@@ -9771,6 +9771,22 @@ PrefabInstance:
       propertyPath: m_LocalPosition.x
       value: 0.45
       objectReference: {fileID: 0}
+    - target: {fileID: 3090423080499815593, guid: 5324f3c1b528b7743bccab55715b6a18, type: 3}
+      propertyPath: m_Size.x
+      value: 0.6102896
+      objectReference: {fileID: 0}
+    - target: {fileID: 3090423080499815593, guid: 5324f3c1b528b7743bccab55715b6a18, type: 3}
+      propertyPath: m_Size.y
+      value: 0.7216358
+      objectReference: {fileID: 0}
+    - target: {fileID: 3090423080499815593, guid: 5324f3c1b528b7743bccab55715b6a18, type: 3}
+      propertyPath: m_Offset.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3090423080499815593, guid: 5324f3c1b528b7743bccab55715b6a18, type: 3}
+      propertyPath: m_Offset.y
+      value: -0.0075917244
+      objectReference: {fileID: 0}
     - target: {fileID: 3800173594537874763, guid: 5324f3c1b528b7743bccab55715b6a18, type: 3}
       propertyPath: bulletPrefab
       value: 
