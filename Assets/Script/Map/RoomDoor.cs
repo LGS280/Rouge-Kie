@@ -3,20 +3,20 @@ using System.Collections;
 
 public class RoomDoor : MonoBehaviour
 {
-    [Header("C?u hình Kh?i D??i (Thân C?a)")]
+    [Header("C?u h?nh Kh?i D??i (Th?n C?a)")]
     public Sprite openSpriteLower;
     public Sprite closedSpriteLower;
 
-    [Header("C?u hình Kh?i Trên (Mái C?a)")]
+    [Header("C?u h?nh Kh?i Tr?n (M?i C?a)")]
     public Sprite openSpriteUpper;
     public Sprite closedSpriteUpper;
 
-    [Header("Object Con Gi? Mái C?a")]
+    [Header("Object Con Gi? M?i C?a")]
     public SpriteRenderer upperSpriteRenderer;
 
     private SpriteRenderer lowerSpriteRenderer;
     private BoxCollider2D physicsCollider;
-    private BoxCollider2D triggerCollider; // L?u cái collider làm trigger
+    private BoxCollider2D triggerCollider; // L?u c?i collider l?m trigger
     private bool isClosed = false;
 
     private void Awake()
@@ -29,16 +29,16 @@ public class RoomDoor : MonoBehaviour
             if (!col.isTrigger)
                 physicsCollider = col;
             else
-                triggerCollider = col; // Tìm ra cái Trigger
+                triggerCollider = col; // T?m ra c?i Trigger
         }
 
         OpenDoor();
     }
 
-    // Hàm này giúp DungeonGenerator t? ??ng c?u hình l?i Trigger theo t?ng h??ng c?a
+    // H?m n?y gi?p DungeonGenerator t? ??ng c?u h?nh l?i Trigger theo t?ng h??ng c?a
     public void SetupTriggerCollider(Vector2 size, Vector2 offset)
     {
-        // N?u ch?a k?p l?y ? Awake thì tìm l?i cho ch?c
+        // N?u ch?a k?p l?y ? Awake th? t?m l?i cho ch?c
         if (triggerCollider == null)
         {
             BoxCollider2D[] colliders = GetComponents<BoxCollider2D>();
@@ -79,7 +79,7 @@ public class RoomDoor : MonoBehaviour
     {
         if (collision.CompareTag("Player") && !isClosed)
         {
-            // ??i 0.25 giây xem player có th?c s? ?i vào phòng không r?i m?i khóa
+            // ??i 0.25 gi?y xem player c? th?c s? ?i v?o ph?ng kh?ng r?i m?i kh?a
             StartCoroutine(CheckBeforeClose(collision.transform));
         }
     }
@@ -90,10 +90,10 @@ public class RoomDoor : MonoBehaviour
 
         if (playerTransform != null)
         {
-            // Tính kho?ng cách gi?a Player và ô c?a
+            // T?nh kho?ng c?ch gi?a Player v? ? c?a
             float distance = Vector2.Distance(transform.position, playerTransform.position);
 
-            // N?u ?i xa quá 0.8 ô ngh?a là ?ã vào h?n trong phòng -> Khóa toàn b?!
+            // N?u ?i xa qu? 0.8 ? ngh?a l? ?? v?o h?n trong ph?ng -> Kh?a to?n b?!
             if (distance > 0.8f)
             {
                 CloseAllDoorsInRoom();
