@@ -87,7 +87,7 @@ public class PlayerController : MonoBehaviour
             // check xem là chuột trái và chuột phải có bấm không
             bool mouseMoved = Mouse.current != null && (Mouse.current.delta.ReadValue().sqrMagnitude > 0.1f || Mouse.current.leftButton.wasPressedThisFrame || Mouse.current.rightButton.wasPressedThisFrame);
 
-            // nếu có nút trên bàn phím dc bấm hoặc click chuột thì chuyển qua chế độ chuột + bàn phím
+            //nếu có nút trên bàn phím dc bấm hoặc click chuột thì chuyển qua chế độ chuột + bàn phím
             if (keyboardPressed || mouseMoved)
             {
                 currentMode = InputMode.KeyboardMouse;
