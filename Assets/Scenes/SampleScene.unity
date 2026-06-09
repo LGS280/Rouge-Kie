@@ -78254,8 +78254,28 @@ PrefabInstance:
       value: Brog
       objectReference: {fileID: 0}
     - target: {fileID: 5514756235691171080, guid: 2350648142145864b99ebe99622f3847, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 5514756235691171080, guid: 2350648142145864b99ebe99622f3847, type: 3}
       propertyPath: m_TagString
       value: Enemy
+      objectReference: {fileID: 0}
+    - target: {fileID: 5975511628072991313, guid: 2350648142145864b99ebe99622f3847, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5975511628072991313, guid: 2350648142145864b99ebe99622f3847, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5975511628072991313, guid: 2350648142145864b99ebe99622f3847, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9012517047312577492, guid: 2350648142145864b99ebe99622f3847, type: 3}
+      propertyPath: m_Layer
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -80739,6 +80759,14 @@ PrefabInstance:
       propertyPath: bulletPrefab
       value: 
       objectReference: {fileID: 5457056256669451622, guid: b151046f8c1e0f844b3f31b266ffbb4a, type: 3}
+    - target: {fileID: 3800173594537874763, guid: 5324f3c1b528b7743bccab55715b6a18, type: 3}
+      propertyPath: meleeSlashPrefab
+      value: 
+      objectReference: {fileID: 8616719184387406343, guid: 0f9f2a81ca31463408b2c686ed0b2437, type: 3}
+    - target: {fileID: 3800173594537874763, guid: 5324f3c1b528b7743bccab55715b6a18, type: 3}
+      propertyPath: enemyLayer.m_Bits
+      value: 64
+      objectReference: {fileID: 0}
     - target: {fileID: 4513691302435627913, guid: 5324f3c1b528b7743bccab55715b6a18, type: 3}
       propertyPath: m_Name
       value: Player

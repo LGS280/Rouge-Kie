@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class WeaponAim : MonoBehaviour
@@ -7,13 +8,24 @@ public class WeaponAim : MonoBehaviour
     private SpriteRenderer playerRenderer;
     private PlayerController playerController;
 
-    [Header("--- THIẾT LẬP BẮN ĐẠN ---")]
+    [Header("THIẾT LẬP BẮN ĐẠN")]
     public GameObject bulletPrefab;
     public Transform firePoint;
     public float fireRate = 0.2f;
     private float nextFireTime = 0f;
 
+    [Header("THIẾT LẬP CẬN CHIẾN")]
+    public GameObject meleeSlashPrefab;    // Kéo thả Prefab vệt chém cận chiến vào đây
+    public float meleeRadius = 1.5f;       // Khoảng cách siêu sát quái để kích hoạt đánh tay
+
+    [Header("Setting Aim Bot")]
+    public float aimRadius = 7f; // bán kính vòng tròn quét quái 
+    public LayerMask enemyLayer;
+    private Transform currentTarget; // lưu con quái bị aim 
+
     private float currentGamepadAngle = 0f;
+
+    private Transform previousTarget;
 
     void Start()
     {
@@ -35,50 +47,129 @@ public class WeaponAim : MonoBehaviour
         {
             Vector2 gamepadDirection = playerController.GetMoveInput();
 
-            if (gamepadDirection.sqrMagnitude > 0.05f)
-            {
-                angle = Mathf.Atan2(gamepadDirection.y, gamepadDirection.x) * Mathf.Rad2Deg;
-                currentGamepadAngle = angle;
+            FindClosestEnemy();
 
-                // Chỉ lật mặt nhân vật dựa theo hướng gạt cần trái/phải
-                if (gamepadDirection.x > 0.1f && playerRenderer != null) playerRenderer.flipX = false;
-                else if (gamepadDirection.x < -0.1f && playerRenderer != null) playerRenderer.flipX = true;
+            if (currentTarget != null)
+            {
+                // khi có quái trong tầm thì sẽ aim vô quái bỏ qua joystick
+                Vector2 aimDirection = currentTarget.position - transform.position;
+                angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
+                currentGamepadAngle = angle; // lưu lại góc quay súng để khi quái chết ko bị giật 
+
+                HandleTargetRingUI(currentTarget, true); // bật vòng đỏ dưới chân quái để hiện aim bot
             }
             else
             {
-                angle = currentGamepadAngle; // Buông cần thì giữ nguyên hướng súng cũ
+                // Khi mất quái thì thò tay tắt vòng đỏ của con quái cũ đi trước
+                if (previousTarget != null)
+                {
+                    HandleTargetRingUI(previousTarget, false);
+                }
+
+                if (gamepadDirection.sqrMagnitude > 0.05f)
+                {
+                    angle = Mathf.Atan2(gamepadDirection.y, gamepadDirection.x) * Mathf.Rad2Deg;
+                    currentGamepadAngle = angle;
+                }
+                else
+                {
+                    angle = currentGamepadAngle; // Buông cần thì giữ nguyên hướng súng cũ
+                }
             }
+
+            if (currentTarget != previousTarget && previousTarget != null)
+            {
+                // Tắt vòng đỏ của con quái cũ (A) đi để bật con quái mới (B)
+                HandleTargetRingUI(previousTarget, false);
+            }
+            previousTarget = currentTarget;
         }
         // chơi bằng bàn phím + chuột
         else
         {
+            // nếu người chơi qua bàn phím thì tắt vòng đỏ đi
+            if (currentTarget != null)
+            {
+                HandleTargetRingUI(currentTarget, false);
+            }
+            if (previousTarget != null)
+            {
+                HandleTargetRingUI(previousTarget, false);
+            }
+
             Vector3 mousePosition = mainCamera.ScreenToWorldPoint(Mouse.current != null ? Mouse.current.position.ReadValue() : (Vector2)Input.mousePosition);
             Vector2 aimDirection = mousePosition - transform.position;
             angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
-
-            // Đứng yên hay chạy bằng phím thì tự động lật mặt nhân vật nhìn theo hướng con chuột
-            if (playerRenderer != null)
-            {
-                if (angle > 90 || angle < -90) playerRenderer.flipX = true;
-                else playerRenderer.flipX = false;
-            }
         }
+
+        //  BỘ XỬ LÝ LẬT MẶT VÀ XOAY SÚNG ĐỒNG BỘ (CHỐNG XUNG ĐỘT)
 
         // Tự xoay chính nó (Cây súng)
         transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
 
-        // Chống ngược súng khi quay về bên trái (Lật trục Y của súng)
-        if (playerRenderer != null && playerRenderer.flipX)
+        // Chuẩn hóa góc về khoảng -180 đến 180 độ để tính toán hướng lật mặt
+        if (angle > 180f)
         {
-            transform.localScale = new Vector3(1, -1, 1);
+            angle -= 360f;
         }
-        else
+        if (angle < -180f)
         {
-            transform.localScale = new Vector3(1, 1, 1);
+            angle += 360f;
+        }
+
+        // Quy định hướng: Cứ họng súng hướng sang trái (góc > 90 hoặc < -90) là người và súng cùng lật
+        if (playerRenderer != null)
+        {
+            if (angle > 90f || angle < -90f)
+            {
+                playerRenderer.flipX = true; // Nhân vật nhìn sang trái
+                transform.localScale = new Vector3(1f, -1f, 1f); // Lật trục Y của súng chống ngược súng
+            }
+            else
+            {
+                playerRenderer.flipX = false; // Nhân vật nhìn sang phải
+                transform.localScale = new Vector3(1f, 1f, 1f); // Súng thẳng bình thường
+            }
         }
 
         // Logic xả đạn
         HandleShooting();
+    }
+
+    private void HandleTargetRingUI(Transform enemyTransform, bool isActive)
+    {
+        if (enemyTransform == null)
+        {
+            return;
+        }
+
+        Transform mobRing = enemyTransform.Find("Mob_Ring");
+
+        if (mobRing != null)
+        {
+            mobRing.gameObject.SetActive(isActive);
+        }
+    }
+
+    private void FindClosestEnemy()
+    {
+        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(transform.position, aimRadius, enemyLayer);
+
+        Transform closestEnemy = null;
+        float minDistance = Mathf.Infinity;
+
+        foreach (var collider in hitColliders)
+        {
+            float distanceToEnemy = Vector2.Distance(transform.position, collider.transform.position);
+
+            if (distanceToEnemy < minDistance)
+            {
+                minDistance = distanceToEnemy;
+                closestEnemy = collider.transform;
+            }
+        }
+
+        currentTarget = closestEnemy;
     }
 
     void HandleShooting()
@@ -89,26 +180,53 @@ public class WeaponAim : MonoBehaviour
 
             if (playerController != null && playerController.currentMode == PlayerController.InputMode.Gamepad)
             {
-                if (Gamepad.current != null && Gamepad.current.xButton.isPressed) isShooting = true;
+                if (Gamepad.current != null && Gamepad.current.xButton.isPressed)
+                {
+                    isShooting = true;
+                }
             }
             else
             {
-                if (Mouse.current != null && Mouse.current.leftButton.isPressed) isShooting = true;
+                if (Mouse.current != null && Mouse.current.leftButton.isPressed)
+                {
+                    isShooting = true;
+                }
             }
 
             if (isShooting)
             {
                 nextFireTime = Time.time + fireRate;
-                Shoot();
+                ExecuteAttack(); // Chuyển sang gọi hàm phân tích thông minh mới để chọn Bắn hoặc Chém
             }
         }
     }
 
-    void Shoot()
+    // Hàm quyết định sinh ra Đạn hoặc Vệt chém (Xoay tự do theo hướng súng firePoint)
+    void ExecuteAttack()
     {
-        if (bulletPrefab != null && firePoint != null)
+        // Quét một vòng tròn nhỏ xem có quái đang áp sát không
+        Collider2D closeEnemy = Physics2D.OverlapCircle(transform.position, meleeRadius, enemyLayer);
+
+        if (closeEnemy != null && meleeSlashPrefab != null && firePoint != null)
         {
+            // Có quái sát người -> Sinh ra vệt chém theo đúng góc xoay hiện tại của súng (firePoint.rotation)
+            Instantiate(meleeSlashPrefab, firePoint.position, firePoint.rotation);
+        }
+        else if (bulletPrefab != null && firePoint != null)
+        {
+            // Quái ở xa -> Bắn đạn như bình thường
             Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
         }
+    }
+
+    private void OnDrawGizmosSelected() // vẽ vòng tròn trong scene để xem tầm aim bot tới đâu
+    {
+        // Vòng đỏ: xem tầm aim bot tới đâu
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, aimRadius);
+
+        // Vòng xanh dương: vẽ tầm kích hoạt đánh cận chiến
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(transform.position, meleeRadius);
     }
 }
