@@ -80760,6 +80760,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 5457056256669451622, guid: b151046f8c1e0f844b3f31b266ffbb4a, type: 3}
     - target: {fileID: 3800173594537874763, guid: 5324f3c1b528b7743bccab55715b6a18, type: 3}
+      propertyPath: meleeSlashPrefab
+      value: 
+      objectReference: {fileID: 8616719184387406343, guid: 0f9f2a81ca31463408b2c686ed0b2437, type: 3}
+    - target: {fileID: 3800173594537874763, guid: 5324f3c1b528b7743bccab55715b6a18, type: 3}
       propertyPath: enemyLayer.m_Bits
       value: 64
       objectReference: {fileID: 0}
