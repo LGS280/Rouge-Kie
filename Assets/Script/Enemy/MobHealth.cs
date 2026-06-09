@@ -31,16 +31,13 @@ public class MobHealth : MonoBehaviour
     public void TakeDamage(int damage)
     {
         if (isDead) return;
-
         currentHealth -= damage;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
-
         // Kích hoạt Animation bị thương (giật lùi, chớp đỏ...)
         if (animator != null)
         {
             animator.SetTrigger("hurt");
         }
-
         if (currentHealth <= 0)
         {
             Die();
