@@ -28,19 +28,17 @@ public class MobHealth : MonoBehaviour
         if (mobCollider != null) mobCollider.enabled = true;
     }
 
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damage, bool isCrit = false)
     {
         if (isDead) return;
+        
         currentHealth -= damage;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
-<<<<<<< HEAD
-=======
 
         MobFlash flash = GetComponent<MobFlash>();
         if (flash != null) flash.TriggerFlash();
+        DamageNumberSpawner.Instance.Spawn(transform.position, damage, isCrit); // ✅
 
-
->>>>>>> 9edf7b851f07d2539ee0b53c6da0eb9be4c6aa37
         // Kích hoạt Animation bị thương (giật lùi, chớp đỏ...)
         if (animator != null)
         {
