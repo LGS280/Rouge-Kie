@@ -21,6 +21,8 @@ public class WeaponAim : MonoBehaviour
 
     private float currentGamepadAngle = 0f;
 
+    private Transform previousTarget;
+
     void Start()
     {
         mainCamera = Camera.main;
@@ -49,9 +51,14 @@ public class WeaponAim : MonoBehaviour
                 Vector2 aimDirection = currentTarget.position - transform.position;
                 angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
                 currentGamepadAngle = angle; // lưu lại góc quay súng để khi quái chết ko bị giật 
+
+                HandleTargetRingUI(currentTarget, true); // bật vòng đỏ dưới chân quái để hiện aim bot
             }
             else
             {
+
+                HandleTargetRingUI(currentTarget, true);
+
                 if (gamepadDirection.sqrMagnitude > 0.05f)
                 {
                     angle = Mathf.Atan2(gamepadDirection.y, gamepadDirection.x) * Mathf.Rad2Deg;
@@ -62,16 +69,33 @@ public class WeaponAim : MonoBehaviour
                     angle = currentGamepadAngle; // Buông cần thì giữ nguyên hướng súng cũ
                 }
             }
+
+            if (currentTarget != previousTarget && previousTarget != null)
+            {
+                // Tắt vòng đỏ của con quái cũ (A) đi để bật con quái mới (B)
+                HandleTargetRingUI(previousTarget, false);
+            }
+            previousTarget = currentTarget;
         }
         // chơi bằng bàn phím + chuột
         else
         {
+            // nếu người chơi qua bàn phím thì tắt vòng đỏ đi
+            if (currentTarget != null)
+            {
+                HandleTargetRingUI(currentTarget, false);
+            }
+            if (previousTarget != null)
+            {
+                HandleTargetRingUI(previousTarget, false);
+            }
+
             Vector3 mousePosition = mainCamera.ScreenToWorldPoint(Mouse.current != null ? Mouse.current.position.ReadValue() : (Vector2)Input.mousePosition);
             Vector2 aimDirection = mousePosition - transform.position;
             angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
         }
 
-        // === 🎯 BỘ XỬ LÝ LẬT MẶT VÀ XOAY SÚNG ĐỒNG BỘ (CHỐNG XUNG ĐỘT) ===
+        //  BỘ XỬ LÝ LẬT MẶT VÀ XOAY SÚNG ĐỒNG BỘ (CHỐNG XUNG ĐỘT)
 
         // Tự xoay chính nó (Cây súng)
         transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
@@ -103,6 +127,21 @@ public class WeaponAim : MonoBehaviour
 
         // Logic xả đạn
         HandleShooting();
+    }
+
+    private void HandleTargetRingUI(Transform enemyTransform, bool isActive)
+    {
+        if (enemyTransform == null)
+        {
+            return;
+        }
+
+        Transform mobRing = enemyTransform.Find("Mob_Ring");
+
+        if (mobRing != null)
+        {
+            mobRing.gameObject.SetActive(isActive);
+        }
     }
 
     private void FindClosestEnemy()
