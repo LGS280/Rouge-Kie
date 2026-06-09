@@ -57,5 +57,11 @@ public class Bullet : MonoBehaviour
         {
             isCrit = false;
         }
+
+        MobHealth enemyHealth = collision.GetComponent<MobHealth>();
+        if (enemyHealth != null)
+        {
+            enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage));
+        }
     }
 }

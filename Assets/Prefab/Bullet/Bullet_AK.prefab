@@ -181,3 +181,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Bullet
   speed: 30
   lifeTime: 3
+  baseDamage: 10
+  critChance: 20
+  critMultiplier: 1.5
