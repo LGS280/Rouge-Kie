@@ -14,6 +14,10 @@ public class WeaponAim : MonoBehaviour
     public float fireRate = 0.2f;
     private float nextFireTime = 0f;
 
+    [Header("THIẾT LẬP CẬN CHIẾN")]
+    public GameObject meleeSlashPrefab;    // Kéo thả Prefab vệt chém cận chiến vào đây
+    public float meleeRadius = 1.5f;       // Khoảng cách siêu sát quái để kích hoạt đánh tay
+
     [Header("Setting Aim Bot")]
     public float aimRadius = 7f; // bán kính vòng tròn quét quái 
     public LayerMask enemyLayer;
@@ -56,8 +60,11 @@ public class WeaponAim : MonoBehaviour
             }
             else
             {
-
-                HandleTargetRingUI(currentTarget, true);
+                // Khi mất quái thì thò tay tắt vòng đỏ của con quái cũ đi trước
+                if (previousTarget != null)
+                {
+                    HandleTargetRingUI(previousTarget, false);
+                }
 
                 if (gamepadDirection.sqrMagnitude > 0.05f)
                 {
@@ -189,22 +196,37 @@ public class WeaponAim : MonoBehaviour
             if (isShooting)
             {
                 nextFireTime = Time.time + fireRate;
-                Shoot();
+                ExecuteAttack(); // Chuyển sang gọi hàm phân tích thông minh mới để chọn Bắn hoặc Chém
             }
         }
     }
 
-    void Shoot()
+    // Hàm quyết định sinh ra Đạn hoặc Vệt chém (Xoay tự do theo hướng súng firePoint)
+    void ExecuteAttack()
     {
-        if (bulletPrefab != null && firePoint != null)
+        // Quét một vòng tròn nhỏ xem có quái đang áp sát không
+        Collider2D closeEnemy = Physics2D.OverlapCircle(transform.position, meleeRadius, enemyLayer);
+
+        if (closeEnemy != null && meleeSlashPrefab != null && firePoint != null)
         {
+            // Có quái sát người -> Sinh ra vệt chém theo đúng góc xoay hiện tại của súng (firePoint.rotation)
+            Instantiate(meleeSlashPrefab, firePoint.position, firePoint.rotation);
+        }
+        else if (bulletPrefab != null && firePoint != null)
+        {
+            // Quái ở xa -> Bắn đạn như bình thường
             Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
         }
     }
 
     private void OnDrawGizmosSelected() // vẽ vòng tròn trong scene để xem tầm aim bot tới đâu
     {
+        // Vòng đỏ: xem tầm aim bot tới đâu
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, aimRadius);
+
+        // Vòng xanh dương: vẽ tầm kích hoạt đánh cận chiến
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(transform.position, meleeRadius);
     }
 }
