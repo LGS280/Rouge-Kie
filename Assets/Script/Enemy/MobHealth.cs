@@ -33,6 +33,14 @@ public class MobHealth : MonoBehaviour
         if (isDead) return;
         currentHealth -= damage;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+<<<<<<< HEAD
+=======
+
+        MobFlash flash = GetComponent<MobFlash>();
+        if (flash != null) flash.TriggerFlash();
+
+
+>>>>>>> 9edf7b851f07d2539ee0b53c6da0eb9be4c6aa37
         // Kích hoạt Animation bị thương (giật lùi, chớp đỏ...)
         if (animator != null)
         {
@@ -59,14 +67,31 @@ public class MobHealth : MonoBehaviour
             mobCollider.enabled = false;
         }
 
-        // Dừng chuyển động vật lý ngay lập tức
+        // Đóng băng vật lý của quái (Chuyển sang Static) để xác quái không bị trượt đi khi bị va chạm
         if (rb != null)
         {
-            rb.linearVelocity = Vector2.zero;
+            rb.bodyType = RigidbodyType2D.Static;
+            rb.linearVelocity = Vector2.zero; // Dừng mọi lực quán tính còn lại
         }
 
+        // Tắt hoàn toàn AI của quái để dừng mọi logic tìm đường/chạy Update
+        MobAI ai = GetComponent<MobAI>();
+        if (ai != null)
+        {
+            ai.enabled = false;
+        }
+
+        // Đẩy xác quái xuống lớp hiển thị phía sau (Dưới chân người chơi)
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            // Giả sử sortingOrder bình thường của bạn là 0 hoặc lớn hơn, đặt về -10 để nằm dưới chân nhân vật
+            sr.sortingOrder = 2;
+        }
+
+
         // Trả quái về Object Pool sau một khoảng thời gian (ví dụ 1.2 giây)
-        Invoke("RecycleMob", 1.2f);
+        //Invoke("RecycleMob", 1.2f);
     }
 
     void RecycleMob()
