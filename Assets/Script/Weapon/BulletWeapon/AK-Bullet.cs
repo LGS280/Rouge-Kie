@@ -61,7 +61,7 @@ public class Bullet : MonoBehaviour
         MobHealth enemyHealth = collision.GetComponent<MobHealth>();
         if (enemyHealth != null)
         {
-            enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage));
+            enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage), isCrit);
         }
     }
 }
