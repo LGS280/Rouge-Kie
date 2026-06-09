@@ -3,45 +3,53 @@ using TMPro;
 
 public class DamageNumber : MonoBehaviour
 {
-    [SerializeField] float floatSpeed = 1.5f;
+    [SerializeField] float floatSpeed = 2f;
     [SerializeField] float lifetime = 0.8f;
 
-    TextMeshProUGUI tmp;
+    TextMeshPro tmp;
     float timer;
     Color startColor;
 
     void Awake()
     {
-        tmp = GetComponent<TextMeshProUGUI>();
-        startColor = tmp.color;
+        tmp = GetComponent<TextMeshPro>();
+
+        MeshRenderer mr = GetComponent<MeshRenderer>();
+        if (mr != null)
+        {
+            mr.sortingLayerName = "Default";
+            mr.sortingOrder = 100;
+        }
+
+        transform.rotation = Camera.main.transform.rotation;
+        // Bỏ startColor ở đây
     }
 
     public void Setup(int damage, bool isCrit = false)
     {
+        Debug.Log("Setup called: damage=" + damage + " isCrit=" + isCrit); // ra ngoài if
         if (isCrit)
         {
             tmp.text = damage.ToString() + "!";
-            tmp.fontSize = 7;           // to hơn
+            tmp.fontSize = 5;
             tmp.color = Color.yellow;
-            startColor = Color.yellow;
         }
         else
         {
             tmp.text = damage.ToString();
-            tmp.fontSize = 5;
-            tmp.color = Color.white;
-            startColor = Color.white;
+            tmp.fontSize = 3;
+            tmp.color = Color.red;
         }
+        startColor = tmp.color;
     }
 
     void Update()
     {
         timer += Time.deltaTime;
 
-        // Bay lên
-        transform.position += Vector3.up * floatSpeed * Time.deltaTime;
+        // Bay lên + lắc nhẹ ngang
+        transform.position += new Vector3(0, floatSpeed * Time.deltaTime, 0);
 
-        // Fade out
         float alpha = Mathf.Lerp(1f, 0f, timer / lifetime);
         tmp.color = new Color(startColor.r, startColor.g, startColor.b, alpha);
 
