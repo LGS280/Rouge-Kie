@@ -174,6 +174,9 @@ public class WeaponAim : MonoBehaviour
 
     void HandleShooting()
     {
+        float currentFireRate = PlayerStats.Instance != null
+        ? fireRate / PlayerStats.Instance.attackSpeedMultiplier
+        : fireRate;
         if (Time.time >= nextFireTime)
         {
             bool isShooting = false;
@@ -195,7 +198,7 @@ public class WeaponAim : MonoBehaviour
 
             if (isShooting)
             {
-                nextFireTime = Time.time + fireRate;
+                nextFireTime = Time.time + currentFireRate;
                 ExecuteAttack(); // Chuyển sang gọi hàm phân tích thông minh mới để chọn Bắn hoặc Chém
             }
         }
