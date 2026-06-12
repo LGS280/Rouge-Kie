@@ -1,6 +1,6 @@
 using UnityEngine;
-using UnityEngine.SceneManagement; // Dùng để chuyển sang Scene chơi game sau này
-
+using UnityEngine.EventSystems; // Bắt buộc phải có để sử dụng EventSystem
+using System.Collections;
 public class MainMenuController : MonoBehaviour
 {
     [Header("Main Panels")]
@@ -11,6 +11,11 @@ public class MainMenuController : MonoBehaviour
     [Header("Settings Tabs")]
     [SerializeField] private GameObject audioContent;
     [SerializeField] private GameObject graphicsContent;
+
+    [Header("First Selected Objects (For Gamepad/Keyboard)")]
+    [SerializeField] private GameObject playButton;      // Nút đầu tiên được chọn ở Main Menu
+    [SerializeField] private GameObject singleButton;    // Nút đầu tiên được chọn ở Play Menu
+    [SerializeField] private GameObject tabAudioBtn;     // Nút đầu tiên được chọn ở Settings Panel
 
     private void Start()
     {
@@ -25,6 +30,9 @@ public class MainMenuController : MonoBehaviour
         mainMenuPanel.SetActive(true);
         playMenuPanel.SetActive(false);
         settingsPanel.SetActive(false);
+
+        // Kích hoạt tiêu điểm vào nút Play khi ở Main Menu
+        SetSelected(playButton);
     }
 
     public void OnPlayButtonPressed()
@@ -32,25 +40,30 @@ public class MainMenuController : MonoBehaviour
         mainMenuPanel.SetActive(false);
         playMenuPanel.SetActive(true);
         settingsPanel.SetActive(false);
+
+        // Kích hoạt tiêu điểm vào nút Single khi vào Play Menu
+        SetSelected(singleButton);
     }
 
     public void OnSettingsButtonPressed()
     {
-        // Settings Panel sẽ bật đè lên màn hình hiện tại
         settingsPanel.SetActive(true);
-
-        // Mặc định khi mở Settings sẽ hiện Tab Audio trước
         OnAudioTabPressed();
+
+        // Kích hoạt tiêu điểm vào nút Tab Audio khi mở bảng Settings
+        SetSelected(tabAudioBtn);
     }
 
     public void OnCloseSettingsPressed()
     {
         settingsPanel.SetActive(false);
+
+        // Khi đóng Settings, trả tiêu điểm về nút Play ở Main Menu
+        SetSelected(playButton);
     }
 
     public void OnBackButtonPressed()
     {
-        // Quay lại Main Menu từ màn hình chọn chế độ chơi
         ShowMainMenu();
     }
 
@@ -59,7 +72,6 @@ public class MainMenuController : MonoBehaviour
         Debug.Log("Thoát Game!");
         Application.Quit();
 
-        // Nếu đang chạy thử trong Unity Editor thì dừng chế độ Play
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #endif
@@ -79,18 +91,41 @@ public class MainMenuController : MonoBehaviour
         graphicsContent.SetActive(true);
     }
 
-    // --- PHẦN KẾT NỐI GAMEPLAY (SẼ PHÁT TRIỂN TIẾP) ---
+    // --- PHẦN KẾT NỐI GAMEPLAY ---
 
     public void OnSingleplayerPressed()
     {
         Debug.Log("Chạy chế độ chơi đơn...");
-        // Sau này load scene chơi đơn tại đây:
-        // SceneManager.LoadScene("Gameplay_Scene_Name");
     }
 
     public void OnCoOpPressed()
     {
         Debug.Log("Chạy chế độ Multiplayer Co-op...");
-        // Sau này sẽ kích hoạt UI nhập mã phòng và kết nối SignalR tại đây
     }
+
+    // Hàm phụ trợ giúp chọn nút an toàn cho tay cầm, tránh lỗi NullReferenceException
+    private void SetSelected(GameObject obj)
+    {
+        if (obj != null && EventSystem.current != null)
+        {
+            // Dừng các tiến trình chờ cũ đang chạy để tránh xung đột
+            StopAllCoroutines();
+            // Chạy tiến trình chờ 1 khung hình rồi mới chọn nút
+            StartCoroutine(SelectButtonDelayed(obj));
+        }
+    }
+
+    // Tiến trình chờ Canvas cập nhật hoàn tất trước khi chọn nút
+    private IEnumerator SelectButtonDelayed(GameObject obj)
+    {
+        // Xóa tiêu điểm cũ để tránh lỗi bám dính tiêu điểm
+        EventSystem.current.SetSelectedGameObject(null);
+
+        // Chờ đúng 1 khung hình (để Panel mới kịp kích hoạt hoàn toàn trên màn hình)
+        yield return null;
+
+        // Tiến hành chọn nút mới
+        EventSystem.current.SetSelectedGameObject(obj);
+    }
+
 }
