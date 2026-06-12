@@ -6,6 +6,8 @@ public class MobHealth : MonoBehaviour
     private int currentHealth;
     [HideInInspector] public bool isDead = false;
 
+    public System.Action<MobHealth> OnDeath;
+
     private Animator animator;
     private Collider2D mobCollider;
     private Rigidbody2D rb;
@@ -37,7 +39,7 @@ public class MobHealth : MonoBehaviour
     public void TakeDamage(int damage, bool isCrit = false)
     {
         if (isDead) return;
-        
+
         currentHealth -= damage;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
@@ -56,6 +58,48 @@ public class MobHealth : MonoBehaviour
         }
     }
 
+    //void Die()
+    //{
+    //    isDead = true;
+
+    //    if (animator != null)
+    //    {
+    //        animator.SetTrigger("die");
+    //    }
+
+    //    // Tắt va chạm vật lý để người chơi/đạn đi xuyên qua xác quái khi đang chạy Anim chết
+    //    if (mobCollider != null)
+    //    {
+    //        mobCollider.enabled = false;
+    //    }
+
+    //    // Đóng băng vật lý của quái (Chuyển sang Static) để xác quái không bị trượt đi khi bị va chạm
+    //    if (rb != null)
+    //    {
+    //        rb.bodyType = RigidbodyType2D.Static;
+    //        rb.linearVelocity = Vector2.zero; // Dừng mọi lực quán tính còn lại
+    //    }
+
+    //    // Tắt hoàn toàn AI của quái để dừng mọi logic tìm đường/chạy Update
+    //    MobAI ai = GetComponent<MobAI>();
+    //    if (ai != null)
+    //    {
+    //        ai.enabled = false;
+    //    }
+
+    //    // Đẩy xác quái xuống lớp hiển thị phía sau (Dưới chân người chơi)
+    //    SpriteRenderer sr = GetComponent<SpriteRenderer>();
+    //    if (sr != null)
+    //    {
+    //        // Giả sử sortingOrder bình thường của bạn là 0 hoặc lớn hơn, đặt về -10 để nằm dưới chân nhân vật
+    //        sr.sortingOrder = 2;
+    //    }
+
+
+    //    // Trả quái về Object Pool sau một khoảng thời gian (ví dụ 1.2 giây)
+    //    //Invoke("RecycleMob", 1.2f);
+    //}
+
     void Die()
     {
         isDead = true;
@@ -65,20 +109,17 @@ public class MobHealth : MonoBehaviour
             animator.SetTrigger("die");
         }
 
-        // Tắt va chạm vật lý để người chơi/đạn đi xuyên qua xác quái khi đang chạy Anim chết
         if (mobCollider != null)
         {
             mobCollider.enabled = false;
         }
 
-        // Đóng băng vật lý của quái (Chuyển sang Static) để xác quái không bị trượt đi khi bị va chạm
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Static;
-            rb.linearVelocity = Vector2.zero; // Dừng mọi lực quán tính còn lại
+            rb.linearVelocity = Vector2.zero;
         }
 
-        // Tắt hoàn toàn AI của quái để dừng mọi logic tìm đường/chạy Update
         MobAI ai = GetComponent<MobAI>();
         if (ai != null)
         {
@@ -95,13 +136,10 @@ public class MobHealth : MonoBehaviour
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
         if (sr != null)
         {
-            // Giả sử sortingOrder bình thường của bạn là 0 hoặc lớn hơn, đặt về -10 để nằm dưới chân nhân vật
             sr.sortingOrder = 2;
         }
 
-
-        // Trả quái về Object Pool sau một khoảng thời gian (ví dụ 1.2 giây)
-        //Invoke("RecycleMob", 1.2f);
+        OnDeath?.Invoke(this);
     }
 
     void RecycleMob()
