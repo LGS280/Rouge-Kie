@@ -79,6 +79,7 @@ public class DungeonGenerator : MonoBehaviour
         public Vector2Int gridPos;
         public RectInt rect;
         public bool isStartRoom;
+        public RoomController controller;
 
         public Vector2Int Center
         {
@@ -137,6 +138,7 @@ public class DungeonGenerator : MonoBehaviour
         BuildAllCorridors();
         RebuildWallsFromFloorPositions();
         DecorateWallsByCluster();
+        CreateAllRoomControllers();
         CreateAllDoors();
         SpawnAllRoomObstacles();
         SpawnAllRoomMobs();
@@ -511,36 +513,57 @@ public class DungeonGenerator : MonoBehaviour
 
     private void CreateDoorBetween(MapRoom from, MapRoom to, Vector2Int direction)
     {
+        List<RoomDoor> fromDoors = null;
+        List<RoomDoor> toDoors = null;
+
         if (direction == Vector2Int.up)
         {
-            CreateHorizontalDoorAt(from.Center.x, from.Top, false);
-            CreateHorizontalDoorAt(to.Center.x, to.Bottom, true);
+            fromDoors = CreateHorizontalDoorAt(from.Center.x, from.Top, false);
+            toDoors = CreateHorizontalDoorAt(to.Center.x, to.Bottom, true);
         }
         else if (direction == Vector2Int.down)
         {
-            CreateHorizontalDoorAt(from.Center.x, from.Bottom, true);
-            CreateHorizontalDoorAt(to.Center.x, to.Top, false);
+            fromDoors = CreateHorizontalDoorAt(from.Center.x, from.Bottom, true);
+            toDoors = CreateHorizontalDoorAt(to.Center.x, to.Top, false);
         }
         else if (direction == Vector2Int.left)
         {
-            CreateVerticalDoorAt(from.Left, from.Center.y, true);
-            CreateVerticalDoorAt(to.Right, to.Center.y, false);
+            fromDoors = CreateVerticalDoorAt(from.Left, from.Center.y, true);
+            toDoors = CreateVerticalDoorAt(to.Right, to.Center.y, false);
         }
         else if (direction == Vector2Int.right)
         {
-            CreateVerticalDoorAt(from.Right, from.Center.y, false);
-            CreateVerticalDoorAt(to.Left, to.Center.y, true);
+            fromDoors = CreateVerticalDoorAt(from.Right, from.Center.y, false);
+            toDoors = CreateVerticalDoorAt(to.Left, to.Center.y, true);
+        }
+
+        AddDoorsToRoom(from, fromDoors);
+        AddDoorsToRoom(to, toDoors);
+    }
+
+    private void AddDoorsToRoom(MapRoom room, List<RoomDoor> doors)
+    {
+        if (room == null || room.controller == null || doors == null)
+        {
+            return;
+        }
+
+        foreach (RoomDoor door in doors)
+        {
+            room.controller.AddDoor(door);
         }
     }
 
-    private void CreateHorizontalDoorAt(int midX, int y, bool isBottomDoor)
+    private List<RoomDoor> CreateHorizontalDoorAt(int midX, int y, bool isBottomDoor)
     {
+        List<RoomDoor> createdDoors = new List<RoomDoor>();
+
         int halfDoor = doorSize / 2;
 
         for (int x = midX - halfDoor; x < midX + halfDoor; x++)
         {
             Vector3Int topPos = new Vector3Int(x, y, 0);
-            Vector3Int spawnPos = isBottomDoor ? topPos + Vector3Int.down : topPos + Vector3Int.down;
+            Vector3Int spawnPos = topPos + Vector3Int.down;
 
             SetFloor(topPos, GetRandomFloorTile());
             SetFloor(topPos + Vector3Int.down, GetRandomFloorTile());
@@ -561,13 +584,21 @@ public class DungeonGenerator : MonoBehaviour
                         : new Vector2(0f, -0.4f);
 
                     doorScript.SetupTriggerCollider(new Vector2(1f, 0.2f), offset);
+
+                    createdDoors.Add(doorScript);
                 }
             }
         }
+
+        return createdDoors;
     }
 
-    private void CreateVerticalDoorAt(int x, int midY, bool triggerToRight)
+    private List<RoomDoor> CreateVerticalDoorAt(int x, int midY, bool triggerToRight)
     {
+        Debug.Log($"CreateVerticalDoorAt x={x} midY={midY}");
+
+        List<RoomDoor> createdDoors = new List<RoomDoor>();
+
         int halfDoor = doorSize / 2;
         int orderOffset = 0;
 
@@ -602,11 +633,15 @@ public class DungeonGenerator : MonoBehaviour
                         : new Vector2(-0.4f, 0f);
 
                     doorScript.SetupTriggerCollider(new Vector2(0.2f, 1f), offset);
+
+                    createdDoors.Add(doorScript);
                 }
             }
 
             orderOffset++;
         }
+
+        return createdDoors;
     }
 
     private GameObject SpawnDoorPrefab(Vector3Int tilePosition)
@@ -1045,6 +1080,16 @@ public class DungeonGenerator : MonoBehaviour
             GameObject mobObj = Instantiate(mobPrefab, worldPos, Quaternion.identity);
             mobObj.transform.SetParent(transform);
 
+            MobHealth mobHealth = mobObj.GetComponent<MobHealth>();
+            if (mobHealth != null && room.controller != null)
+            {
+                room.controller.AddMob(mobHealth);
+            }
+            else
+            {
+                Debug.LogWarning($"Không add được mob vào room {room.gridPos}");
+            }
+
             MobNetworkIdentity identity = mobObj.GetComponent<MobNetworkIdentity>();
             if (identity != null)
             {
@@ -1109,6 +1154,32 @@ public class DungeonGenerator : MonoBehaviour
         }
 
         return new Vector3Int(room.Center.x, room.Center.y, 0);
+    }
+
+    private void CreateAllRoomControllers()
+    {
+        foreach (MapRoom room in roomsByGrid.Values)
+        {
+            GameObject roomObj = new GameObject("Room_" + room.gridPos);
+            roomObj.transform.SetParent(transform);
+
+            Vector3 centerWorld = floorTilemap.CellToWorld(
+                new Vector3Int(room.Center.x, room.Center.y, 0)
+            ) + new Vector3(0.5f, 0.5f, 0f);
+
+            roomObj.transform.position = centerWorld;
+
+            BoxCollider2D trigger = roomObj.AddComponent<BoxCollider2D>();
+            trigger.isTrigger = true;
+
+            trigger.size = new Vector2(
+                room.rect.width - 4,
+                room.rect.height - 4
+            );
+
+            RoomController controller = roomObj.AddComponent<RoomController>();
+            room.controller = controller;
+        }
     }
 }
 
