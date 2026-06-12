@@ -12,6 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 394b33bf1ed0c8446807163c8b375721, type: 3}
   m_Name: ForestTheme
   m_EditorClassIdentifier: Assembly-CSharp::DungeonTheme
+  mobs:
+  - mobPrefab: {fileID: 5514756235691171080, guid: 2350648142145864b99ebe99622f3847, type: 3}
+    weight: 100
+  minMobPerRoom: 4
+  maxMobPerRoom: 7
+  spawnMobInStartRoom: 0
+  mobSpawnPadding: 3
   baseTiles: []
   detailTiles: []
   shadowTiles: []

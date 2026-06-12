@@ -4,6 +4,20 @@ using UnityEngine.Tilemaps;
 [CreateAssetMenu(fileName = "DungeonTheme", menuName = "Rogue-kie/Dungeon Theme")]
 public class DungeonTheme : ScriptableObject
 {
+    [System.Serializable]
+    public class MobSpawnData
+    {
+        public GameObject mobPrefab;
+        public int weight = 1;
+    }
+
+    [Header("Mob Spawn")]
+    public MobSpawnData[] mobs;
+    public int minMobPerRoom = 2;
+    public int maxMobPerRoom = 5;
+    public bool spawnMobInStartRoom = false;
+    public int mobSpawnPadding = 3;
+
     [Header("Floor")]
     public TileBase[] baseTiles;
     public TileBase[] detailTiles;
