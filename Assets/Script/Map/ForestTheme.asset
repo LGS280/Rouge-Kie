@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 394b33bf1ed0c8446807163c8b375721, type: 3}
+  m_Name: ForestTheme
+  m_EditorClassIdentifier: Assembly-CSharp::DungeonTheme
+  mobs:
+  - mobPrefab: {fileID: 5514756235691171080, guid: 2350648142145864b99ebe99622f3847, type: 3}
+    weight: 100
+  minMobPerRoom: 4
+  maxMobPerRoom: 7
+  spawnMobInStartRoom: 0
+  mobSpawnPadding: 3
+  baseTiles: []
+  detailTiles: []
+  shadowTiles: []
+  wallTopSide: {fileID: 11400000, guid: 64f9e06570c9c0442ae53c74ee233616, type: 2}
+  wallTopBot: {fileID: 11400000, guid: 1075e41c347570944b4bc687962f9a73, type: 2}
+  wallDefault: {fileID: 11400000, guid: 190f9609d69c5c14a9d8dfbd989ff6ed, type: 2}
+  wallBottomFoot: {fileID: 11400000, guid: f40bd587423a9ac4faaa5b35caae5eb2, type: 2}
+  wallDecorations:
+  - wallDefault: {fileID: 11400000, guid: 78d876be53b527447868bada69d736c0, type: 2}
+    wallBottomFoot: {fileID: 11400000, guid: 3ad3199635b191240bba19447bbe5332, type: 2}
+    minClusterSize: 2
+    maxClusterSize: 4
+  decorationChance: 0.2
