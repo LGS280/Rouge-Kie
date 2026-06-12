@@ -139,6 +139,7 @@ public class DungeonGenerator : MonoBehaviour
         DecorateWallsByCluster();
         CreateAllDoors();
         SpawnAllRoomObstacles();
+        SpawnAllRoomMobs();
 
         Debug.Log("?ã generate map ki?u Soul Knight t? logic build 1 phòng c?.");
     }
@@ -1005,6 +1006,109 @@ public class DungeonGenerator : MonoBehaviour
                 wallTilemap.SetTile(bodyPos, deco.wallBottomFoot);
             }
         }
+    }
+
+    private void SpawnAllRoomMobs()
+    {
+        if (currentTheme == null || currentTheme.mobs == null || currentTheme.mobs.Length == 0)
+        {
+            Debug.LogWarning("CurrentTheme chưa có danh sách mobs.");
+            return;
+        }
+
+        foreach (MapRoom room in roomsByGrid.Values)
+        {
+            if (room.isStartRoom && !currentTheme.spawnMobInStartRoom)
+                continue;
+
+            SpawnMobsInRoom(room);
+        }
+    }
+
+    private void SpawnMobsInRoom(MapRoom room)
+    {
+        int mobCount = Random.Range(
+            currentTheme.minMobPerRoom,
+            currentTheme.maxMobPerRoom + 1
+        );
+
+        for (int i = 0; i < mobCount; i++)
+        {
+            GameObject mobPrefab = GetRandomMobPrefabFromTheme();
+
+            if (mobPrefab == null)
+                continue;
+
+            Vector3Int cellPos = GetRandomMobSpawnCell(room);
+            Vector3 worldPos = floorTilemap.CellToWorld(cellPos) + new Vector3(0.5f, 0.5f, 0f);
+
+            GameObject mobObj = Instantiate(mobPrefab, worldPos, Quaternion.identity);
+            mobObj.transform.SetParent(transform);
+
+            MobNetworkIdentity identity = mobObj.GetComponent<MobNetworkIdentity>();
+            if (identity != null)
+            {
+                identity.roomId = room.gridPos.ToString();
+            }
+        }
+    }
+
+    private GameObject GetRandomMobPrefabFromTheme()
+    {
+        int totalWeight = 0;
+
+        foreach (var mob in currentTheme.mobs)
+        {
+            if (mob.mobPrefab != null && mob.weight > 0)
+            {
+                totalWeight += mob.weight;
+            }
+        }
+
+        if (totalWeight <= 0)
+            return null;
+
+        int randomValue = Random.Range(0, totalWeight);
+
+        foreach (var mob in currentTheme.mobs)
+        {
+            if (mob.mobPrefab == null || mob.weight <= 0)
+                continue;
+
+            if (randomValue < mob.weight)
+                return mob.mobPrefab;
+
+            randomValue -= mob.weight;
+        }
+
+        return null;
+    }
+
+    private Vector3Int GetRandomMobSpawnCell(MapRoom room)
+    {
+        int safeLoop = 0;
+        int padding = currentTheme.mobSpawnPadding;
+
+        while (safeLoop < 100)
+        {
+            safeLoop++;
+
+            int x = Random.Range(room.Left + padding, room.Right - padding + 1);
+            int y = Random.Range(room.Bottom + padding, room.Top - padding + 1);
+
+            Vector3Int cellPos = new Vector3Int(x, y, 0);
+
+            bool hasFloor = floorTilemap.HasTile(cellPos);
+            bool hasObstacle = obstacleTilemap != null && obstacleTilemap.HasTile(cellPos);
+            bool hasWall = wallTilemap != null && wallTilemap.HasTile(cellPos);
+
+            if (hasFloor && !hasObstacle && !hasWall)
+            {
+                return cellPos;
+            }
+        }
+
+        return new Vector3Int(room.Center.x, room.Center.y, 0);
     }
 }
 
