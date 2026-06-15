@@ -1,6 +1,8 @@
 using UnityEngine;
-using UnityEngine.EventSystems; // Bắt buộc phải có để sử dụng EventSystem
+using UnityEngine.EventSystems; // Sử dụng EventSystem cho tay cầm/bàn phím
 using System.Collections;
+using UnityEngine.UI; // Yêu cầu có để sử dụng cấu phần Image và Button
+
 public class MainMenuController : MonoBehaviour
 {
     [Header("Main Panels")]
@@ -12,10 +14,20 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private GameObject audioContent;
     [SerializeField] private GameObject graphicsContent;
 
+    [Header("Tab Sprites")]
+    [SerializeField] private Sprite activeTabSprite;    // Sprite tab đang chọn (sáng, không viền dưới)
+    [SerializeField] private Sprite inactiveTabSprite;  // Sprite tab chưa chọn (tối, có viền dưới)
+
+    [Header("Tab UI Components")]
+    [SerializeField] private Image audioTabImage;
+    [SerializeField] private Image graphicsTabImage;
+    [SerializeField] private Button audioTabButton;
+    [SerializeField] private Button graphicsTabButton;
+
     [Header("First Selected Objects (For Gamepad/Keyboard)")]
-    [SerializeField] private GameObject playButton;      // Nút đầu tiên được chọn ở Main Menu
-    [SerializeField] private GameObject singleButton;    // Nút đầu tiên được chọn ở Play Menu
-    [SerializeField] private GameObject tabAudioBtn;     // Nút đầu tiên được chọn ở Settings Panel
+    [SerializeField] private GameObject playButton;          // Nút đầu tiên ở Main Menu
+    [SerializeField] private GameObject singleButton;        // Nút đầu tiên ở Play Menu
+    [SerializeField] private GameObject firstSettingOption;  // Chọn Slider Master đầu tiên thay vì chọn Tab (do Tab đang active đã bị khóa click)
 
     private void Start()
     {
@@ -48,10 +60,9 @@ public class MainMenuController : MonoBehaviour
     public void OnSettingsButtonPressed()
     {
         settingsPanel.SetActive(true);
-        OnAudioTabPressed();
 
-        // Kích hoạt tiêu điểm vào nút Tab Audio khi mở bảng Settings
-        SetSelected(tabAudioBtn);
+        // Luôn mở mặc định Tab Audio khi mở bảng Settings
+        OnAudioTabPressed();
     }
 
     public void OnCloseSettingsPressed()
@@ -83,12 +94,43 @@ public class MainMenuController : MonoBehaviour
     {
         audioContent.SetActive(true);
         graphicsContent.SetActive(false);
+
+        // Hoán đổi sprite hiển thị thủ công để giữ nguyên trạng thái
+        audioTabImage.sprite = activeTabSprite;
+        graphicsTabImage.sprite = inactiveTabSprite;
+
+        // Khóa không cho click lại vào Tab đang mở (giữ nguyên trạng thái)
+        audioTabButton.interactable = false;
+        graphicsTabButton.interactable = true;
+
+        // Chuyển tiêu điểm tay cầm vào Option đầu tiên (ví dụ: Slider Master)
+        SetSelected(firstSettingOption);
     }
 
     public void OnGraphicsTabPressed()
     {
         audioContent.SetActive(false);
         graphicsContent.SetActive(true);
+
+        // Hoán đổi sprite hiển thị thủ công để giữ nguyên trạng thái
+        audioTabImage.sprite = inactiveTabSprite;
+        graphicsTabImage.sprite = activeTabSprite;
+
+        // Khóa không cho click lại vào Tab đang mở (giữ nguyên trạng thái)
+        audioTabButton.interactable = true;
+        graphicsTabButton.interactable = false;
+
+        // Khi chuyển sang Tab Graphics, chọn phần tử đầu tiên của tab Graphics (ví dụ: Toggle Fullscreen)
+        Transform firstGraphicsOption = graphicsContent.transform.GetChild(0);
+        if (firstGraphicsOption != null)
+        {
+            // Tìm nút Toggle con bên trong Row đầu tiên của Graphics_Content
+            Transform toggleObj = firstGraphicsOption.Find("Toggle_Fullscreen");
+            if (toggleObj != null)
+                SetSelected(toggleObj.gameObject);
+            else
+                SetSelected(firstGraphicsOption.gameObject);
+        }
     }
 
     // --- PHẦN KẾT NỐI GAMEPLAY ---
@@ -103,29 +145,20 @@ public class MainMenuController : MonoBehaviour
         Debug.Log("Chạy chế độ Multiplayer Co-op...");
     }
 
-    // Hàm phụ trợ giúp chọn nút an toàn cho tay cầm, tránh lỗi NullReferenceException
+    // Hàm phụ trợ giúp chọn nút an toàn cho tay cầm
     private void SetSelected(GameObject obj)
     {
         if (obj != null && EventSystem.current != null)
         {
-            // Dừng các tiến trình chờ cũ đang chạy để tránh xung đột
             StopAllCoroutines();
-            // Chạy tiến trình chờ 1 khung hình rồi mới chọn nút
             StartCoroutine(SelectButtonDelayed(obj));
         }
     }
 
-    // Tiến trình chờ Canvas cập nhật hoàn tất trước khi chọn nút
     private IEnumerator SelectButtonDelayed(GameObject obj)
     {
-        // Xóa tiêu điểm cũ để tránh lỗi bám dính tiêu điểm
         EventSystem.current.SetSelectedGameObject(null);
-
-        // Chờ đúng 1 khung hình (để Panel mới kịp kích hoạt hoàn toàn trên màn hình)
         yield return null;
-
-        // Tiến hành chọn nút mới
         EventSystem.current.SetSelectedGameObject(obj);
     }
-
 }
