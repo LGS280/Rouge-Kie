@@ -5,6 +5,7 @@ public class RoomController : MonoBehaviour
 {
     public bool roomCleared = false;
     public bool roomStarted = false;
+    private Transform currentPlayer;
 
     private readonly List<RoomDoor> doors = new List<RoomDoor>();
     private readonly List<MobHealth> mobs = new List<MobHealth>();
@@ -41,8 +42,20 @@ public class RoomController : MonoBehaviour
     {
         if (collision.CompareTag("Player"))
         {
+            currentPlayer = collision.transform;
             TryStartRoomCombat();
         }
+    }
+
+    private void PushPlayerInsideRoom()
+    {
+        if (currentPlayer == null)
+            return;
+
+        Vector3 roomCenter = transform.position;
+        Vector3 dir = (roomCenter - currentPlayer.position).normalized;
+
+        currentPlayer.position += dir * 1.5f;
     }
 
     public void TryStartRoomCombat()
@@ -62,6 +75,8 @@ public class RoomController : MonoBehaviour
         }
 
         roomStarted = true;
+
+        PushPlayerInsideRoom();
         CloseDoors();
     }
 
@@ -153,8 +168,8 @@ public class RoomController : MonoBehaviour
         if (roomCollider == null)
             return;
 
-        Bounds expandedBounds = roomCollider.bounds;
-        expandedBounds.Expand(6f);
+        Bounds roomBounds = roomCollider.bounds;
+        roomBounds.Expand(8f);
 
         RoomDoor[] allDoors = Object.FindObjectsByType<RoomDoor>(FindObjectsSortMode.None);
 
@@ -163,7 +178,20 @@ public class RoomController : MonoBehaviour
             if (door == null || doors.Contains(door))
                 continue;
 
-            if (expandedBounds.Contains(door.transform.position))
+            Collider2D[] doorColliders = door.GetComponents<Collider2D>();
+
+            bool isNearRoom = false;
+
+            foreach (Collider2D doorCol in doorColliders)
+            {
+                if (doorCol != null && roomBounds.Intersects(doorCol.bounds))
+                {
+                    isNearRoom = true;
+                    break;
+                }
+            }
+
+            if (isNearRoom)
             {
                 AddDoor(door);
             }
