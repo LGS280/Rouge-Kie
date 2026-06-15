@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class SpeedSkill : MonoBehaviour
 {
@@ -11,12 +12,36 @@ public class SpeedSkill : MonoBehaviour
     float cooldownTimer = 0f;
     bool isReady => cooldownTimer <= 0f;
 
+    private PlayerController playerController;
+    void Start()
+    {
+        playerController = GetComponentInParent<PlayerController>();
+    }
+
     void Update()
     {
         if (cooldownTimer > 0f)
             cooldownTimer -= Time.deltaTime;
 
-        if (Input.GetKeyDown(skillKey) && isReady)
+        bool isSkillKeyPressed = false;
+
+        if (playerController != null && playerController.currentMode == PlayerController.InputMode.Gamepad)
+        {
+            if (Gamepad.current != null && Gamepad.current.yButton.wasPressedThisFrame)
+            {
+                isSkillKeyPressed = true;
+            }
+        }
+        else
+        {
+            if (Input.GetKeyDown(skillKey))
+            {
+                isSkillKeyPressed = true;
+            }
+        }
+
+        // Kích hoạt skill nếu thỏa mãn điều kiện bấm nút và skill đã hồi chiêu xong
+        if (isSkillKeyPressed && isReady)
         {
             ActivateSkill();
         }

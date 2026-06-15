@@ -28,6 +28,12 @@ public class MobHealth : MonoBehaviour
         currentHealth = maxHealth;
         isDead = false;
         if (mobCollider != null) mobCollider.enabled = true;
+
+        Transform shadowObj = transform.Find("Shadow");
+        if (shadowObj != null)
+        {
+            shadowObj.gameObject.SetActive(true);
+        }
     }
 
     public void TakeDamage(int damage, bool isCrit = false)
@@ -120,6 +126,13 @@ public class MobHealth : MonoBehaviour
             ai.enabled = false;
         }
 
+        Transform shadowObj = transform.Find("Shadow");
+        if (shadowObj != null)
+        {
+            shadowObj.gameObject.SetActive(false);
+        }
+
+        // Đẩy xác quái xuống lớp hiển thị phía sau (Dưới chân người chơi)
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
         if (sr != null)
         {
