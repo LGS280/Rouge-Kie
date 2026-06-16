@@ -1,10 +1,11 @@
 using UnityEngine;
-
 public class CameraController : MonoBehaviour
 {
     public Transform target;
-    public float smoothSpeed = 0.125f;
     public Vector3 offset = new Vector3(0, 0, -10);
+
+    [Header("PIXEL PERFECT")]
+    public float pixelsPerUnit = 100f;
 
     void LateUpdate()
     {
@@ -12,9 +13,11 @@ public class CameraController : MonoBehaviour
         {
             Vector3 desiredPosition = target.position + offset;
 
-            Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed);
+            // Snap thẳng vào pixel grid, không lerp
+            desiredPosition.x = Mathf.Round(desiredPosition.x * pixelsPerUnit) / pixelsPerUnit;
+            desiredPosition.y = Mathf.Round(desiredPosition.y * pixelsPerUnit) / pixelsPerUnit;
 
-            transform.position = smoothedPosition;
+            transform.position = desiredPosition;
         }
     }
 }
