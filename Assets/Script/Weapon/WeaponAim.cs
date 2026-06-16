@@ -156,30 +156,38 @@ public class WeaponAim : MonoBehaviour
 
     void HandleShooting()
     {
-        // Nếu không có súng trên tay thì không bắn được
         if (currentWeapon == null) return;
 
         float currentFireRate = PlayerStats.Instance != null
-        ? currentWeapon.fireRate / PlayerStats.Instance.attackSpeedMultiplier
-        : currentWeapon.fireRate;
+            ? currentWeapon.fireRate / PlayerStats.Instance.attackSpeedMultiplier
+            : currentWeapon.fireRate;
 
         if (Time.time >= nextFireTime)
         {
             bool isShooting = false;
+            bool isNewClick = false; // click mới hay đang giữ
 
             if (playerController != null && playerController.currentMode == PlayerController.InputMode.Gamepad)
             {
-                if (Gamepad.current != null && Gamepad.current.xButton.isPressed) isShooting = true;
+                if (Gamepad.current != null && Gamepad.current.xButton.isPressed)
+                {
+                    isShooting = true;
+                    isNewClick = Gamepad.current.xButton.wasPressedThisFrame;
+                }
             }
             else
             {
-                if (Mouse.current != null && Mouse.current.leftButton.isPressed) isShooting = true;
+                if (Mouse.current != null && Mouse.current.leftButton.isPressed)
+                {
+                    isShooting = true;
+                    isNewClick = Mouse.current.leftButton.wasPressedThisFrame;
+                }
             }
 
             if (isShooting)
             {
                 nextFireTime = Time.time + currentFireRate;
-                currentWeapon.Attack(enemyLayer);
+                currentWeapon.Attack(enemyLayer, isNewClick); // truyền thêm isNewClick
             }
         }
     }
