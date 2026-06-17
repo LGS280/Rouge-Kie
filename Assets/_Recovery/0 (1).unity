@@ -49199,7 +49199,6 @@ GameObject:
   - component: {fileID: 1390208851}
   - component: {fileID: 1390208855}
   - component: {fileID: 1390208854}
-  - component: {fileID: 1390208856}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -49242,15 +49241,15 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.033719346
+    x: 0
     y: 0
-    width: 0.9329019
-    height: 1.0006698
+    width: 1
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5.4
+  orthographic size: 5
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -49294,8 +49293,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Camera
   target: {fileID: 1422058907}
+  smoothSpeed: 0.125
   offset: {x: 0, y: 0, z: -10}
-  pixelsPerUnit: 100
 --- !u!114 &1390208855
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -49340,30 +49339,6 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
---- !u!114 &1390208856
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1390208850}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c88f5cead0c0b2a4eb05b5900433f8d1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.PixelPerfectCamera
-  m_ComponentVersion: 1
-  m_AssetsPPU: 100
-  m_RefResolutionX: 1980
-  m_RefResolutionY: 1080
-  m_CropFrame: 4
-  m_GridSnapping: 2
-  m_FilterMode: 0
-  m_UpscaleRT: 0
-  m_PixelSnapping: 0
-  m_CropFrameX: 0
-  m_CropFrameY: 0
-  m_StretchFill: 0
 --- !u!1 &1401518640
 GameObject:
   m_ObjectHideFlags: 0

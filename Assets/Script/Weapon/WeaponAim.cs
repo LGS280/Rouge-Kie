@@ -8,15 +8,9 @@ public class WeaponAim : MonoBehaviour
     private SpriteRenderer playerRenderer;
     private PlayerController playerController;
 
-    [Header("THIẾT LẬP BẮN ĐẠN")]
-    public GameObject bulletPrefab;
-    public Transform firePoint;
-    public float fireRate = 0.2f;
+    // biến ẩn để biết súng nào đang trên tay nhằm kích hoạt bắn/tốc độ bắn
+    [HideInInspector] public WeaponInfo currentWeapon;
     private float nextFireTime = 0f;
-
-    [Header("THIẾT LẬP CẬN CHIẾN")]
-    public GameObject meleeSlashPrefab;    // Kéo thả Prefab vệt chém cận chiến vào đây
-    public float meleeRadius = 1.5f;       // Khoảng cách siêu sát quái để kích hoạt đánh tay
 
     [Header("Setting Aim Bot")]
     public float aimRadius = 7f; // bán kính vòng tròn quét quái 
@@ -24,7 +18,6 @@ public class WeaponAim : MonoBehaviour
     private Transform currentTarget; // lưu con quái bị aim 
 
     private float currentGamepadAngle = 0f;
-
     private Transform previousTarget;
 
     void Start()
@@ -138,54 +131,48 @@ public class WeaponAim : MonoBehaviour
 
     private void HandleTargetRingUI(Transform enemyTransform, bool isActive)
     {
-        if (enemyTransform == null)
-        {
-            return;
-        }
-
+        if (enemyTransform == null) return;
         Transform mobRing = enemyTransform.Find("Mob_Ring");
-
-        if (mobRing != null)
-        {
-            mobRing.gameObject.SetActive(isActive);
-        }
+        if (mobRing != null) mobRing.gameObject.SetActive(isActive);
     }
 
     private void FindClosestEnemy()
     {
         Collider2D[] hitColliders = Physics2D.OverlapCircleAll(transform.position, aimRadius, enemyLayer);
-
         Transform closestEnemy = null;
         float minDistance = Mathf.Infinity;
 
         foreach (var collider in hitColliders)
         {
             float distanceToEnemy = Vector2.Distance(transform.position, collider.transform.position);
-
             if (distanceToEnemy < minDistance)
             {
                 minDistance = distanceToEnemy;
                 closestEnemy = collider.transform;
             }
         }
-
         currentTarget = closestEnemy;
     }
 
     void HandleShooting()
     {
+        if (currentWeapon == null) return;
+
         float currentFireRate = PlayerStats.Instance != null
-        ? fireRate / PlayerStats.Instance.attackSpeedMultiplier
-        : fireRate;
+            ? currentWeapon.fireRate / PlayerStats.Instance.attackSpeedMultiplier
+            : currentWeapon.fireRate;
+
         if (Time.time >= nextFireTime)
         {
             bool isShooting = false;
+            bool isNewClick = false; // click mới hay đang giữ
 
             if (playerController != null && playerController.currentMode == PlayerController.InputMode.Gamepad)
             {
                 if (Gamepad.current != null && Gamepad.current.xButton.isPressed)
                 {
                     isShooting = true;
+                    isNewClick = Gamepad.current.xButton.wasPressedThisFrame;
                 }
             }
             else
@@ -193,32 +180,15 @@ public class WeaponAim : MonoBehaviour
                 if (Mouse.current != null && Mouse.current.leftButton.isPressed)
                 {
                     isShooting = true;
+                    isNewClick = Mouse.current.leftButton.wasPressedThisFrame;
                 }
             }
 
             if (isShooting)
             {
                 nextFireTime = Time.time + currentFireRate;
-                ExecuteAttack(); // Chuyển sang gọi hàm phân tích thông minh mới để chọn Bắn hoặc Chém
+                currentWeapon.Attack(enemyLayer, isNewClick); // truyền thêm isNewClick
             }
-        }
-    }
-
-    // Hàm quyết định sinh ra Đạn hoặc Vệt chém (Xoay tự do theo hướng súng firePoint)
-    void ExecuteAttack()
-    {
-        // Quét một vòng tròn nhỏ xem có quái đang áp sát không
-        Collider2D closeEnemy = Physics2D.OverlapCircle(transform.position, meleeRadius, enemyLayer);
-
-        if (closeEnemy != null && meleeSlashPrefab != null && firePoint != null)
-        {
-            // Có quái sát người -> Sinh ra vệt chém theo đúng góc xoay hiện tại của súng (firePoint.rotation)
-            Instantiate(meleeSlashPrefab, firePoint.position, firePoint.rotation);
-        }
-        else if (bulletPrefab != null && firePoint != null)
-        {
-            // Quái ở xa -> Bắn đạn như bình thường
-            Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
         }
     }
 
@@ -228,8 +198,11 @@ public class WeaponAim : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, aimRadius);
 
-        // Vòng xanh dương: vẽ tầm kích hoạt đánh cận chiến
-        Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(transform.position, meleeRadius);
+        // Vòng xanh dương: Vẽ tầm cận chiến của súng đang cầm nếu có
+        if (currentWeapon != null)
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawWireSphere(transform.position, currentWeapon.meleeRadius);
+        }
     }
 }
