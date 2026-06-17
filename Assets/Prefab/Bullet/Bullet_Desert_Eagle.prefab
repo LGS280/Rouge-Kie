@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 3284041523834475196}
   - component: {fileID: 4332510483118647796}
   - component: {fileID: -957510019112484533}
-  - component: {fileID: -1809008685266730900}
+  - component: {fileID: 2677830516158283211}
   m_Layer: 0
-  m_Name: Bullet_AK
+  m_Name: Bullet_Desert_Eagle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 12
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -3908340781828562639, guid: 83fbe691cf9cd664d88f874c6c2763ee, type: 3}
+  m_Sprite: {fileID: -3642600195826130275, guid: afc286a50dc7fd74495c5a2e52a891fd, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -155,19 +155,19 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.041627645, y: -0.0012615323}
+  m_Offset: {x: 0.00866048, y: 0.003471449}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 0.36}
+    oldSize: {x: 0.72, y: 0.36}
     newSize: {x: 1.5625, y: 0.5625}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.787977, y: 0.25723213}
+  m_Size: {x: 0.5051806, y: 0.20753571}
   m_EdgeRadius: 0
---- !u!114 &-1809008685266730900
+--- !u!114 &2677830516158283211
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -176,11 +176,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 5457056256669451622}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c1f76b9d367cd0d4cabe5d31c4db870f, type: 3}
+  m_Script: {fileID: 11500000, guid: 4e6b742480d7a1d4199f381023217f95, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Bullet
-  speed: 30
+  m_EditorClassIdentifier: Assembly-CSharp::Desert_Eagle_Bullet
+  speed: 25
   lifeTime: 3
-  baseDamage: 10
-  critChance: 35
+  baseDamage: 12
+  critChance: 20
   critMultiplier: 1.5

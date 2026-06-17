@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 0af20bc2bec0478419fa75fc12bf9925
+guid: 853899c3cf32a5e4b928b6ef54534b70
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1585974835397443309
-    second: AK_0
+      213: 1782558958363294090
+    second: Desert_Eagle_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,7 +51,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 32
+  spritePixelsToUnits: 42
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -100,23 +100,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: AK_0
+      name: Desert_Eagle_0
       rect:
         serializedVersion: 2
-        x: 2
-        y: 10
-        width: 27
+        x: 6
+        y: 12
+        width: 18
         height: 11
       alignment: 9
-      pivot: {x: 0.3393358, y: 0.48591527}
+      pivot: {x: 0.30634227, y: 0.36385223}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: deeb29eb5b3820610800000000000000
-      internalID: 1585974835397443309
+      spriteID: a893f60adebecb810800000000000000
+      internalID: 1782558958363294090
       vertices: []
       indices: 
       edges: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: e0a608126dcb5884bbfcb0a6f79106e8
+    spriteID: c4e83c7ab9ad8be489df22eaf7c54e41
     internalID: 0
     vertices: []
     indices: 
@@ -135,9 +135,9 @@ TextureImporter:
     spriteCustomMetadata:
       entries:
       - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":32.0,"y":32.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      AK_0: 1585974835397443309
+      Desert_Eagle_0: 1782558958363294090
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
