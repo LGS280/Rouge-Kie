@@ -1,7 +1,7 @@
 using UnityEngine;
-using UnityEngine.EventSystems; // Sử dụng EventSystem cho tay cầm/bàn phím
+using UnityEngine.EventSystems;
 using System.Collections;
-using UnityEngine.UI; // Yêu cầu có để sử dụng cấu phần Image và Button
+using UnityEngine.UI;
 
 public class MainMenuController : MonoBehaviour
 {
@@ -10,28 +10,37 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private GameObject playMenuPanel;
     [SerializeField] private GameObject settingsPanel;
 
-    [Header("Settings Tabs")]
+    [Header("Canvas Group (Dùng để khóa tương tác phía sau)")]
+    // THÊM MỚI: Quản lý tính chất tương tác của Menu chính
+    [SerializeField] private CanvasGroup mainMenuCanvasGroup;
+
+    [Header("Settings Panels Content")]
     [SerializeField] private GameObject audioContent;
     [SerializeField] private GameObject graphicsContent;
+    [SerializeField] private GameObject controlsContent;
 
     [Header("Tab Sprites")]
-    [SerializeField] private Sprite activeTabSprite;    // Sprite tab đang chọn (sáng, không viền dưới)
-    [SerializeField] private Sprite inactiveTabSprite;  // Sprite tab chưa chọn (tối, có viền dưới)
+    [SerializeField] private Sprite activeTabSprite;
+    [SerializeField] private Sprite inactiveTabSprite;
 
-    [Header("Tab UI Components")]
+    [Header("Tab UI Images")]
     [SerializeField] private Image audioTabImage;
     [SerializeField] private Image graphicsTabImage;
+    [SerializeField] private Image controlsTabImage;
+
+    [Header("Tab UI Buttons")]
     [SerializeField] private Button audioTabButton;
     [SerializeField] private Button graphicsTabButton;
+    [SerializeField] private Button controlsTabButton;
 
     [Header("First Selected Objects (For Gamepad/Keyboard)")]
-    [SerializeField] private GameObject playButton;          // Nút đầu tiên ở Main Menu
-    [SerializeField] private GameObject singleButton;        // Nút đầu tiên ở Play Menu
-    [SerializeField] private GameObject firstSettingOption;  // Chọn Slider Master đầu tiên thay vì chọn Tab (do Tab đang active đã bị khóa click)
+    [SerializeField] private GameObject playButton;
+    [SerializeField] private GameObject singleButton;
+    [SerializeField] private GameObject firstSettingOption;
+    [SerializeField] private GameObject firstControlsOption;
 
     private void Start()
     {
-        // Khi bắt đầu chạy game, đảm bảo chỉ có Main Menu được hiện
         ShowMainMenu();
     }
 
@@ -43,7 +52,14 @@ public class MainMenuController : MonoBehaviour
         playMenuPanel.SetActive(false);
         settingsPanel.SetActive(false);
 
-        // Kích hoạt tiêu điểm vào nút Play khi ở Main Menu
+        // Mở khóa tương tác cho Menu chính khi quay lại màn hình chính
+        if (mainMenuCanvasGroup != null)
+        {
+            mainMenuCanvasGroup.interactable = true;
+            mainMenuCanvasGroup.blocksRaycasts = true;
+            mainMenuCanvasGroup.alpha = 1f; // Trả về độ sáng 100%
+        }
+
         SetSelected(playButton);
     }
 
@@ -52,16 +68,20 @@ public class MainMenuController : MonoBehaviour
         mainMenuPanel.SetActive(false);
         playMenuPanel.SetActive(true);
         settingsPanel.SetActive(false);
-
-        // Kích hoạt tiêu điểm vào nút Single khi vào Play Menu
         SetSelected(singleButton);
     }
 
     public void OnSettingsButtonPressed()
     {
-        settingsPanel.SetActive(true);
+        // GIỮ HIỂN THỊ nhưng khóa hoàn toàn tương tác của Menu chính phía sau
+        if (mainMenuCanvasGroup != null)
+        {
+            mainMenuCanvasGroup.interactable = false;   // Khóa tương tác bàn phím/WASD/tay cầm
+            mainMenuCanvasGroup.blocksRaycasts = false; // Khóa rê chuột/click chuột xuyên qua
+            mainMenuCanvasGroup.alpha = 0.5f;          // Làm mờ nhẹ 50% để nổi bật bảng Settings
+        }
 
-        // Luôn mở mặc định Tab Audio khi mở bảng Settings
+        settingsPanel.SetActive(true);
         OnAudioTabPressed();
     }
 
@@ -69,7 +89,14 @@ public class MainMenuController : MonoBehaviour
     {
         settingsPanel.SetActive(false);
 
-        // Khi đóng Settings, trả tiêu điểm về nút Play ở Main Menu
+        // MỞ KHÓA tương tác lại cho Menu chính khi đóng Settings
+        if (mainMenuCanvasGroup != null)
+        {
+            mainMenuCanvasGroup.interactable = true;
+            mainMenuCanvasGroup.blocksRaycasts = true;
+            mainMenuCanvasGroup.alpha = 1f; // Trả về độ sáng 100%
+        }
+
         SetSelected(playButton);
     }
 
@@ -82,7 +109,6 @@ public class MainMenuController : MonoBehaviour
     {
         Debug.Log("Thoát Game!");
         Application.Quit();
-
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #endif
@@ -94,16 +120,16 @@ public class MainMenuController : MonoBehaviour
     {
         audioContent.SetActive(true);
         graphicsContent.SetActive(false);
+        controlsContent.SetActive(false);
 
-        // Hoán đổi sprite hiển thị thủ công để giữ nguyên trạng thái
         audioTabImage.sprite = activeTabSprite;
         graphicsTabImage.sprite = inactiveTabSprite;
+        controlsTabImage.sprite = inactiveTabSprite;
 
-        // Khóa không cho click lại vào Tab đang mở (giữ nguyên trạng thái)
         audioTabButton.interactable = false;
         graphicsTabButton.interactable = true;
+        controlsTabButton.interactable = true;
 
-        // Chuyển tiêu điểm tay cầm vào Option đầu tiên (ví dụ: Slider Master)
         SetSelected(firstSettingOption);
     }
 
@@ -111,20 +137,19 @@ public class MainMenuController : MonoBehaviour
     {
         audioContent.SetActive(false);
         graphicsContent.SetActive(true);
+        controlsContent.SetActive(false);
 
-        // Hoán đổi sprite hiển thị thủ công để giữ nguyên trạng thái
         audioTabImage.sprite = inactiveTabSprite;
         graphicsTabImage.sprite = activeTabSprite;
+        controlsTabImage.sprite = inactiveTabSprite;
 
-        // Khóa không cho click lại vào Tab đang mở (giữ nguyên trạng thái)
         audioTabButton.interactable = true;
         graphicsTabButton.interactable = false;
+        controlsTabButton.interactable = true;
 
-        // Khi chuyển sang Tab Graphics, chọn phần tử đầu tiên của tab Graphics (ví dụ: Toggle Fullscreen)
         Transform firstGraphicsOption = graphicsContent.transform.GetChild(0);
         if (firstGraphicsOption != null)
         {
-            // Tìm nút Toggle con bên trong Row đầu tiên của Graphics_Content
             Transform toggleObj = firstGraphicsOption.Find("Toggle_Fullscreen");
             if (toggleObj != null)
                 SetSelected(toggleObj.gameObject);
@@ -133,19 +158,23 @@ public class MainMenuController : MonoBehaviour
         }
     }
 
-    // --- PHẦN KẾT NỐI GAMEPLAY ---
-
-    public void OnSingleplayerPressed()
+    public void OnControlsTabPressed()
     {
-        Debug.Log("Chạy chế độ chơi đơn...");
+        audioContent.SetActive(false);
+        graphicsContent.SetActive(false);
+        controlsContent.SetActive(true);
+
+        audioTabImage.sprite = inactiveTabSprite;
+        graphicsTabImage.sprite = inactiveTabSprite;
+        controlsTabImage.sprite = activeTabSprite;
+
+        audioTabButton.interactable = true;
+        graphicsTabButton.interactable = true;
+        controlsTabButton.interactable = false;
+
+        SetSelected(firstControlsOption);
     }
 
-    public void OnCoOpPressed()
-    {
-        Debug.Log("Chạy chế độ Multiplayer Co-op...");
-    }
-
-    // Hàm phụ trợ giúp chọn nút an toàn cho tay cầm
     private void SetSelected(GameObject obj)
     {
         if (obj != null && EventSystem.current != null)
