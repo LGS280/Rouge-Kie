@@ -35,6 +35,8 @@ public class WeaponAim : MonoBehaviour
     {
         float angle = 0f;
 
+        if(Time.timeScale == 0f) return; // nếu đang trong menu thì không cần update hướng súng
+
         // chơi bằng tay cầm
         if (playerController != null && playerController.currentMode == PlayerController.InputMode.Gamepad)
         {
