@@ -2,19 +2,9 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
-public class MainMenuController : MonoBehaviour
+public class SettingsPanelController : MonoBehaviour
 {
-    [Header("Main Panels")]
-    [SerializeField] private GameObject mainMenuPanel;
-    [SerializeField] private GameObject playMenuPanel;
-    [SerializeField] private GameObject settingsPanel;
-
-    [Header("Canvas Group (Dùng để khóa tương tác phía sau)")]
-    // THÊM MỚI: Quản lý tính chất tương tác của Menu chính
-    [SerializeField] private CanvasGroup mainMenuCanvasGroup;
-
     [Header("Settings Panels Content")]
     [SerializeField] private GameObject audioContent;
     [SerializeField] private GameObject graphicsContent;
@@ -34,94 +24,15 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private Button graphicsTabButton;
     [SerializeField] private Button controlsTabButton;
 
-    [Header("First Selected Objects (For Gamepad/Keyboard)")]
-    [SerializeField] private GameObject playButton;
-    [SerializeField] private GameObject singleButton;
+    [Header("First Selected Objects")]
     [SerializeField] private GameObject firstSettingOption;
     [SerializeField] private GameObject firstControlsOption;
 
-    private void Start()
+    private void OnEnable()
     {
-        ShowMainMenu();
+        // Mặc định luôn mở tab Audio khi bảng Settings được Active
+        OnAudioTabPressed();
     }
-
-    // --- LOGIC CHUYỂN ĐỔI GIỮA CÁC PANEL CHÍNH ---
-
-    public void ShowMainMenu()
-    {
-        mainMenuPanel.SetActive(true);
-        playMenuPanel.SetActive(false);
-        settingsPanel.SetActive(false);
-
-        // Mở khóa tương tác cho Menu chính khi quay lại màn hình chính
-        if (mainMenuCanvasGroup != null)
-        {
-            mainMenuCanvasGroup.interactable = true;
-            mainMenuCanvasGroup.blocksRaycasts = true;
-            mainMenuCanvasGroup.alpha = 1f; // Trả về độ sáng 100%
-        }
-
-        SetSelected(playButton);
-    }
-
-    public void OnPlayButtonPressed()
-    {
-        mainMenuPanel.SetActive(false);
-        playMenuPanel.SetActive(true);
-        settingsPanel.SetActive(false);
-        SetSelected(singleButton);
-    }
-
-    public void OnSingleplayerPressed()
-    {
-        Debug.Log("Chạy chế độ chơi đơn...");
-
-        // Lệnh chuyển sang màn chơi chính
-        //SceneManager.LoadScene("SampleScene");
-        SceneManager.LoadScene(1);
-    }
-
-
-    public void OnSettingsButtonPressed()
-    {
-        mainMenuCanvasGroup.interactable = false;
-        mainMenuCanvasGroup.blocksRaycasts = false;
-        mainMenuCanvasGroup.alpha = 0.5f;
-
-        settingsPanel.SetActive(true); // Bảng Settings tự kích hoạt OnEnable và tự chuyển tab
-    }
-
-
-    public void OnCloseSettingsPressed()
-    {
-        settingsPanel.SetActive(false);
-
-        // MỞ KHÓA tương tác lại cho Menu chính khi đóng Settings
-        if (mainMenuCanvasGroup != null)
-        {
-            mainMenuCanvasGroup.interactable = true;
-            mainMenuCanvasGroup.blocksRaycasts = true;
-            mainMenuCanvasGroup.alpha = 1f; // Trả về độ sáng 100%
-        }
-
-        SetSelected(playButton);
-    }
-
-    public void OnBackButtonPressed()
-    {
-        ShowMainMenu();
-    }
-
-    public void OnQuitButtonPressed()
-    {
-        Debug.Log("Thoát Game!");
-        Application.Quit();
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#endif
-    }
-
-    // --- LOGIC CHUYỂN TAB TRONG BẢNG SETTINGS ---
 
     public void OnAudioTabPressed()
     {
@@ -184,10 +95,16 @@ public class MainMenuController : MonoBehaviour
 
     private void SetSelected(GameObject obj)
     {
-        if (obj != null && EventSystem.current != null)
+        // KIỂM TRA AN TOÀN: Chỉ khởi chạy Coroutine khi GameObject này thực sự Active trong Scene
+        if (gameObject.activeInHierarchy)
         {
             StopAllCoroutines();
             StartCoroutine(SelectButtonDelayed(obj));
+        }
+        else
+        {
+            // Nếu chưa hoàn toàn active (đang trong nhịp Enable), gán trực tiếp để tránh báo lỗi Console
+            EventSystem.current.SetSelectedGameObject(obj);
         }
     }
 
