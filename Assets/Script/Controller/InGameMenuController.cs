@@ -3,17 +3,56 @@ using UnityEngine;
 public class InGameMenuController : MonoBehaviour
 {
     [Header("UI Panels")]
-    [SerializeField] private GameObject settingsPanel; // Kéo Prefab Settings_Panel trong scene vào đây
+    [SerializeField] private GameObject settingsPanel; // Kéo Prefab Settings_Panel vào đây
 
     public void OpenSettings()
     {
         settingsPanel.SetActive(true);
-        Time.timeScale = 0f; // Tạm dừng trò chơi (Pause) khi đang cài đặt
+
+        // KHÔNG dùng Time.timeScale = 0f nữa để thế giới game (quái vật, đạn) vẫn tiếp tục chạy
+        Time.timeScale = 1f;
+
+        // Tạm thời khóa điều khiển của nhân vật Rookie để tránh việc vừa chỉnh setting vừa bắn súng/di chuyển
+        TogglePlayerControls(false);
     }
 
     public void CloseSettings()
     {
         settingsPanel.SetActive(false);
-        Time.timeScale = 1f; // Tiếp tục chơi game (Resume)
+
+        // Trả lại quyền điều khiển cho nhân vật Rookie
+        TogglePlayerControls(true);
+    }
+
+    // Hàm phụ trợ bật/tắt script điều khiển của nhân vật Rookie
+    private void TogglePlayerControls(bool enable)
+    {
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player != null)
+        {
+            PlayerMovement movement = player.GetComponent<PlayerMovement>();
+            PlayerController controller = player.GetComponent<PlayerController>();
+
+            // THÊM MỚI: Tìm kiếm component ngắm/bắn súng trên Rookie hoặc các GameObject con của nó
+            WeaponAim weaponAim = player.GetComponentInChildren<WeaponAim>();
+
+            if (movement != null) movement.enabled = enable;
+            if (controller != null) controller.enabled = enable;
+            if (weaponAim != null) weaponAim.enabled = enable; // Bật/tắt súng đồng bộ
+
+            // Dừng lực quán tính vật lý của nhân vật ngay khi mở cài đặt để tránh bị trượt tự do
+            if (!enable)
+            {
+                Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+                if (rb != null)
+                {
+                    rb.linearVelocity = Vector2.zero;
+                }
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Không tìm thấy GameObject nhân vật có Tag 'Player'!");
+        }
     }
 }
