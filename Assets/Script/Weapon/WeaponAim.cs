@@ -35,8 +35,6 @@ public class WeaponAim : MonoBehaviour
     {
         float angle = 0f;
 
-        if(Time.timeScale == 0f) return; // nếu đang trong menu thì không cần update hướng súng
-
         // chơi bằng tay cầm
         if (playerController != null && playerController.currentMode == PlayerController.InputMode.Gamepad)
         {
@@ -205,6 +203,20 @@ public class WeaponAim : MonoBehaviour
         {
             Gizmos.color = Color.blue;
             Gizmos.DrawWireSphere(transform.position, currentWeapon.meleeRadius);
+        }
+    }
+
+    // Được Unity gọi tự động ngay khi script WeaponAim bị vô hiệu hóa
+    private void OnDisable()
+    {
+        // Tắt vòng tròn ngắm dưới chân quái vật để tránh bị kẹt vòng đỏ khi pause game
+        if (currentTarget != null)
+        {
+            HandleTargetRingUI(currentTarget, false);
+        }
+        if (previousTarget != null)
+        {
+            HandleTargetRingUI(previousTarget, false);
         }
     }
 }
