@@ -8,6 +8,7 @@ public class SettingsController : MonoBehaviour
     public Slider masterSlider;
     public Slider bgmSlider;
     public Slider sfxSlider;
+    public AudioSource bgmSource;
 
     [Header("Graphics UI")]
     public Toggle fullscreenToggle;
@@ -16,9 +17,16 @@ public class SettingsController : MonoBehaviour
 
     private Resolution[] resolutions;
 
+    private void Awake()
+    {
+        if (resolutionDropdown != null)
+            SetupResolutionDropdown();
+        else
+            Debug.LogError("resolutionDropdown chưa được gán trong Inspector!");
+    }
+
     private void Start()
     {
-        SetupResolutionDropdown();
         LoadSettings();
     }
 
@@ -28,43 +36,60 @@ public class SettingsController : MonoBehaviour
     {
         if (resolutionDropdown == null) return;
 
-        resolutions = Screen.resolutions;
         resolutionDropdown.ClearOptions();
 
-        System.Collections.Generic.List<string> options = new System.Collections.Generic.List<string>();
-        int currentResolutionIndex = 0;
+        System.Collections.Generic.List<string> options = new System.Collections.Generic.List<string>
+{
+    "1920 x 1080",
+    "1600 x 900",
+    "1280 x 720"
+};
 
-        for (int i = 0; i < resolutions.Length; i++)
+        resolutions = new Resolution[]
         {
-            string option = resolutions[i].width + " x " + resolutions[i].height;
-            options.Add(option);
-
-            if (resolutions[i].width == Screen.currentResolution.width &&
-                resolutions[i].height == Screen.currentResolution.height)
-            {
-                currentResolutionIndex = i;
-            }
-        }
+    new Resolution { width = 1920, height = 1080 },
+    new Resolution { width = 1600, height = 900 },
+    new Resolution { width = 1280, height = 720 }
+        };
 
         resolutionDropdown.AddOptions(options);
 
-        // Load lại độ phân giải đã lưu hoặc đặt mặc định
-        int savedResIndex = PlayerPrefs.GetInt("ResolutionIndex", currentResolutionIndex);
-        resolutionDropdown.value = savedResIndex;
+        int savedIndex = PlayerPrefs.GetInt("ResolutionIndex", 0);
+        resolutionDropdown.value = savedIndex;
         resolutionDropdown.RefreshShownValue();
-    }
 
+        // Gắn event ở đây luôn cho chắc
+        resolutionDropdown.onValueChanged.RemoveAllListeners();
+        resolutionDropdown.onValueChanged.AddListener(SetResolution);
+
+        Debug.Log("Dropdown setup done, options: " + options.Count);
+    }
     public void SetResolution(int resolutionIndex)
     {
+        
+
+        if (resolutions == null || resolutionIndex >= resolutions.Length)
+        {
+            
+            return;
+        }
+
         Resolution resolution = resolutions[resolutionIndex];
-        Screen.SetResolution(resolution.width, resolution.height, Screen.fullScreen);
+        
+        Screen.SetResolution(resolution.width, resolution.height, Screen.fullScreenMode);
         PlayerPrefs.SetInt("ResolutionIndex", resolutionIndex);
+        PlayerPrefs.Save();
     }
 
     public void SetFullscreen(bool isFullscreen)
     {
-        Screen.fullScreen = isFullscreen;
+        if (isFullscreen)
+            Screen.fullScreenMode = FullScreenMode.FullScreenWindow;
+        else
+            Screen.fullScreenMode = FullScreenMode.Windowed;
+
         PlayerPrefs.SetInt("Fullscreen", isFullscreen ? 1 : 0);
+        PlayerPrefs.Save();
     }
 
     public void SetFPSLimit(int index)
@@ -89,7 +114,10 @@ public class SettingsController : MonoBehaviour
 
     public void SetBGMVolume(float volume)
     {
+        
         PlayerPrefs.SetFloat("BGMVol", volume);
+        PlayerPrefs.Save();
+        if (bgmSource != null) bgmSource.volume = volume;
     }
 
     public void SetSFXVolume(float volume)
@@ -101,18 +129,46 @@ public class SettingsController : MonoBehaviour
 
     private void LoadSettings()
     {
-        // Đồ họa
+        // Tắt event trước khi set value để tránh trigger
+        if (bgmSlider != null)
+        {
+            bgmSlider.onValueChanged.RemoveAllListeners();
+            bgmSlider.value = PlayerPrefs.GetFloat("BGMVol", 1f);
+            bgmSlider.onValueChanged.AddListener(SetBGMVolume); // gắn lại sau
+            if (bgmSource != null) bgmSource.volume = bgmSlider.value;
+        }
+
+        if (masterSlider != null)
+        {
+            masterSlider.onValueChanged.RemoveAllListeners();
+            masterSlider.value = PlayerPrefs.GetFloat("MasterVol", 1f);
+            masterSlider.onValueChanged.AddListener(SetMasterVolume);
+        }
+
+        if (sfxSlider != null)
+        {
+            sfxSlider.onValueChanged.RemoveAllListeners();
+            sfxSlider.value = PlayerPrefs.GetFloat("SFXVol", 1f);
+            sfxSlider.onValueChanged.AddListener(SetSFXVolume);
+        }
+
+        // Phần còn lại giữ nguyên
         bool isFullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
-        if (fullscreenToggle != null) fullscreenToggle.isOn = isFullscreen;
-        Screen.fullScreen = isFullscreen;
+        if (fullscreenToggle != null)
+        {
+            fullscreenToggle.isOn = isFullscreen;
+            fullscreenToggle.onValueChanged.RemoveAllListeners();
+            fullscreenToggle.onValueChanged.AddListener(SetFullscreen);
+        }
+        Screen.fullScreenMode = isFullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
 
-        int fpsIndex = PlayerPrefs.GetInt("FPSLimitIndex", 1); // Mặc định 60 FPS
-        if (fpsDropdown != null) fpsDropdown.value = fpsIndex;
+        int fpsIndex = PlayerPrefs.GetInt("FPSLimitIndex", 1);
+        if (fpsDropdown != null)
+        {
+            fpsDropdown.value = fpsIndex;
+            fpsDropdown.onValueChanged.RemoveAllListeners();
+            fpsDropdown.onValueChanged.AddListener(SetFPSLimit);
+        }
         SetFPSLimit(fpsIndex);
-
-        // Âm thanh
-        if (masterSlider != null) masterSlider.value = PlayerPrefs.GetFloat("MasterVol", 0.8f);
-        if (bgmSlider != null) bgmSlider.value = PlayerPrefs.GetFloat("BGMVol", 0.6f);
-        if (sfxSlider != null) sfxSlider.value = PlayerPrefs.GetFloat("SFXVol", 0.8f);
     }
 }
