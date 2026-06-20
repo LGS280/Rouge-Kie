@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 748203293326626555}
   - component: {fileID: 6296113314098115309}
   m_Layer: 0
-  m_Name: AK47
+  m_Name: Snipe
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 4136628244467973380}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 6.02783, y: 7.89225, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -81,9 +81,9 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 9
+  m_SortingOrder: 11
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 1585974835397443309, guid: 0af20bc2bec0478419fa75fc12bf9925, type: 3}
+  m_Sprite: {fileID: -6605063592543207465, guid: 71120e1fdc81244428a6f0901207a046, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -105,15 +105,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df397456b8e4f78429e2e244b759fab4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponInfo
-  customHandPosition: {x: 0.04, y: 0.12, z: 0}
-  bulletPrefab: {fileID: 5457056256669451622, guid: b151046f8c1e0f844b3f31b266ffbb4a, type: 3}
+  customHandPosition: {x: 0.2, y: 0.1, z: 0}
+  bulletPrefab: {fileID: 5457056256669451622, guid: 31423f60f5ac48d48ab9d4feb7a5ac82, type: 3}
   firePoint: {fileID: 8568073828566795883}
-  fireRate: 0.2
+  fireRate: 1.5
   meleeSlashPrefab: {fileID: 8616719184387406343, guid: 0f9f2a81ca31463408b2c686ed0b2437, type: 3}
-  meleeRadius: 3
-  recoilDistance: 0.15
+  meleeRadius: 2
+  recoilDistance: 0.35
   recoilDuration: 0.05
-  returnDuration: 0.1
+  returnDuration: 0.18
 --- !u!1 &7720013465286283729
 GameObject:
   m_ObjectHideFlags: 0
