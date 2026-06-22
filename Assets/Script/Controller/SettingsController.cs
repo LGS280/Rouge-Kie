@@ -106,23 +106,33 @@ public class SettingsController : MonoBehaviour
 
     // --- CẤU HÌNH ÂM THANH (Sẽ kết nối với Audio Mixer sau) ---
 
+    // Thay thế các hàm SetVolume cũ trong SettingsController.cs bằng code này:
+
     public void SetMasterVolume(float volume)
     {
         PlayerPrefs.SetFloat("MasterVol", volume);
-        // Code điều chỉnh AudioMixer sẽ bổ sung ở bước sau
+        if (RogueKie.Audio.AudioManager.Instance != null)
+        {
+            RogueKie.Audio.AudioManager.Instance.SetVolume("MasterVolume", volume);
+        }
     }
 
     public void SetBGMVolume(float volume)
     {
-        
         PlayerPrefs.SetFloat("BGMVol", volume);
-        PlayerPrefs.Save();
-        if (bgmSource != null) bgmSource.volume = volume;
+        if (RogueKie.Audio.AudioManager.Instance != null)
+        {
+            RogueKie.Audio.AudioManager.Instance.SetVolume("BGMVolume", volume);
+        }
     }
 
     public void SetSFXVolume(float volume)
     {
         PlayerPrefs.SetFloat("SFXVol", volume);
+        if (RogueKie.Audio.AudioManager.Instance != null)
+        {
+            RogueKie.Audio.AudioManager.Instance.SetVolume("SFXVolume", volume);
+        }
     }
 
     // --- LOAD CÀI ĐẶT KHI KHỞI ĐỘNG GAME ---
