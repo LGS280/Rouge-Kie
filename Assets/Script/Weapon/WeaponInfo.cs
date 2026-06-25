@@ -1,6 +1,10 @@
 ﻿using UnityEngine;
 public class WeaponInfo : MonoBehaviour
 {
+    [Header("Audio Settings")]
+    [SerializeField] private AudioClip shootSound; // Kéo file âm thanh tiếng bắn của súng này vào đây
+    [Range(0f, 1f)][SerializeField] private float shootVolume = 0.8f;
+
     [Header("VỊ TRÍ CẦM SÚNG")]
     public Vector3 customHandPosition;
 
@@ -57,6 +61,13 @@ public class WeaponInfo : MonoBehaviour
 
             // Bắn xa: Sinh ra đạn tại đầu nòng của chính nó
             Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+
+            // --- TÍCH HỢP PHÁT ÂM THANH TIẾNG BẮN 3D ---
+            // Chỉ phát âm thanh khi có gán file âm thanh và AudioManager đã khởi chạy thành công
+            if (shootSound != null && RogueKie.Audio.AudioManager.Instance != null)
+            {
+                RogueKie.Audio.AudioManager.Instance.PlaySFXAtPosition(shootSound, transform.position, shootVolume);
+            }
         }
 
         // Recoil chỉ khi bắn đạn, không phải melee
