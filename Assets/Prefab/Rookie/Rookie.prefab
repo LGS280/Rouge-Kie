@@ -69,6 +69,7 @@ GameObject:
   - component: {fileID: 6337125136891598741}
   - component: {fileID: 7324990917526745866}
   - component: {fileID: 6471317071900559171}
+  - component: {fileID: 1417017810891825403}
   m_Layer: 0
   m_Name: Rookie
   m_TagString: Player
@@ -355,6 +356,22 @@ MonoBehaviour:
   backPosition: {fileID: 5289129472824092616}
   weaponSlot1: {fileID: 3958100353804416116}
   weaponSlot2: {fileID: 7899034397582093655}
+--- !u!114 &1417017810891825403
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4513691302435627913}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917d1385831b8ad42ad47039a078bd4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMeleeSlash
+  meleeSlashPrefab: {fileID: 8616719184387406343, guid: 0f9f2a81ca31463408b2c686ed0b2437, type: 3}
+  meleeRadius: 3
+  meleeCooldown: 0.3
+  enemyTag: Enemy
 --- !u!1 &5801610104968796645
 GameObject:
   m_ObjectHideFlags: 0
