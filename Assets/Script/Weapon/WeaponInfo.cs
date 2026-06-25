@@ -13,6 +13,9 @@ public class WeaponInfo : MonoBehaviour
     public GameObject meleeSlashPrefab;
     public float meleeRadius = 3f;
 
+    [Header("MANA")]
+    public int manaCostPerShot = 2;
+
     [Header("RECOIL")]
     [SerializeField] float recoilDistance = 0.15f;  // giật lùi bao nhiêu unit
     [SerializeField] float recoilDuration = 0.05f;  // thời gian giật ra
@@ -34,10 +37,12 @@ public class WeaponInfo : MonoBehaviour
             positionSaved = true;
         }
 
+        // Tìm RookieHealth từ parent
+        RookieHealth rookieHealth = GetComponentInParent<RookieHealth>();
+
         Collider2D closeEnemy = Physics2D.OverlapCircle(transform.position, meleeRadius, enemyLayer);
         bool didMelee = false;
 
-        // Melee chỉ kích hoạt khi click mới (không phải giữ chuột)
         if (isNewClick && closeEnemy != null && meleeSlashPrefab != null && firePoint != null)
         {
             // Cận chiến: Sinh ra vệt chém tại đầu nòng của chính nó
@@ -46,6 +51,10 @@ public class WeaponInfo : MonoBehaviour
         }
         else if (bulletPrefab != null && firePoint != null)
         {
+            // Kiểm tra mana trước khi bắn
+            if (rookieHealth != null && !rookieHealth.UseMana(manaCostPerShot))
+                return; // không đủ mana, không bắn
+
             // Bắn xa: Sinh ra đạn tại đầu nòng của chính nó
             Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
         }
