@@ -12,14 +12,11 @@ public class WeaponManager : MonoBehaviour
     public GameObject weaponSlot2;
 
     private bool isUsingSlot1 = true;
-    private WeaponAim handWeaponAim; // Gọi script WeaponAim nằm trên Hand_Position
+    private WeaponAim handWeaponAim;
 
     void Start()
     {
-        // Lấy script điều khiển xoay súng nằm trên điểm neo Hand_Position
         handWeaponAim = handPosition.GetComponent<WeaponAim>();
-
-        // Vào game phát là đưa súng 1 lên tay, súng 2 ra sau lưng
         ResetWeaponsStatus();
     }
 
@@ -27,17 +24,14 @@ public class WeaponManager : MonoBehaviour
     {
         bool hasPressedSwapKey = false;
 
-        // Bấm Q đổi súng
         if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
         {
             hasPressedSwapKey = true;
         }
-        // Bấm nút Y/Tam giác trên tay cầm đổi súng
         else if (Gamepad.current != null && Gamepad.current.aButton.wasPressedThisFrame)
         {
             hasPressedSwapKey = true;
         }
-        // Lăn con lăn chuột giữa đổi súng
         else if (Mouse.current != null && Mathf.Abs(Mouse.current.scroll.ReadValue().y) > 0.1f)
         {
             hasPressedSwapKey = true;
@@ -51,7 +45,7 @@ public class WeaponManager : MonoBehaviour
 
     void SwapWeapon()
     {
-        isUsingSlot1 = !isUsingSlot1; // Đảo ô súng
+        isUsingSlot1 = !isUsingSlot1;
 
         if (isUsingSlot1)
         {
@@ -69,43 +63,44 @@ public class WeaponManager : MonoBehaviour
     {
         weapon.transform.SetParent(newParent);
         weapon.transform.localRotation = Quaternion.identity;
-
         weapon.transform.localScale = Vector3.one;
+
         if (isTargetHand)
         {
             WeaponInfo info = weapon.GetComponent<WeaponInfo>();
             if (info != null)
             {
-                // Thay vì gán bằng Vector3.zero, mình lấy tọa độ custom ông chỉnh trong Prefab gán vào!
                 weapon.transform.localPosition = info.customHandPosition;
-                handWeaponAim.currentWeapon = info;
+                if (handWeaponAim != null) handWeaponAim.currentWeapon = info;
             }
             else
             {
                 weapon.transform.localPosition = Vector3.zero;
+
+                if (handWeaponAim != null)
+                {
+                    handWeaponAim.currentWeapon = null;
+                }
             }
         }
         else
         {
-            weapon.transform.localPosition = Vector3.zero; // Ra sau lưng thì cứ về tâm Back_Position
+            weapon.transform.localPosition = Vector3.zero;
+
+            WeaponLaser laserScript = weapon.GetComponent<WeaponLaser>();
+            if (laserScript != null)
+            {
+                laserScript.StopLaser();
+            }
         }
 
         SpriteRenderer weaponRenderer = weapon.GetComponent<SpriteRenderer>();
-        SpriteRenderer playerRenderer = handPosition.parent.GetComponent<SpriteRenderer>(); // Lấy Sprite của Rookie
+        SpriteRenderer playerRenderer = handPosition.parent.GetComponent<SpriteRenderer>();
 
         if (weaponRenderer != null && playerRenderer != null)
         {
-            if (isTargetHand) weaponRenderer.sortingOrder = playerRenderer.sortingOrder + 1; // Đè lên trước bụng
-            else weaponRenderer.sortingOrder = playerRenderer.sortingOrder - 1; // Chui ra sau lưng áo
-        }
-
-        if (isTargetHand)
-        {
-            WeaponInfo info = weapon.GetComponent<WeaponInfo>();
-            if (info != null && handWeaponAim != null)
-            {
-                handWeaponAim.currentWeapon = info;
-            }
+            if (isTargetHand) weaponRenderer.sortingOrder = playerRenderer.sortingOrder + 1;
+            else weaponRenderer.sortingOrder = playerRenderer.sortingOrder - 1;
         }
     }
 

@@ -7,6 +7,7 @@ public class WeaponAim : MonoBehaviour
     private Camera mainCamera;
     private SpriteRenderer playerRenderer;
     private PlayerController playerController;
+    private PlayerMeleeSlash playerMelee;
 
     // biến ẩn để biết súng nào đang trên tay nhằm kích hoạt bắn/tốc độ bắn
     [HideInInspector] public WeaponInfo currentWeapon;
@@ -24,6 +25,7 @@ public class WeaponAim : MonoBehaviour
     {
         mainCamera = Camera.main;
         playerController = GetComponentInParent<PlayerController>();
+        playerMelee = GetComponentInParent<PlayerMeleeSlash>();
 
         if (transform.parent != null)
         {
@@ -187,7 +189,17 @@ public class WeaponAim : MonoBehaviour
             if (isShooting)
             {
                 nextFireTime = Time.time + currentFireRate;
-                currentWeapon.Attack(enemyLayer, isNewClick); // truyền thêm isNewClick
+
+                //if (playerMelee != null && isNewClick)
+                if (playerMelee != null)
+                {
+                    if (playerMelee.TryMeleeAttack(currentWeapon.firePoint))
+                    {
+                        return;
+                    }
+                }
+
+                currentWeapon.Attack(); // truyền thêm isNewClick
             }
         }
     }
@@ -199,14 +211,13 @@ public class WeaponAim : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, aimRadius);
 
         // Vòng xanh dương: Vẽ tầm cận chiến của súng đang cầm nếu có
-        if (currentWeapon != null)
+        if (playerMelee != null)
         {
             Gizmos.color = Color.blue;
-            Gizmos.DrawWireSphere(transform.position, currentWeapon.meleeRadius);
+            Gizmos.DrawWireSphere(transform.position, playerMelee.meleeRadius);
         }
     }
 
-    // Được Unity gọi tự động ngay khi script WeaponAim bị vô hiệu hóa
     private void OnDisable()
     {
         // Tắt vòng tròn ngắm dưới chân quái vật để tránh bị kẹt vòng đỏ khi pause game
