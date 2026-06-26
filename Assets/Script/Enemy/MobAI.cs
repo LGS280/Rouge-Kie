@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections.Generic;
 
 public class MobAI : MonoBehaviour
 {
@@ -14,8 +13,13 @@ public class MobAI : MonoBehaviour
     private float nextAttackTime = 0f;
 
     [Header("Network Status")]
-    // Đánh dấu xem máy này có quyền điều khiển AI hay không (chỉ máy Host = true)
     public bool isHost = true;
+
+    [Header("Room Setup")]
+    [Tooltip("Khoảng cách giữ thêm với rào chắn phòng (Mặc định bằng 0 vì rào chắn của DungeonGenerator đã tự cách tường 2 ô)")]
+    public float wallPadding = 0f;
+    [HideInInspector] public RoomController myRoom; // Tự động nhận diện từ RoomController khi map được sinh ra
+    private bool isRoomActivated = false;          // Cờ kiểm soát kích hoạt AI
 
     private Transform targetPlayer;
     private Rigidbody2D rb;
@@ -24,7 +28,6 @@ public class MobAI : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private Vector3 originalScale;
 
-
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -32,16 +35,25 @@ public class MobAI : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         mobHealth = GetComponent<MobHealth>();
         originalScale = transform.localScale;
-
     }
 
     void Update()
     {
         if (mobHealth.isDead) return;
-
-        // Nếu không phải là Host, máy này chỉ nhận vị trí từ mạng, không tự chạy AI
         if (!isHost) return;
 
+        // BẢO VỆ CHẶT CHẼ: Nếu người chơi chưa bước qua cửa kích hoạt phòng,
+        // quái vật đứng yên hoàn toàn, KHÔNG nhận diện và KHÔNG tìm kiếm Player.
+        if (!isRoomActivated)
+        {
+            targetPlayer = null;
+            currentState = EnemyState.Idle;
+            if (animator != null) animator.SetBool("isMoving", false);
+            rb.linearVelocity = Vector2.zero;
+            return; // Thoát hàm ngay lập tức
+        }
+
+        // CHỈ KHI cửa đóng và combat bắt đầu, quái mới bắt đầu mở giác quan tìm Player
         FindNearestPlayer();
 
         switch (currentState)
@@ -58,9 +70,39 @@ public class MobAI : MonoBehaviour
         }
     }
 
+    void LateUpdate()
+    {
+        if (mobHealth.isDead) return;
+        ClampPositionToRoom();
+    }
+
+    // Được gọi trực tiếp bởi RoomController khi bắt đầu TryStartRoomCombat()
+    public void ActivateMob()
+    {
+        isRoomActivated = true;
+    }
+
+    // Chặn không cho quái vật đi ra khỏi ranh giới phòng
+    void ClampPositionToRoom()
+    {
+        if (myRoom == null || myRoom.RoomCollider == null) return;
+
+        Bounds bounds = myRoom.RoomCollider.bounds;
+
+        // Khống chế tọa độ của quái vật nằm gọn trong bounds của RoomCollider
+        float minX = bounds.min.x + wallPadding;
+        float maxX = bounds.max.x - wallPadding;
+        float minY = bounds.min.y + wallPadding;
+        float maxY = bounds.max.y - wallPadding;
+
+        float clampedX = Mathf.Clamp(transform.position.x, minX, maxX);
+        float clampedY = Mathf.Clamp(transform.position.y, minY, maxY);
+
+        transform.position = new Vector3(clampedX, clampedY, transform.position.z);
+    }
+
     void FindNearestPlayer()
     {
-        // Tìm tất cả các Player có trong phòng (Co-op)
         GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
         float shortestDistance = Mathf.Infinity;
         Transform nearestPlayer = null;
@@ -81,9 +123,9 @@ public class MobAI : MonoBehaviour
     void MonitorIdleState()
     {
         animator.SetBool("isMoving", false);
-        rb.linearVelocity = Vector2.zero; // Dừng di chuyển
+        rb.linearVelocity = Vector2.zero;
 
-        if (targetPlayer != null && Vector2.Distance(transform.position, targetPlayer.position) <= detectRange)
+        if (isRoomActivated && targetPlayer != null && Vector2.Distance(transform.position, targetPlayer.position) <= detectRange)
         {
             currentState = EnemyState.Chase;
         }
@@ -109,26 +151,20 @@ public class MobAI : MonoBehaviour
         }
         else
         {
-            // Di chuyển hướng về phía Player
             Vector2 direction = (targetPlayer.position - transform.position).normalized;
             rb.linearVelocity = direction * chaseSpeed;
 
-            // Đồng bộ Animation di chuyển
             animator.SetBool("isMoving", true);
 
-            // Lật mặt bằng flipX thay vì localScale (giả sử Sprite mặc định hướng sang bên Phải)
+            // Xử lý quay mặt Sprite
             if (direction.x > 0)
             {
-                spriteRenderer.flipX = false; // Quay mặt sang phải
+                spriteRenderer.flipX = false;
             }
             else if (direction.x < 0)
             {
-                spriteRenderer.flipX = true;  // Quay mặt sang trái
+                spriteRenderer.flipX = true;
             }
-
-            //// Lật mặt quái (Flip Sprite) theo hướng di chuyển
-            //if (direction.x > 0) transform.localScale = new Vector3(1, 1, 1);
-            //else if (direction.x < 0) transform.localScale = new Vector3(-1, 1, 1);
         }
     }
 
@@ -158,6 +194,5 @@ public class MobAI : MonoBehaviour
     void AttackTarget()
     {
         animator.SetTrigger("attack");
-        // Gây sát thương lên Player ở đây (gửi sự kiện qua Server)
     }
 }

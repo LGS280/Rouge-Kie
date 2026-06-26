@@ -7,8 +7,16 @@ public class RoomController : MonoBehaviour
     public bool roomStarted = false;
     private Transform currentPlayer;
 
+    // Cache lại Collider của phòng để chia sẻ cho các MobAI lấy biên di chuyển
+    public Collider2D RoomCollider { get; private set; }
+
     private readonly List<RoomDoor> doors = new List<RoomDoor>();
     private readonly List<MobHealth> mobs = new List<MobHealth>();
+
+    private void Awake()
+    {
+        RoomCollider = GetComponent<Collider2D>();
+    }
 
     public void AddDoor(RoomDoor door)
     {
@@ -26,6 +34,13 @@ public class RoomController : MonoBehaviour
 
         mobs.Add(mob);
         mob.OnDeath += OnMobDeath;
+
+        // Tự động gán tham chiếu phòng cho MobAI mới nạp
+        MobAI mobAI = mob.GetComponent<MobAI>();
+        if (mobAI != null)
+        {
+            mobAI.myRoom = this;
+        }
 
         Debug.Log($"{gameObject.name} AddMob: {mob.name}");
     }
@@ -78,6 +93,24 @@ public class RoomController : MonoBehaviour
 
         PushPlayerInsideRoom();
         CloseDoors();
+
+        // Kích hoạt toàn bộ quái trong phòng khi bắt đầu combat
+        ActivateAllMobsInRoom();
+    }
+
+    private void ActivateAllMobsInRoom()
+    {
+        foreach (MobHealth mob in mobs)
+        {
+            if (mob != null)
+            {
+                MobAI mobAI = mob.GetComponent<MobAI>();
+                if (mobAI != null)
+                {
+                    mobAI.ActivateMob();
+                }
+            }
+        }
     }
 
     private void OnMobDeath(MobHealth deadMob)
@@ -142,9 +175,7 @@ public class RoomController : MonoBehaviour
 
     private void CollectMobsInsideRoom()
     {
-        Collider2D roomCollider = GetComponent<Collider2D>();
-
-        if (roomCollider == null)
+        if (RoomCollider == null)
             return;
 
         MobHealth[] allMobs = Object.FindObjectsByType<MobHealth>(FindObjectsSortMode.None);
@@ -154,7 +185,7 @@ public class RoomController : MonoBehaviour
             if (mob == null || mob.isDead || mobs.Contains(mob))
                 continue;
 
-            if (roomCollider.OverlapPoint(mob.transform.position))
+            if (RoomCollider.OverlapPoint(mob.transform.position))
             {
                 AddMob(mob);
             }
@@ -163,12 +194,10 @@ public class RoomController : MonoBehaviour
 
     private void CollectDoorsNearRoom()
     {
-        Collider2D roomCollider = GetComponent<Collider2D>();
-
-        if (roomCollider == null)
+        if (RoomCollider == null)
             return;
 
-        Bounds roomBounds = roomCollider.bounds;
+        Bounds roomBounds = RoomCollider.bounds;
         roomBounds.Expand(8f);
 
         RoomDoor[] allDoors = Object.FindObjectsByType<RoomDoor>(FindObjectsSortMode.None);
