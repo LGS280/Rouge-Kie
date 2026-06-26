@@ -32,6 +32,12 @@ public class WeaponLaser : MonoBehaviour
     private float startGlowScale = 0f;
 
     private Dictionary<int, float> damageAccumulators = new Dictionary<int, float>();
+    private PlayerMeleeSlash playerMelee;
+
+    void Start()
+    {
+        playerMelee = GetComponentInParent<PlayerMeleeSlash>();
+    }
 
     void Update()
     {
@@ -43,6 +49,11 @@ public class WeaponLaser : MonoBehaviour
         }
 
         CheckAttackInput();
+
+        if (isHoldingAttack && playerMelee != null && playerMelee.TryMeleeAttack(firePoint))
+        {
+            isHoldingAttack = false;
+        }
 
         if (isHoldingAttack && laserPrefab != null && firePoint != null)
         {

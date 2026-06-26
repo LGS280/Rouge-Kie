@@ -6,6 +6,7 @@ public class PlayerMeleeSlash : MonoBehaviour
     public GameObject meleeSlashPrefab;
     public float meleeRadius = 3f;
     public float meleeCooldown = 0.3f;
+    public float slashOffset = 1.2f;
     public string enemyTag = "Enemy";
 
     private float cooldownTimer = 0f;
@@ -26,7 +27,7 @@ public class PlayerMeleeSlash : MonoBehaviour
         {
             if (hit.CompareTag(enemyTag))
             {
-                Vector2 directionToEnemy = (hit.transform.position - firePoint.position).normalized;
+                Vector2 directionToEnemy = (hit.transform.position - transform.position).normalized;
                 Vector2 weaponDirection = firePoint.right;
 
                 float dotProduct = Vector2.Dot(weaponDirection, directionToEnemy);
@@ -37,7 +38,9 @@ public class PlayerMeleeSlash : MonoBehaviour
                     {
                         if (meleeSlashPrefab != null && firePoint != null)
                         {
-                            Instantiate(meleeSlashPrefab, firePoint.position, firePoint.rotation);
+                            Vector3 spawnPosition = transform.position + firePoint.right * slashOffset;
+
+                            Instantiate(meleeSlashPrefab, spawnPosition, firePoint.rotation);
                             cooldownTimer = meleeCooldown;
                         }
                     }
