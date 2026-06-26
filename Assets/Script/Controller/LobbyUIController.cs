@@ -33,6 +33,8 @@ public class LobbyUIController : MonoBehaviour
             NetworkManager.Instance.OnJoinRoomFailed += HandleJoinRoomFailed;
             NetworkManager.Instance.OnPlayerJoined += HandlePlayerJoined;
             NetworkManager.Instance.OnPlayerDisconnected += HandlePlayerDisconnected;
+            NetworkManager.Instance.OnGameStarted += HandleGameStarted;
+
         }
     }
 
@@ -46,6 +48,7 @@ public class LobbyUIController : MonoBehaviour
             NetworkManager.Instance.OnJoinRoomFailed -= HandleJoinRoomFailed;
             NetworkManager.Instance.OnPlayerJoined -= HandlePlayerJoined;
             NetworkManager.Instance.OnPlayerDisconnected -= HandlePlayerDisconnected;
+            NetworkManager.Instance.OnGameStarted -= HandleGameStarted;
         }
     }
 
@@ -53,9 +56,28 @@ public class LobbyUIController : MonoBehaviour
 
     public void OnCoOpButtonPressed()
     {
+        if (NetworkManager.Instance == null)
+        {
+            Debug.LogError("LỖI: Chưa có GameObject 'NetworkManager' trong Scene! Hãy kéo thả script NetworkManager vào một GameObject trống ngoài Hierarchy.");
+            return; 
+        }
+
+        // TẠM THỜI: Tự động đăng nhập Guest nếu chưa đăng nhập khi test Co-op
+        if (!NetworkManager.Instance.IsLoggedIn)
+        {
+            NetworkManager.Instance.IsLoggedIn = true; // Gán tạm bằng true để bypass
+            NetworkManager.Instance.LoggedInUsername = $"Player_{UnityEngine.Random.Range(1000, 9999)}";
+            usernameInput.text = NetworkManager.Instance.LoggedInUsername;
+        }
+
+        // Bỏ qua kiểm tra và cho phép mở sảnh chọn Co-op ngay lập tức
         playMenuPanel.SetActive(false);
         lobbyMenuPanel.SetActive(true);
         roomLobbyPanel.SetActive(false);
+
+        //playMenuPanel.SetActive(false);
+        //lobbyMenuPanel.SetActive(true);
+        //roomLobbyPanel.SetActive(false);
     }
 
     public void OnCreateRoomPressed()
@@ -82,6 +104,22 @@ public class LobbyUIController : MonoBehaviour
     {
         lobbyMenuPanel.SetActive(false);
         playMenuPanel.SetActive(true);
+    }
+
+    public void OnBackPressedFromRoomCode()
+    {
+        lobbyMenuPanel.SetActive(true);
+        playMenuPanel.SetActive(false);
+        roomLobbyPanel.SetActive(false);
+    }
+
+    public void OnStartGamePressed()
+    {
+        // Gửi lệnh yêu cầu bắt đầu game lên Server
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.RequestStartGame();
+        }
     }
 
     // --- XỬ LÝ SỰ KIỆN MẠNG TRẢ VỀ ---
@@ -159,5 +197,12 @@ public class LobbyUIController : MonoBehaviour
         {
             playerListText.text += $"{i + 1}. {activePlayers[i]}\n";
         }
+    }
+
+    private void HandleGameStarted()
+    {
+        Debug.Log("Trận đấu bắt đầu! Đang tải màn chơi...");
+        // Tải Scene chơi game thực tế của bạn
+        UnityEngine.SceneManagement.SceneManager.LoadScene("SampleScene");
     }
 }

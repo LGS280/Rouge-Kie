@@ -269,6 +269,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &24181495
 Animator:
   serializedVersion: 7
@@ -1765,6 +1767,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &129673040
 Animator:
   serializedVersion: 7
@@ -2271,6 +2275,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &157772453
 Animator:
   serializedVersion: 7
@@ -2797,6 +2803,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &160656179
 Animator:
   serializedVersion: 7
@@ -4970,6 +4978,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &311863039
 Animator:
   serializedVersion: 7
@@ -6131,6 +6141,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &432529925
 Animator:
   serializedVersion: 7
@@ -6849,6 +6861,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &451965074
 Animator:
   serializedVersion: 7
@@ -7581,6 +7595,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &511770435
 Animator:
   serializedVersion: 7
@@ -7903,6 +7919,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &537890475
 Animator:
   serializedVersion: 7
@@ -8726,6 +8744,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &598815387
 Animator:
   serializedVersion: 7
@@ -9503,6 +9523,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &655653932
 Animator:
   serializedVersion: 7
@@ -10879,6 +10901,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &715799432
 Animator:
   serializedVersion: 7
@@ -12202,6 +12226,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &813457400
 Animator:
   serializedVersion: 7
@@ -13243,6 +13269,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &905907363
 Animator:
   serializedVersion: 7
@@ -14133,6 +14161,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &949560270
 Animator:
   serializedVersion: 7
@@ -14455,6 +14485,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &971177826
 Animator:
   serializedVersion: 7
@@ -15026,6 +15058,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &1004852629
 Animator:
   serializedVersion: 7
@@ -15439,6 +15473,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &1044575405
 Animator:
   serializedVersion: 7
@@ -38812,6 +38848,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &1187745940
 Animator:
   serializedVersion: 7
@@ -39043,6 +39081,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &1188393762
 Animator:
   serializedVersion: 7
@@ -39279,6 +39319,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &1213616133
 Animator:
   serializedVersion: 7
@@ -39510,6 +39552,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &1222287727
 Animator:
   serializedVersion: 7
@@ -40693,6 +40737,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &1305253361
 Animator:
   serializedVersion: 7
@@ -41406,6 +41452,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &1319761047
 Animator:
   serializedVersion: 7
@@ -41754,6 +41802,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &1341489616
 Animator:
   serializedVersion: 7
@@ -51333,6 +51383,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &1372248568
 Animator:
   serializedVersion: 7
@@ -51655,6 +51707,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &1386032942
 Animator:
   serializedVersion: 7
@@ -51886,6 +51940,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &1386305091
 Animator:
   serializedVersion: 7
@@ -52024,9 +52080,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.014814815
+    y: 0
     width: 1
-    height: 0.96969694
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -52128,7 +52184,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1390208850}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c88f5cead0c0b2a4eb05b5900433f8d1, type: 3}
   m_Name: 
@@ -52750,6 +52806,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &1469347536
 Animator:
   serializedVersion: 7
@@ -57016,6 +57074,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &1739301801
 Animator:
   serializedVersion: 7
@@ -57643,6 +57703,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &1749147670
 Animator:
   serializedVersion: 7
@@ -60671,6 +60733,8 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   isHost: 1
+  wallPadding: 0.5
+  myRoom: {fileID: 0}
 --- !u!95 &1965844057
 Animator:
   serializedVersion: 7
