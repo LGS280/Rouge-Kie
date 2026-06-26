@@ -369,8 +369,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMeleeSlash
   meleeSlashPrefab: {fileID: 8616719184387406343, guid: 0f9f2a81ca31463408b2c686ed0b2437, type: 3}
-  meleeRadius: 3
+  meleeRadius: 2
   meleeCooldown: 0.3
+  slashOffset: 1.2
   enemyTag: Enemy
 --- !u!1 &5801610104968796645
 GameObject:

@@ -65,29 +65,31 @@ public class WeaponManager : MonoBehaviour
         weapon.transform.localRotation = Quaternion.identity;
         weapon.transform.localScale = Vector3.one;
 
+        WeaponInfo info = weapon.GetComponent<WeaponInfo>();
+        WeaponLaser laserScript = weapon.GetComponent<WeaponLaser>();
+
         if (isTargetHand)
         {
-            WeaponInfo info = weapon.GetComponent<WeaponInfo>();
             if (info != null)
             {
                 weapon.transform.localPosition = info.customHandPosition;
                 if (handWeaponAim != null) handWeaponAim.currentWeapon = info;
             }
+            else if (laserScript != null)
+            {
+                weapon.transform.localPosition = laserScript.customHandPosition;
+                if (handWeaponAim != null) handWeaponAim.currentWeapon = null;
+            }
             else
             {
                 weapon.transform.localPosition = Vector3.zero;
-
-                if (handWeaponAim != null)
-                {
-                    handWeaponAim.currentWeapon = null;
-                }
+                if (handWeaponAim != null) handWeaponAim.currentWeapon = null;
             }
         }
         else
         {
             weapon.transform.localPosition = Vector3.zero;
 
-            WeaponLaser laserScript = weapon.GetComponent<WeaponLaser>();
             if (laserScript != null)
             {
                 laserScript.StopLaser();
