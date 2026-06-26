@@ -7,8 +7,23 @@ using TMPro;
 public class UserData
 {
     public string username;
+    public string email;
     public string password;
     public string confirmPassword;
+    public string otpCode;
+}
+
+[System.Serializable]
+public class SendOtpRequest
+{
+    public string email;
+}
+
+[System.Serializable]
+public class ApiResponse
+{
+    public bool success;
+    public string message;
 }
 
 [System.Serializable]
@@ -37,17 +52,21 @@ public class LoginController : MonoBehaviour
     [SerializeField] private GameObject registerPanel;
 
     [Header("Login Inputs")]
-    [SerializeField] private TMP_InputField loginUsernameInput;
+    [SerializeField] private TMP_InputField loginUsernameInput; // nhập username hoặc email
     [SerializeField] private TMP_InputField loginPasswordInput;
 
     [Header("Register Inputs")]
     [SerializeField] private TMP_InputField regUsernameInput;
+    [SerializeField] private TMP_InputField regEmailInput;
     [SerializeField] private TMP_InputField regPasswordInput;
     [SerializeField] private TMP_InputField regConfirmPasswordInput;
+    [SerializeField] private TMP_InputField regOtpInput;
 
     [Header("UI Feedback")]
     [SerializeField] private TMP_Text messageText;
-    [SerializeField] private TMP_Text regMessageText; // Thêm ô này cho Register
+    [SerializeField] private TMP_Text regMessageText;
+
+    [Header("Backend")]
     [SerializeField] private string backendBase = "https://localhost:7075";
 
     private void Start()
@@ -55,15 +74,12 @@ public class LoginController : MonoBehaviour
         ShowLoginPanel();
     }
 
-    // --- CÁC HÀM HIỂN THỊ PANEL ---
     public void ShowLoginPanel()
     {
         if (loginPanel != null) loginPanel.SetActive(true);
         if (registerPanel != null) registerPanel.SetActive(false);
 
-        // ẨN KHUNG MESSAGE KHI CHUYỂN TRANG
-        if (messageText != null) messageText.gameObject.SetActive(false);
-        if (regMessageText != null) regMessageText.gameObject.SetActive(false);
+        HideMessages();
     }
 
     public void ShowRegisterPanel()
@@ -71,12 +87,9 @@ public class LoginController : MonoBehaviour
         if (loginPanel != null) loginPanel.SetActive(false);
         if (registerPanel != null) registerPanel.SetActive(true);
 
-        // ẨN KHUNG MESSAGE KHI CHUYỂN TRANG
-        if (messageText != null) messageText.gameObject.SetActive(false);
-        if (regMessageText != null) regMessageText.gameObject.SetActive(false);
+        HideMessages();
     }
 
-    // --- CÁC HÀM ĐIỀU HƯỚNG NÚT BẤM ---
     public void OnGoToRegisterClick()
     {
         ShowRegisterPanel();
@@ -93,32 +106,78 @@ public class LoginController : MonoBehaviour
         if (registerPanel != null) registerPanel.SetActive(false);
     }
 
-    // --- CÁC HÀM GỌI API ---
     public void OnLoginClick()
     {
         StartCoroutine(LoginRoutine());
+    }
+
+    public void OnSendOtpClick()
+    {
+        if (regEmailInput == null || string.IsNullOrWhiteSpace(regEmailInput.text))
+        {
+            ShowRegisterMessage("Vui lòng nhập email trước khi gửi OTP.", Color.red);
+            return;
+        }
+
+        StartCoroutine(SendRegisterOtpRoutine());
     }
 
     public void OnRegisterClick()
     {
         if (regPasswordInput.text != regConfirmPasswordInput.text)
         {
-            if (regMessageText != null)
-            {
-                // HIỆN KHUNG VÀ ĐẶT CHỮ BÁO LỖI
-                regMessageText.gameObject.SetActive(true);
-                regMessageText.text = "Lỗi: Mật khẩu xác nhận không khớp!";
-                regMessageText.color = Color.red;
-            }
+            ShowRegisterMessage("Lỗi: Mật khẩu xác nhận không khớp!", Color.red);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(regOtpInput.text))
+        {
+            ShowRegisterMessage("Vui lòng nhập mã OTP.", Color.red);
             return;
         }
 
         StartCoroutine(RegisterRoutine());
     }
 
+    private IEnumerator SendRegisterOtpRoutine()
+    {
+        var data = new SendOtpRequest
+        {
+            email = regEmailInput.text.Trim()
+        };
+
+        string jsonData = JsonUtility.ToJson(data);
+
+        using (var request = new UnityWebRequest(backendBase + "/api/auth/send-register-otp", "POST"))
+        {
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+            request.certificateHandler = new AcceptAllCerts();
+
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                var resp = JsonUtility.FromJson<ApiResponse>(request.downloadHandler.text);
+                ShowRegisterMessage(resp?.message ?? "Mã OTP đã được gửi đến email.", Color.green);
+            }
+            else
+            {
+                ShowRegisterMessage(GetErrorMessage(request, "Lỗi gửi OTP"), Color.red);
+            }
+        }
+    }
+
     private IEnumerator LoginRoutine()
     {
-        var data = new UserData { username = loginUsernameInput.text, password = loginPasswordInput.text };
+        var data = new UserData
+        {
+            username = loginUsernameInput.text.Trim(), // backend nhận username hoặc email ở field này
+            password = loginPasswordInput.text
+        };
+
         string jsonData = JsonUtility.ToJson(data);
 
         using (var request = new UnityWebRequest(backendBase + "/api/auth/login", "POST"))
@@ -134,47 +193,40 @@ public class LoginController : MonoBehaviour
             if (request.result == UnityWebRequest.Result.Success)
             {
                 var resp = JsonUtility.FromJson<LoginResponse>(request.downloadHandler.text);
+
                 if (resp != null && resp.success)
                 {
                     PlayerPrefs.SetString("jwt_token", resp.token);
+                    PlayerPrefs.SetString("username", resp.username);
+                    PlayerPrefs.SetInt("user_id", resp.userId);
                     PlayerPrefs.Save();
-                    if (messageText != null)
-                    {
-                        // HIỆN KHUNG VÀ BÁO THÀNH CÔNG
-                        messageText.gameObject.SetActive(true);
-                        messageText.text = "Đăng nhập thành công!";
-                        messageText.color = Color.green;
-                    }
+
+                    ShowLoginMessage("Đăng nhập thành công!", Color.green);
+
                     StartCoroutine(GetUsersRoutine());
                     yield break;
                 }
-                else
-                {
-                    if (messageText != null)
-                    {
-                        // HIỆN KHUNG VÀ BÁO THẤT BẠI
-                        messageText.gameObject.SetActive(true);
-                        messageText.text = resp?.message ?? "Đăng nhập thất bại";
-                        messageText.color = Color.red;
-                    }
-                }
+
+                ShowLoginMessage(resp?.message ?? "Đăng nhập thất bại.", Color.red);
             }
             else
             {
-                if (messageText != null)
-                {
-                    // HIỆN KHUNG VÀ BÁO LỖI MẠNG
-                    messageText.gameObject.SetActive(true);
-                    messageText.text = "Lỗi mạng: " + request.error;
-                    messageText.color = Color.red;
-                }
+                ShowLoginMessage(GetErrorMessage(request, "Lỗi đăng nhập"), Color.red);
             }
         }
     }
 
     private IEnumerator RegisterRoutine()
     {
-        var data = new UserData { username = regUsernameInput.text, password = regPasswordInput.text, confirmPassword = regConfirmPasswordInput.text };
+        var data = new UserData
+        {
+            username = regUsernameInput.text.Trim(),
+            email = regEmailInput.text.Trim(),
+            password = regPasswordInput.text,
+            confirmPassword = regConfirmPasswordInput.text,
+            otpCode = regOtpInput.text.Trim()
+        };
+
         string jsonData = JsonUtility.ToJson(data);
 
         using (var request = new UnityWebRequest(backendBase + "/api/auth/register", "POST"))
@@ -189,23 +241,12 @@ public class LoginController : MonoBehaviour
 
             if (request.result == UnityWebRequest.Result.Success)
             {
-                if (regMessageText != null)
-                {
-                    // HIỆN KHUNG VÀ BÁO THÀNH CÔNG
-                    regMessageText.gameObject.SetActive(true);
-                    regMessageText.text = "Đăng ký thành công! Hãy quay lại để đăng nhập.";
-                    regMessageText.color = Color.green;
-                }
+                var resp = JsonUtility.FromJson<ApiResponse>(request.downloadHandler.text);
+                ShowRegisterMessage(resp?.message ?? "Đăng ký thành công! Hãy quay lại để đăng nhập.", Color.green);
             }
             else
             {
-                if (regMessageText != null)
-                {
-                    // HIỆN KHUNG VÀ BÁO LỖI ĐĂNG KÝ
-                    regMessageText.gameObject.SetActive(true);
-                    regMessageText.text = "Lỗi đăng ký: " + request.error;
-                    regMessageText.color = Color.red;
-                }
+                ShowRegisterMessage(GetErrorMessage(request, "Lỗi đăng ký"), Color.red);
             }
         }
     }
@@ -213,13 +254,56 @@ public class LoginController : MonoBehaviour
     private IEnumerator GetUsersRoutine()
     {
         string token = PlayerPrefs.GetString("jwt_token", "");
+
         using (var req = UnityWebRequest.Get(backendBase + "/api/users"))
         {
-            if (!string.IsNullOrEmpty(token)) req.SetRequestHeader("Authorization", "Bearer " + token);
+            if (!string.IsNullOrEmpty(token))
+            {
+                req.SetRequestHeader("Authorization", "Bearer " + token);
+            }
+
             req.certificateHandler = new AcceptAllCerts();
             req.downloadHandler = new DownloadHandlerBuffer();
 
             yield return req.SendWebRequest();
         }
+    }
+
+    private void HideMessages()
+    {
+        if (messageText != null) messageText.gameObject.SetActive(false);
+        if (regMessageText != null) regMessageText.gameObject.SetActive(false);
+    }
+
+    private void ShowLoginMessage(string message, Color color)
+    {
+        if (messageText == null) return;
+
+        messageText.gameObject.SetActive(true);
+        messageText.text = message;
+        messageText.color = color;
+    }
+
+    private void ShowRegisterMessage(string message, Color color)
+    {
+        if (regMessageText == null) return;
+
+        regMessageText.gameObject.SetActive(true);
+        regMessageText.text = message;
+        regMessageText.color = color;
+    }
+
+    private string GetErrorMessage(UnityWebRequest request, string fallback)
+    {
+        if (!string.IsNullOrWhiteSpace(request.downloadHandler.text))
+        {
+            var resp = JsonUtility.FromJson<ApiResponse>(request.downloadHandler.text);
+            if (resp != null && !string.IsNullOrWhiteSpace(resp.message))
+            {
+                return resp.message;
+            }
+        }
+
+        return fallback + ": " + request.error;
     }
 }
