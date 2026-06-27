@@ -64,7 +64,12 @@ public class RoomDoor : MonoBehaviour
         if (lowerSpriteRenderer != null) lowerSpriteRenderer.sprite = closedSpriteLower;
         if (upperSpriteRenderer != null) upperSpriteRenderer.sprite = closedSpriteUpper;
 
-        if (physicsCollider != null) physicsCollider.enabled = true;
+        // C?a ?óng: ch?n Player + ch?n ??n
+        if (physicsCollider != null)
+        {
+            physicsCollider.enabled = true;
+            physicsCollider.isTrigger = false;
+        }
     }
 
     public void OpenDoor()
@@ -74,7 +79,12 @@ public class RoomDoor : MonoBehaviour
         if (lowerSpriteRenderer != null) lowerSpriteRenderer.sprite = openSpriteLower;
         if (upperSpriteRenderer != null) upperSpriteRenderer.sprite = openSpriteUpper;
 
-        if (physicsCollider != null) physicsCollider.enabled = false;
+        // C?a m?: v?n cho ??n detect, nh?ng không ch?n Player v?t lý
+        if (physicsCollider != null)
+        {
+            physicsCollider.enabled = true;
+            physicsCollider.isTrigger = true;
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
