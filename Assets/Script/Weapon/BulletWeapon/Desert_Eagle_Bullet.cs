@@ -25,10 +25,6 @@ public class Desert_Eagle_Bullet : MonoBehaviour
     // Hàm xử lý khi đạn chạm vào tường hoặc quái vật
     void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.CompareTag("Door") && collision.isTrigger)
-        {
-            return;
-        }
 
         if (collision.CompareTag("Obstacle") || collision.CompareTag("Enemy") || collision.CompareTag("Door"))
         {
