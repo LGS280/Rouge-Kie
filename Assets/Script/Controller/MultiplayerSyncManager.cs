@@ -16,7 +16,6 @@ public class MultiplayerSyncManager : MonoBehaviour
     // Quản lý danh sách các đồng đội đang có trong trận qua ConnectionId
     private Dictionary<string, GameObject> remotePlayers = new Dictionary<string, GameObject>();
 
-
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -36,15 +35,20 @@ public class MultiplayerSyncManager : MonoBehaviour
         {
             NetworkManager.Instance.OnReceivePosition += UpdateRemotePlayerPosition;
             NetworkManager.Instance.OnPlayerDisconnected += RemoveRemotePlayer;
+            NetworkManager.Instance.OnRemotePlayerShoot += HandleRemotePlayerShoot;
+            NetworkManager.Instance.OnRemoteEnemyDamaged += HandleRemoteEnemyDamaged;
         }
     }
 
     private void OnDestroy()
     {
+        // Hủy đăng ký tất cả sự kiện để tránh lỗi rò rỉ bộ nhớ (Memory Leak)
         if (NetworkManager.Instance != null)
         {
             NetworkManager.Instance.OnReceivePosition -= UpdateRemotePlayerPosition;
             NetworkManager.Instance.OnPlayerDisconnected -= RemoveRemotePlayer;
+            NetworkManager.Instance.OnRemotePlayerShoot -= HandleRemotePlayerShoot;
+            NetworkManager.Instance.OnRemoteEnemyDamaged -= HandleRemoteEnemyDamaged;
         }
     }
 
@@ -64,7 +68,7 @@ public class MultiplayerSyncManager : MonoBehaviour
         // Bỏ qua nếu gói tin tọa độ đó là của chính mình
         if (NetworkManager.Instance != null && connId == NetworkManager.Instance.MyConnectionId) return;
 
-        // Nếu ConnectionId này chưa có trong màn chơi -> Thực hiện sinh động đội động (Just-In-Time)
+        // Nếu ConnectionId này chưa có trong màn chơi -> Thực hiện sinh đồng đội động (Just-In-Time)
         if (!remotePlayers.ContainsKey(connId))
         {
             Debug.Log($"Sinh nhân vật đồng đội mới trong trận đấu! ID: {connId}");
@@ -79,10 +83,10 @@ public class MultiplayerSyncManager : MonoBehaviour
             {
                 // Di chuyển đồng đội tới vị trí đồng bộ mạng
                 remote.transform.position = Vector3.Lerp(remote.transform.position, new Vector3(x, y, 0), 0.3f);
-                
+
                 // Đồng bộ Animation di chuyển
                 Animator anim = remote.GetComponent<Animator>();
-                if (anim != null) 
+                if (anim != null)
                     anim.SetBool("isMoving", true);
             }
         }
@@ -97,5 +101,55 @@ public class MultiplayerSyncManager : MonoBehaviour
             remotePlayers.Remove(connId);
             Debug.Log($"Đồng đội {username} đã ngắt kết nối, tiến hành xóa khỏi màn chơi.");
         }
+    }
+
+    // SỬA LỖI 1: Định nghĩa hàm tìm kiếm đồng đội theo ConnectionId
+    private GameObject GetRemotePlayerById(string playerId)
+    {
+        if (remotePlayers.TryGetValue(playerId, out GameObject player))
+        {
+            return player;
+        }
+        return null;
+    }
+
+    // Xử lý vẽ đạn của người chơi khác
+    private void HandleRemotePlayerShoot(string playerId, string weaponId, Vector3 position, Vector3 direction)
+    {
+        GameObject remotePlayer = GetRemotePlayerById(playerId);
+        if (remotePlayer != null)
+        {
+            WeaponInfo remoteWeapon = remotePlayer.GetComponentInChildren<WeaponInfo>();
+            if (remoteWeapon != null)
+            {
+                remoteWeapon.RemoteShoot(position, direction);
+            }
+        }
+    }
+
+    // Xử lý khi quái vật bị dính đòn (áp dụng cho tất cả Client)
+    private void HandleRemoteEnemyDamaged(string enemyId, float damage)
+    {
+        GameObject enemy = FindEnemyByNetworkId(enemyId);
+        if (enemy != null)
+        {
+            MobHealth health = enemy.GetComponent<MobHealth>();
+            if (health != null)
+            {
+                // SỬA LỖI 2: Sử dụng Mathf.RoundToInt để ép kiểu an toàn từ float sang int
+                health.TakeDamage(Mathf.RoundToInt(damage));
+            }
+        }
+    }
+
+    private GameObject FindEnemyByNetworkId(string networkId)
+    {
+        MobNetworkIdentity[] enemies = Object.FindObjectsByType<MobNetworkIdentity>(FindObjectsSortMode.None);
+        foreach (var enemy in enemies)
+        {
+            if (enemy.networkId == networkId)
+                return enemy.gameObject;
+        }
+        return null;
     }
 }

@@ -1,8 +1,9 @@
+using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Collections.Generic;
 using System.Threading; // Thư viện quản lý luồng chính
+using UnityEditor.MemoryProfiler;
 using UnityEngine;
-using Microsoft.AspNetCore.SignalR.Client;
 
 public class NetworkManager : MonoBehaviour
 {
@@ -17,6 +18,9 @@ public class NetworkManager : MonoBehaviour
 
     private HubConnection hubConnection;
     private SynchronizationContext unityContext; // Đồng bộ luồng chính Unity
+
+    public event System.Action<string, string, Vector3, Vector3> OnRemotePlayerShoot;
+    public event System.Action<string, float> OnRemoteEnemyDamaged;
 
     // --- CÁC SỰ KIỆN C# ĐỂ LỚP UI & SYNC MANAGER LẮNG NGHE ---
     public event Action<string> OnRoomCreated;
@@ -146,6 +150,46 @@ public class NetworkManager : MonoBehaviour
         {
             await hubConnection.StopAsync();
             await hubConnection.DisposeAsync();
+        }
+    }
+
+    // Đăng ký Listener trong hàm khởi tạo kết nối SignalR (ví dụ: RegisterHubCallbacks)
+    private void RegisterCombatCallbacks()
+    {
+        // Đồng bộ bắn súng
+        hubConnection.On<string, string, Vector3, Vector3>("OnPlayerShoot", (playerId, weaponId, position, direction) =>
+        {
+            unityContext.Post(_ =>
+            {
+                OnRemotePlayerShoot?.Invoke(playerId, weaponId, position, direction);
+            }, null);
+        });
+
+        // Đồng bộ sát thương quái
+        hubConnection.On<string, float>("OnEnemyDamaged", (enemyId, damage) =>
+        {
+            unityContext.Post(_ =>
+            {
+                OnRemoteEnemyDamaged?.Invoke(enemyId, damage);
+            }, null);
+        });
+    }
+
+    // --- PHƯƠNG THỨC GỬI LÊN SERVER (API KHÁCH GỌI) ---
+
+    public async void SendShootEvent(string roomId, string weaponId, Vector3 position, Vector3 direction)
+    {
+        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        {
+            await hubConnection.InvokeAsync("SendShoot", roomId, weaponId, position, direction);
+        }
+    }
+
+    public async void SendEnemyHitEvent(string roomId, string enemyId, float damage)
+    {
+        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        {
+            await hubConnection.InvokeAsync("RegisterEnemyHit", roomId, enemyId, damage);
         }
     }
 }
