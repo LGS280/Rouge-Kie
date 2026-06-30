@@ -124,7 +124,27 @@ public class MultiplayerSyncManager : MonoBehaviour
             WeaponInfo remoteWeapon = remotePlayer.GetComponentInChildren<WeaponInfo>();
             if (remoteWeapon != null)
             {
-                // Sử dụng hàm RemoteShoot chuyên dụng để bắn đạn đúng góc xoay và tọa độ của người chơi đó
+                // 1. Cập nhật góc xoay cho súng của Remote Player
+                float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+                remoteWeapon.transform.rotation = Quaternion.Euler(0, 0, angle);
+
+                // 2. Lật hình ảnh nhân vật nếu súng hướng sang trái
+                SpriteRenderer playerRenderer = remotePlayer.GetComponent<SpriteRenderer>();
+                if (playerRenderer != null)
+                {
+                    if (angle > 90f || angle < -90f)
+                    {
+                        playerRenderer.flipX = true;
+                        remoteWeapon.transform.localScale = new Vector3(1f, -1f, 1f);
+                    }
+                    else
+                    {
+                        playerRenderer.flipX = false;
+                        remoteWeapon.transform.localScale = new Vector3(1f, 1f, 1f);
+                    }
+                }
+
+                // 3. Bắn đạn
                 remoteWeapon.RemoteShoot(position, direction);
             }
         }
