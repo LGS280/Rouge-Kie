@@ -124,9 +124,8 @@ public class MultiplayerSyncManager : MonoBehaviour
             WeaponInfo remoteWeapon = remotePlayer.GetComponentInChildren<WeaponInfo>();
             if (remoteWeapon != null)
             {
-                // GỌI TRỰC TIẾP hàm Attack() nguyên bản!
-                // Súng của đồng đội sẽ tự động bắn đạn, giật súng và phát âm thanh cực kỳ mượt mà.
-                remoteWeapon.Attack();
+                // Sử dụng hàm RemoteShoot chuyên dụng để bắn đạn đúng góc xoay và tọa độ của người chơi đó
+                remoteWeapon.RemoteShoot(position, direction);
             }
         }
     }
