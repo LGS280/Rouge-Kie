@@ -164,11 +164,11 @@ public class NetworkManager : MonoBehaviour
     private void RegisterCombatCallbacks()
     {
         // Đồng bộ bắn súng
-        hubConnection.On<string, string, Vector3, Vector3>("OnPlayerShoot", (playerId, weaponId, position, direction) =>
+        hubConnection.On<string, string, float, float, float, float>("OnPlayerShoot", (playerId, weaponId, px, py, dx, dy) =>
         {
             unityContext.Post(_ =>
             {
-                OnRemotePlayerShoot?.Invoke(playerId, weaponId, position, direction);
+                OnRemotePlayerShoot?.Invoke(playerId, weaponId, new Vector3(px, py, 0), new Vector3(dx, dy, 0));
             }, null);
         });
 
@@ -191,7 +191,7 @@ public class NetworkManager : MonoBehaviour
         if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
         {
             // Sử dụng trực tiếp CurrentRoomId nội bộ tự động nhận diện từ phòng chơi
-            await hubConnection.InvokeAsync("SendShoot", CurrentRoomId, weaponId, position, direction);
+            await hubConnection.InvokeAsync("SendShoot", CurrentRoomId, weaponId, position.x, position.y, direction.x, direction.y);
         }
     }
 
