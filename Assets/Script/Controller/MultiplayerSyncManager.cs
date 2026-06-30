@@ -16,6 +16,7 @@ public class MultiplayerSyncManager : MonoBehaviour
     // Quản lý danh sách các đồng đội đang có trong trận qua ConnectionId
     private Dictionary<string, GameObject> remotePlayers = new Dictionary<string, GameObject>();
 
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
