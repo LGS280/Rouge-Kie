@@ -83,10 +83,10 @@ public class MultiplayerSyncManager : MonoBehaviour
             {
                 // Di chuyển đồng đội tới vị trí đồng bộ mạng
                 remote.transform.position = Vector3.Lerp(remote.transform.position, new Vector3(x, y, 0), 0.3f);
-
+                
                 // Đồng bộ Animation di chuyển
                 Animator anim = remote.GetComponent<Animator>();
-                if (anim != null)
+                if (anim != null) 
                     anim.SetBool("isMoving", true);
             }
         }
@@ -116,16 +116,21 @@ public class MultiplayerSyncManager : MonoBehaviour
     // Xử lý vẽ đạn của người chơi khác
     private void HandleRemotePlayerShoot(string playerId, string weaponId, Vector3 position, Vector3 direction)
     {
+        // Tìm đối tượng Remote Player
         GameObject remotePlayer = GetRemotePlayerById(playerId);
         if (remotePlayer != null)
         {
+            // Lấy thành phần WeaponInfo nguyên bản trên tay của Remote Player
             WeaponInfo remoteWeapon = remotePlayer.GetComponentInChildren<WeaponInfo>();
             if (remoteWeapon != null)
             {
-                remoteWeapon.RemoteShoot(position, direction);
+                // GỌI TRỰC TIẾP hàm Attack() nguyên bản!
+                // Súng của đồng đội sẽ tự động bắn đạn, giật súng và phát âm thanh cực kỳ mượt mà.
+                remoteWeapon.Attack();
             }
         }
     }
+
 
     // Xử lý khi quái vật bị dính đòn (áp dụng cho tất cả Client)
     private void HandleRemoteEnemyDamaged(string enemyId, float damage)
