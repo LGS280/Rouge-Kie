@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Collections.Generic;
 using System.Threading; // Thư viện quản lý luồng chính
-using UnityEditor.MemoryProfiler;
 using UnityEngine;
 
 public class NetworkManager : MonoBehaviour
@@ -15,6 +14,9 @@ public class NetworkManager : MonoBehaviour
     [Header("Player Session Status (Debug)")]
     public bool IsLoggedIn = false;
     public string LoggedInUsername = "Guest";
+
+    // BỔ SUNG: Thuộc tính lưu trữ mã phòng chơi hiện tại (Multiplayer-Ready)
+    public string CurrentRoomId { get; private set; }
 
     private HubConnection hubConnection;
     private SynchronizationContext unityContext; // Đồng bộ luồng chính Unity
@@ -62,11 +64,13 @@ public class NetworkManager : MonoBehaviour
 
         hubConnection.On<string>("OnRoomCreated", (roomCode) =>
         {
+            CurrentRoomId = roomCode; // CẬP NHẬT: Lưu lại Room ID cục bộ
             unityContext.Post(_ => OnRoomCreated?.Invoke(roomCode), null);
         });
 
         hubConnection.On<string, List<string>>("OnJoinRoomSuccess", (roomCode, players) =>
         {
+            CurrentRoomId = roomCode; // CẬP NHẬT: Lưu lại Room ID cục bộ
             unityContext.Post(_ => OnJoinRoomSuccess?.Invoke(roomCode, players), null);
         });
 
@@ -96,6 +100,9 @@ public class NetworkManager : MonoBehaviour
         {
             unityContext.Post(_ => OnGameStarted?.Invoke(), null);
         });
+
+        // Gọi hàm đăng ký các sự kiện Combat mạng
+        RegisterCombatCallbacks();
 
         try
         {
@@ -177,11 +184,14 @@ public class NetworkManager : MonoBehaviour
 
     // --- PHƯƠNG THỨC GỬI LÊN SERVER (API KHÁCH GỌI) ---
 
-    public async void SendShootEvent(string roomId, string weaponId, Vector3 position, Vector3 direction)
+    // TỐI ƯU HÓA: Vũ khí chỉ cần truyền tham số vũ khí và vị trí hướng bắn, 
+    // hàm này tự lấy CurrentRoomId đã lưu để gửi lên server để giảm thiểu sai sót.
+    public async void SendShootEvent(string weaponId, Vector3 position, Vector3 direction)
     {
         if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
         {
-            await hubConnection.InvokeAsync("SendShoot", roomId, weaponId, position, direction);
+            // Sử dụng trực tiếp CurrentRoomId nội bộ tự động nhận diện từ phòng chơi
+            await hubConnection.InvokeAsync("SendShoot", CurrentRoomId, weaponId, position, direction);
         }
     }
 
