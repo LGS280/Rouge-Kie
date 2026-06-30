@@ -4883,7 +4883,7 @@ MonoBehaviour:
   getOtpButton: {fileID: 1631236867}
   messageText: {fileID: 316823608}
   regMessageText: {fileID: 1827910942}
-  backendBase: https://localhost:7075
+  backendBase: https://rougekiebe.azurewebsites.net
 --- !u!4 &1614211062
 Transform:
   m_ObjectHideFlags: 0

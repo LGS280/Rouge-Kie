@@ -68,7 +68,7 @@ public class LoginController : MonoBehaviour
     [SerializeField] private TMP_Text regMessageText;
 
     [Header("Backend")]
-    [SerializeField] private string backendBase = "https://localhost:7075";
+    [SerializeField] private string backendBase = "https://rougekiebe.azurewebsites.net";
 
     private void Start()
     {
@@ -207,7 +207,7 @@ public class LoginController : MonoBehaviour
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
-            request.certificateHandler = new AcceptAllCerts();
+            //request.certificateHandler = new AcceptAllCerts();
 
             yield return request.SendWebRequest();
 
@@ -239,7 +239,7 @@ public class LoginController : MonoBehaviour
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
-            request.certificateHandler = new AcceptAllCerts();
+            //request.certificateHandler = new AcceptAllCerts();
 
             yield return request.SendWebRequest();
 
@@ -263,8 +263,12 @@ public class LoginController : MonoBehaviour
                     if (lobbyUI != null) lobbyUI.OnCoOpButtonPressed();
 
                     // Tự giải phóng Scene đăng nhập
-                    UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("LoginScene");
+                    //UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("LoginScene");
                     ShowLoginMessage("Đăng nhập thành công!", Color.green);
+
+                    // FIX TẠI ĐÂY: Tự động lấy chính xác tên Scene chứa Script này (LoginScene) để giải phóng hoàn toàn
+                    string currentSceneName = gameObject.scene.name;
+                    UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(currentSceneName);
 
                     StartCoroutine(GetUsersRoutine());
                     yield break;
@@ -298,7 +302,7 @@ public class LoginController : MonoBehaviour
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
-            request.certificateHandler = new AcceptAllCerts();
+            //request.certificateHandler = new AcceptAllCerts();
 
             yield return request.SendWebRequest();
 
@@ -306,6 +310,8 @@ public class LoginController : MonoBehaviour
             {
                 var resp = JsonUtility.FromJson<ApiResponse>(request.downloadHandler.text);
                 ShowRegisterMessage(resp?.message ?? "Đăng ký thành công! Hãy quay lại để đăng nhập.", Color.green);
+
+                Invoke("ShowLoginPanel", 1.5f);
             }
             else
             {
@@ -325,7 +331,7 @@ public class LoginController : MonoBehaviour
                 req.SetRequestHeader("Authorization", "Bearer " + token);
             }
 
-            req.certificateHandler = new AcceptAllCerts();
+            //req.certificateHandler = new AcceptAllCerts();
             req.downloadHandler = new DownloadHandlerBuffer();
 
             yield return req.SendWebRequest();
