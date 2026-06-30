@@ -35,15 +35,20 @@ public class MultiplayerSyncManager : MonoBehaviour
         {
             NetworkManager.Instance.OnReceivePosition += UpdateRemotePlayerPosition;
             NetworkManager.Instance.OnPlayerDisconnected += RemoveRemotePlayer;
+            NetworkManager.Instance.OnRemotePlayerShoot += HandleRemotePlayerShoot;
+            NetworkManager.Instance.OnRemoteEnemyDamaged += HandleRemoteEnemyDamaged;
         }
     }
 
     private void OnDestroy()
     {
+        // Hủy đăng ký tất cả sự kiện để tránh lỗi rò rỉ bộ nhớ (Memory Leak)
         if (NetworkManager.Instance != null)
         {
             NetworkManager.Instance.OnReceivePosition -= UpdateRemotePlayerPosition;
             NetworkManager.Instance.OnPlayerDisconnected -= RemoveRemotePlayer;
+            NetworkManager.Instance.OnRemotePlayerShoot -= HandleRemotePlayerShoot;
+            NetworkManager.Instance.OnRemoteEnemyDamaged -= HandleRemoteEnemyDamaged;
         }
     }
 
@@ -63,7 +68,7 @@ public class MultiplayerSyncManager : MonoBehaviour
         // Bỏ qua nếu gói tin tọa độ đó là của chính mình
         if (NetworkManager.Instance != null && connId == NetworkManager.Instance.MyConnectionId) return;
 
-        // Nếu ConnectionId này chưa có trong màn chơi -> Thực hiện sinh động đội động (Just-In-Time)
+        // Nếu ConnectionId này chưa có trong màn chơi -> Thực hiện sinh đồng đội động (Just-In-Time)
         if (!remotePlayers.ContainsKey(connId))
         {
             Debug.Log($"Sinh nhân vật đồng đội mới trong trận đấu! ID: {connId}");
@@ -96,5 +101,79 @@ public class MultiplayerSyncManager : MonoBehaviour
             remotePlayers.Remove(connId);
             Debug.Log($"Đồng đội {username} đã ngắt kết nối, tiến hành xóa khỏi màn chơi.");
         }
+    }
+
+    // SỬA LỖI 1: Định nghĩa hàm tìm kiếm đồng đội theo ConnectionId
+    private GameObject GetRemotePlayerById(string playerId)
+    {
+        if (remotePlayers.TryGetValue(playerId, out GameObject player))
+        {
+            return player;
+        }
+        return null;
+    }
+
+    // Xử lý vẽ đạn của người chơi khác
+    private void HandleRemotePlayerShoot(string playerId, string weaponId, Vector3 position, Vector3 direction)
+    {
+        // Tìm đối tượng Remote Player
+        GameObject remotePlayer = GetRemotePlayerById(playerId);
+        if (remotePlayer != null)
+        {
+            // Lấy thành phần WeaponInfo nguyên bản trên tay của Remote Player
+            WeaponInfo remoteWeapon = remotePlayer.GetComponentInChildren<WeaponInfo>();
+            if (remoteWeapon != null)
+            {
+                // 1. Cập nhật góc xoay cho súng của Remote Player
+                float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+                remoteWeapon.transform.rotation = Quaternion.Euler(0, 0, angle);
+
+                // 2. Lật hình ảnh nhân vật nếu súng hướng sang trái
+                SpriteRenderer playerRenderer = remotePlayer.GetComponent<SpriteRenderer>();
+                if (playerRenderer != null)
+                {
+                    if (angle > 90f || angle < -90f)
+                    {
+                        playerRenderer.flipX = true;
+                        remoteWeapon.transform.localScale = new Vector3(1f, -1f, 1f);
+                    }
+                    else
+                    {
+                        playerRenderer.flipX = false;
+                        remoteWeapon.transform.localScale = new Vector3(1f, 1f, 1f);
+                    }
+                }
+
+                // 3. Bắn đạn
+                remoteWeapon.RemoteShoot(position, direction);
+            }
+        }
+    }
+
+
+    // Xử lý khi quái vật bị dính đòn (áp dụng cho tất cả Client)
+    private void HandleRemoteEnemyDamaged(string enemyId, float damage)
+    {
+        GameObject enemy = FindEnemyByNetworkId(enemyId);
+        if (enemy != null)
+        {
+            MobHealth health = enemy.GetComponent<MobHealth>();
+            if (health != null)
+            {
+                // SỬA LỖI 2: Sử dụng Mathf.RoundToInt để ép kiểu an toàn từ float sang int
+                health.TakeDamage(Mathf.RoundToInt(damage));
+            }
+        }
+    }
+
+    private GameObject FindEnemyByNetworkId(string networkId)
+    {
+        MobNetworkIdentity[] enemies = Object.FindObjectsByType<MobNetworkIdentity>(FindObjectsSortMode.None);
+        foreach (var enemy in enemies)
+        {
+            if (enemy.networkId == networkId)
+                return enemy.gameObject;
+        }
+        return null;
     }
 }
