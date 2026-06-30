@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 4136628244467973380}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.02783, y: 7.89225, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -111,8 +111,6 @@ MonoBehaviour:
   bulletPrefab: {fileID: 5457056256669451622, guid: 31423f60f5ac48d48ab9d4feb7a5ac82, type: 3}
   firePoint: {fileID: 8568073828566795883}
   fireRate: 1.5
-  meleeSlashPrefab: {fileID: 8616719184387406343, guid: 0f9f2a81ca31463408b2c686ed0b2437, type: 3}
-  meleeRadius: 2
   recoilDistance: 0.35
   recoilDuration: 0.05
   returnDuration: 0.18
