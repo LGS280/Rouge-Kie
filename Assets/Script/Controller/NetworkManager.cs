@@ -26,7 +26,7 @@ public class NetworkManager : MonoBehaviour
     [Header("Player Session Status (Debug)")]
     public bool IsLoggedIn = false;       // Mặc định ban đầu là chưa đăng nhập
     public string LoggedInUsername = "Guest"; // Tên hiển thị mặc định
-
+    public string UserRole = "Guest"; // Vai trò mặc định là Guest khi chưa đăng nhập
     private void Awake()
     {
         if (Instance == null)
