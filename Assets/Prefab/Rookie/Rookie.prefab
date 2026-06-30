@@ -340,6 +340,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RookieHealth
   maxHealth: 100
   isDead: 0
+  maxArmor: 4
+  armorRegenDelay: 2
+  armorRegenTick: 1
+  maxMana: 200
+  onHealthChanged:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &6471317071900559171
 MonoBehaviour:
   m_ObjectHideFlags: 0

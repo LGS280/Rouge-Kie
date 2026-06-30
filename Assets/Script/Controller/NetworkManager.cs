@@ -1,8 +1,8 @@
+using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Collections.Generic;
 using System.Threading; // Thư viện quản lý luồng chính
 using UnityEngine;
-using Microsoft.AspNetCore.SignalR.Client;
 
 public class NetworkManager : MonoBehaviour
 {
@@ -15,8 +15,14 @@ public class NetworkManager : MonoBehaviour
     public bool IsLoggedIn = false;
     public string LoggedInUsername = "Guest";
 
+    // BỔ SUNG: Thuộc tính lưu trữ mã phòng chơi hiện tại (Multiplayer-Ready)
+    public string CurrentRoomId { get; private set; }
+
     private HubConnection hubConnection;
     private SynchronizationContext unityContext; // Đồng bộ luồng chính Unity
+
+    public event System.Action<string, string, Vector3, Vector3> OnRemotePlayerShoot;
+    public event System.Action<string, float> OnRemoteEnemyDamaged;
 
     // --- CÁC SỰ KIỆN C# ĐỂ LỚP UI & SYNC MANAGER LẮNG NGHE ---
     public event Action<string> OnRoomCreated;
@@ -58,11 +64,13 @@ public class NetworkManager : MonoBehaviour
 
         hubConnection.On<string>("OnRoomCreated", (roomCode) =>
         {
+            CurrentRoomId = roomCode; // CẬP NHẬT: Lưu lại Room ID cục bộ
             unityContext.Post(_ => OnRoomCreated?.Invoke(roomCode), null);
         });
 
         hubConnection.On<string, List<string>>("OnJoinRoomSuccess", (roomCode, players) =>
         {
+            CurrentRoomId = roomCode; // CẬP NHẬT: Lưu lại Room ID cục bộ
             unityContext.Post(_ => OnJoinRoomSuccess?.Invoke(roomCode, players), null);
         });
 
@@ -92,6 +100,9 @@ public class NetworkManager : MonoBehaviour
         {
             unityContext.Post(_ => OnGameStarted?.Invoke(), null);
         });
+
+        // Gọi hàm đăng ký các sự kiện Combat mạng
+        RegisterCombatCallbacks();
 
         try
         {
@@ -146,6 +157,49 @@ public class NetworkManager : MonoBehaviour
         {
             await hubConnection.StopAsync();
             await hubConnection.DisposeAsync();
+        }
+    }
+
+    // Đăng ký Listener trong hàm khởi tạo kết nối SignalR (ví dụ: RegisterHubCallbacks)
+    private void RegisterCombatCallbacks()
+    {
+        // Đồng bộ bắn súng
+        hubConnection.On<string, string, float, float, float, float>("OnPlayerShoot", (playerId, weaponId, px, py, dx, dy) =>
+        {
+            unityContext.Post(_ =>
+            {
+                OnRemotePlayerShoot?.Invoke(playerId, weaponId, new Vector3(px, py, 0), new Vector3(dx, dy, 0));
+            }, null);
+        });
+
+        // Đồng bộ sát thương quái
+        hubConnection.On<string, float>("OnEnemyDamaged", (enemyId, damage) =>
+        {
+            unityContext.Post(_ =>
+            {
+                OnRemoteEnemyDamaged?.Invoke(enemyId, damage);
+            }, null);
+        });
+    }
+
+    // --- PHƯƠNG THỨC GỬI LÊN SERVER (API KHÁCH GỌI) ---
+
+    // TỐI ƯU HÓA: Vũ khí chỉ cần truyền tham số vũ khí và vị trí hướng bắn, 
+    // hàm này tự lấy CurrentRoomId đã lưu để gửi lên server để giảm thiểu sai sót.
+    public async void SendShootEvent(string weaponId, Vector3 position, Vector3 direction)
+    {
+        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        {
+            // Sử dụng trực tiếp CurrentRoomId nội bộ tự động nhận diện từ phòng chơi
+            await hubConnection.InvokeAsync("SendShoot", CurrentRoomId, weaponId, position.x, position.y, direction.x, direction.y);
+        }
+    }
+
+    public async void SendEnemyHitEvent(string roomId, string enemyId, float damage)
+    {
+        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        {
+            await hubConnection.InvokeAsync("RegisterEnemyHit", roomId, enemyId, damage);
         }
     }
 }
