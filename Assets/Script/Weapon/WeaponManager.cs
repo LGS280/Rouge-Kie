@@ -45,6 +45,24 @@ public class WeaponManager : MonoBehaviour
 
     void SwapWeapon()
     {
+        if (weaponSlot1 == null && weaponSlot2 != null)
+        {
+            weaponSlot1 = weaponSlot2;
+            weaponSlot2 = null;
+            isUsingSlot1 = true;
+            UpdateWeaponParent(weaponSlot1, handPosition, true);
+            return;
+        }
+
+        if (weaponSlot1 != null && weaponSlot2 == null)
+        {
+            isUsingSlot1 = true;
+            UpdateWeaponParent(weaponSlot1, handPosition, true);
+            return;
+        }
+
+        if (weaponSlot1 == null && weaponSlot2 == null) return;
+
         isUsingSlot1 = !isUsingSlot1;
 
         if (isUsingSlot1)
@@ -61,6 +79,8 @@ public class WeaponManager : MonoBehaviour
 
     void UpdateWeaponParent(GameObject weapon, Transform newParent, bool isTargetHand)
     {
+        if (weapon == null) return;
+
         weapon.transform.SetParent(newParent);
         weapon.transform.localRotation = Quaternion.identity;
         weapon.transform.localScale = Vector3.one;
@@ -108,10 +128,31 @@ public class WeaponManager : MonoBehaviour
 
     void ResetWeaponsStatus()
     {
-        if (weaponSlot1 != null && weaponSlot2 != null)
+        if (weaponSlot1 == null && weaponSlot2 != null)
+        {
+            weaponSlot1 = weaponSlot2;
+            weaponSlot2 = null;
+        }
+
+        if (weaponSlot1 != null)
         {
             UpdateWeaponParent(weaponSlot1, handPosition, true);
+            isUsingSlot1 = true;
+        }
+
+        if (weaponSlot2 != null)
+        {
             UpdateWeaponParent(weaponSlot2, backPosition, false);
         }
     }
+
+    // public void PickupWeapon(GameObject newWeapon)
+    // {
+    //     if (newWeapon == null) return;
+    //     if (weaponSlot1 != null && weaponSlot2 == null)
+    //     {
+    //         weaponSlot2 = newWeapon;
+    //         UpdateWeaponParent(weaponSlot2, backPosition, false);
+    //     }
+    // }
 }
