@@ -35,6 +35,13 @@ public class WeaponAim : MonoBehaviour
 
     void Update()
     {
+        // BỎ QUA NẾU ĐÂY LÀ SÚNG CỦA REMOTE PLAYER
+        // Theo kiến trúc, Remote Player không có PlayerController, nên biến này sẽ null
+        if (playerController == null)
+        {
+            return;
+        }
+
         float angle = 0f;
 
         // chơi bằng tay cầm
