@@ -39,6 +39,16 @@ public class WeaponInfo : MonoBehaviour
         {
             Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
 
+            if (NetworkManager.Instance != null)
+            {
+                // Hướng bắn súng (thường là hướng của trục bên phải nòng súng)
+                Vector3 shootDirection = firePoint.right;
+
+                // Gửi gói tin bắn súng lên Azure Server (Mã phòng đã tự động đi kèm)
+                NetworkManager.Instance.SendShootEvent("RookieWeapon", firePoint.position, shootDirection);
+            }
+
+
             if (shootSound != null && RogueKie.Audio.AudioManager.Instance != null)
             {
                 RogueKie.Audio.AudioManager.Instance.PlaySFXAtPosition(shootSound, transform.position, shootVolume);

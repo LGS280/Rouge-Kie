@@ -63,13 +63,6 @@ GameObject:
   - component: {fileID: 3090423080499815593}
   - component: {fileID: 968341340445653306}
   - component: {fileID: 3410201476915872192}
-  - component: {fileID: 2442851724912038013}
-  - component: {fileID: 1389444901819791447}
-  - component: {fileID: 6378955532732907479}
-  - component: {fileID: 6337125136891598741}
-  - component: {fileID: 7324990917526745866}
-  - component: {fileID: 6471317071900559171}
-  - component: {fileID: 1417017810891825403}
   m_Layer: 0
   m_Name: Remote_Rookie
   m_TagString: Player
@@ -250,129 +243,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &2442851724912038013
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4513691302435627913}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.PlayerInput
-  m_Actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
-  m_NotificationBehavior: 0
-  m_UIInputModule: {fileID: 0}
-  m_DeviceLostEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_DeviceRegainedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_ControlsChangedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_ActionEvents: []
-  m_NeverAutoSwitchControlSchemes: 0
-  m_DefaultControlScheme: 
-  m_DefaultActionMap: Player
-  m_SplitScreenIndex: -1
-  m_Camera: {fileID: 0}
---- !u!114 &1389444901819791447
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4513691302435627913}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 27ea9b4e85f5862429d4f878dcede754, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  moveSpeed: 8
-  rb2d: {fileID: 968341340445653306}
-  playerInput: {fileID: 2442851724912038013}
-  mainCamera: {fileID: 0}
-  currentMode: 0
---- !u!114 &6378955532732907479
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4513691302435627913}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41ac3d13826c411469f364e9aa9e4618, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpeedSkill
-  buffMultiplier: 2
-  buffDuration: 7
-  cooldown: 15
-  skillKey: 102
---- !u!114 &6337125136891598741
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4513691302435627913}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c95cad2675f1d674896f25911132ae05, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerStats
-  attackSpeedMultiplier: 1
---- !u!114 &7324990917526745866
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4513691302435627913}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bb5fad99dbb4df44cb1d8acb78a39aab, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RookieHealth
-  maxHealth: 100
-  isDead: 0
---- !u!114 &6471317071900559171
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4513691302435627913}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a2299550b2b8d5140a14c001282a5d17, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeaponManager
-  handPosition: {fileID: 12616528524299117}
-  backPosition: {fileID: 5289129472824092616}
-  weaponSlot1: {fileID: 3958100353804416116}
-  weaponSlot2: {fileID: 7899034397582093655}
---- !u!114 &1417017810891825403
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4513691302435627913}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 917d1385831b8ad42ad47039a078bd4a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerMeleeSlash
-  meleeSlashPrefab: {fileID: 8616719184387406343, guid: 0f9f2a81ca31463408b2c686ed0b2437, type: 3}
-  meleeRadius: 2
-  meleeCooldown: 0.3
-  slashOffset: 1.2
-  enemyTag: Enemy
 --- !u!1 &5801610104968796645
 GameObject:
   m_ObjectHideFlags: 0
@@ -649,11 +519,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3248397152866196008, guid: 7ac88ad6a102d7d41ab1ff7cd22148cf, type: 3}
   m_PrefabInstance: {fileID: 1118509220308732272}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &3958100353804416116 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4136628244467973380, guid: 7ac88ad6a102d7d41ab1ff7cd22148cf, type: 3}
-  m_PrefabInstance: {fileID: 1118509220308732272}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8274193632421948077
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -714,10 +579,5 @@ PrefabInstance:
 --- !u!4 &1005439118819429336 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 9162536917882675573, guid: 4208f3b8848eb1e44b5e5ce624af72cc, type: 3}
-  m_PrefabInstance: {fileID: 8274193632421948077}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &7899034397582093655 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2255413539830745082, guid: 4208f3b8848eb1e44b5e5ce624af72cc, type: 3}
   m_PrefabInstance: {fileID: 8274193632421948077}
   m_PrefabAsset: {fileID: 0}
