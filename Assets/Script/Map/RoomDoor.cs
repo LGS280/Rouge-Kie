@@ -16,6 +16,13 @@ public class RoomDoor : MonoBehaviour
 
     private RoomController ownerRoom;
 
+    //private Vector2 inwardDirection = Vector2.zero;
+
+    //public void SetInwardDirection(Vector2 dir)
+    //{
+    //    inwardDirection = dir.normalized;
+    //}
+
     private void Awake()
     {
         lowerSpriteRenderer = GetComponent<SpriteRenderer>();
@@ -87,26 +94,26 @@ public class RoomDoor : MonoBehaviour
         }
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerStay2D(Collider2D collision)
     {
-        if (collision.CompareTag("Player") && !isClosed)
-        {
-            StartCoroutine(CheckBeforeClose(collision.transform));
-        }
+        if (!collision.CompareTag("Player") || isClosed || ownerRoom == null)
+            return;
+
+        ownerRoom.TryStartRoomCombat();
     }
 
-    private IEnumerator CheckBeforeClose(Transform playerTransform)
-    {
-        yield return new WaitForSeconds(0.25f);
+    //private IEnumerator CheckBeforeClose(Transform playerTransform)
+    //{
+    //    yield return new WaitForSeconds(0.25f);
 
-        if (playerTransform == null || ownerRoom == null)
-            yield break;
+    //    if (playerTransform == null || ownerRoom == null)
+    //        yield break;
 
-        float distance = Vector2.Distance(transform.position, playerTransform.position);
+    //    float distance = Vector2.Distance(transform.position, playerTransform.position);
 
-        if (distance > 0.8f)
-        {
-            ownerRoom.TryStartRoomCombat();
-        }
-    }
+    //    if (distance > 0.8f)
+    //    {
+    //        ownerRoom.TryStartRoomCombat();
+    //    }
+    //}
 }
