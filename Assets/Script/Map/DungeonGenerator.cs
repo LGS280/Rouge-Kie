@@ -563,7 +563,7 @@ public class DungeonGenerator : MonoBehaviour
         for (int x = midX - halfDoor; x < midX + halfDoor; x++)
         {
             Vector3Int topPos = new Vector3Int(x, y, 0);
-            Vector3Int spawnPos = topPos + Vector3Int.down;
+            Vector3Int spawnPos = isBottomDoor ? topPos + Vector3Int.down : topPos;
 
             SetFloor(topPos, GetRandomFloorTile());
             SetFloor(topPos + Vector3Int.down, GetRandomFloorTile());
@@ -579,11 +579,10 @@ public class DungeonGenerator : MonoBehaviour
 
                 if (doorScript != null)
                 {
-                    Vector2 offset = isBottomDoor
-                        ? new Vector2(0f, 0.6f)
-                        : new Vector2(0f, -0.4f);
-
-                    doorScript.SetupTriggerCollider(new Vector2(1f, 0.2f), offset);
+                    doorScript.SetupTriggerCollider(
+                        new Vector2(1f, 0.4f),
+                        Vector2.zero
+                    );
 
                     createdDoors.Add(doorScript);
                 }
@@ -628,11 +627,10 @@ public class DungeonGenerator : MonoBehaviour
                         doorScript.upperSpriteRenderer.sortingOrder += orderOffset;
                     }
 
-                    Vector2 offset = triggerToRight
-                        ? new Vector2(0.4f, 0f)
-                        : new Vector2(-0.4f, 0f);
-
-                    doorScript.SetupTriggerCollider(new Vector2(0.2f, 1f), offset);
+                    doorScript.SetupTriggerCollider(
+    new Vector2(1f, 1f),
+    Vector2.zero
+);
 
                     createdDoors.Add(doorScript);
                 }
@@ -1173,9 +1171,9 @@ public class DungeonGenerator : MonoBehaviour
             trigger.isTrigger = true;
 
             trigger.size = new Vector2(
-                room.rect.width - 4,
-                room.rect.height - 4
-            );
+            room.rect.width - 1,
+            room.rect.height - 1
+);
 
             RoomController controller = roomObj.AddComponent<RoomController>();
             room.controller = controller;
