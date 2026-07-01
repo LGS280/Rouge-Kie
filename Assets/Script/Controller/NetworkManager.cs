@@ -40,6 +40,8 @@ public class NetworkManager : MonoBehaviour
 
     public string MyConnectionId => hubConnection?.ConnectionId;
 
+    public string UserRole = "Guest";
+
     private void Awake()
     {
         if (Instance == null)

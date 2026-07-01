@@ -61,17 +61,53 @@ public class LoginController : MonoBehaviour
     [SerializeField] private TMP_InputField regPasswordInput;
     [SerializeField] private TMP_InputField regConfirmPasswordInput;
     [SerializeField] private TMP_InputField regOtpInput;
+    [SerializeField] private GameObject getOtpButton;
 
     [Header("UI Feedback")]
     [SerializeField] private TMP_Text messageText;
     [SerializeField] private TMP_Text regMessageText;
 
     [Header("Backend")]
-    [SerializeField] private string backendBase = "https://localhost:7075";
+    [SerializeField] private string backendBase = "https://rougekiebe.azurewebsites.net";
 
     private void Start()
     {
         ShowLoginPanel();
+
+        //đăng kí sự kiện lắng nghe sự kiện input thay đổi trong trường input email
+        if (regEmailInput != null)
+        {
+            regEmailInput.onValueChanged.AddListener(OnEmailValueChanged);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Hủy lắng nghe khi Object bị xóa để tránh rò rỉ bộ nhớ
+        if (regEmailInput != null)
+        {
+            regEmailInput.onValueChanged.RemoveListener(OnEmailValueChanged);
+        }
+    }
+
+    // Hàm lắng nghe sự kiện thay đổi text từ Input Field
+    private void OnEmailValueChanged(string value)
+    {
+        UpdateOtpButtonVisibility(value);
+    }
+
+    // HÀM CẬP NHẬT: Xử lý làm sạch chuỗi và ẩn/hiện nút OTP chính xác
+    private void UpdateOtpButtonVisibility(string textValue)
+    {
+        if (getOtpButton != null)
+        {
+            // Loại bỏ các ký tự ẩn đặc biệt của TextMeshPro cùng khoảng trắng thừa
+            string cleanedText = textValue.Replace("\u200b", "").Replace("\r", "").Replace("\n", "").Trim();
+
+            // Chỉ hiện nút nếu chuỗi sau khi làm sạch không bị rỗng
+            bool shouldShow = !string.IsNullOrEmpty(cleanedText);
+            getOtpButton.SetActive(shouldShow);
+        }
     }
 
     public void ShowLoginPanel()
@@ -87,6 +123,12 @@ public class LoginController : MonoBehaviour
         if (loginPanel != null) loginPanel.SetActive(false);
         if (registerPanel != null) registerPanel.SetActive(true);
 
+        //hàm check để ẩn/hiện nút OTP khi hiển thị panel đăng ký
+        if (getOtpButton != null)
+        {
+            getOtpButton.SetActive(regEmailInput != null && !string.IsNullOrWhiteSpace(regEmailInput.text));
+        }
+
         HideMessages();
     }
 
@@ -97,13 +139,24 @@ public class LoginController : MonoBehaviour
 
     public void OnBackToLoginClick()
     {
-        ShowLoginPanel();
+        // Nếu đang ở trang Register, bấm Back sẽ quay lại trang Login Panel
+        if (registerPanel != null && registerPanel.activeSelf)
+        {
+            ShowLoginPanel();
+        }
+        else
+        {
+            // Tự động lấy chính xác tên Scene hiện tại đang chứa Script này để Unload an toàn
+            string currentSceneName = gameObject.scene.name;
+            UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(currentSceneName);
+        }
     }
 
     public void OnCloseLoginClick()
     {
-        if (loginPanel != null) loginPanel.SetActive(false);
-        if (registerPanel != null) registerPanel.SetActive(false);
+        // Tự động lấy chính xác tên Scene hiện tại đang chứa Script này để Unload an toàn
+        string currentSceneName = gameObject.scene.name;
+        UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(currentSceneName);
     }
 
     public void OnLoginClick()
@@ -154,7 +207,7 @@ public class LoginController : MonoBehaviour
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
-            request.certificateHandler = new AcceptAllCerts();
+            //request.certificateHandler = new AcceptAllCerts();
 
             yield return request.SendWebRequest();
 
@@ -186,7 +239,7 @@ public class LoginController : MonoBehaviour
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
-            request.certificateHandler = new AcceptAllCerts();
+            //request.certificateHandler = new AcceptAllCerts();
 
             yield return request.SendWebRequest();
 
@@ -201,7 +254,21 @@ public class LoginController : MonoBehaviour
                     PlayerPrefs.SetInt("user_id", resp.userId);
                     PlayerPrefs.Save();
 
+                    NetworkManager.Instance.IsLoggedIn = true;
+                    NetworkManager.Instance.LoggedInUsername = resp.username;
+                    NetworkManager.Instance.UserRole = "Player";
+
+                    // Tự động gọi Menu chính mở sảnh Co-op
+                    LobbyUIController lobbyUI = Object.FindFirstObjectByType<LobbyUIController>();
+                    if (lobbyUI != null) lobbyUI.OnCoOpButtonPressed();
+
+                    // Tự giải phóng Scene đăng nhập
+                    //UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("LoginScene");
                     ShowLoginMessage("Đăng nhập thành công!", Color.green);
+
+                    // FIX TẠI ĐÂY: Tự động lấy chính xác tên Scene chứa Script này (LoginScene) để giải phóng hoàn toàn
+                    string currentSceneName = gameObject.scene.name;
+                    UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(currentSceneName);
 
                     StartCoroutine(GetUsersRoutine());
                     yield break;
@@ -235,7 +302,7 @@ public class LoginController : MonoBehaviour
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
-            request.certificateHandler = new AcceptAllCerts();
+            //request.certificateHandler = new AcceptAllCerts();
 
             yield return request.SendWebRequest();
 
@@ -243,6 +310,8 @@ public class LoginController : MonoBehaviour
             {
                 var resp = JsonUtility.FromJson<ApiResponse>(request.downloadHandler.text);
                 ShowRegisterMessage(resp?.message ?? "Đăng ký thành công! Hãy quay lại để đăng nhập.", Color.green);
+
+                Invoke("ShowLoginPanel", 1.5f);
             }
             else
             {
@@ -262,7 +331,7 @@ public class LoginController : MonoBehaviour
                 req.SetRequestHeader("Authorization", "Bearer " + token);
             }
 
-            req.certificateHandler = new AcceptAllCerts();
+            //req.certificateHandler = new AcceptAllCerts();
             req.downloadHandler = new DownloadHandlerBuffer();
 
             yield return req.SendWebRequest();
