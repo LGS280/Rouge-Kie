@@ -84,6 +84,11 @@ public class LobbyUIController : MonoBehaviour
             return; // Dừng hàm tại đây, không cho vào Lobby Menu bên dưới
         }
 
+        if (usernameInput != null && !string.IsNullOrEmpty(NetworkManager.Instance.LoggedInUsername))
+        {
+            usernameInput.text = NetworkManager.Instance.LoggedInUsername;
+        }
+
         // Bỏ qua kiểm tra và cho phép mở sảnh chọn Co-op ngay lập tức
         playMenuPanel.SetActive(false);
         lobbyMenuPanel.SetActive(true);
