@@ -23,6 +23,7 @@ public class NetworkManager : MonoBehaviour
 
     public event System.Action<string, string, Vector3, Vector3> OnRemotePlayerShoot;
     public event System.Action<string, float> OnRemoteEnemyDamaged;
+    public event System.Action<string, float, float, float> OnReceiveWeaponAngle;
 
     // --- CÁC SỰ KIỆN C# ĐỂ LỚP UI & SYNC MANAGER LẮNG NGHE ---
     public event Action<string> OnRoomCreated;
@@ -182,6 +183,15 @@ public class NetworkManager : MonoBehaviour
                 OnRemoteEnemyDamaged?.Invoke(enemyId, damage);
             }, null);
         });
+
+        // Đồng bộ góc quay súng
+        hubConnection.On<string, float, float, float>("OnReceiveShoot", (connId, angle, px, py) =>
+        {
+            unityContext.Post(_ =>
+            {
+                OnReceiveWeaponAngle?.Invoke(connId, angle, px, py);
+            }, null);
+        });
     }
 
     // --- PHƯƠNG THỨC GỬI LÊN SERVER (API KHÁCH GỌI) ---
@@ -202,6 +212,14 @@ public class NetworkManager : MonoBehaviour
         if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
         {
             await hubConnection.InvokeAsync("RegisterEnemyHit", roomId, enemyId, damage);
+        }
+    }
+
+    public async void SendWeaponAngle(float angle, float px, float py)
+    {
+        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        {
+            await hubConnection.InvokeAsync("SyncShoot", angle, px, py);
         }
     }
 }
