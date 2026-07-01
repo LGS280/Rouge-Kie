@@ -16,6 +16,13 @@ public class RoomDoor : MonoBehaviour
 
     private RoomController ownerRoom;
 
+    //private Vector2 inwardDirection = Vector2.zero;
+
+    //public void SetInwardDirection(Vector2 dir)
+    //{
+    //    inwardDirection = dir.normalized;
+    //}
+
     private void Awake()
     {
         lowerSpriteRenderer = GetComponent<SpriteRenderer>();
@@ -64,7 +71,12 @@ public class RoomDoor : MonoBehaviour
         if (lowerSpriteRenderer != null) lowerSpriteRenderer.sprite = closedSpriteLower;
         if (upperSpriteRenderer != null) upperSpriteRenderer.sprite = closedSpriteUpper;
 
-        if (physicsCollider != null) physicsCollider.enabled = true;
+        // C?a ?óng: ch?n Player + ch?n ??n
+        if (physicsCollider != null)
+        {
+            physicsCollider.enabled = true;
+            physicsCollider.isTrigger = false;
+        }
     }
 
     public void OpenDoor()
@@ -74,29 +86,34 @@ public class RoomDoor : MonoBehaviour
         if (lowerSpriteRenderer != null) lowerSpriteRenderer.sprite = openSpriteLower;
         if (upperSpriteRenderer != null) upperSpriteRenderer.sprite = openSpriteUpper;
 
-        if (physicsCollider != null) physicsCollider.enabled = false;
-    }
-
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (collision.CompareTag("Player") && !isClosed)
+        // C?a m?: v?n cho ??n detect, nh?ng không ch?n Player v?t lý
+        if (physicsCollider != null)
         {
-            StartCoroutine(CheckBeforeClose(collision.transform));
+            physicsCollider.enabled = true;
+            physicsCollider.isTrigger = true;
         }
     }
 
-    private IEnumerator CheckBeforeClose(Transform playerTransform)
+    private void OnTriggerStay2D(Collider2D collision)
     {
-        yield return new WaitForSeconds(0.25f);
+        if (!collision.CompareTag("Player") || isClosed || ownerRoom == null)
+            return;
 
-        if (playerTransform == null || ownerRoom == null)
-            yield break;
-
-        float distance = Vector2.Distance(transform.position, playerTransform.position);
-
-        if (distance > 0.8f)
-        {
-            ownerRoom.TryStartRoomCombat();
-        }
+        ownerRoom.TryStartRoomCombat();
     }
+
+    //private IEnumerator CheckBeforeClose(Transform playerTransform)
+    //{
+    //    yield return new WaitForSeconds(0.25f);
+
+    //    if (playerTransform == null || ownerRoom == null)
+    //        yield break;
+
+    //    float distance = Vector2.Distance(transform.position, playerTransform.position);
+
+    //    if (distance > 0.8f)
+    //    {
+    //        ownerRoom.TryStartRoomCombat();
+    //    }
+    //}
 }

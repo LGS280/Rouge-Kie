@@ -63,11 +63,25 @@ public class LobbyUIController : MonoBehaviour
         }
 
         // TẠM THỜI: Tự động đăng nhập Guest nếu chưa đăng nhập khi test Co-op
+        //if (!NetworkManager.Instance.IsLoggedIn)
+        //{
+        //    NetworkManager.Instance.IsLoggedIn = true; // Gán tạm bằng true để bypass
+        //    NetworkManager.Instance.LoggedInUsername = $"Player_{UnityEngine.Random.Range(1000, 9999)}";
+        //    usernameInput.text = NetworkManager.Instance.LoggedInUsername;
+        //}
+
+        // --- BƯỚC KIỂM TRA ĐĂNG NHẬP THỰC TẾ ---
         if (!NetworkManager.Instance.IsLoggedIn)
         {
-            NetworkManager.Instance.IsLoggedIn = true; // Gán tạm bằng true để bypass
-            NetworkManager.Instance.LoggedInUsername = $"Player_{UnityEngine.Random.Range(1000, 9999)}";
-            usernameInput.text = NetworkManager.Instance.LoggedInUsername;
+            Debug.Log("Chưa đăng nhập! Đang gọi Scene Login/Register...");
+
+            // 1. Kiểm tra xem Scene Login đã được load chưa để tránh load trùng
+            if (!UnityEngine.SceneManagement.SceneManager.GetSceneByName("LoginScrene").isLoaded)
+            {
+                // 2. Tải cộng dồn Scene Login đè lên Main Menu (nhớ đổi đúng tên Scene của bạn)
+                UnityEngine.SceneManagement.SceneManager.LoadScene("LoginScrene", UnityEngine.SceneManagement.LoadSceneMode.Additive);
+            }
+            return; // Dừng hàm tại đây, không cho vào Lobby Menu bên dưới
         }
 
         // Bỏ qua kiểm tra và cho phép mở sảnh chọn Co-op ngay lập tức

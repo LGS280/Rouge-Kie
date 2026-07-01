@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -35,6 +35,13 @@ public class WeaponAim : MonoBehaviour
 
     void Update()
     {
+        // BỎ QUA NẾU ĐÂY LÀ SÚNG CỦA REMOTE PLAYER
+        // Theo kiến trúc, Remote Player không có PlayerController, nên biến này sẽ null
+        if (playerController == null)
+        {
+            return;
+        }
+
         float angle = 0f;
 
         // chơi bằng tay cầm
@@ -200,6 +207,15 @@ public class WeaponAim : MonoBehaviour
                 }
 
                 currentWeapon.Attack(); // truyền thêm isNewClick
+
+                // Gửi sự kiện bắn đạn lên mạng cho các người chơi khác
+                if (NetworkManager.Instance != null && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId))
+                {
+                    Vector3 shootPos = currentWeapon.firePoint != null ? currentWeapon.firePoint.position : transform.position;
+                    Vector3 shootDir = currentWeapon.firePoint != null ? currentWeapon.firePoint.right : transform.right;
+                    
+                    NetworkManager.Instance.SendShootEvent(currentWeapon.name, shootPos, shootDir);
+                }
             }
         }
     }
