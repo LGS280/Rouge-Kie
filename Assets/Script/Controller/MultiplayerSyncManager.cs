@@ -37,6 +37,7 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnPlayerDisconnected += RemoveRemotePlayer;
             NetworkManager.Instance.OnRemotePlayerShoot += HandleRemotePlayerShoot;
             NetworkManager.Instance.OnRemoteEnemyDamaged += HandleRemoteEnemyDamaged;
+            NetworkManager.Instance.OnReceiveWeaponAngle += UpdateRemoteWeaponAngle;
         }
     }
 
@@ -49,6 +50,7 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnPlayerDisconnected -= RemoveRemotePlayer;
             NetworkManager.Instance.OnRemotePlayerShoot -= HandleRemotePlayerShoot;
             NetworkManager.Instance.OnRemoteEnemyDamaged -= HandleRemoteEnemyDamaged;
+            NetworkManager.Instance.OnReceiveWeaponAngle -= UpdateRemoteWeaponAngle;
         }
     }
 
@@ -58,6 +60,15 @@ public class MultiplayerSyncManager : MonoBehaviour
         if (localPlayer != null && NetworkManager.Instance != null && Time.time - lastSyncTime >= syncInterval)
         {
             NetworkManager.Instance.SendPlayerPosition(localPlayer.position.x, localPlayer.position.y);
+            
+            // Gửi góc quay súng liên tục
+            WeaponAim weaponAim = localPlayer.GetComponentInChildren<WeaponAim>();
+            if (weaponAim != null)
+            {
+                float angle = weaponAim.transform.rotation.eulerAngles.z;
+                NetworkManager.Instance.SendWeaponAngle(angle, localPlayer.position.x, localPlayer.position.y);
+            }
+
             lastSyncTime = Time.time;
         }
     }
@@ -73,21 +84,32 @@ public class MultiplayerSyncManager : MonoBehaviour
         {
             Debug.Log($"Sinh nhân vật đồng đội mới trong trận đấu! ID: {connId}");
             GameObject newRemote = Instantiate(remotePlayerPrefab, new Vector3(x, y, 0), Quaternion.identity);
+            
+            // Xóa các script của local player trên bản sao này để tránh xung đột
+            Destroy(newRemote.GetComponent<PlayerController>());
+            Destroy(newRemote.GetComponent<PlayerMovement>());
+            Destroy(newRemote.GetComponent<UnityEngine.InputSystem.PlayerInput>());
+            
+            // Thêm script điều khiển từ xa
+            newRemote.AddComponent<RemotePlayerController>();
+            
             remotePlayers.Add(connId, newRemote);
         }
         else
         {
-            // Nếu đã tồn tại -> Cập nhật tọa độ mượt mà bằng Lerp
+            // Cập nhật vị trí mục tiêu cho RemotePlayerController
             GameObject remote = remotePlayers[connId];
             if (remote != null)
             {
-                // Di chuyển đồng đội tới vị trí đồng bộ mạng
-                remote.transform.position = Vector3.Lerp(remote.transform.position, new Vector3(x, y, 0), 0.3f);
-                
-                // Đồng bộ Animation di chuyển
-                Animator anim = remote.GetComponent<Animator>();
-                if (anim != null) 
-                    anim.SetBool("isMoving", true);
+                RemotePlayerController rpc = remote.GetComponent<RemotePlayerController>();
+                if (rpc != null)
+                {
+                    rpc.targetPosition = new Vector3(x, y, 0);
+                }
+                else
+                {
+                    remote.transform.position = new Vector3(x, y, 0);
+                }
             }
         }
     }
@@ -111,6 +133,38 @@ public class MultiplayerSyncManager : MonoBehaviour
             return player;
         }
         return null;
+    }
+
+    // Cập nhật góc quay súng từ xa liên tục
+    private void UpdateRemoteWeaponAngle(string connId, float angle, float px, float py)
+    {
+        GameObject remote = GetRemotePlayerById(connId);
+        if (remote != null)
+        {
+            WeaponInfo remoteWeapon = remote.GetComponentInChildren<WeaponInfo>();
+            if (remoteWeapon != null)
+            {
+                if (angle > 180f) angle -= 360f;
+                if (angle < -180f) angle += 360f;
+
+                remoteWeapon.transform.rotation = Quaternion.Euler(0, 0, angle);
+
+                SpriteRenderer playerRenderer = remote.GetComponent<SpriteRenderer>();
+                if (playerRenderer != null)
+                {
+                    if (angle > 90f || angle < -90f)
+                    {
+                        playerRenderer.flipX = true;
+                        remoteWeapon.transform.localScale = new Vector3(1f, -1f, 1f);
+                    }
+                    else
+                    {
+                        playerRenderer.flipX = false;
+                        remoteWeapon.transform.localScale = new Vector3(1f, 1f, 1f);
+                    }
+                }
+            }
+        }
     }
 
     // Xử lý vẽ đạn của người chơi khác
