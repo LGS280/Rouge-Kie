@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 748203293326626555}
   - component: {fileID: 6296113314098115309}
   m_Layer: 0
-  m_Name: AK47
+  m_Name: Wooden_Bow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -81,14 +81,14 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 11
+  m_SortingOrder: 9
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 1585974835397443309, guid: 0af20bc2bec0478419fa75fc12bf9925, type: 3}
+  m_Sprite: {fileID: -2721812861199101799, guid: 8ad4da3f68ca5b840b341fc03de0e957, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.84375, y: 0.34375}
+  m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -105,12 +105,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df397456b8e4f78429e2e244b759fab4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponInfo
-  shootSound: {fileID: 8300000, guid: 4ae2095f19431574292a3de087a0bfab, type: 3}
+  shootSound: {fileID: 0}
   shootVolume: 0.8
   customHandPosition: {x: 0.04, y: 0.12, z: 0}
-  bulletPrefab: {fileID: 5457056256669451622, guid: b151046f8c1e0f844b3f31b266ffbb4a, type: 3}
+  bulletPrefab: {fileID: 5457056256669451622, guid: e189e784771179944b5166cfa9f456b3, type: 3}
   firePoint: {fileID: 8568073828566795883}
-  fireRate: 0.2
+  fireRate: 0.15
   recoilDistance: 0.15
   recoilDuration: 0.05
   returnDuration: 0.1

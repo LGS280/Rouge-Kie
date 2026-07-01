@@ -1,31 +1,46 @@
+using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Collections.Generic;
-using System.Threading; // Yêu cầu thư viện này để quản lý luồng
+using System.Threading; // Thư viện quản lý luồng chính
 using UnityEngine;
-using Microsoft.AspNetCore.SignalR.Client;
 
 public class NetworkManager : MonoBehaviour
 {
     public static NetworkManager Instance { get; private set; }
 
-    public event Action OnGameStarted; // Sự kiện báo cho UI biết trận đấu đã bắt đầu
-
     [Header("Server Connection Settings")]
     [SerializeField] private string serverUrl = "http://localhost:5000/gamehub";
 
-    private HubConnection hubConnection;
-    private SynchronizationContext unityContext; // Lưu luồng chính của Unity
+    [Header("Player Session Status (Debug)")]
+    public bool IsLoggedIn = false;
+    public string LoggedInUsername = "Guest";
 
-    // Các sự kiện C# để lớp UI lắng nghe
+    // BỔ SUNG: Thuộc tính lưu trữ mã phòng chơi hiện tại (Multiplayer-Ready)
+    public string CurrentRoomId { get; private set; }
+
+    private HubConnection hubConnection;
+    private SynchronizationContext unityContext; // Đồng bộ luồng chính Unity
+
+    public event System.Action<string, string, Vector3, Vector3> OnRemotePlayerShoot;
+    public event System.Action<string, float> OnRemoteEnemyDamaged;
+    public event System.Action<string, float, float, float> OnReceiveWeaponAngle;
+
+    // --- CÁC SỰ KIỆN C# ĐỂ LỚP UI & SYNC MANAGER LẮNG NGHE ---
     public event Action<string> OnRoomCreated;
     public event Action<string, List<string>> OnJoinRoomSuccess;
     public event Action<string> OnJoinRoomFailed;
     public event Action<string, string> OnPlayerJoined;
     public event Action<string, string> OnPlayerDisconnected;
 
-    [Header("Player Session Status (Debug)")]
-    public bool IsLoggedIn = false;       // Mặc định ban đầu là chưa đăng nhập
-    public string LoggedInUsername = "Guest"; // Tên hiển thị mặc định
+    // Sự kiện đồng bộ vị trí (Đồng đội gọi)
+    public event Action<string, float, float> OnReceivePosition;
+
+    // Sự kiện bắt đầu game
+    public event Action OnGameStarted;
+
+    public string MyConnectionId => hubConnection?.ConnectionId;
+
+    public string UserRole = "Guest";
 
     private void Awake()
     {
@@ -33,7 +48,7 @@ public class NetworkManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            unityContext = SynchronizationContext.Current; // Lấy luồng chính hiện tại
+            unityContext = SynchronizationContext.Current;
         }
         else
         {
@@ -48,44 +63,49 @@ public class NetworkManager : MonoBehaviour
             .WithAutomaticReconnect()
             .Build();
 
-        // ĐĂNG KÝ LẮNG NGHE SỰ KIỆN TỪ SERVER (Sử dụng unityContext.Post để chạy trên Main Thread)
+        // --- ĐĂNG KÝ LẮNG NGHE TỪ SERVER ---
 
         hubConnection.On<string>("OnRoomCreated", (roomCode) =>
         {
-            // Chuyển tiếp sự kiện về chạy an toàn trên luồng chính (Main Thread) của Unity
+            CurrentRoomId = roomCode; // CẬP NHẬT: Lưu lại Room ID cục bộ
             unityContext.Post(_ => OnRoomCreated?.Invoke(roomCode), null);
         });
 
         hubConnection.On<string, List<string>>("OnJoinRoomSuccess", (roomCode, players) =>
         {
-            // Chuyển tiếp sự kiện về chạy an toàn trên luồng chính (Main Thread) của Unity
+            CurrentRoomId = roomCode; // CẬP NHẬT: Lưu lại Room ID cục bộ
             unityContext.Post(_ => OnJoinRoomSuccess?.Invoke(roomCode, players), null);
         });
 
         hubConnection.On<string>("OnJoinRoomFailed", (errorMessage) =>
         {
-            // Chuyển tiếp sự kiện về chạy an toàn trên luồng chính (Main Thread) của Unity
             unityContext.Post(_ => OnJoinRoomFailed?.Invoke(errorMessage), null);
         });
 
         hubConnection.On<string, string>("OnPlayerJoined", (username, connId) =>
         {
-            // Chuyển tiếp sự kiện về chạy an toàn trên luồng chính (Main Thread) của Unity
             unityContext.Post(_ => OnPlayerJoined?.Invoke(username, connId), null);
         });
 
         hubConnection.On<string, string>("OnPlayerDisconnected", (username, connId) =>
         {
-            // Chuyển tiếp sự kiện về chạy an toàn trên luồng chính (Main Thread) của Unity
             unityContext.Post(_ => OnPlayerDisconnected?.Invoke(username, connId), null);
         });
 
+        // Đăng ký lắng nghe gói tin tọa độ của đồng đội từ Server gửi về
+        hubConnection.On<string, float, float>("OnReceivePosition", (connId, x, y) =>
+        {
+            unityContext.Post(_ => OnReceivePosition?.Invoke(connId, x, y), null);
+        });
+
+        // Đăng ký lắng nghe tín hiệu bắt đầu game
         hubConnection.On("OnGameStarted", () =>
         {
-            // Chuyển tiếp sự kiện về chạy an toàn trên luồng chính (Main Thread) của Unity
             unityContext.Post(_ => OnGameStarted?.Invoke(), null);
         });
 
+        // Gọi hàm đăng ký các sự kiện Combat mạng
+        RegisterCombatCallbacks();
 
         try
         {
@@ -116,11 +136,90 @@ public class NetworkManager : MonoBehaviour
         }
     }
 
+    // Hàm gửi tọa độ di chuyển của người chơi cục bộ lên Server
+    public async void SendPlayerPosition(float x, float y)
+    {
+        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        {
+            await hubConnection.InvokeAsync("SyncPosition", x, y);
+        }
+    }
+
+    // Hàm gửi yêu cầu bắt đầu game lên Server (Chỉ Host gọi)
     public async void RequestStartGame()
     {
         if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
         {
             await hubConnection.InvokeAsync("StartGame");
+        }
+    }
+
+    private async void OnDestroy()
+    {
+        if (hubConnection != null)
+        {
+            await hubConnection.StopAsync();
+            await hubConnection.DisposeAsync();
+        }
+    }
+
+    // Đăng ký Listener trong hàm khởi tạo kết nối SignalR (ví dụ: RegisterHubCallbacks)
+    private void RegisterCombatCallbacks()
+    {
+        // Đồng bộ bắn súng
+        hubConnection.On<string, string, float, float, float, float>("OnPlayerShoot", (playerId, weaponId, px, py, dx, dy) =>
+        {
+            unityContext.Post(_ =>
+            {
+                OnRemotePlayerShoot?.Invoke(playerId, weaponId, new Vector3(px, py, 0), new Vector3(dx, dy, 0));
+            }, null);
+        });
+
+        // Đồng bộ sát thương quái
+        hubConnection.On<string, float>("OnEnemyDamaged", (enemyId, damage) =>
+        {
+            unityContext.Post(_ =>
+            {
+                OnRemoteEnemyDamaged?.Invoke(enemyId, damage);
+            }, null);
+        });
+
+        // Đồng bộ góc quay súng
+        hubConnection.On<string, float, float, float>("OnReceiveShoot", (connId, angle, px, py) =>
+        {
+            unityContext.Post(_ =>
+            {
+                OnReceiveWeaponAngle?.Invoke(connId, angle, px, py);
+            }, null);
+        });
+    }
+
+    // --- PHƯƠNG THỨC GỬI LÊN SERVER (API KHÁCH GỌI) ---
+
+    // TỐI ƯU HÓA: Vũ khí chỉ cần truyền tham số vũ khí và vị trí hướng bắn, 
+    // hàm này tự lấy CurrentRoomId đã lưu để gửi lên server để giảm thiểu sai sót.
+    public async void SendShootEvent(string weaponId, Vector3 position, Vector3 direction)
+    {
+        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        {
+            // Sử dụng trực tiếp CurrentRoomId nội bộ tự động nhận diện từ phòng chơi
+            await hubConnection.InvokeAsync("SendShoot", CurrentRoomId, weaponId, position.x, position.y, direction.x, direction.y);
+        }
+    }
+
+    public async void SendEnemyHitEvent(string roomId, string enemyId, float damage)
+    {
+        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        {
+            await hubConnection.InvokeAsync("RegisterEnemyHit", roomId, enemyId, damage);
+        }
+    }
+
+    public async void SendWeaponAngle(float angle, float px, float py)
+    {
+        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        {
+            await hubConnection.InvokeAsync("SyncShoot", angle, px, py);
         }
     }
 }

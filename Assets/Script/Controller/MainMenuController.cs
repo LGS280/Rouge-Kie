@@ -77,8 +77,8 @@ public class MainMenuController : MonoBehaviour
         Debug.Log("Chạy chế độ chơi đơn...");
 
         // Lệnh chuyển sang màn chơi chính
-        //SceneManager.LoadScene("SampleScene");
-        SceneManager.LoadScene(1);
+        SceneManager.LoadScene("SampleScene");
+        //SceneManager.LoadScene(1);
     }
 
 
