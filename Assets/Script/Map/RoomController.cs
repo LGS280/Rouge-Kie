@@ -3,6 +3,11 @@ using UnityEngine;
 
 public class RoomController : MonoBehaviour
 {
+    [Header("Multiplayer Settings (Auto-generated)")]
+    // TỰ ĐỘNG HÓA: ID này sẽ tự sinh bằng GetInstanceID().ToString() lúc Runtime, không cần điền tay nữa!
+    public string roomUniqueId { get; private set; }
+
+    [Header("Room Status")]
     public bool roomCleared = false;
     public bool roomStarted = false;
     private Transform currentPlayer;
@@ -16,6 +21,9 @@ public class RoomController : MonoBehaviour
     private void Awake()
     {
         RoomCollider = GetComponent<Collider2D>();
+
+        // TỰ ĐỘNG SINH ID: Lấy mã InstanceID độc nhất của Object này trong Scene hiện tại
+        roomUniqueId = gameObject.GetInstanceID().ToString();
     }
 
     public void AddDoor(RoomDoor door)
@@ -62,40 +70,71 @@ public class RoomController : MonoBehaviour
         }
     }
 
-    private void PushPlayerInsideRoom()
-    {
-        if (currentPlayer == null)
-            return;
-
-        Vector3 roomCenter = transform.position;
-        Vector3 dir = (roomCenter - currentPlayer.position).normalized;
-
-        currentPlayer.position += dir * 1.5f;
-    }
-
     public void TryStartRoomCombat()
     {
         CollectMobsInsideRoom();
         CollectDoorsNearRoom();
 
-        Debug.Log($"{gameObject.name} StartCombat - AliveMobs: {GetAliveMobCount()}");
+        Debug.Log($"{gameObject.name} TryStartRoomCombat - AliveMobs: {GetAliveMobCount()}");
 
         if (roomCleared || roomStarted)
             return;
 
         if (GetAliveMobCount() <= 0)
         {
-            ClearRoom();
+            if (NetworkManager.Instance != null)
+            {
+                NetworkManager.Instance.SendRoomClearedEvent(roomUniqueId);
+            }
+            else
+            {
+                ClearRoom();
+            }
             return;
         }
 
-        roomStarted = true;
+        // Gửi ID tự động lên Server
+        if (NetworkManager.Instance != null && currentPlayer != null)
+        {
+            NetworkManager.Instance.SendRoomCombatTrigger(roomUniqueId, currentPlayer.position);
+        }
+        else
+        {
+            ExecuteStartCombatLocal();
+        }
+    }
 
+    public void ExecuteStartCombatLocal()
+    {
+        if (roomStarted || roomCleared) return;
+
+        CollectMobsInsideRoom();
+        CollectDoorsNearRoom();
+
+        roomStarted = true;
         PushPlayerInsideRoom();
         CloseDoors();
-
-        // Kích hoạt toàn bộ quái trong phòng khi bắt đầu combat
         ActivateAllMobsInRoom();
+    }
+
+    public void ExecuteClearRoomLocal()
+    {
+        roomCleared = true;
+        roomStarted = false;
+        OpenDoors();
+    }
+
+    private void PushPlayerInsideRoom()
+    {
+        if (currentPlayer == null) return;
+
+        PlayerController pc = currentPlayer.GetComponent<PlayerController>();
+        if (pc == null) return;
+
+        Vector3 roomCenter = transform.position;
+        Vector3 dir = (roomCenter - currentPlayer.position).normalized;
+
+        currentPlayer.position += dir * 1.5f;
     }
 
     private void ActivateAllMobsInRoom()
@@ -116,7 +155,6 @@ public class RoomController : MonoBehaviour
     private void OnMobDeath(MobHealth deadMob)
     {
         Debug.Log($"{gameObject.name} Mob Died: {deadMob.name}");
-
         CheckRoomCleared();
     }
 
@@ -124,39 +162,40 @@ public class RoomController : MonoBehaviour
     {
         if (GetAliveMobCount() <= 0)
         {
-            ClearRoom();
+            if (NetworkManager.Instance != null)
+            {
+                NetworkManager.Instance.SendRoomClearedEvent(roomUniqueId);
+            }
+            else
+            {
+                ClearRoom();
+            }
         }
     }
 
     private void ClearRoom()
     {
-        roomCleared = true;
-        roomStarted = false;
-        OpenDoors();
+        ExecuteClearRoomLocal();
     }
 
     private int GetAliveMobCount()
     {
         int count = 0;
-
         foreach (MobHealth mob in mobs)
         {
             if (mob != null && !mob.isDead)
                 count++;
         }
-
         return count;
     }
 
     private void CloseDoors()
     {
         Debug.Log($"{gameObject.name} CLOSE DOORS - DoorCount: {doors.Count}");
-
         foreach (RoomDoor door in doors)
         {
             if (door != null)
             {
-                Debug.Log($"Closing door: {door.name}");
                 door.CloseDoor();
             }
         }
@@ -165,7 +204,6 @@ public class RoomController : MonoBehaviour
     private void OpenDoors()
     {
         Debug.Log($"{gameObject.name} OPEN DOORS");
-
         foreach (RoomDoor door in doors)
         {
             if (door != null)
@@ -208,7 +246,6 @@ public class RoomController : MonoBehaviour
                 continue;
 
             Collider2D[] doorColliders = door.GetComponents<Collider2D>();
-
             bool isNearRoom = false;
 
             foreach (Collider2D doorCol in doorColliders)
@@ -225,7 +262,5 @@ public class RoomController : MonoBehaviour
                 AddDoor(door);
             }
         }
-
-        Debug.Log($"{gameObject.name} CollectDoorsNearRoom - DoorCount: {doors.Count}");
     }
 }
