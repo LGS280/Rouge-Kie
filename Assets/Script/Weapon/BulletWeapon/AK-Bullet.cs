@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 public class Bullet : MonoBehaviour
@@ -60,7 +60,12 @@ public class Bullet : MonoBehaviour
         MobHealth enemyHealth = collision.GetComponent<MobHealth>();
         if (enemyHealth != null)
         {
-            enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage), isCrit);
+            // Bug Fix 2: Bỏ qua sát thương nếu đây là viên đạn của người chơi khác (Remote Bullet)
+            // Lượng máu trừ sẽ được đồng bộ từ mạng (SendEnemyHitEvent) thay vì tự trừ 2 lần
+            if (!gameObject.name.EndsWith("_Remote"))
+            {
+                enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage), isCrit);
+            }
         }
     }
 }

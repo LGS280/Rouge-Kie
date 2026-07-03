@@ -96,7 +96,8 @@ public class RoomController : MonoBehaviour
         // Gửi ID tự động lên Server
         if (NetworkManager.Instance != null && currentPlayer != null)
         {
-            NetworkManager.Instance.SendRoomCombatTrigger(roomUniqueId, currentPlayer.position);
+            // SỬA LỖI: Lấy tọa độ trung tâm phòng (transform.position) để khi dịch chuyển, đồng đội không bị kẹt ngoài cửa
+            NetworkManager.Instance.SendRoomCombatTrigger(roomUniqueId, transform.position);
         }
         else
         {

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class MeleeSlash : MonoBehaviour
 {
@@ -35,7 +35,10 @@ public class MeleeSlash : MonoBehaviour
             MobHealth enemyHealth = collision.GetComponent<MobHealth>();
             if (enemyHealth != null)
             {
-                enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage));
+                if (!gameObject.name.EndsWith("_Remote"))
+                {
+                    enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage));
+                }
             }
         }
     }

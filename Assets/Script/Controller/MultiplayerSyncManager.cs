@@ -301,8 +301,8 @@ public class MultiplayerSyncManager : MonoBehaviour
                 else
                 {
                     // Dự phòng: Nếu là sát thương bình thường từ đồng đội bắn (không phải đòn kết liễu)
-                    // Bạn có thể cho quái local trừ máu theo để đồng bộ thanh máu (nếu cần hiển thị)
-                    health.TakeDamage(Mathf.RoundToInt(damage));
+                    // Pass false to syncNetwork to prevent loop
+                    health.TakeDamage(Mathf.RoundToInt(damage), false, false);
                 }
             }
         }
