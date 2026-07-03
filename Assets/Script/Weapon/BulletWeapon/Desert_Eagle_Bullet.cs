@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class Desert_Eagle_Bullet : MonoBehaviour
 {
@@ -59,7 +59,10 @@ public class Desert_Eagle_Bullet : MonoBehaviour
         MobHealth enemyHealth = collision.GetComponent<MobHealth>();
         if (enemyHealth != null)
         {
-            enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage), isCrit);
+            if (!gameObject.name.EndsWith("_Remote"))
+            {
+                enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage), isCrit);
+            }
         }
     }
 }

@@ -37,13 +37,19 @@ public class MobHealth : MonoBehaviour
         }
     }
 
-    public void TakeDamage(int damage, bool isCrit = false)
+    public void TakeDamage(int damage, bool isCrit = false, bool syncNetwork = true)
     {
         if (isDead) return;
 
         // CẢ HOST VÀ CLIENT ĐỀU TRỪ MÁU LOCAL ĐỂ CHƠI MƯỢT MÀ
         currentHealth -= damage;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+
+        // SYNC DAMAGE: Sync all damage to other clients so health matches perfectly
+        if (syncNetwork && NetworkManager.Instance != null && networkIdentity != null)
+        {
+            NetworkManager.Instance.SendEnemyHitEvent(NetworkManager.Instance.CurrentRoomId, networkIdentity.networkId, damage);
+        }
 
         MobFlash flash = GetComponent<MobFlash>();
         if (flash != null) flash.TriggerFlash();
@@ -56,18 +62,18 @@ public class MobHealth : MonoBehaviour
 
         if (currentHealth <= 0)
         {
-            Die();
+            Die(syncNetwork);
         }
     }
 
-    void Die()
+    void Die(bool syncNetwork)
     {
         // 1. Cho quái chết tại máy hiện tại luôn
         ExecuteDieLocal();
 
         // 2. ĐỒNG BỘ HAI BÊN: Bất kể ai giết (Host hay Client), đều gửi một gói tin đặc biệt 
         // lên Server để báo cho máy đối phương khai tử con quái này theo.
-        if (NetworkManager.Instance != null && networkIdentity != null)
+        if (syncNetwork && NetworkManager.Instance != null && networkIdentity != null)
         {
             // Mượn hàm SendEnemyHitEvent gửi lượng dame 9999 để kích hoạt lệnh chết bên máy kia
             NetworkManager.Instance.SendEnemyHitEvent(NetworkManager.Instance.CurrentRoomId, networkIdentity.networkId, 9999f);
