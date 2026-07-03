@@ -96,8 +96,13 @@ public class RoomController : MonoBehaviour
         // Gửi ID tự động lên Server
         if (NetworkManager.Instance != null && currentPlayer != null)
         {
-            // SỬA LỖI: Lấy tọa độ trung tâm phòng (transform.position) để khi dịch chuyển, đồng đội không bị kẹt ngoài cửa
-            NetworkManager.Instance.SendRoomCombatTrigger(roomUniqueId, transform.position);
+            // SỬA THEO YÊU CẦU: Lấy tọa độ mép cửa phía trong phòng (safeSpot) thay vì giữa phòng,
+            // tránh trường hợp giữa phòng có vật cản.
+            Vector3 roomCenter = transform.position;
+            Vector3 dirToCenter = (roomCenter - currentPlayer.position).normalized;
+            Vector3 safeTeleportPos = currentPlayer.position + dirToCenter * 2.0f; // Đẩy vào trong 2 unit từ mép cửa
+
+            NetworkManager.Instance.SendRoomCombatTrigger(roomUniqueId, safeTeleportPos);
         }
         else
         {
@@ -129,8 +134,8 @@ public class RoomController : MonoBehaviour
     {
         if (currentPlayer == null) return;
 
-        PlayerController pc = currentPlayer.GetComponent<PlayerController>();
-        if (pc == null) return;
+        // Bỏ qua nếu đang chơi Multi, vì MultiplayerSyncManager đã tự dịch chuyển (tránh đẩy 2 lần)
+        if (NetworkManager.Instance != null) return;
 
         Vector3 roomCenter = transform.position;
         Vector3 dir = (roomCenter - currentPlayer.position).normalized;
