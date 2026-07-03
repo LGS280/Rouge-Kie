@@ -11,6 +11,7 @@ public class MobHealth : MonoBehaviour
     private Animator animator;
     private Collider2D mobCollider;
     private Rigidbody2D rb;
+    private MobNetworkIdentity networkIdentity;
 
     void Start()
     {
@@ -20,9 +21,9 @@ public class MobHealth : MonoBehaviour
         animator = GetComponent<Animator>();
         mobCollider = GetComponent<Collider2D>();
         rb = GetComponent<Rigidbody2D>();
+        networkIdentity = GetComponent<MobNetworkIdentity>();
     }
 
-    // Hàm reset khi quái được lấy ra lại từ Object Pool
     void OnEnable()
     {
         currentHealth = maxHealth;
@@ -36,72 +37,53 @@ public class MobHealth : MonoBehaviour
         }
     }
 
-    public void TakeDamage(int damage, bool isCrit = false)
+    public void TakeDamage(int damage, bool isCrit = false, bool syncNetwork = true)
     {
         if (isDead) return;
 
+        // CẢ HOST VÀ CLIENT ĐỀU TRỪ MÁU LOCAL ĐỂ CHƠI MƯỢT MÀ
         currentHealth -= damage;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
+        // SYNC DAMAGE: Sync all damage to other clients so health matches perfectly
+        if (syncNetwork && NetworkManager.Instance != null && networkIdentity != null)
+        {
+            NetworkManager.Instance.SendEnemyHitEvent(NetworkManager.Instance.CurrentRoomId, networkIdentity.networkId, damage);
+        }
+
         MobFlash flash = GetComponent<MobFlash>();
         if (flash != null) flash.TriggerFlash();
-        DamageNumberSpawner.Instance.Spawn(transform.position, damage, isCrit); // ✅
+        DamageNumberSpawner.Instance.Spawn(transform.position, damage, isCrit);
 
-        // Kích hoạt Animation bị thương (giật lùi, chớp đỏ...)
         if (animator != null)
         {
             animator.SetTrigger("hurt");
         }
+
         if (currentHealth <= 0)
         {
-            Die();
+            Die(syncNetwork);
         }
     }
 
-    //void Die()
-    //{
-    //    isDead = true;
-
-    //    if (animator != null)
-    //    {
-    //        animator.SetTrigger("die");
-    //    }
-
-    //    // Tắt va chạm vật lý để người chơi/đạn đi xuyên qua xác quái khi đang chạy Anim chết
-    //    if (mobCollider != null)
-    //    {
-    //        mobCollider.enabled = false;
-    //    }
-
-    //    // Đóng băng vật lý của quái (Chuyển sang Static) để xác quái không bị trượt đi khi bị va chạm
-    //    if (rb != null)
-    //    {
-    //        rb.bodyType = RigidbodyType2D.Static;
-    //        rb.linearVelocity = Vector2.zero; // Dừng mọi lực quán tính còn lại
-    //    }
-
-    //    // Tắt hoàn toàn AI của quái để dừng mọi logic tìm đường/chạy Update
-    //    MobAI ai = GetComponent<MobAI>();
-    //    if (ai != null)
-    //    {
-    //        ai.enabled = false;
-    //    }
-
-    //    // Đẩy xác quái xuống lớp hiển thị phía sau (Dưới chân người chơi)
-    //    SpriteRenderer sr = GetComponent<SpriteRenderer>();
-    //    if (sr != null)
-    //    {
-    //        // Giả sử sortingOrder bình thường của bạn là 0 hoặc lớn hơn, đặt về -10 để nằm dưới chân nhân vật
-    //        sr.sortingOrder = 2;
-    //    }
-
-
-    //    // Trả quái về Object Pool sau một khoảng thời gian (ví dụ 1.2 giây)
-    //    //Invoke("RecycleMob", 1.2f);
-    //}
-
-    void Die()
+    void Die(bool syncNetwork)
     {
+        // 1. Cho quái chết tại máy hiện tại luôn
+        ExecuteDieLocal();
+
+        // 2. ĐỒNG BỘ HAI BÊN: Bất kể ai giết (Host hay Client), đều gửi một gói tin đặc biệt 
+        // lên Server để báo cho máy đối phương khai tử con quái này theo.
+        if (syncNetwork && NetworkManager.Instance != null && networkIdentity != null)
+        {
+            // Mượn hàm SendEnemyHitEvent gửi lượng dame 9999 để kích hoạt lệnh chết bên máy kia
+            NetworkManager.Instance.SendEnemyHitEvent(NetworkManager.Instance.CurrentRoomId, networkIdentity.networkId, 9999f);
+        }
+    }
+
+    // Ép quái chết lập tức (gọi cục bộ hoặc gọi từ máy khác qua mạng)
+    public void ExecuteDieLocal()
+    {
+        if (isDead) return;
         isDead = true;
 
         if (animator != null)
@@ -132,7 +114,6 @@ public class MobHealth : MonoBehaviour
             shadowObj.gameObject.SetActive(false);
         }
 
-        // Đẩy xác quái xuống lớp hiển thị phía sau (Dưới chân người chơi)
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
         if (sr != null)
         {

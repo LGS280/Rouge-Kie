@@ -16,6 +16,9 @@ public class MultiplayerSyncManager : MonoBehaviour
     // Quản lý danh sách các đồng đội đang có trong trận qua ConnectionId
     private Dictionary<string, GameObject> remotePlayers = new Dictionary<string, GameObject>();
 
+    // BỔ SUNG: Cache danh sách các phòng trong Scene để truy xuất nhanh bằng ID
+    private Dictionary<string, RoomController> roomCache = new Dictionary<string, RoomController>();
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -30,7 +33,10 @@ public class MultiplayerSyncManager : MonoBehaviour
             if (playerObj != null) localPlayer = playerObj.transform;
         }
 
-        // Đăng ký lắng nghe gói tin tọa độ mạng từ NetworkManager
+        // Cache toàn bộ RoomController có trong Scene
+        CacheAllRooms();
+
+        // Đăng ký lắng nghe gói tin mạng từ NetworkManager
         if (NetworkManager.Instance != null)
         {
             NetworkManager.Instance.OnReceivePosition += UpdateRemotePlayerPosition;
@@ -38,6 +44,10 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnRemotePlayerShoot += HandleRemotePlayerShoot;
             NetworkManager.Instance.OnRemoteEnemyDamaged += HandleRemoteEnemyDamaged;
             NetworkManager.Instance.OnReceiveWeaponAngle += UpdateRemoteWeaponAngle;
+
+            // ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ PHÒNG
+            NetworkManager.Instance.OnRoomCombatStarted += HandleRoomCombatStarted;
+            NetworkManager.Instance.OnRoomClearedFromServer += HandleRoomClearedFromServer;
         }
     }
 
@@ -51,6 +61,10 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnRemotePlayerShoot -= HandleRemotePlayerShoot;
             NetworkManager.Instance.OnRemoteEnemyDamaged -= HandleRemoteEnemyDamaged;
             NetworkManager.Instance.OnReceiveWeaponAngle -= UpdateRemoteWeaponAngle;
+
+            // HỦY ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ PHÒNG
+            NetworkManager.Instance.OnRoomCombatStarted -= HandleRoomCombatStarted;
+            NetworkManager.Instance.OnRoomClearedFromServer -= HandleRoomClearedFromServer;
         }
     }
 
@@ -60,7 +74,7 @@ public class MultiplayerSyncManager : MonoBehaviour
         if (localPlayer != null && NetworkManager.Instance != null && Time.time - lastSyncTime >= syncInterval)
         {
             NetworkManager.Instance.SendPlayerPosition(localPlayer.position.x, localPlayer.position.y);
-            
+
             // Gửi góc quay súng liên tục
             WeaponAim weaponAim = localPlayer.GetComponentInChildren<WeaponAim>();
             if (weaponAim != null)
@@ -73,6 +87,78 @@ public class MultiplayerSyncManager : MonoBehaviour
         }
     }
 
+    // ==========================================
+    // NEW: LOGIC ĐỒNG BỘ COMBAT ROOM
+    // ==========================================
+
+    private void CacheAllRooms()
+    {
+        RoomController[] allRooms = Object.FindObjectsByType<RoomController>(FindObjectsSortMode.None);
+        foreach (RoomController room in allRooms)
+        {
+            if (string.IsNullOrEmpty(room.roomUniqueId))
+            {
+                Debug.LogWarning($"Cảnh báo: Có một RoomController trên object {room.gameObject.name} chưa được gán roomUniqueId!");
+                continue;
+            }
+
+            if (!roomCache.ContainsKey(room.roomUniqueId))
+            {
+                roomCache.Add(room.roomUniqueId, room);
+            }
+        }
+    }
+
+    // Khi Server báo một phòng đã bắt đầu đánh nhau
+    private void HandleRoomCombatStarted(string targetRoomId, float centerX, float centerY)
+    {
+        Debug.Log($"NHẬN LỆNH TỪ SERVER: Bắt đầu combat tại phòng {targetRoomId}");
+
+        // 1. Dịch chuyển Local Player vào tâm phòng
+        if (localPlayer != null)
+        {
+            // Tùy biến một chút khoảng cách để 2 người không bị dính chùm vào nhau (offset ngẫu nhiên)
+            Vector2 randomOffset = Random.insideUnitCircle * 1.5f;
+            localPlayer.position = new Vector3(centerX + randomOffset.x, centerY + randomOffset.y, 0);
+        }
+
+        // 2. Dịch chuyển ngay lập tức tất cả Remote Players (Đồng đội)
+        foreach (var remotePlayerKV in remotePlayers)
+        {
+            GameObject remoteObj = remotePlayerKV.Value;
+            if (remoteObj != null)
+            {
+                RemotePlayerController rpc = remoteObj.GetComponent<RemotePlayerController>();
+                Vector3 newPos = new Vector3(centerX, centerY, 0);
+
+                if (rpc != null)
+                {
+                    rpc.targetPosition = newPos; // Báo RPC di chuyển mượt về vị trí này
+                }
+
+                remoteObj.transform.position = newPos; // Teleport lập tức để khỏi kẹt tường
+            }
+        }
+
+        // 3. Tìm đúng căn phòng đó để ép cửa đóng lại + Kích hoạt quái (Logic nội bộ)
+        if (roomCache.TryGetValue(targetRoomId, out RoomController room))
+        {
+            room.ExecuteStartCombatLocal();
+        }
+    }
+
+    // Khi Server báo phòng đã dọn dẹp xong
+    private void HandleRoomClearedFromServer(string targetRoomId)
+    {
+        Debug.Log($"NHẬN LỆNH TỪ SERVER: Phòng {targetRoomId} đã clear xong. Mở cửa!");
+
+        if (roomCache.TryGetValue(targetRoomId, out RoomController room))
+        {
+            room.ExecuteClearRoomLocal();
+        }
+    }
+    // ==========================================
+
     // Xử lý đồng bộ tọa độ đồng đội
     private void UpdateRemotePlayerPosition(string connId, float x, float y)
     {
@@ -84,15 +170,15 @@ public class MultiplayerSyncManager : MonoBehaviour
         {
             Debug.Log($"Sinh nhân vật đồng đội mới trong trận đấu! ID: {connId}");
             GameObject newRemote = Instantiate(remotePlayerPrefab, new Vector3(x, y, 0), Quaternion.identity);
-            
+
             // Xóa các script của local player trên bản sao này để tránh xung đột
             Destroy(newRemote.GetComponent<PlayerController>());
             Destroy(newRemote.GetComponent<PlayerMovement>());
             Destroy(newRemote.GetComponent<UnityEngine.InputSystem.PlayerInput>());
-            
+
             // Thêm script điều khiển từ xa
             newRemote.AddComponent<RemotePlayerController>();
-            
+
             remotePlayers.Add(connId, newRemote);
         }
         else
@@ -125,7 +211,6 @@ public class MultiplayerSyncManager : MonoBehaviour
         }
     }
 
-    // SỬA LỖI 1: Định nghĩa hàm tìm kiếm đồng đội theo ConnectionId
     private GameObject GetRemotePlayerById(string playerId)
     {
         if (remotePlayers.TryGetValue(playerId, out GameObject player))
@@ -170,19 +255,15 @@ public class MultiplayerSyncManager : MonoBehaviour
     // Xử lý vẽ đạn của người chơi khác
     private void HandleRemotePlayerShoot(string playerId, string weaponId, Vector3 position, Vector3 direction)
     {
-        // Tìm đối tượng Remote Player
         GameObject remotePlayer = GetRemotePlayerById(playerId);
         if (remotePlayer != null)
         {
-            // Lấy thành phần WeaponInfo nguyên bản trên tay của Remote Player
             WeaponInfo remoteWeapon = remotePlayer.GetComponentInChildren<WeaponInfo>();
             if (remoteWeapon != null)
             {
-                // 1. Cập nhật góc xoay cho súng của Remote Player
                 float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
                 remoteWeapon.transform.rotation = Quaternion.Euler(0, 0, angle);
 
-                // 2. Lật hình ảnh nhân vật nếu súng hướng sang trái
                 SpriteRenderer playerRenderer = remotePlayer.GetComponent<SpriteRenderer>();
                 if (playerRenderer != null)
                 {
@@ -198,12 +279,10 @@ public class MultiplayerSyncManager : MonoBehaviour
                     }
                 }
 
-                // 3. Bắn đạn
                 remoteWeapon.RemoteShoot(position, direction);
             }
         }
     }
-
 
     // Xử lý khi quái vật bị dính đòn (áp dụng cho tất cả Client)
     private void HandleRemoteEnemyDamaged(string enemyId, float damage)
@@ -214,8 +293,17 @@ public class MultiplayerSyncManager : MonoBehaviour
             MobHealth health = enemy.GetComponent<MobHealth>();
             if (health != null)
             {
-                // SỬA LỖI 2: Sử dụng Mathf.RoundToInt để ép kiểu an toàn từ float sang int
-                health.TakeDamage(Mathf.RoundToInt(damage));
+                // Nếu nhận được tín hiệu kết liễu (9999) từ máy đối phương -> Ép quái chết theo ngay lập tức
+                if (damage >= 9999f)
+                {
+                    health.ExecuteDieLocal();
+                }
+                else
+                {
+                    // Dự phòng: Nếu là sát thương bình thường từ đồng đội bắn (không phải đòn kết liễu)
+                    // Pass false to syncNetwork to prevent loop
+                    health.TakeDamage(Mathf.RoundToInt(damage), false, false);
+                }
             }
         }
     }

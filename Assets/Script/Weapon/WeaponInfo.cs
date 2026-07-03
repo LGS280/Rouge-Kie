@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 public class WeaponInfo : MonoBehaviour
 {
     [Header("Audio Settings")]
@@ -76,7 +76,10 @@ public class WeaponInfo : MonoBehaviour
             Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.forward);
 
             // Sinh viên đạn
-            Instantiate(bulletPrefab, spawnPosition, rotation);
+            GameObject spawnedBullet = Instantiate(bulletPrefab, spawnPosition, rotation);
+            
+            // Đánh dấu đây là đạn của người chơi khác (Remote) để không gây sát thương trùng lặp cục bộ
+            spawnedBullet.name += "_Remote";
 
             // Phát âm thanh không gian tại vị trí nòng súng của đồng đội
             if (shootSound != null && RogueKie.Audio.AudioManager.Instance != null)
