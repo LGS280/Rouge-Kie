@@ -3,23 +3,27 @@ using System.Collections.Generic;
 
 public class WeaponLaser : MonoBehaviour
 {
+    [Header("Cấu hình API kết nối")]
+    public int weaponDbId;
+
     [Header("--- THIẾT LẬP LASER ---")]
     public GameObject laserPrefab;
     public Transform firePoint;
-    public float baseDamage = 10f;
     public float maxLaserDistance = 15f;
 
-    [Header("VỊ TRÍ CẦM SÚNG")]
-    public Vector3 customHandPosition;
+    [Header("VỊ TRÍ CẦM SÚNG (Đọc từ DB)")]
+    [HideInInspector] public Vector3 customHandPosition;
 
     [Header("--- THIẾT LẬP TAG ---")]
     public string obstacleTag = "Obstacle";
     public string enemyTag = "Enemy";
     public string doorTag = "Door";
 
-    public float chargeDuration = 0.15f;
     public float maxLaserWidth = 1.0f;
     public float lerpSpeed = 15f;
+
+    [HideInInspector] public float baseDamage;
+    [HideInInspector] public float chargeDuration;
 
     private LineRenderer currentLaserLine;
     private Transform startGlowCircle;
@@ -37,6 +41,28 @@ public class WeaponLaser : MonoBehaviour
     void Start()
     {
         playerMelee = GetComponentInParent<PlayerMeleeSlash>();
+    }
+
+    void OnEnable()
+    {
+        ApplyConfigFromDb();
+    }
+
+    public void ApplyConfigFromDb()
+    {
+        if (GameConfigManager.Instance != null && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig wConfig))
+        {
+            chargeDuration = wConfig.fireRate;
+
+            // Nạp vị trí cầm súng từ DB
+            customHandPosition = new Vector3(wConfig.handPositionX, wConfig.handPositionY, wConfig.handPositionZ);
+            transform.localPosition = customHandPosition;
+
+            if (GameConfigManager.Instance.BulletDb.TryGetValue(wConfig.bulletId, out BulletConfig bConfig))
+            {
+                baseDamage = bConfig.damage;
+            }
+        }
     }
 
     void Update()
