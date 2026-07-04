@@ -5058,7 +5058,7 @@ MonoBehaviour:
   playerHUDs:
   - {fileID: 163530327}
   players:
-  - {fileID: 0}
+  - {fileID: 1347407592}
 --- !u!114 &381416464
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -49893,6 +49893,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4760798153524251046, guid: 569e9b8b73d6dc145b49aa5e2acc7ce0, type: 3}
   m_PrefabInstance: {fileID: 1461958530}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1347407592 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7324990917526745866, guid: 569e9b8b73d6dc145b49aa5e2acc7ce0, type: 3}
+  m_PrefabInstance: {fileID: 1461958530}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb5fad99dbb4df44cb1d8acb78a39aab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RookieHealth
 --- !u!1 &1362054374
 GameObject:
   m_ObjectHideFlags: 0
