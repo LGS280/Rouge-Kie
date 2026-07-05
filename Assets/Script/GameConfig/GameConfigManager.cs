@@ -57,17 +57,39 @@ public class GameConfigManager : MonoBehaviour
         if (string.IsNullOrEmpty(baseUrl)) yield return null;
 
         yield return StartCoroutine(FetchData($"{baseUrl}/bullets", (json) => {
-            string wrappedJson = "{\"data\":" + json + "}";
-            var wrapper = JsonUtility.FromJson<BulletArrayWrapper>(wrappedJson);
-            foreach (var b in wrapper.data) BulletDb[b.id] = b;
-            Debug.Log($"[API] Đã nạp {BulletDb.Count} cấu hình đạn thành công.");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(json)) throw new Exception("Empty response");
+                string wrappedJson = "{\"data\":" + json + "}";
+                var wrapper = JsonUtility.FromJson<BulletArrayWrapper>(wrappedJson);
+                if (wrapper != null && wrapper.data != null)
+                {
+                    foreach (var b in wrapper.data) BulletDb[b.id] = b;
+                    Debug.Log($"[API] Đã nạp {BulletDb.Count} cấu hình đạn thành công.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[API Error] Lỗi parse cấu hình đạn: {ex.Message} - Json: {json}");
+            }
         }));
 
         yield return StartCoroutine(FetchData($"{baseUrl}/weapons", (json) => {
-            string wrappedJson = "{\"data\":" + json + "}";
-            var wrapper = JsonUtility.FromJson<WeaponArrayWrapper>(wrappedJson);
-            foreach (var w in wrapper.data) WeaponDb[w.id] = w;
-            Debug.Log($"[API] Đã nạp {WeaponDb.Count} cấu hình vũ khí thành công.");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(json)) throw new Exception("Empty response");
+                string wrappedJson = "{\"data\":" + json + "}";
+                var wrapper = JsonUtility.FromJson<WeaponArrayWrapper>(wrappedJson);
+                if (wrapper != null && wrapper.data != null)
+                {
+                    foreach (var w in wrapper.data) WeaponDb[w.id] = w;
+                    Debug.Log($"[API] Đã nạp {WeaponDb.Count} cấu hình vũ khí thành công.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[API Error] Lỗi parse cấu hình vũ khí: {ex.Message} - Json: {json}");
+            }
         }));
     }
 
