@@ -76,16 +76,14 @@ public class MobHealth : MonoBehaviour
 
     void Die(bool syncNetwork)
     {
-        // 1. Cho quái chết tại máy hiện tại luôn
-        ExecuteDieLocal();
-
-        // 2. ĐỒNG BỘ HAI BÊN: Bất kể ai giết (Host hay Client), đều gửi một gói tin đặc biệt 
-        // lên Server để báo cho máy đối phương khai tử con quái này theo.
+        // 2. Gửi tín hiệu 9999f TRƯỚC khi xử lý logic chết local (để tránh bị sự kiện RoomCleared gửi lên server trước làm kẹt 9999f)
         if (syncNetwork && NetworkManager.Instance != null && networkIdentity != null)
         {
-            // Mượn hàm SendEnemyHitEvent gửi lượng dame 9999 để kích hoạt lệnh chết bên máy kia
             NetworkManager.Instance.SendEnemyHitEvent(NetworkManager.Instance.CurrentRoomId, networkIdentity.networkId, 9999f);
         }
+
+        // 1. Cho quái chết tại máy hiện tại
+        ExecuteDieLocal();
     }
 
     // Ép quái chết lập tức (gọi cục bộ hoặc gọi từ máy khác qua mạng)
