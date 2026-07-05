@@ -39,9 +39,27 @@ public class GameConfigManager : MonoBehaviour
 
         if (File.Exists(filePath))
         {
-            string jsonText = File.ReadAllText(filePath);
-            ConfigData config = JsonUtility.FromJson<ConfigData>(jsonText);
-            baseUrl = config.baseUrl;
+            try
+            {
+                string jsonText = File.ReadAllText(filePath);
+                // Xóa các dòng comment // để JsonUtility của Unity không bị lỗi
+                jsonText = System.Text.RegularExpressions.Regex.Replace(jsonText, @"//.*", "");
+                
+                ConfigData config = JsonUtility.FromJson<ConfigData>(jsonText);
+                if (config != null && !string.IsNullOrEmpty(config.baseUrl))
+                {
+                    baseUrl = config.baseUrl;
+                }
+                else
+                {
+                    throw new Exception("baseUrl is null or empty");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[Config] Lỗi đọc file appsettings.json: {ex.Message}. Sử dụng URL mặc định.");
+                baseUrl = "https://rougekiebe.azurewebsites.net/api"; // URL dự phòng
+            }
         }
         else
         {
