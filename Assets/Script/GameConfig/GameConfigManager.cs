@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO; // Thêm thư viện này để đọc file
@@ -11,6 +11,9 @@ public class GameConfigManager : MonoBehaviour
 
     // Xóa const cũ, thay bằng biến private để gán từ file json
     private string baseUrl;
+
+    // BỔ SUNG: Cung cấp property để các Controller khác (Login, NetworkManager) lấy URL cấu hình động
+    public string BaseUrl => baseUrl;
 
     public Dictionary<int, BulletConfig> BulletDb = new Dictionary<int, BulletConfig>();
     public Dictionary<int, WeaponConfig> WeaponDb = new Dictionary<int, WeaponConfig>();
