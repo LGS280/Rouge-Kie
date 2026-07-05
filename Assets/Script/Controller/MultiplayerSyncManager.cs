@@ -331,22 +331,9 @@ public class MultiplayerSyncManager : MonoBehaviour
             MobHealth health = enemy.GetComponent<MobHealth>();
             if (health != null)
             {
-                // Nếu nhận được tín hiệu kết liễu (9999) từ máy đối phương -> Ép quái chết theo ngay lập tức
-                if (damage >= 9999f)
-                {
-                    health.ExecuteDieLocal();
-                }
-                else
-                {
-                    // Dự phòng: Nếu là sát thương bình thường từ đồng đội bắn (không phải đòn kết liễu)
-                    // Pass false to syncNetwork to prevent loop
-                    health.TakeDamage(Mathf.RoundToInt(damage), false, false);
-                }
+                // Bỏ IF ELSE đi, dùng đúng 1 dòng này thôi:
+                health.TakeDamage(Mathf.RoundToInt(damage), false, false);
             }
-        }
-        else
-        {
-            Debug.LogWarning($"[MultiplayerSyncManager] Không tìm thấy quái vật với ID {enemyId} trên máy Local để đồng bộ sát thương!");
         }
     }
 
