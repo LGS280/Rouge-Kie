@@ -98,7 +98,7 @@ public class MultiplayerSyncManager : MonoBehaviour
     {
         // 1. Đồng bộ Room ID
         RoomController[] allRooms = Object.FindObjectsByType<RoomController>(FindObjectsSortMode.None);
-        System.Array.Sort(allRooms, (a, b) => string.Compare(GetGameObjectPath(a.gameObject), GetGameObjectPath(b.gameObject)));
+        System.Array.Sort(allRooms, (a, b) => string.CompareOrdinal(GetGameObjectPath(a.gameObject), GetGameObjectPath(b.gameObject)));
 
         for (int i = 0; i < allRooms.Length; i++)
         {
@@ -107,7 +107,7 @@ public class MultiplayerSyncManager : MonoBehaviour
 
         // 2. Đồng bộ Mob ID
         MobNetworkIdentity[] allMobs = Object.FindObjectsByType<MobNetworkIdentity>(FindObjectsSortMode.None);
-        System.Array.Sort(allMobs, (a, b) => string.Compare(GetGameObjectPath(a.gameObject), GetGameObjectPath(b.gameObject)));
+        System.Array.Sort(allMobs, (a, b) => string.CompareOrdinal(GetGameObjectPath(a.gameObject), GetGameObjectPath(b.gameObject)));
 
         for (int i = 0; i < allMobs.Length; i++)
         {
@@ -343,6 +343,10 @@ public class MultiplayerSyncManager : MonoBehaviour
                     health.TakeDamage(Mathf.RoundToInt(damage), false, false);
                 }
             }
+        }
+        else
+        {
+            Debug.LogWarning($"[MultiplayerSyncManager] Không tìm thấy quái vật với ID {enemyId} trên máy Local để đồng bộ sát thương!");
         }
     }
 
