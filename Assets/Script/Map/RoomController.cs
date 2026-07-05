@@ -130,6 +130,16 @@ public class RoomController : MonoBehaviour
     {
         roomCleared = true;
         roomStarted = false;
+
+        // Failsafe: Ensure all mobs in the room are dead when room is cleared by network
+        foreach (MobHealth mob in mobs)
+        {
+            if (mob != null && !mob.isDead)
+            {
+                mob.ExecuteDieLocal();
+            }
+        }
+
         OpenDoors();
     }
 
