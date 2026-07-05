@@ -74,6 +74,17 @@ public class GameConfigManager : MonoBehaviour
         // Chờ nạp xong baseUrl (đề phòng trường hợp bất đồng bộ)
         if (string.IsNullOrEmpty(baseUrl)) yield return null;
 
+        // Thử nạp ngay khi Start (nếu đã có token lưu từ trước)
+        yield return StartCoroutine(FetchConfigsRoutine());
+    }
+
+    public void ReloadConfigs()
+    {
+        StartCoroutine(FetchConfigsRoutine());
+    }
+
+    private IEnumerator FetchConfigsRoutine()
+    {
         yield return StartCoroutine(FetchData($"{baseUrl}/bullets", (json) => {
             try
             {
@@ -115,6 +126,12 @@ public class GameConfigManager : MonoBehaviour
     {
         using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
         {
+            string token = PlayerPrefs.GetString("jwt_token", "");
+            if (!string.IsNullOrEmpty(token))
+            {
+                webRequest.SetRequestHeader("Authorization", "Bearer " + token);
+            }
+
             webRequest.certificateHandler = new BypassCert();
             yield return webRequest.SendWebRequest();
 

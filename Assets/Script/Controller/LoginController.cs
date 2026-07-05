@@ -268,6 +268,9 @@ public class LoginController : MonoBehaviour
                     NetworkManager.Instance.LoggedInUsername = resp.username;
                     NetworkManager.Instance.UserRole = "Player";
 
+                    // Tải lại cấu hình súng/đạn vì giờ đã có token
+                    GameConfigManager.Instance?.ReloadConfigs();
+
                     // Tự động gọi Menu chính mở sảnh Co-op
                     LobbyUIController lobbyUI = Object.FindFirstObjectByType<LobbyUIController>();
                     if (lobbyUI != null) lobbyUI.OnCoOpButtonPressed();
