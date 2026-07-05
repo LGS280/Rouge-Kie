@@ -1,6 +1,5 @@
 using UnityEngine;
 
-[RequireComponent(typeof(MobNetworkIdentity))]
 public class MobHealth : MonoBehaviour
 {
     public int maxHealth = 100;
