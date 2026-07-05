@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(MobNetworkIdentity))]
 public class MobHealth : MonoBehaviour
 {
     public int maxHealth = 100;
@@ -13,6 +14,15 @@ public class MobHealth : MonoBehaviour
     private Rigidbody2D rb;
     private MobNetworkIdentity networkIdentity;
 
+    private void Awake()
+    {
+        networkIdentity = GetComponent<MobNetworkIdentity>();
+        if (networkIdentity == null)
+        {
+            networkIdentity = gameObject.AddComponent<MobNetworkIdentity>();
+        }
+    }
+
     void Start()
     {
         currentHealth = maxHealth;
@@ -21,7 +31,7 @@ public class MobHealth : MonoBehaviour
         animator = GetComponent<Animator>();
         mobCollider = GetComponent<Collider2D>();
         rb = GetComponent<Rigidbody2D>();
-        networkIdentity = GetComponent<MobNetworkIdentity>();
+        // networkIdentity đã được lấy ở Awake
     }
 
     void OnEnable()

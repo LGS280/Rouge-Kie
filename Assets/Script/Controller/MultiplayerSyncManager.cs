@@ -98,13 +98,7 @@ public class MultiplayerSyncManager : MonoBehaviour
     {
         // 1. Đồng bộ Room ID
         RoomController[] allRooms = Object.FindObjectsByType<RoomController>(FindObjectsSortMode.None);
-        // Sắp xếp theo X, rồi Y
-        System.Array.Sort(allRooms, (a, b) => 
-        {
-            if (a.transform.position.x == b.transform.position.x)
-                return a.transform.position.y.CompareTo(b.transform.position.y);
-            return a.transform.position.x.CompareTo(b.transform.position.x);
-        });
+        System.Array.Sort(allRooms, (a, b) => string.Compare(GetGameObjectPath(a.gameObject), GetGameObjectPath(b.gameObject)));
 
         for (int i = 0; i < allRooms.Length; i++)
         {
@@ -113,12 +107,7 @@ public class MultiplayerSyncManager : MonoBehaviour
 
         // 2. Đồng bộ Mob ID
         MobNetworkIdentity[] allMobs = Object.FindObjectsByType<MobNetworkIdentity>(FindObjectsSortMode.None);
-        System.Array.Sort(allMobs, (a, b) => 
-        {
-            if (a.transform.position.x == b.transform.position.x)
-                return a.transform.position.y.CompareTo(b.transform.position.y);
-            return a.transform.position.x.CompareTo(b.transform.position.x);
-        });
+        System.Array.Sort(allMobs, (a, b) => string.Compare(GetGameObjectPath(a.gameObject), GetGameObjectPath(b.gameObject)));
 
         for (int i = 0; i < allMobs.Length; i++)
         {
@@ -126,6 +115,18 @@ public class MultiplayerSyncManager : MonoBehaviour
         }
         
         Debug.Log($"Đã gán thành công {allRooms.Length} Room IDs và {allMobs.Length} Mob IDs đồng bộ.");
+    }
+
+    private string GetGameObjectPath(GameObject obj)
+    {
+        string path = obj.name + "_" + obj.transform.GetSiblingIndex();
+        Transform curr = obj.transform.parent;
+        while (curr != null)
+        {
+            path = curr.name + "_" + curr.GetSiblingIndex() + "/" + path;
+            curr = curr.parent;
+        }
+        return path;
     }
 
     private void CacheAllRooms()
