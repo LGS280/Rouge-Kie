@@ -70,10 +70,7 @@ public class MobHealth : MonoBehaviour
         }
         else
         {
-            if (animator != null)
-            {
-                animator.SetTrigger("hurt");
-            }
+            // Do nothing, flash is handled above.
         }
     }
 
@@ -99,7 +96,6 @@ public class MobHealth : MonoBehaviour
 
         if (animator != null)
         {
-            animator.ResetTrigger("hurt"); // Tránh lỗi Animator kẹt ở state hurt không chịu chuyển sang die
             animator.SetTrigger("die");
         }
 
