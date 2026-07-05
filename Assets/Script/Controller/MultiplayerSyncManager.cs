@@ -33,6 +33,9 @@ public class MultiplayerSyncManager : MonoBehaviour
             if (playerObj != null) localPlayer = playerObj.transform;
         }
 
+        // BỔ SUNG: Gán ID đồng bộ cho Phòng và Quái vật trước khi Cache
+        AssignDeterministicRoomAndMobIds();
+
         // Cache toàn bộ RoomController có trong Scene
         CacheAllRooms();
 
@@ -90,6 +93,40 @@ public class MultiplayerSyncManager : MonoBehaviour
     // ==========================================
     // NEW: LOGIC ĐỒNG BỘ COMBAT ROOM
     // ==========================================
+
+    private void AssignDeterministicRoomAndMobIds()
+    {
+        // 1. Đồng bộ Room ID
+        RoomController[] allRooms = Object.FindObjectsByType<RoomController>(FindObjectsSortMode.None);
+        // Sắp xếp theo X, rồi Y
+        System.Array.Sort(allRooms, (a, b) => 
+        {
+            if (a.transform.position.x == b.transform.position.x)
+                return a.transform.position.y.CompareTo(b.transform.position.y);
+            return a.transform.position.x.CompareTo(b.transform.position.x);
+        });
+
+        for (int i = 0; i < allRooms.Length; i++)
+        {
+            allRooms[i].roomUniqueId = $"room_{i}";
+        }
+
+        // 2. Đồng bộ Mob ID
+        MobNetworkIdentity[] allMobs = Object.FindObjectsByType<MobNetworkIdentity>(FindObjectsSortMode.None);
+        System.Array.Sort(allMobs, (a, b) => 
+        {
+            if (a.transform.position.x == b.transform.position.x)
+                return a.transform.position.y.CompareTo(b.transform.position.y);
+            return a.transform.position.x.CompareTo(b.transform.position.x);
+        });
+
+        for (int i = 0; i < allMobs.Length; i++)
+        {
+            allMobs[i].networkId = $"mob_{i}";
+        }
+        
+        Debug.Log($"Đã gán thành công {allRooms.Length} Room IDs và {allMobs.Length} Mob IDs đồng bộ.");
+    }
 
     private void CacheAllRooms()
     {

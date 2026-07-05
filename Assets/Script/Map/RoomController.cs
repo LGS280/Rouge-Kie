@@ -5,7 +5,7 @@ public class RoomController : MonoBehaviour
 {
     [Header("Multiplayer Settings (Auto-generated)")]
     // TỰ ĐỘNG HÓA: ID này sẽ tự sinh bằng GetInstanceID().ToString() lúc Runtime, không cần điền tay nữa!
-    public string roomUniqueId { get; private set; }
+    public string roomUniqueId { get; set; }
 
     [Header("Room Status")]
     public bool roomCleared = false;
@@ -23,7 +23,10 @@ public class RoomController : MonoBehaviour
         RoomCollider = GetComponent<Collider2D>();
 
         // TỰ ĐỘNG SINH ID: Lấy mã InstanceID độc nhất của Object này trong Scene hiện tại
-        roomUniqueId = gameObject.GetInstanceID().ToString();
+        if (string.IsNullOrEmpty(roomUniqueId))
+        {
+            roomUniqueId = gameObject.GetInstanceID().ToString();
+        }
     }
 
     public void AddDoor(RoomDoor door)
