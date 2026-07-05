@@ -63,6 +63,12 @@ public class NetworkManager : MonoBehaviour
 
     private async void Start()
     {
+        // BỔ SUNG: Tự động đồng bộ URL Server SignalR dựa trên cấu hình appsettings.json của GameConfigManager
+        if (GameConfigManager.Instance != null && !string.IsNullOrEmpty(GameConfigManager.Instance.BaseUrl))
+        {
+            serverUrl = GameConfigManager.Instance.BaseUrl.Replace("/api", "/gamehub");
+        }
+
         hubConnection = new HubConnectionBuilder()
             .WithUrl(serverUrl)
             .WithAutomaticReconnect()
