@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 using TMPro;
@@ -67,8 +67,18 @@ public class LoginController : MonoBehaviour
     [SerializeField] private TMP_Text messageText;
     [SerializeField] private TMP_Text regMessageText;
 
-    [Header("Backend")]
     [SerializeField] private string backendBase = "https://rougekiebe.azurewebsites.net";
+
+    // BỔ SUNG: Hàm lấy URL API động từ appsettings.json nếu có, tránh fix cứng đường dẫn Azure
+    private string GetApiUrl(string path)
+    {
+        string apiBase = backendBase + "/api";
+        if (GameConfigManager.Instance != null && !string.IsNullOrEmpty(GameConfigManager.Instance.BaseUrl))
+        {
+            apiBase = GameConfigManager.Instance.BaseUrl;
+        }
+        return $"{apiBase}{path}";
+    }
 
     private void Start()
     {
@@ -201,7 +211,7 @@ public class LoginController : MonoBehaviour
 
         string jsonData = JsonUtility.ToJson(data);
 
-        using (var request = new UnityWebRequest(backendBase + "/api/auth/send-register-otp", "POST"))
+        using (var request = new UnityWebRequest(GetApiUrl("/auth/send-register-otp"), "POST"))
         {
             byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -233,7 +243,7 @@ public class LoginController : MonoBehaviour
 
         string jsonData = JsonUtility.ToJson(data);
 
-        using (var request = new UnityWebRequest(backendBase + "/api/auth/login", "POST"))
+        using (var request = new UnityWebRequest(GetApiUrl("/auth/login"), "POST"))
         {
             byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -296,7 +306,7 @@ public class LoginController : MonoBehaviour
 
         string jsonData = JsonUtility.ToJson(data);
 
-        using (var request = new UnityWebRequest(backendBase + "/api/auth/register", "POST"))
+        using (var request = new UnityWebRequest(GetApiUrl("/auth/register"), "POST"))
         {
             byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -324,7 +334,7 @@ public class LoginController : MonoBehaviour
     {
         string token = PlayerPrefs.GetString("jwt_token", "");
 
-        using (var req = UnityWebRequest.Get(backendBase + "/api/users"))
+        using (var req = UnityWebRequest.Get(GetApiUrl("/users")))
         {
             if (!string.IsNullOrEmpty(token))
             {
