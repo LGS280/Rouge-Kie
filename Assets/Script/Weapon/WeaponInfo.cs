@@ -1,30 +1,73 @@
 using UnityEngine;
+
 public class WeaponInfo : MonoBehaviour
 {
-    [Header("Audio Settings")]
-    [SerializeField] private AudioClip shootSound;
-    [Range(0f, 1f)][SerializeField] private float shootVolume = 0.8f;
+    [Header("Cấu hình API kết nối")]
+    public int weaponDbId;
 
-    [Header("VỊ TRÍ CẦM SÚNG")]
-    public Vector3 customHandPosition;
+    private string soundFileName;
+    private float soundVolume = 0.8f;
+
+    [Header("VỊ TRÍ CẦM SÚNG (Đọc từ DB)")]
+    [HideInInspector] public Vector3 customHandPosition;
 
     [Header("THIẾT LẬP BẮN ĐẠN")]
     public GameObject bulletPrefab;
     public Transform firePoint;
-    public float fireRate = 0.2f;
 
-    [Header("MANA")]
-    public int manaCostPerShot = 2; // mỗi khẩu súng chỉnh khác nhau trong Inspector
+    [HideInInspector] public float fireRate;
+    [HideInInspector] public int manaCostPerShot;
 
-    [Header("RECOIL")]
-    [SerializeField] float recoilDistance = 0.15f;
-    [SerializeField] float recoilDuration = 0.05f;
-    [SerializeField] float returnDuration = 0.1f;
+    private float recoilDistance = 0.15f;
+    private float recoilDuration = 0.05f;
+    private float returnDuration = 0.1f;
 
     Vector3 originalLocalPos;
     bool positionSaved = false;
 
-    void Awake() { }
+    void OnEnable()
+    {
+        ApplyConfigFromDb();
+    }
+
+    public void ApplyConfigFromDb()
+    {
+        if (GameConfigManager.Instance != null && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig config))
+        {
+            fireRate = config.fireRate;
+            manaCostPerShot = config.manaCost;
+
+            // 1. Nạp vị trí cầm súng từ DB và cập nhật ngay
+            customHandPosition = new Vector3(config.handPositionX, config.handPositionY, config.handPositionZ);
+            transform.localPosition = customHandPosition;
+
+            // 2. Nạp thông số âm thanh
+            soundFileName = config.shootSound;
+            soundVolume = config.shootVolume;
+
+            // 3. Nạp thông số độ giật
+            recoilDistance = config.recoilDistance;
+            recoilDuration = config.recoilDuration;
+            returnDuration = config.returnDuration;
+        }
+    }
+
+    private void PlayWeaponSound()
+    {
+        if (!string.IsNullOrEmpty(soundFileName) && RogueKie.Audio.AudioManager.Instance != null)
+        {
+            // Tự load file âm thanh dựa vào tên file trong thư mục Assets/Resources/Audio/
+            AudioClip clip = Resources.Load<AudioClip>($"Audio/{soundFileName}");
+            if (clip != null)
+            {
+                RogueKie.Audio.AudioManager.Instance.PlaySFXAtPosition(clip, transform.position, soundVolume);
+            }
+            else
+            {
+                Debug.LogWarning($"[Audio Warning] Không tìm thấy file sound tên '{soundFileName}' trong Resources/Audio/");
+            }
+        }
+    }
 
     public void Attack()
     {
@@ -34,32 +77,43 @@ public class WeaponInfo : MonoBehaviour
             positionSaved = true;
         }
 
-        // Kiểm tra mana trước khi bắn
         RookieHealth playerHealth = GetComponentInParent<RookieHealth>();
         if (playerHealth != null && !playerHealth.UseMana(manaCostPerShot))
-            return; // hết mana, không bắn
+            return;
 
         if (bulletPrefab != null && firePoint != null)
         {
-            Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
-            if (shootSound != null && RogueKie.Audio.AudioManager.Instance != null)
+            // Áp dụng góc lệch tâm SpreadAngle từ DB vào hướng đạn bắn ra
+            Quaternion bulletRotation = firePoint.rotation;
+            if (GameConfigManager.Instance != null && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig wConfig))
             {
-                RogueKie.Audio.AudioManager.Instance.PlaySFXAtPosition(shootSound, transform.position, shootVolume);
+                float randomSpread = Random.Range(-wConfig.spreadAngle, wConfig.spreadAngle);
+                bulletRotation *= Quaternion.Euler(0, 0, randomSpread);
             }
+
+            GameObject spawnedBullet = Instantiate(bulletPrefab, firePoint.position, bulletRotation);
+
+            if (GameConfigManager.Instance != null && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig wConfig2))
+            {
+                var bNormal = spawnedBullet.GetComponent<Bullet>();
+                if (bNormal != null) bNormal.InitFromDb(wConfig2.bulletId);
+
+                var bDE = spawnedBullet.GetComponent<Desert_Eagle_Bullet>();
+                if (bDE != null) bDE.InitFromDb(wConfig2.bulletId);
+
+                var bSlash = spawnedBullet.GetComponent<MeleeSlash>();
+                if (bSlash != null) bSlash.InitFromDb(wConfig2.bulletId);
+            }
+
+            PlayWeaponSound();
         }
 
         StopAllCoroutines();
         StartCoroutine(RecoilRoutine());
     }
 
-    /// <summary>
-    /// Được gọi từ mạng khi người chơi khác bắn súng.
-    /// Hàm này tái sử dụng cơ chế sinh đạn giả, âm thanh không gian và hiệu ứng giật súng (recoil) 
-    /// của chính bạn để đồng đội trông cực kỳ mượt mà.
-    /// </summary>
     public void RemoteShoot(Vector3 position, Vector3 direction)
     {
-        // Đảm bảo lưu lại vị trí gốc của súng trước khi chạy giật súng (recoil) cho đồng đội
         if (!positionSaved)
         {
             originalLocalPos = transform.localPosition;
@@ -68,27 +122,35 @@ public class WeaponInfo : MonoBehaviour
 
         if (bulletPrefab != null)
         {
-            // Xác định vị trí nòng súng của đồng đội (ưu tiên firePoint nếu có)
             Vector3 spawnPosition = (firePoint != null) ? firePoint.position : position;
-
-            // Tính toán góc xoay của viên đạn mạng gửi về
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.forward);
 
-            // Sinh viên đạn
+            // Đồng bộ góc lệch đạn cho client remote mạng
+            if (GameConfigManager.Instance != null && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig wConfig))
+            {
+                float randomSpread = Random.Range(-wConfig.spreadAngle, wConfig.spreadAngle);
+                rotation *= Quaternion.Euler(0, 0, randomSpread);
+            }
+
             GameObject spawnedBullet = Instantiate(bulletPrefab, spawnPosition, rotation);
-            
-            // Đánh dấu đây là đạn của người chơi khác (Remote) để không gây sát thương trùng lặp cục bộ
             spawnedBullet.name += "_Remote";
 
-            // Phát âm thanh không gian tại vị trí nòng súng của đồng đội
-            if (shootSound != null && RogueKie.Audio.AudioManager.Instance != null)
+            if (GameConfigManager.Instance != null && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig wConfig2))
             {
-                RogueKie.Audio.AudioManager.Instance.PlaySFXAtPosition(shootSound, spawnPosition, shootVolume);
+                var bNormal = spawnedBullet.GetComponent<Bullet>();
+                if (bNormal != null) bNormal.InitFromDb(wConfig2.bulletId);
+
+                var bDE = spawnedBullet.GetComponent<Desert_Eagle_Bullet>();
+                if (bDE != null) bDE.InitFromDb(wConfig2.bulletId);
+
+                var bSlash = spawnedBullet.GetComponent<MeleeSlash>();
+                if (bSlash != null) bSlash.InitFromDb(wConfig2.bulletId);
             }
+
+            PlayWeaponSound();
         }
 
-        // Kích hoạt hiệu ứng giật súng (Recoil) của đồng đội ngay trên máy khách của bạn
         StopAllCoroutines();
         StartCoroutine(RecoilRoutine());
     }
