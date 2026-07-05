@@ -43,7 +43,8 @@ public class GameConfigManager : MonoBehaviour
             {
                 string jsonText = File.ReadAllText(filePath);
                 // Xóa các dòng comment // để JsonUtility của Unity không bị lỗi
-                jsonText = System.Text.RegularExpressions.Regex.Replace(jsonText, @"//.*", "");
+                // Dùng Multiline và ^ để chỉ xóa các comment ở đầu dòng, tránh xóa nhầm // trong URL
+                jsonText = System.Text.RegularExpressions.Regex.Replace(jsonText, @"^\s*//.*", "", System.Text.RegularExpressions.RegexOptions.Multiline);
                 
                 ConfigData config = JsonUtility.FromJson<ConfigData>(jsonText);
                 if (config != null && !string.IsNullOrEmpty(config.baseUrl))
