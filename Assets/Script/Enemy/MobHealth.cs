@@ -65,14 +65,16 @@ public class MobHealth : MonoBehaviour
         if (flash != null) flash.TriggerFlash();
         DamageNumberSpawner.Instance.Spawn(transform.position, damage, isCrit);
 
-        if (animator != null)
-        {
-            animator.SetTrigger("hurt");
-        }
-
         if (currentHealth <= 0)
         {
             Die(syncNetwork);
+        }
+        else
+        {
+            if (animator != null)
+            {
+                animator.SetTrigger("hurt");
+            }
         }
     }
 
@@ -98,6 +100,7 @@ public class MobHealth : MonoBehaviour
 
         if (animator != null)
         {
+            animator.ResetTrigger("hurt"); // Tránh lỗi Animator kẹt ở state hurt không chịu chuyển sang die
             animator.SetTrigger("die");
         }
 
