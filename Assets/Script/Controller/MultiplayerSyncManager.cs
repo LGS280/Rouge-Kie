@@ -358,7 +358,15 @@ public class MultiplayerSyncManager : MonoBehaviour
         GameObject enemy = FindEnemyByNetworkId(enemyId);
         if (enemy != null)
         {
-            enemy.transform.position = new Vector3(x, y, enemy.transform.position.z);
+            MobAI mobAI = enemy.GetComponent<MobAI>();
+            if (mobAI != null)
+            {
+                mobAI.UpdateNetworkPosition(x, y);
+            }
+            else
+            {
+                enemy.transform.position = new Vector3(x, y, enemy.transform.position.z);
+            }
         }
     }
 
