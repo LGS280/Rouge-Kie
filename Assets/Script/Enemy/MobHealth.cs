@@ -53,7 +53,12 @@ public class MobHealth : MonoBehaviour
         // BÍ QUYẾT: Gửi MÁU HIỆN TẠI (currentHealth) qua mạng thay vì gửi damage
         if (NetworkManager.Instance != null && networkIdentity != null)
         {
+            Debug.Log($"[MobHealth] {gameObject.name} (networkId={networkIdentity.networkId}) TakeDamage: damage={damage}, remainingHealth={currentHealth}. Sending sync...");
             NetworkManager.Instance.SendEnemyHitEvent(NetworkManager.Instance.CurrentRoomId, networkIdentity.networkId, (float)currentHealth);
+        }
+        else
+        {
+            Debug.LogWarning($"[MobHealth] {gameObject.name} cannot sync: NetworkManager={NetworkManager.Instance != null}, networkIdentity={networkIdentity != null}");
         }
 
         ShowDamageUI(damage, isCrit);
@@ -67,10 +72,20 @@ public class MobHealth : MonoBehaviour
     // Hàm MỚI: Chỉ dành cho việc đồng bộ từ máy khác gửi sang
     public void SyncHealthFromNetwork(int networkHealth)
     {
-        if (isDead) return;
+        if (isDead)
+        {
+            Debug.Log($"[MobHealth] {gameObject.name} (networkId={networkIdentity?.networkId}) received SyncHealthFromNetwork={networkHealth} but is already dead.");
+            return;
+        }
+
+        Debug.Log($"[MobHealth] {gameObject.name} (networkId={networkIdentity?.networkId}) SyncHealthFromNetwork: networkHealth={networkHealth}, currentHealth={currentHealth}");
 
         // CHỐNG TIẾNG VỌNG: Nếu máu mạng gửi về >= máu hiện tại -> Đây là gói tin cũ hoặc của chính mình dội lại -> BỎ QUA!
-        if (networkHealth >= currentHealth) return;
+        if (networkHealth >= currentHealth)
+        {
+            Debug.Log($"[MobHealth] {gameObject.name} (networkId={networkIdentity?.networkId}) ignored sync: networkHealth={networkHealth} >= currentHealth={currentHealth}");
+            return;
+        }
 
         int damageTaken = currentHealth - networkHealth;
         currentHealth = networkHealth;
@@ -105,6 +120,8 @@ public class MobHealth : MonoBehaviour
     public void ExecuteDieLocal()
     {
         if (isDead) return;
+
+        Debug.Log($"[MobHealth] {gameObject.name} (networkId={networkIdentity?.networkId}) ExecuteDieLocal() - Killing mob locally.");
 
         isDead = true;
         currentHealth = 0;
