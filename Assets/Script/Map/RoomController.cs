@@ -29,6 +29,12 @@ public class RoomController : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        CollectMobsInsideRoom();
+        CollectDoorsNearRoom();
+    }
+
     public void AddDoor(RoomDoor door)
     {
         if (door != null && !doors.Contains(door))
@@ -75,9 +81,6 @@ public class RoomController : MonoBehaviour
 
     public void TryStartRoomCombat()
     {
-        CollectMobsInsideRoom();
-        CollectDoorsNearRoom();
-
         Debug.Log($"{gameObject.name} TryStartRoomCombat - AliveMobs: {GetAliveMobCount()}");
 
         if (roomCleared || roomStarted)
@@ -116,9 +119,6 @@ public class RoomController : MonoBehaviour
     public void ExecuteStartCombatLocal()
     {
         if (roomStarted || roomCleared) return;
-
-        CollectMobsInsideRoom();
-        CollectDoorsNearRoom();
 
         roomStarted = true;
         PushPlayerInsideRoom();

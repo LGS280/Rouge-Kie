@@ -97,8 +97,15 @@ public class MultiplayerSyncManager : MonoBehaviour
     private void AssignDeterministicRoomAndMobIds()
     {
         // 1. Đồng bộ Room ID
-        RoomController[] allRooms = Object.FindObjectsByType<RoomController>(FindObjectsSortMode.None);
-        System.Array.Sort(allRooms, (a, b) => string.CompareOrdinal(GetGameObjectPath(a.gameObject), GetGameObjectPath(b.gameObject)));
+        RoomController[] allRooms = Object.FindObjectsByType<RoomController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        System.Array.Sort(allRooms, (a, b) => 
+        {
+            int cmpX = a.transform.position.x.CompareTo(b.transform.position.x);
+            if (cmpX != 0) return cmpX;
+            int cmpY = a.transform.position.y.CompareTo(b.transform.position.y);
+            if (cmpY != 0) return cmpY;
+            return string.CompareOrdinal(GetGameObjectPath(a.gameObject), GetGameObjectPath(b.gameObject));
+        });
 
         for (int i = 0; i < allRooms.Length; i++)
         {
@@ -106,8 +113,15 @@ public class MultiplayerSyncManager : MonoBehaviour
         }
 
         // 2. Đồng bộ Mob ID
-        MobNetworkIdentity[] allMobs = Object.FindObjectsByType<MobNetworkIdentity>(FindObjectsSortMode.None);
-        System.Array.Sort(allMobs, (a, b) => string.CompareOrdinal(GetGameObjectPath(a.gameObject), GetGameObjectPath(b.gameObject)));
+        MobNetworkIdentity[] allMobs = Object.FindObjectsByType<MobNetworkIdentity>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        System.Array.Sort(allMobs, (a, b) => 
+        {
+            int cmpX = a.transform.position.x.CompareTo(b.transform.position.x);
+            if (cmpX != 0) return cmpX;
+            int cmpY = a.transform.position.y.CompareTo(b.transform.position.y);
+            if (cmpY != 0) return cmpY;
+            return string.CompareOrdinal(GetGameObjectPath(a.gameObject), GetGameObjectPath(b.gameObject));
+        });
 
         for (int i = 0; i < allMobs.Length; i++)
         {
@@ -131,7 +145,7 @@ public class MultiplayerSyncManager : MonoBehaviour
 
     private void CacheAllRooms()
     {
-        RoomController[] allRooms = Object.FindObjectsByType<RoomController>(FindObjectsSortMode.None);
+        RoomController[] allRooms = Object.FindObjectsByType<RoomController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (RoomController room in allRooms)
         {
             if (string.IsNullOrEmpty(room.roomUniqueId))
@@ -348,7 +362,7 @@ public class MultiplayerSyncManager : MonoBehaviour
 
     private GameObject FindEnemyByNetworkId(string networkId)
     {
-        MobNetworkIdentity[] enemies = Object.FindObjectsByType<MobNetworkIdentity>(FindObjectsSortMode.None);
+        MobNetworkIdentity[] enemies = Object.FindObjectsByType<MobNetworkIdentity>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var enemy in enemies)
         {
             if (enemy.networkId == networkId)

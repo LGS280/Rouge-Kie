@@ -104,6 +104,12 @@ public class MobAI : MonoBehaviour
     void FindNearestPlayer()
     {
         GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        
+        if (players.Length == 0)
+        {
+            Debug.LogWarning($"[MobAI] {gameObject.name} không tìm thấy bất kỳ GameObject nào có tag 'Player'. Hãy kiểm tra lại tag của Player/RemotePlayer.");
+        }
+
         float shortestDistance = Mathf.Infinity;
         Transform nearestPlayer = null;
 
