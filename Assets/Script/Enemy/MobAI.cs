@@ -24,6 +24,11 @@ public class MobAI : MonoBehaviour
     private float syncTimer = 0f;
     private float syncInterval = 0.1f; // 100ms sync rate cho Mob
     private Vector3 lastPos;
+    
+    // Lerp Variables cho Client
+    private Vector2 networkTargetPos;
+    private bool hasFirstNetworkPos = false;
+    private float syncSmoothing = 15f;
 
     private Transform targetPlayer;
     private Rigidbody2D rb;
@@ -54,14 +59,21 @@ public class MobAI : MonoBehaviour
 
         if (!isHost)
         {
-            // Client: Tự động đoán animation dựa trên sự thay đổi vị trí (do Host gửi qua)
+            // Client: Di chuyển mượt (Lerp) tới tọa độ do Host gửi
+            if (hasFirstNetworkPos)
+            {
+                Vector3 target = new Vector3(networkTargetPos.x, networkTargetPos.y, transform.position.z);
+                transform.position = Vector3.Lerp(transform.position, target, Time.deltaTime * syncSmoothing);
+            }
+
+            // Tự động đoán animation dựa trên sự thay đổi vị trí
             Vector3 delta = transform.position - lastPos;
             if (animator != null)
             {
-                animator.SetBool("isMoving", delta.magnitude > 0.01f);
+                animator.SetBool("isMoving", delta.magnitude > 0.001f);
             }
-            if (delta.x > 0.01f) spriteRenderer.flipX = false;
-            else if (delta.x < -0.01f) spriteRenderer.flipX = true;
+            if (delta.x > 0.001f) spriteRenderer.flipX = false;
+            else if (delta.x < -0.001f) spriteRenderer.flipX = true;
 
             lastPos = transform.position;
             return;
@@ -120,6 +132,22 @@ public class MobAI : MonoBehaviour
     public void ActivateMob()
     {
         isRoomActivated = true;
+    }
+
+    // Client nhận tọa độ từ mạng
+    public void UpdateNetworkPosition(float x, float y)
+    {
+        Vector2 newPos = new Vector2(x, y);
+        if (!hasFirstNetworkPos)
+        {
+            transform.position = new Vector3(x, y, transform.position.z);
+            networkTargetPos = newPos;
+            hasFirstNetworkPos = true;
+        }
+        else
+        {
+            networkTargetPos = newPos;
+        }
     }
 
     // Chặn không cho quái vật đi ra khỏi ranh giới phòng
