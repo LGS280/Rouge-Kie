@@ -130,8 +130,8 @@ public class MobHealth : MonoBehaviour
 
         if (rb != null)
         {
-            rb.bodyType = RigidbodyType2D.Static;
             rb.linearVelocity = Vector2.zero;
+            rb.bodyType = RigidbodyType2D.Static;
         }
 
         MobAI ai = GetComponent<MobAI>();
