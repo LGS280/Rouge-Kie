@@ -681,7 +681,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkManager
   serverUrl: https://rougekiebe.azurewebsites.net/gamehub
-  IsLoggedIn: 1
+  IsLoggedIn: 0
   LoggedInUsername: Guest
   UserRole: Guest
 --- !u!4 &210628576
