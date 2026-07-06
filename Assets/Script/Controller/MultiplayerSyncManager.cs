@@ -33,6 +33,9 @@ public class MultiplayerSyncManager : MonoBehaviour
             if (playerObj != null) localPlayer = playerObj.transform;
         }
 
+        // BỔ SUNG: Gán ID đồng bộ cho Phòng và Quái vật trước khi Cache
+        AssignDeterministicRoomAndMobIds();
+
         // Cache toàn bộ RoomController có trong Scene
         CacheAllRooms();
 
@@ -48,6 +51,9 @@ public class MultiplayerSyncManager : MonoBehaviour
             // ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ PHÒNG
             NetworkManager.Instance.OnRoomCombatStarted += HandleRoomCombatStarted;
             NetworkManager.Instance.OnRoomClearedFromServer += HandleRoomClearedFromServer;
+            
+            // ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ VỊ TRÍ QUÁI
+            NetworkManager.Instance.OnReceiveEnemyPosition += HandleRemoteEnemyPosition;
         }
     }
 
@@ -65,6 +71,9 @@ public class MultiplayerSyncManager : MonoBehaviour
             // HỦY ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ PHÒNG
             NetworkManager.Instance.OnRoomCombatStarted -= HandleRoomCombatStarted;
             NetworkManager.Instance.OnRoomClearedFromServer -= HandleRoomClearedFromServer;
+            
+            // HỦY SỰ KIỆN ĐỒNG BỘ VỊ TRÍ QUÁI
+            NetworkManager.Instance.OnReceiveEnemyPosition -= HandleRemoteEnemyPosition;
         }
     }
 
@@ -90,6 +99,41 @@ public class MultiplayerSyncManager : MonoBehaviour
     // ==========================================
     // NEW: LOGIC ĐỒNG BỘ COMBAT ROOM
     // ==========================================
+
+    private void AssignDeterministicRoomAndMobIds()
+    {
+        // 1. Đồng bộ Room ID
+        RoomController[] allRooms = Object.FindObjectsByType<RoomController>(FindObjectsSortMode.None);
+        System.Array.Sort(allRooms, (a, b) => string.CompareOrdinal(GetGameObjectPath(a.gameObject), GetGameObjectPath(b.gameObject)));
+
+        for (int i = 0; i < allRooms.Length; i++)
+        {
+            allRooms[i].roomUniqueId = $"room_{i}";
+        }
+
+        // 2. Đồng bộ Mob ID
+        MobNetworkIdentity[] allMobs = Object.FindObjectsByType<MobNetworkIdentity>(FindObjectsSortMode.None);
+        System.Array.Sort(allMobs, (a, b) => string.CompareOrdinal(GetGameObjectPath(a.gameObject), GetGameObjectPath(b.gameObject)));
+
+        for (int i = 0; i < allMobs.Length; i++)
+        {
+            allMobs[i].networkId = $"mob_{i}";
+        }
+        
+        Debug.Log($"Đã gán thành công {allRooms.Length} Room IDs và {allMobs.Length} Mob IDs đồng bộ.");
+    }
+
+    private string GetGameObjectPath(GameObject obj)
+    {
+        string path = obj.name + "_" + obj.transform.GetSiblingIndex();
+        Transform curr = obj.transform.parent;
+        while (curr != null)
+        {
+            path = curr.name + "_" + curr.GetSiblingIndex() + "/" + path;
+            curr = curr.parent;
+        }
+        return path;
+    }
 
     private void CacheAllRooms()
     {
@@ -285,25 +329,43 @@ public class MultiplayerSyncManager : MonoBehaviour
     }
 
     // Xử lý khi quái vật bị dính đòn (áp dụng cho tất cả Client)
-    private void HandleRemoteEnemyDamaged(string enemyId, float damage)
+    private void HandleRemoteEnemyDamaged(string enemyId, float healthFromServer)
     {
+        Debug.Log($"[MultiplayerSyncManager] Nhận OnEnemyDamaged từ Server: enemyId={enemyId}, healthFromServer={healthFromServer}");
         GameObject enemy = FindEnemyByNetworkId(enemyId);
         if (enemy != null)
         {
             MobHealth health = enemy.GetComponent<MobHealth>();
             if (health != null)
             {
-                // Nếu nhận được tín hiệu kết liễu (9999) từ máy đối phương -> Ép quái chết theo ngay lập tức
-                if (damage >= 9999f)
-                {
-                    health.ExecuteDieLocal();
-                }
-                else
-                {
-                    // Dự phòng: Nếu là sát thương bình thường từ đồng đội bắn (không phải đòn kết liễu)
-                    // Pass false to syncNetwork to prevent loop
-                    health.TakeDamage(Mathf.RoundToInt(damage), false, false);
-                }
+                // Truyền cục máu thật vào hàm đồng bộ, dẹp luôn TakeDamage qua mạng!
+                health.SyncHealthFromNetwork(Mathf.RoundToInt(healthFromServer));
+            }
+            else
+            {
+                Debug.LogWarning($"[MultiplayerSyncManager] Không tìm thấy component MobHealth trên GameObject: {enemy.name}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"[MultiplayerSyncManager] KHÔNG tìm thấy quái nào có networkId là: {enemyId} trong scene!");
+        }
+    }
+
+    private void HandleRemoteEnemyPosition(string enemyId, float x, float y)
+    {
+        // Client nhận tọa độ từ Host và vẽ lại quái vật
+        GameObject enemy = FindEnemyByNetworkId(enemyId);
+        if (enemy != null)
+        {
+            MobAI mobAI = enemy.GetComponent<MobAI>();
+            if (mobAI != null)
+            {
+                mobAI.UpdateNetworkPosition(x, y);
+            }
+            else
+            {
+                enemy.transform.position = new Vector3(x, y, enemy.transform.position.z);
             }
         }
     }
