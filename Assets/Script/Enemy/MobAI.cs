@@ -21,6 +21,10 @@ public class MobAI : MonoBehaviour
     [HideInInspector] public RoomController myRoom; // Tự động nhận diện từ RoomController khi map được sinh ra
     private bool isRoomActivated = false;          // Cờ kiểm soát kích hoạt AI
 
+    private float syncTimer = 0f;
+    private float syncInterval = 0.1f; // 100ms sync rate cho Mob
+    private Vector3 lastPos;
+
     private Transform targetPlayer;
     private Rigidbody2D rb;
     private Animator animator;
@@ -35,12 +39,33 @@ public class MobAI : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         mobHealth = GetComponent<MobHealth>();
         originalScale = transform.localScale;
+
+        if (NetworkManager.Instance != null)
+        {
+            isHost = (NetworkManager.Instance.UserRole == "Host");
+        }
+        
+        lastPos = transform.position;
     }
 
     void Update()
     {
         if (mobHealth.isDead) return;
-        if (!isHost) return;
+
+        if (!isHost)
+        {
+            // Client: Tự động đoán animation dựa trên sự thay đổi vị trí (do Host gửi qua)
+            Vector3 delta = transform.position - lastPos;
+            if (animator != null)
+            {
+                animator.SetBool("isMoving", delta.magnitude > 0.01f);
+            }
+            if (delta.x > 0.01f) spriteRenderer.flipX = false;
+            else if (delta.x < -0.01f) spriteRenderer.flipX = true;
+
+            lastPos = transform.position;
+            return;
+        }
 
         // BẢO VỆ CHẶT CHẼ: Nếu người chơi chưa bước qua cửa kích hoạt phòng,
         // quái vật đứng yên hoàn toàn, KHÔNG nhận diện và KHÔNG tìm kiếm Player.
@@ -67,6 +92,21 @@ public class MobAI : MonoBehaviour
             case EnemyState.Attack:
                 MonitorAttackState();
                 break;
+        }
+
+        // Host: Gửi vị trí quái vật liên tục cho Client
+        if (NetworkManager.Instance != null)
+        {
+            syncTimer -= Time.deltaTime;
+            if (syncTimer <= 0f)
+            {
+                MobNetworkIdentity identity = GetComponent<MobNetworkIdentity>();
+                if (identity != null && !string.IsNullOrEmpty(identity.networkId))
+                {
+                    NetworkManager.Instance.SendEnemyPosition(identity.networkId, transform.position.x, transform.position.y);
+                }
+                syncTimer = syncInterval;
+            }
         }
     }
 
