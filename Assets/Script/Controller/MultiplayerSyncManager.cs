@@ -51,6 +51,9 @@ public class MultiplayerSyncManager : MonoBehaviour
             // ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ PHÒNG
             NetworkManager.Instance.OnRoomCombatStarted += HandleRoomCombatStarted;
             NetworkManager.Instance.OnRoomClearedFromServer += HandleRoomClearedFromServer;
+            
+            // ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ VỊ TRÍ QUÁI
+            NetworkManager.Instance.OnReceiveEnemyPosition += HandleRemoteEnemyPosition;
         }
     }
 
@@ -68,6 +71,9 @@ public class MultiplayerSyncManager : MonoBehaviour
             // HỦY ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ PHÒNG
             NetworkManager.Instance.OnRoomCombatStarted -= HandleRoomCombatStarted;
             NetworkManager.Instance.OnRoomClearedFromServer -= HandleRoomClearedFromServer;
+            
+            // HỦY SỰ KIỆN ĐỒNG BỘ VỊ TRÍ QUÁI
+            NetworkManager.Instance.OnReceiveEnemyPosition -= HandleRemoteEnemyPosition;
         }
     }
 
@@ -343,6 +349,16 @@ public class MultiplayerSyncManager : MonoBehaviour
         else
         {
             Debug.LogWarning($"[MultiplayerSyncManager] KHÔNG tìm thấy quái nào có networkId là: {enemyId} trong scene!");
+        }
+    }
+
+    private void HandleRemoteEnemyPosition(string enemyId, float x, float y)
+    {
+        // Client nhận tọa độ từ Host và vẽ lại quái vật
+        GameObject enemy = FindEnemyByNetworkId(enemyId);
+        if (enemy != null)
+        {
+            enemy.transform.position = new Vector3(x, y, enemy.transform.position.z);
         }
     }
 

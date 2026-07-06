@@ -41,6 +41,7 @@ public class NetworkManager : MonoBehaviour
     // CÁC SỰ KIỆN ĐỒNG BỘ PHÒNG (ROOM COMBAT)
     public event Action<string, float, float> OnRoomCombatStarted; // roomId, centerX, centerY
     public event Action<string> OnRoomClearedFromServer;          // roomId
+    public event Action<string, float, float> OnReceiveEnemyPosition; // enemyId, x, y
 
     public string MyConnectionId => hubConnection?.ConnectionId;
 
@@ -243,6 +244,15 @@ public class NetworkManager : MonoBehaviour
                 OnReceiveWeaponAngle?.Invoke(connId, angle, px, py);
             }, null);
         });
+
+        // Đăng ký lắng nghe vị trí quái vật
+        hubConnection.On<string, float, float>("OnReceiveEnemyPosition", (enemyId, x, y) =>
+        {
+            unityContext.Post(_ =>
+            {
+                OnReceiveEnemyPosition?.Invoke(enemyId, x, y);
+            }, null);
+        });
     }
 
     // --- PHƯƠNG THỨC GỬI LÊN SERVER (API KHÁCH GỌI) ---
@@ -268,6 +278,14 @@ public class NetworkManager : MonoBehaviour
         if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
         {
             await hubConnection.InvokeAsync("SyncShoot", angle, px, py);
+        }
+    }
+
+    public async void SendEnemyPosition(string enemyId, float x, float y)
+    {
+        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        {
+            await hubConnection.InvokeAsync("SyncEnemyPosition", CurrentRoomId, enemyId, x, y);
         }
     }
 }
