@@ -39,9 +39,28 @@ public class GameConfigManager : MonoBehaviour
 
         if (File.Exists(filePath))
         {
-            string jsonText = File.ReadAllText(filePath);
-            ConfigData config = JsonUtility.FromJson<ConfigData>(jsonText);
-            baseUrl = config.baseUrl;
+            try
+            {
+                string jsonText = File.ReadAllText(filePath);
+                // Xóa các dòng comment // để JsonUtility của Unity không bị lỗi
+                // Dùng Multiline và ^ để chỉ xóa các comment ở đầu dòng, tránh xóa nhầm // trong URL
+                jsonText = System.Text.RegularExpressions.Regex.Replace(jsonText, @"^\s*//.*", "", System.Text.RegularExpressions.RegexOptions.Multiline);
+                
+                ConfigData config = JsonUtility.FromJson<ConfigData>(jsonText);
+                if (config != null && !string.IsNullOrEmpty(config.baseUrl))
+                {
+                    baseUrl = config.baseUrl;
+                }
+                else
+                {
+                    throw new Exception("baseUrl is null or empty");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[Config] Lỗi đọc file appsettings.json: {ex.Message}. Sử dụng URL mặc định.");
+                baseUrl = "https://rougekiebe.azurewebsites.net/api"; // URL dự phòng
+            }
         }
         else
         {
@@ -56,18 +75,51 @@ public class GameConfigManager : MonoBehaviour
         // Chờ nạp xong baseUrl (đề phòng trường hợp bất đồng bộ)
         if (string.IsNullOrEmpty(baseUrl)) yield return null;
 
+        // Thử nạp ngay khi Start (nếu đã có token lưu từ trước)
+        yield return StartCoroutine(FetchConfigsRoutine());
+    }
+
+    public void ReloadConfigs()
+    {
+        StartCoroutine(FetchConfigsRoutine());
+    }
+
+    private IEnumerator FetchConfigsRoutine()
+    {
         yield return StartCoroutine(FetchData($"{baseUrl}/bullets", (json) => {
-            string wrappedJson = "{\"data\":" + json + "}";
-            var wrapper = JsonUtility.FromJson<BulletArrayWrapper>(wrappedJson);
-            foreach (var b in wrapper.data) BulletDb[b.id] = b;
-            Debug.Log($"[API] Đã nạp {BulletDb.Count} cấu hình đạn thành công.");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(json)) throw new Exception("Empty response");
+                string wrappedJson = "{\"data\":" + json + "}";
+                var wrapper = JsonUtility.FromJson<BulletArrayWrapper>(wrappedJson);
+                if (wrapper != null && wrapper.data != null)
+                {
+                    foreach (var b in wrapper.data) BulletDb[b.id] = b;
+                    Debug.Log($"[API] Đã nạp {BulletDb.Count} cấu hình đạn thành công.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[API Error] Lỗi parse cấu hình đạn: {ex.Message} - Json: {json}");
+            }
         }));
 
         yield return StartCoroutine(FetchData($"{baseUrl}/weapons", (json) => {
-            string wrappedJson = "{\"data\":" + json + "}";
-            var wrapper = JsonUtility.FromJson<WeaponArrayWrapper>(wrappedJson);
-            foreach (var w in wrapper.data) WeaponDb[w.id] = w;
-            Debug.Log($"[API] Đã nạp {WeaponDb.Count} cấu hình vũ khí thành công.");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(json)) throw new Exception("Empty response");
+                string wrappedJson = "{\"data\":" + json + "}";
+                var wrapper = JsonUtility.FromJson<WeaponArrayWrapper>(wrappedJson);
+                if (wrapper != null && wrapper.data != null)
+                {
+                    foreach (var w in wrapper.data) WeaponDb[w.id] = w;
+                    Debug.Log($"[API] Đã nạp {WeaponDb.Count} cấu hình vũ khí thành công.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[API Error] Lỗi parse cấu hình vũ khí: {ex.Message} - Json: {json}");
+            }
         }));
     }
 
@@ -75,6 +127,12 @@ public class GameConfigManager : MonoBehaviour
     {
         using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
         {
+            string token = PlayerPrefs.GetString("jwt_token", "");
+            if (!string.IsNullOrEmpty(token))
+            {
+                webRequest.SetRequestHeader("Authorization", "Bearer " + token);
+            }
+
             webRequest.certificateHandler = new BypassCert();
             yield return webRequest.SendWebRequest();
 
