@@ -30,7 +30,6 @@ public class MobHealth : MonoBehaviour
         animator = GetComponent<Animator>();
         mobCollider = GetComponent<Collider2D>();
         rb = GetComponent<Rigidbody2D>();
-        // networkIdentity đã được lấy ở Awake
     }
 
     void OnEnable()
@@ -40,67 +39,77 @@ public class MobHealth : MonoBehaviour
         if (mobCollider != null) mobCollider.enabled = true;
 
         Transform shadowObj = transform.Find("Shadow");
-        if (shadowObj != null)
-        {
-            shadowObj.gameObject.SetActive(true);
-        }
+        if (shadowObj != null) shadowObj.gameObject.SetActive(true);
     }
 
-    public void TakeDamage(int damage, bool isCrit = false, bool syncNetwork = true)
+    // Đạn bắn trúng máy nào, máy đó gọi hàm này
+    public void TakeDamage(int damage, bool isCrit = false)
     {
         if (isDead) return;
 
-        // CẢ HOST VÀ CLIENT ĐỀU TRỪ MÁU LOCAL ĐỂ CHƠI MƯỢT MÀ
         currentHealth -= damage;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
-        // SYNC DAMAGE: Sync all damage to other clients so health matches perfectly
-        if (syncNetwork && NetworkManager.Instance != null && networkIdentity != null)
+        // BÍ QUYẾT: Gửi MÁU HIỆN TẠI (currentHealth) qua mạng thay vì gửi damage
+        if (NetworkManager.Instance != null && networkIdentity != null)
         {
-            NetworkManager.Instance.SendEnemyHitEvent(NetworkManager.Instance.CurrentRoomId, networkIdentity.networkId, damage);
+            NetworkManager.Instance.SendEnemyHitEvent(NetworkManager.Instance.CurrentRoomId, networkIdentity.networkId, (float)currentHealth);
         }
 
-        MobFlash flash = GetComponent<MobFlash>();
-        if (flash != null) flash.TriggerFlash();
-        DamageNumberSpawner.Instance.Spawn(transform.position, damage, isCrit);
+        ShowDamageUI(damage, isCrit);
 
         if (currentHealth <= 0)
         {
-            Die(syncNetwork);
-        }
-        else
-        {
-            // Do nothing, flash is handled above.
+            ExecuteDieLocal();
         }
     }
 
-    void Die(bool syncNetwork)
+    // Hàm MỚI: Chỉ dành cho việc đồng bộ từ máy khác gửi sang
+    public void SyncHealthFromNetwork(int networkHealth)
     {
-        // 2. Gửi tín hiệu 9999f TRƯỚC khi xử lý logic chết local (để tránh bị sự kiện RoomCleared gửi lên server trước làm kẹt 9999f)
-        if (syncNetwork && NetworkManager.Instance != null && networkIdentity != null)
-        {
-            NetworkManager.Instance.SendEnemyHitEvent(NetworkManager.Instance.CurrentRoomId, networkIdentity.networkId, 9999f);
-        }
+        if (isDead) return;
 
-        // 1. Cho quái chết tại máy hiện tại
-        ExecuteDieLocal();
+        // CHỐNG TIẾNG VỌNG: Nếu máu mạng gửi về >= máu hiện tại -> Đây là gói tin cũ hoặc của chính mình dội lại -> BỎ QUA!
+        if (networkHealth >= currentHealth) return;
+
+        int damageTaken = currentHealth - networkHealth;
+        currentHealth = networkHealth;
+
+        ShowDamageUI(damageTaken, false);
+
+        if (currentHealth <= 0)
+        {
+            ExecuteDieLocal();
+        }
     }
 
-    // Ép quái chết lập tức (gọi cục bộ hoặc gọi từ máy khác qua mạng)
+    // Tách riêng phần hiển thị UI cho sạch code
+    private void ShowDamageUI(int damageAmount, bool isCrit)
+    {
+        try
+        {
+            MobFlash flash = GetComponent<MobFlash>();
+            if (flash != null) flash.TriggerFlash();
+
+            if (DamageNumberSpawner.Instance != null && damageAmount > 0)
+            {
+                DamageNumberSpawner.Instance.Spawn(transform.position, damageAmount, isCrit);
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning("Lỗi UI số dame: " + ex.Message);
+        }
+    }
+
     public void ExecuteDieLocal()
     {
         if (isDead) return;
+
         isDead = true;
+        currentHealth = 0;
 
-        if (animator != null)
-        {
-            animator.SetTrigger("die");
-        }
-
-        if (mobCollider != null)
-        {
-            mobCollider.enabled = false;
-        }
+        if (mobCollider != null) mobCollider.enabled = false;
 
         if (rb != null)
         {
@@ -109,22 +118,15 @@ public class MobHealth : MonoBehaviour
         }
 
         MobAI ai = GetComponent<MobAI>();
-        if (ai != null)
-        {
-            ai.enabled = false;
-        }
+        if (ai != null) ai.enabled = false;
+
+        if (animator != null) animator.SetTrigger("die");
 
         Transform shadowObj = transform.Find("Shadow");
-        if (shadowObj != null)
-        {
-            shadowObj.gameObject.SetActive(false);
-        }
+        if (shadowObj != null) shadowObj.gameObject.SetActive(false);
 
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
-        if (sr != null)
-        {
-            sr.sortingOrder = 2;
-        }
+        if (sr != null) sr.sortingOrder = 2;
 
         OnDeath?.Invoke(this);
     }
