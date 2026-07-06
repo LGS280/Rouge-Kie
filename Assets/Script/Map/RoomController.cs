@@ -29,13 +29,6 @@ public class RoomController : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        // Thu thập quái và cửa ngay từ đầu bằng Toán học (Bounds) thay vì chờ Vật lý (OverlapPoint)
-        CollectMobsInsideRoom();
-        CollectDoorsNearRoom();
-    }
-
     public void AddDoor(RoomDoor door)
     {
         if (door != null && !doors.Contains(door))
@@ -82,6 +75,9 @@ public class RoomController : MonoBehaviour
 
     public void TryStartRoomCombat()
     {
+        CollectMobsInsideRoom();
+        CollectDoorsNearRoom();
+
         Debug.Log($"{gameObject.name} TryStartRoomCombat - AliveMobs: {GetAliveMobCount()}");
 
         if (roomCleared || roomStarted)
@@ -120,6 +116,9 @@ public class RoomController : MonoBehaviour
     public void ExecuteStartCombatLocal()
     {
         if (roomStarted || roomCleared) return;
+
+        CollectMobsInsideRoom();
+        CollectDoorsNearRoom();
 
         roomStarted = true;
         PushPlayerInsideRoom();
@@ -226,20 +225,14 @@ public class RoomController : MonoBehaviour
         if (RoomCollider == null)
             return;
 
-        // Tạo Bounds 2D an toàn (mở rộng trục Z ra vô cực để không bị trượt quái nếu lệch Z)
-        // Mở rộng XY thêm 0.5f để bao cả dung sai
-        Bounds bounds = RoomCollider.bounds;
-        bounds.Expand(new Vector3(0.5f, 0.5f, 100f));
-
-        MobHealth[] allMobs = Object.FindObjectsByType<MobHealth>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        MobHealth[] allMobs = Object.FindObjectsByType<MobHealth>(FindObjectsSortMode.None);
 
         foreach (MobHealth mob in allMobs)
         {
             if (mob == null || mob.isDead || mobs.Contains(mob))
                 continue;
 
-            // Sử dụng Bounds.Contains thay vì OverlapPoint để không phụ thuộc vào Physics2D
-            if (bounds.Contains(mob.transform.position))
+            if (RoomCollider.OverlapPoint(mob.transform.position))
             {
                 AddMob(mob);
             }
