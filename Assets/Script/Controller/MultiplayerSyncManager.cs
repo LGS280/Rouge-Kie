@@ -325,6 +325,7 @@ public class MultiplayerSyncManager : MonoBehaviour
     // Xử lý khi quái vật bị dính đòn (áp dụng cho tất cả Client)
     private void HandleRemoteEnemyDamaged(string enemyId, float healthFromServer)
     {
+        Debug.Log($"[MultiplayerSyncManager] Nhận OnEnemyDamaged từ Server: enemyId={enemyId}, healthFromServer={healthFromServer}");
         GameObject enemy = FindEnemyByNetworkId(enemyId);
         if (enemy != null)
         {
@@ -334,6 +335,14 @@ public class MultiplayerSyncManager : MonoBehaviour
                 // Truyền cục máu thật vào hàm đồng bộ, dẹp luôn TakeDamage qua mạng!
                 health.SyncHealthFromNetwork(Mathf.RoundToInt(healthFromServer));
             }
+            else
+            {
+                Debug.LogWarning($"[MultiplayerSyncManager] Không tìm thấy component MobHealth trên GameObject: {enemy.name}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"[MultiplayerSyncManager] KHÔNG tìm thấy quái nào có networkId là: {enemyId} trong scene!");
         }
     }
 
