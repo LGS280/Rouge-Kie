@@ -55,4 +55,20 @@ public class InGameMenuController : MonoBehaviour
             Debug.LogWarning("Không tìm thấy GameObject nhân vật có Tag 'Player'!");
         }
     }
+
+    // Thêm mới: Hàm xử lý thoát game ra Menu chính
+    public async void QuitToMainMenu()
+    {
+        // Khôi phục timeScale đề phòng game đang bị pause
+        Time.timeScale = 1f;
+
+        // Nếu đang kết nối mạng, tiến hành ngắt kết nối phòng và reconnect để reset trạng thái
+        if (NetworkManager.Instance != null)
+        {
+            await NetworkManager.Instance.DisconnectAndReconnect();
+        }
+
+        // Chuyển về Scene Menu chính
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Scene_Menu");
+    }
 }
