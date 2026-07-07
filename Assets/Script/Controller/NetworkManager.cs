@@ -270,25 +270,4 @@ public class NetworkManager : MonoBehaviour
             await hubConnection.InvokeAsync("SyncShoot", angle, px, py);
         }
     }
-
-    // Thêm mới: Ngắt kết nối phòng chơi hiện tại và kết nối lại để reset trạng thái phòng nhưng giữ phiên đăng nhập
-    public async System.Threading.Tasks.Task DisconnectAndReconnect()
-    {
-        CurrentRoomId = null;
-        UserRole = "Guest";
-
-        if (hubConnection != null)
-        {
-            try
-            {
-                await hubConnection.StopAsync();
-                await hubConnection.StartAsync();
-                Debug.Log("[NetworkManager] Đã ngắt kết nối phòng cũ và reconnect SignalR thành công.");
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[NetworkManager] Lỗi khi reconnect SignalR: {ex.Message}");
-            }
-        }
-    }
 }
