@@ -3,7 +3,7 @@ using UnityEngine.Events;
 
 public class RookieHealth : MonoBehaviour
 {
-    [Header("THIẾT LẬP MÁU PLAYER")]
+    [Header("THI?T L?P M�U PLAYER")]
     public int maxHealth = 5;
     private int currentHealth;
     [HideInInspector] public bool isDead = false;
@@ -11,7 +11,7 @@ public class RookieHealth : MonoBehaviour
     private Collider2D playerCollider;
     private Rigidbody2D rb;
 
-    [Header("THIẾT LẬP GIÁP")]
+    [Header("THI?T L?P GI�P")]
     public int maxArmor = 4;
     private int currentArmor;
     private float armorRegenDelayTimer = 0f;
@@ -20,7 +20,7 @@ public class RookieHealth : MonoBehaviour
     public float armorRegenDelay = 2f;
     public float armorRegenTick = 1f;
 
-    [Header("THIẾT LẬP MANA")]
+    [Header("THI?T L?P MANA")]
     public int maxMana = 200;
     private int currentMana;
 
@@ -121,8 +121,8 @@ public class RookieHealth : MonoBehaviour
         if (playerCollider != null) playerCollider.enabled = false;
         if (rb != null)
         {
-            rb.bodyType = RigidbodyType2D.Static;
             rb.linearVelocity = Vector2.zero;
+            rb.bodyType = RigidbodyType2D.Static;
         }
         PlayerController controller = GetComponent<PlayerController>();
         if (controller != null) controller.enabled = false;
@@ -145,7 +145,7 @@ public class RookieHealth : MonoBehaviour
         if (sr == null) yield break;
 
         Color startColor = sr.color;
-        Color targetColor = new Color(0.3f, 0.3f, 0.3f, 1f); // xám tối
+        Color targetColor = new Color(0.3f, 0.3f, 0.3f, 1f); // x�m t?i
         float duration = 0.5f;
         float t = 0f;
 

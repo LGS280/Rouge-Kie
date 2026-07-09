@@ -5,7 +5,7 @@ public class RoomController : MonoBehaviour
 {
     [Header("Multiplayer Settings (Auto-generated)")]
     // TỰ ĐỘNG HÓA: ID này sẽ tự sinh bằng GetInstanceID().ToString() lúc Runtime, không cần điền tay nữa!
-    public string roomUniqueId { get; private set; }
+    public string roomUniqueId { get; set; }
 
     [Header("Room Status")]
     public bool roomCleared = false;
@@ -23,7 +23,10 @@ public class RoomController : MonoBehaviour
         RoomCollider = GetComponent<Collider2D>();
 
         // TỰ ĐỘNG SINH ID: Lấy mã InstanceID độc nhất của Object này trong Scene hiện tại
-        roomUniqueId = gameObject.GetInstanceID().ToString();
+        if (string.IsNullOrEmpty(roomUniqueId))
+        {
+            roomUniqueId = gameObject.GetInstanceID().ToString();
+        }
     }
 
     public void AddDoor(RoomDoor door)
@@ -80,9 +83,11 @@ public class RoomController : MonoBehaviour
         if (roomCleared || roomStarted)
             return;
 
+        bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+
         if (GetAliveMobCount() <= 0)
         {
-            if (NetworkManager.Instance != null)
+            if (isMultiplayer)
             {
                 NetworkManager.Instance.SendRoomClearedEvent(roomUniqueId);
             }
@@ -94,7 +99,7 @@ public class RoomController : MonoBehaviour
         }
 
         // Gửi ID tự động lên Server
-        if (NetworkManager.Instance != null && currentPlayer != null)
+        if (isMultiplayer && currentPlayer != null)
         {
             // SỬA THEO YÊU CẦU: Lấy tọa độ mép cửa phía trong phòng (safeSpot) thay vì giữa phòng,
             // tránh trường hợp giữa phòng có vật cản.
@@ -128,6 +133,11 @@ public class RoomController : MonoBehaviour
         roomCleared = true;
         roomStarted = false;
         OpenDoors();
+
+        if (RunStatsTracker.Instance != null)
+        {
+            RunStatsTracker.Instance.LogRoomCleared();
+        }
     }
 
     private void PushPlayerInsideRoom()
@@ -135,7 +145,8 @@ public class RoomController : MonoBehaviour
         if (currentPlayer == null) return;
 
         // Bỏ qua nếu đang chơi Multi, vì MultiplayerSyncManager đã tự dịch chuyển (tránh đẩy 2 lần)
-        if (NetworkManager.Instance != null) return;
+        bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+        if (isMultiplayer) return;
 
         Vector3 roomCenter = transform.position;
         Vector3 dir = (roomCenter - currentPlayer.position).normalized;
@@ -168,7 +179,8 @@ public class RoomController : MonoBehaviour
     {
         if (GetAliveMobCount() <= 0)
         {
-            if (NetworkManager.Instance != null)
+            bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+            if (isMultiplayer)
             {
                 NetworkManager.Instance.SendRoomClearedEvent(roomUniqueId);
             }
