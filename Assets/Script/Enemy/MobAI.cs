@@ -21,6 +21,15 @@ public class MobAI : MonoBehaviour
     [HideInInspector] public RoomController myRoom; // Tự động nhận diện từ RoomController khi map được sinh ra
     private bool isRoomActivated = false;          // Cờ kiểm soát kích hoạt AI
 
+    private float syncTimer = 0f;
+    private float syncInterval = 0.1f; // 100ms sync rate cho Mob
+    private Vector3 lastPos;
+    
+    // Lerp Variables cho Client
+    private Vector2 networkTargetPos;
+    private bool hasFirstNetworkPos = false;
+    private float syncSmoothing = 15f;
+
     private Transform targetPlayer;
     private Rigidbody2D rb;
     private Animator animator;
@@ -35,12 +44,40 @@ public class MobAI : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         mobHealth = GetComponent<MobHealth>();
         originalScale = transform.localScale;
+
+        if (NetworkManager.Instance != null)
+        {
+            isHost = (NetworkManager.Instance.UserRole == "Host");
+        }
+        
+        lastPos = transform.position;
     }
 
     void Update()
     {
         if (mobHealth.isDead) return;
-        if (!isHost) return;
+
+        if (!isHost)
+        {
+            // Client: Di chuyển mượt (Lerp) tới tọa độ do Host gửi
+            if (hasFirstNetworkPos)
+            {
+                Vector3 target = new Vector3(networkTargetPos.x, networkTargetPos.y, transform.position.z);
+                transform.position = Vector3.Lerp(transform.position, target, Time.deltaTime * syncSmoothing);
+            }
+
+            // Tự động đoán animation dựa trên sự thay đổi vị trí
+            Vector3 delta = transform.position - lastPos;
+            if (animator != null)
+            {
+                animator.SetBool("isMoving", delta.magnitude > 0.001f);
+            }
+            if (delta.x > 0.001f) spriteRenderer.flipX = false;
+            else if (delta.x < -0.001f) spriteRenderer.flipX = true;
+
+            lastPos = transform.position;
+            return;
+        }
 
         // BẢO VỆ CHẶT CHẼ: Nếu người chơi chưa bước qua cửa kích hoạt phòng,
         // quái vật đứng yên hoàn toàn, KHÔNG nhận diện và KHÔNG tìm kiếm Player.
@@ -68,6 +105,21 @@ public class MobAI : MonoBehaviour
                 MonitorAttackState();
                 break;
         }
+
+        // Host: Gửi vị trí quái vật liên tục cho Client
+        if (NetworkManager.Instance != null)
+        {
+            syncTimer -= Time.deltaTime;
+            if (syncTimer <= 0f)
+            {
+                MobNetworkIdentity identity = GetComponent<MobNetworkIdentity>();
+                if (identity != null && !string.IsNullOrEmpty(identity.networkId))
+                {
+                    NetworkManager.Instance.SendEnemyPosition(identity.networkId, transform.position.x, transform.position.y);
+                }
+                syncTimer = syncInterval;
+            }
+        }
     }
 
     void LateUpdate()
@@ -80,6 +132,22 @@ public class MobAI : MonoBehaviour
     public void ActivateMob()
     {
         isRoomActivated = true;
+    }
+
+    // Client nhận tọa độ từ mạng
+    public void UpdateNetworkPosition(float x, float y)
+    {
+        Vector2 newPos = new Vector2(x, y);
+        if (!hasFirstNetworkPos)
+        {
+            transform.position = new Vector3(x, y, transform.position.z);
+            networkTargetPos = newPos;
+            hasFirstNetworkPos = true;
+        }
+        else
+        {
+            networkTargetPos = newPos;
+        }
     }
 
     // Chặn không cho quái vật đi ra khỏi ranh giới phòng

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.IO;
 using System.Net;
@@ -39,6 +39,7 @@ public class LoginResponse
     public int userId;
     public string username;
     public string token;
+    public string refreshToken;
 }
 
 // Model nhận cấu hình bảo mật Google từ file JSON cục bộ
@@ -97,8 +98,18 @@ public class LoginController : MonoBehaviour
     [SerializeField] private TMP_Text messageText;
     [SerializeField] private TMP_Text regMessageText;
 
-    [Header("Backend")]
     [SerializeField] private string backendBase = "https://rougekiebe.azurewebsites.net";
+
+    // BỔ SUNG: Hàm lấy URL API động từ appsettings.json nếu có, tránh fix cứng đường dẫn Azure
+    private string GetApiUrl(string path)
+    {
+        string apiBase = backendBase + "/api";
+        if (GameConfigManager.Instance != null && !string.IsNullOrEmpty(GameConfigManager.Instance.BaseUrl))
+        {
+            apiBase = GameConfigManager.Instance.BaseUrl;
+        }
+        return $"{apiBase}{path}";
+    }
 
     [Header("Google OAuth 2.0 Settings (PC)")]
     private string googleClientId = "";
@@ -221,12 +232,14 @@ public class LoginController : MonoBehaviour
 
     public void OnBackToLoginClick()
     {
+        // Nếu đang ở trang Register, bấm Back sẽ quay lại trang Login Panel
         if (registerPanel != null && registerPanel.activeSelf)
         {
             ShowLoginPanel();
         }
         else
         {
+            // Tự động lấy chính xác tên Scene hiện tại đang chứa Script này để Unload an toàn
             string currentSceneName = gameObject.scene.name;
             UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(currentSceneName);
         }
@@ -352,7 +365,7 @@ public class LoginController : MonoBehaviour
         var data = new GoogleLoginRequest { idToken = idToken };
         string jsonData = JsonUtility.ToJson(data);
 
-        using (var request = new UnityWebRequest(backendBase + "/api/auth/google-login", "POST"))
+        using (var request = new UnityWebRequest(GetApiUrl("/auth/google-login"), "POST"))
         {
             byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -417,7 +430,7 @@ public class LoginController : MonoBehaviour
 
         string jsonData = JsonUtility.ToJson(data);
 
-        using (var request = new UnityWebRequest(backendBase + "/api/auth/send-register-otp", "POST"))
+        using (var request = new UnityWebRequest(GetApiUrl("/auth/send-register-otp"), "POST"))
         {
             byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -448,7 +461,7 @@ public class LoginController : MonoBehaviour
 
         string jsonData = JsonUtility.ToJson(data);
 
-        using (var request = new UnityWebRequest(backendBase + "/api/auth/login", "POST"))
+        using (var request = new UnityWebRequest(GetApiUrl("/auth/login"), "POST"))
         {
             byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -463,7 +476,7 @@ public class LoginController : MonoBehaviour
 
                 if (resp != null && resp.success)
                 {
-                    ProcessLoginSuccess(resp);
+                    ProcessLoginSuccess(resp); // Gọi hàm xử lý thành công dùng chung
                     yield break;
                 }
 
@@ -480,6 +493,7 @@ public class LoginController : MonoBehaviour
     private void ProcessLoginSuccess(LoginResponse resp)
     {
         PlayerPrefs.SetString("jwt_token", resp.token);
+        PlayerPrefs.SetString("refresh_token", resp.refreshToken); // Lưu refresh token từ dev
         PlayerPrefs.SetString("username", resp.username);
         PlayerPrefs.SetInt("user_id", resp.userId);
         PlayerPrefs.Save();
@@ -487,6 +501,12 @@ public class LoginController : MonoBehaviour
         NetworkManager.Instance.IsLoggedIn = true;
         NetworkManager.Instance.LoggedInUsername = resp.username;
         NetworkManager.Instance.UserRole = "Player";
+
+        // Tải lại cấu hình súng/đạn vì giờ đã có token (Cập nhật từ dev)
+        GameConfigManager.Instance?.ReloadConfigs();
+
+        // Cập nhật thông tin profile lên UI (Cập nhật từ dev)
+        PlayerProfileUI.Instance?.RefreshProfile();
 
         // Tự động gọi Menu chính mở sảnh Co-op
         LobbyUIController lobbyUI = UnityEngine.Object.FindFirstObjectByType<LobbyUIController>();
@@ -514,7 +534,7 @@ public class LoginController : MonoBehaviour
 
         string jsonData = JsonUtility.ToJson(data);
 
-        using (var request = new UnityWebRequest(backendBase + "/api/auth/register", "POST"))
+        using (var request = new UnityWebRequest(GetApiUrl("/auth/register"), "POST"))
         {
             byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -541,7 +561,7 @@ public class LoginController : MonoBehaviour
     {
         string token = PlayerPrefs.GetString("jwt_token", "");
 
-        using (var req = UnityWebRequest.Get(backendBase + "/api/users"))
+        using (var req = UnityWebRequest.Get(GetApiUrl("/users")))
         {
             if (!string.IsNullOrEmpty(token))
             {

@@ -17,6 +17,23 @@ public class WeaponManager : MonoBehaviour
     void Start()
     {
         handWeaponAim = handPosition.GetComponent<WeaponAim>();
+
+        if (weaponSlot1 != null)
+        {
+            // Tạo bản sao độc lập hoàn toàn trong Scene
+            GameObject instance1 = Instantiate(weaponSlot1, handPosition.position, Quaternion.identity);
+            Destroy(weaponSlot1); // Xóa bỏ cái xác Prefab bị lỗi cũ đi
+            weaponSlot1 = instance1;
+        }
+
+        if (weaponSlot2 != null)
+        {
+            // Tạo bản sao độc lập hoàn toàn trong Scene
+            GameObject instance2 = Instantiate(weaponSlot2, backPosition.position, Quaternion.identity);
+            Destroy(weaponSlot2); // Xóa bỏ cái xác Prefab bị lỗi cũ đi
+            weaponSlot2 = instance2;
+        }
+
         ResetWeaponsStatus();
     }
 
@@ -81,6 +98,7 @@ public class WeaponManager : MonoBehaviour
     {
         if (weapon == null) return;
 
+        // Bây giờ đối tượng đã là bản sao độc lập, SetParent thoải mái không bao giờ lỗi nữa!
         weapon.transform.SetParent(newParent);
         weapon.transform.localRotation = Quaternion.identity;
         weapon.transform.localScale = Vector3.one;
@@ -145,14 +163,4 @@ public class WeaponManager : MonoBehaviour
             UpdateWeaponParent(weaponSlot2, backPosition, false);
         }
     }
-
-    // public void PickupWeapon(GameObject newWeapon)
-    // {
-    //     if (newWeapon == null) return;
-    //     if (weaponSlot1 != null && weaponSlot2 == null)
-    //     {
-    //         weaponSlot2 = newWeapon;
-    //         UpdateWeaponParent(weaponSlot2, backPosition, false);
-    //     }
-    // }
 }
