@@ -55,6 +55,17 @@ public class NetworkManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
             unityContext = SynchronizationContext.Current;
+
+            // Tự động khôi phục phiên đăng nhập từ PlayerPrefs khi khởi động game (Đặt trong Awake để chạy trước Start của các UI khác)
+            string savedToken = PlayerPrefs.GetString("jwt_token", "");
+            string savedUsername = PlayerPrefs.GetString("username", "Guest");
+            if (!string.IsNullOrEmpty(savedToken))
+            {
+                IsLoggedIn = true;
+                LoggedInUsername = savedUsername;
+                UserRole = "Player";
+                Debug.Log($"[NetworkManager] Tự động đăng nhập người dùng: {LoggedInUsername}");
+            }
         }
         else
         {

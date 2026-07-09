@@ -1,9 +1,9 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.Events;
 
 public class RookieHealth : MonoBehaviour
 {
-    [Header("THI?T L?P MÁU PLAYER")]
+    [Header("THI?T L?P Mï¿½U PLAYER")]
     public int maxHealth = 5;
     private int currentHealth;
     [HideInInspector] public bool isDead = false;
@@ -11,7 +11,7 @@ public class RookieHealth : MonoBehaviour
     private Collider2D playerCollider;
     private Rigidbody2D rb;
 
-    [Header("THI?T L?P GIÁP")]
+    [Header("THI?T L?P GIï¿½P")]
     public int maxArmor = 4;
     private int currentArmor;
     private float armorRegenDelayTimer = 0f;
@@ -145,7 +145,7 @@ public class RookieHealth : MonoBehaviour
         if (sr == null) yield break;
 
         Color startColor = sr.color;
-        Color targetColor = new Color(0.3f, 0.3f, 0.3f, 1f); // xám t?i
+        Color targetColor = new Color(0.3f, 0.3f, 0.3f, 1f); // xï¿½m t?i
         float duration = 0.5f;
         float t = 0f;
 
