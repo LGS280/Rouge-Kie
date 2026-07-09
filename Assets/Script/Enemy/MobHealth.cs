@@ -50,15 +50,17 @@ public class MobHealth : MonoBehaviour
         currentHealth -= damage;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
+        if (RunStatsTracker.Instance != null)
+        {
+            RunStatsTracker.Instance.LogDamageDealt(damage);
+        }
+
         // BÍ QUYẾT: Gửi MÁU HIỆN TẠI (currentHealth) qua mạng thay vì gửi damage
-        if (NetworkManager.Instance != null && networkIdentity != null)
+        bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+        if (isMultiplayer && networkIdentity != null)
         {
             Debug.Log($"[MobHealth] {gameObject.name} (networkId={networkIdentity.networkId}) TakeDamage: damage={damage}, remainingHealth={currentHealth}. Sending sync...");
             NetworkManager.Instance.SendEnemyHitEvent(NetworkManager.Instance.CurrentRoomId, networkIdentity.networkId, (float)currentHealth);
-        }
-        else
-        {
-            Debug.LogWarning($"[MobHealth] {gameObject.name} cannot sync: NetworkManager={NetworkManager.Instance != null}, networkIdentity={networkIdentity != null}");
         }
 
         ShowDamageUI(damage, isCrit);
@@ -124,6 +126,11 @@ public class MobHealth : MonoBehaviour
         Debug.Log($"[MobHealth] {gameObject.name} (networkId={networkIdentity?.networkId}) ExecuteDieLocal() - Killing mob locally.");
 
         isDead = true;
+
+        if (RunStatsTracker.Instance != null)
+        {
+            RunStatsTracker.Instance.LogEnemyKilled();
+        }
         currentHealth = 0;
 
         if (mobCollider != null) mobCollider.enabled = false;

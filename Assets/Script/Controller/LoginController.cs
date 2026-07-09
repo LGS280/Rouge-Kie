@@ -34,6 +34,7 @@ public class LoginResponse
     public int userId;
     public string username;
     public string token;
+    public string refreshToken;
 }
 
 // Development-only: accepts any TLS certificate (self-signed). Remove for production.
@@ -260,6 +261,7 @@ public class LoginController : MonoBehaviour
                 if (resp != null && resp.success)
                 {
                     PlayerPrefs.SetString("jwt_token", resp.token);
+                    PlayerPrefs.SetString("refresh_token", resp.refreshToken);
                     PlayerPrefs.SetString("username", resp.username);
                     PlayerPrefs.SetInt("user_id", resp.userId);
                     PlayerPrefs.Save();
@@ -270,6 +272,9 @@ public class LoginController : MonoBehaviour
 
                     // Tải lại cấu hình súng/đạn vì giờ đã có token
                     GameConfigManager.Instance?.ReloadConfigs();
+
+                    // Cập nhật thông tin profile lên UI
+                    PlayerProfileUI.Instance?.RefreshProfile();
 
                     // Tự động gọi Menu chính mở sảnh Co-op
                     LobbyUIController lobbyUI = Object.FindFirstObjectByType<LobbyUIController>();
