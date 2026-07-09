@@ -73,3 +73,11 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# Chặn tệp tin cấu hình bảo mật Google
+/[Aa]ssets/Google_Asset/Resources/google_secrets.json
+/[Aa]ssets/Google_Asset/Resources/google_secrets.json.meta
+
+# Chặn cấu hình appsettings.json trong StreamingAssets
+/[Aa]ssets/StreamingAssets/appsettings.json
+/[Aa]ssets/StreamingAssets/appsettings.json.meta
