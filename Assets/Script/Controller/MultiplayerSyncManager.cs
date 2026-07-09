@@ -26,6 +26,14 @@ public class MultiplayerSyncManager : MonoBehaviour
 
     private void Start()
     {
+        bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+        if (!isMultiplayer)
+        {
+            // Tự động tắt component này nếu đang chơi đơn (Solo) để tiết kiệm tài nguyên mạng và tránh gửi SignalR thừa
+            enabled = false;
+            return;
+        }
+
         // Tự động tìm nhân vật Rookie cục bộ của bạn trong Scene
         if (localPlayer == null)
         {
