@@ -147,6 +147,6 @@ public class PlayerProfileUI : MonoBehaviour
         if (displayNameText != null) displayNameText.text = data.displayName;
         if (gemText != null) gemText.text = $"{data.standardCurrency} Gem";
         if (rubyText != null) rubyText.text = $"{data.premiumCurrency} Ruby";
-        if (recordText != null) recordText.text = $"Kỷ lục: Wave {data.highestWave} | Kills: {data.totalKills}";
+        if (recordText != null) recordText.text = $"High Score: Wave {data.highestWave} | Kills: {data.totalKills}";
     }
 }
