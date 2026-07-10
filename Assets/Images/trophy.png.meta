@@ -1,13 +1,10 @@
 fileFormatVersion: 2
-guid: c3b290151ab47d144b54ed3d1f4136ff
+guid: 8f9b7c62d0aa53f4eb9b462aaefbc8ea
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1362106992686068254
-    second: button_1_0
-  - first:
-      213: 5380118848378659714
-    second: button_1_1
+      213: -2138534889620764463
+    second: Trophy_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -78,7 +75,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 0
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -103,45 +100,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: button_1_0
+      name: Trophy_0
       rect:
         serializedVersion: 2
-        x: 48
+        x: 0
         y: 0
         width: 32
         height: 32
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 8, y: 8, z: 8, w: 8}
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: e12f025d71d27e210800000000000000
-      internalID: 1362106992686068254
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: button_1_1
-      rect:
-        serializedVersion: 2
-        x: 176
-        y: 0
-        width: 32
-        height: 32
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 8, y: 8, z: 8, w: 8}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 2836ef666950aaa40800000000000000
-      internalID: 5380118848378659714
+      spriteID: 1d8006c29d56252e0800000000000000
+      internalID: -2138534889620764463
       vertices: []
       indices: 
       edges: []
@@ -150,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 8b61e6bb7b95b814c9edae4cc5fbc92c
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -158,12 +133,9 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries:
-      - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":32.0,"y":32.0},"gridSpriteOffset":{"x":16.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
+      entries: []
     nameFileIdTable:
-      button_1_0: 1362106992686068254
-      button_1_1: 5380118848378659714
+      Trophy_0: -2138534889620764463
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
