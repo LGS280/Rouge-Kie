@@ -182,6 +182,51 @@ public class MainMenuController : MonoBehaviour
         SetSelected(firstControlsOption);
     }
 
+    private void Update()
+    {
+        // 1. Phím ESC / Nút Cancel (Gamepad) để điều hướng đóng/mở panel
+        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetButtonDown("Cancel"))
+        {
+            if (settingsPanel.activeSelf)
+            {
+                OnCloseSettingsPressed();
+            }
+            else if (LeaderboardUI.Instance != null && LeaderboardUI.Instance.IsOpen)
+            {
+                LeaderboardUI.Instance.HideLeaderboard();
+                SetSelected(playButton);
+            }
+            else if (playMenuPanel.activeSelf)
+            {
+                OnBackButtonPressed();
+            }
+            else if (mainMenuPanel.activeSelf)
+            {
+                OnSettingsButtonPressed();
+            }
+        }
+
+        // 2. Phím tắt mở Leaderboards từ sảnh chính (Phím L hoặc nút Y trên tay cầm Gamepad)
+        if (mainMenuPanel.activeSelf && !settingsPanel.activeSelf && !playMenuPanel.activeSelf)
+        {
+            bool isLeaderboardOpen = LeaderboardUI.Instance != null && LeaderboardUI.Instance.IsOpen;
+            if (!isLeaderboardOpen)
+            {
+                if (Input.GetKeyDown(KeyCode.L) || Input.GetKeyDown(KeyCode.JoystickButton3))
+                {
+                    LeaderboardUI.Instance?.ShowLeaderboard();
+                }
+
+                // 3. Phím tắt Đăng xuất nhanh (Phím O hoặc nút Select/Share trên Gamepad)
+                bool loggedIn = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn;
+                if (loggedIn && (Input.GetKeyDown(KeyCode.O) || Input.GetKeyDown(KeyCode.JoystickButton6)))
+                {
+                    ApiClient.Instance?.Logout();
+                }
+            }
+        }
+    }
+
     private void SetSelected(GameObject obj)
     {
         if (obj != null && EventSystem.current != null)
