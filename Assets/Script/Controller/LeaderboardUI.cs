@@ -25,17 +25,30 @@ public class LeaderboardArrayWrapper
 /// </summary>
 public class LeaderboardUI : MonoBehaviour
 {
-    public static LeaderboardUI Instance { get; private set; }
+    private static LeaderboardUI instance;
+    public static LeaderboardUI Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindFirstObjectByType<LeaderboardUI>(FindObjectsInactive.Include);
+            }
+            return instance;
+        }
+    }
 
     [Header("UI References")]
     [SerializeField] private GameObject leaderboardPanel; // Panel chứa bảng xếp hạng
     [SerializeField] private TMP_Text leaderboardText;      // TextMeshPro hiển thị danh sách xếp hạng
 
+    public bool IsOpen => leaderboardPanel != null && leaderboardPanel.activeSelf;
+
     private void Awake()
     {
-        if (Instance == null)
+        if (instance == null)
         {
-            Instance = this;
+            instance = this;
         }
     }
 
@@ -49,6 +62,7 @@ public class LeaderboardUI : MonoBehaviour
     /// </summary>
     public void ShowLeaderboard()
     {
+        gameObject.SetActive(true); // Kích hoạt đối tượng cha chứa script
         if (leaderboardPanel != null) leaderboardPanel.SetActive(true);
         LoadLeaderboardFromServer();
     }
@@ -89,26 +103,23 @@ public class LeaderboardUI : MonoBehaviour
         });
     }
 
-    // Định dạng và hiển thị bảng xếp hạng lên màn hình
+    // Định dạng và hiển thị bảng xếp hạng lên màn hình sử dụng thẻ Rich Text <pos> để căn cột chính xác tuyệt đối
     private void UpdateUI(LeaderboardItem[] items)
     {
         if (leaderboardText == null) return;
 
         StringBuilder sb = new StringBuilder();
-        sb.AppendLine("<b>HẠNG   TÊN NGƯỜI CHƠI      WAVE    KILLS</b>");
-        sb.AppendLine("--------------------------------------------------");
+        // Căn lề các cột chính xác theo số điểm ảnh (pixels) từ lề trái (Tiếng Anh)
+        sb.AppendLine("<b>RANK<pos=150>PLAYER<pos=350>WAVE<pos=500>KILLS</b>");
+        sb.AppendLine("---------------------------------------------------------------------------");
 
         foreach (var item in items)
         {
-            string rankStr = item.rank.ToString().PadRight(6);
             string nameStr = string.IsNullOrEmpty(item.displayName) ? item.username : item.displayName;
             if (nameStr.Length > 16) nameStr = nameStr.Substring(0, 14) + "..";
-            nameStr = nameStr.PadRight(20);
 
-            string waveStr = item.highestWave.ToString().PadRight(8);
-            string killStr = item.totalKills.ToString();
-
-            sb.AppendLine($"{rankStr}{nameStr}{waveStr}{killStr}");
+            // Sử dụng thẻ <pos> để đẩy text của các cột về đúng vị trí mong muốn
+            sb.AppendLine($" {item.rank}<pos=150>{nameStr}<pos=350>{item.highestWave}<pos=500>{item.totalKills}");
         }
 
         leaderboardText.text = sb.ToString();
