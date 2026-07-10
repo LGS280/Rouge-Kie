@@ -109,16 +109,13 @@ public class LeaderboardUI : MonoBehaviour
         if (leaderboardText == null) return;
 
         StringBuilder sb = new StringBuilder();
-        // Căn lề các cột chính xác theo số điểm ảnh (pixels) từ lề trái (Tiếng Anh)
-        sb.AppendLine("<b>RANK<pos=150>PLAYER<pos=350>WAVE<pos=500>KILLS</b>");
-        sb.AppendLine("---------------------------------------------------------------------------");
 
         foreach (var item in items)
         {
             string nameStr = string.IsNullOrEmpty(item.displayName) ? item.username : item.displayName;
             if (nameStr.Length > 16) nameStr = nameStr.Substring(0, 14) + "..";
 
-            // Sử dụng thẻ <pos> để đẩy text của các cột về đúng vị trí mong muốn
+            // Sử dụng thẻ <pos> để đẩy text của các cột về đúng vị trí mong muốn (khớp với vị trí của Header tĩnh trên UI)
             sb.AppendLine($" {item.rank}<pos=150>{nameStr}<pos=350>{item.highestWave}<pos=500>{item.totalKills}");
         }
 
