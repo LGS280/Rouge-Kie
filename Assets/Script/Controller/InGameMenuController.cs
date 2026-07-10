@@ -5,6 +5,25 @@ public class InGameMenuController : MonoBehaviour
     [Header("UI Panels")]
     [SerializeField] private GameObject settingsPanel; // Kéo Prefab Settings_Panel vào đây
 
+    private void Update()
+    {
+        // Phím ESC / Nút Cancel (Gamepad) để đóng/mở Settings Panel trong trận đấu
+        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetButtonDown("Cancel"))
+        {
+            if (settingsPanel != null)
+            {
+                if (settingsPanel.activeSelf)
+                {
+                    CloseSettings();
+                }
+                else
+                {
+                    OpenSettings();
+                }
+            }
+        }
+    }
+
     public void OpenSettings()
     {
         settingsPanel.SetActive(true);

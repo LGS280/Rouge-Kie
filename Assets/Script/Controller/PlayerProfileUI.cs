@@ -23,11 +23,23 @@ public class ProfileResponseData
 public class PlayerProfileUI : MonoBehaviour
 {
     // Singleton Instance để truy cập nhanh từ các Controller khác
-    public static PlayerProfileUI Instance { get; private set; }
+    private static PlayerProfileUI instance;
+    public static PlayerProfileUI Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindFirstObjectByType<PlayerProfileUI>(FindObjectsInactive.Include);
+            }
+            return instance;
+        }
+    }
 
     [Header("Profile UI Elements")]
     [SerializeField] private GameObject profileContainer; // Panel tổng thể chứa thông tin profile (hiện khi đã login)
     [SerializeField] private GameObject loginButton;       // Nút bấm đăng nhập nhanh ở Menu chính (hiện khi chưa login)
+    [SerializeField] private Button logoutButton;          // Nút Đăng xuất tài khoản (hiện khi đã login)
     
     [Header("Text Fields")]
     [SerializeField] private TMP_Text displayNameText;     // Hiển thị tên người chơi
@@ -37,9 +49,9 @@ public class PlayerProfileUI : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
+        if (instance == null)
         {
-            Instance = this;
+            instance = this;
         }
     }
 
@@ -53,6 +65,18 @@ public class PlayerProfileUI : MonoBehaviour
             {
                 btn.onClick.AddListener(OnLoginButtonClicked);
             }
+        }
+
+        // Gắn sự kiện click cho nút Đăng xuất
+        if (logoutButton != null)
+        {
+            logoutButton.onClick.AddListener(() =>
+            {
+                if (ApiClient.Instance != null)
+                {
+                    ApiClient.Instance.Logout();
+                }
+            });
         }
         
         RefreshProfile();
@@ -74,18 +98,21 @@ public class PlayerProfileUI : MonoBehaviour
     /// </summary>
     public void RefreshProfile()
     {
+        gameObject.SetActive(true); // Đảm bảo đối tượng cha chứa script luôn hoạt động
         bool loggedIn = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn;
 
         if (loggedIn)
         {
             if (profileContainer != null) profileContainer.SetActive(true);
             if (loginButton != null) loginButton.SetActive(false);
+            if (logoutButton != null) logoutButton.gameObject.SetActive(true);
             LoadProfileFromServer();
         }
         else
         {
             if (profileContainer != null) profileContainer.SetActive(false);
             if (loginButton != null) loginButton.SetActive(true);
+            if (logoutButton != null) logoutButton.gameObject.SetActive(false);
         }
     }
 
