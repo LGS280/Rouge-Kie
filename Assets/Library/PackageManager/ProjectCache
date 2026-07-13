@@ -5,16 +5,16 @@ m_ProjectFiles:
     m_ContentTrackingEnabled: 1
     m_ModificationDate:
       serializedVersion: 2
-      ticks: 639172164803202871
-    m_Hash: 1907927753
+      ticks: 639174804740194260
+    m_Hash: 827622745
   m_LockFileStatus:
     m_FilePath: D:/SEP/Unity_Data/Rouge-Kie/Assets/Packages/packages-lock.json
     m_PathExists: 1
     m_ContentTrackingEnabled: 1
     m_ModificationDate:
       serializedVersion: 2
-      ticks: 639172164832922771
-    m_Hash: 1556631890
+      ticks: 639174804740204237
+    m_Hash: 4103317803
 m_EmbeddedPackageManifests:
   m_ManifestsStatus: {}
 m_LocalPackages:

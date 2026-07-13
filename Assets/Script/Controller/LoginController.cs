@@ -1,11 +1,13 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.UI;
 using TMPro;
 
 [System.Serializable]
@@ -119,6 +121,9 @@ public class LoginController : MonoBehaviour
     private HttpListener httpListener;
     private string authCodeToExchange = null;
 
+    // Danh sách các GraphicRaycaster thuộc scene khác bị tắt tạm thời
+    private readonly List<GraphicRaycaster> _disabledRaycasters = new List<GraphicRaycaster>();
+
     private void Start()
     {
         // 1. Tự động đọc Client ID và Client Secret từ file Assets/Resources/google_secrets.json
@@ -131,6 +136,9 @@ public class LoginController : MonoBehaviour
         {
             regEmailInput.onValueChanged.AddListener(OnEmailValueChanged);
         }
+
+        // Chặn tương tác của các scene khác (Menu) khi Login scene đang mở
+        BlockOtherScenesInput();
     }
 
     private void LoadGoogleSecrets()
@@ -181,6 +189,46 @@ public class LoginController : MonoBehaviour
         {
             httpListener.Stop();
         }
+
+        // Khôi phục tương tác cho các scene khác khi Login scene đóng
+        RestoreOtherScenesInput();
+    }
+
+    /// <summary>
+    /// Tắt GraphicRaycaster của tất cả Canvas thuộc scene khác (VD: Menu scene)
+    /// để chúng không nhận input khi Login panel đang hiển thị phía trên.
+    /// </summary>
+    private void BlockOtherScenesInput()
+    {
+        _disabledRaycasters.Clear();
+        string loginSceneName = gameObject.scene.name;
+
+        GraphicRaycaster[] allRaycasters = FindObjectsByType<GraphicRaycaster>(FindObjectsSortMode.None);
+        foreach (GraphicRaycaster raycaster in allRaycasters)
+        {
+            // Chỉ tắt raycaster thuộc scene KHÁC với Login scene
+            if (raycaster.gameObject.scene.name != loginSceneName && raycaster.enabled)
+            {
+                raycaster.enabled = false;
+                _disabledRaycasters.Add(raycaster);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Bật lại các GraphicRaycaster đã bị tắt khi Login scene bị unload.
+    /// </summary>
+    private void RestoreOtherScenesInput()
+    {
+        foreach (GraphicRaycaster raycaster in _disabledRaycasters)
+        {
+            // Kiểm tra null để tránh lỗi nếu object đã bị destroy
+            if (raycaster != null)
+            {
+                raycaster.enabled = true;
+            }
+        }
+        _disabledRaycasters.Clear();
     }
 
     // Hàm lắng nghe sự kiện thay đổi text từ Input Field
