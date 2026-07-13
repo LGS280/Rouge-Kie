@@ -1,6 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum RoomType
+{
+    Normal, // Phòng thường có quái
+    Start,  // Phòng xuất phát (Home)
+    Boss,   // Phòng Boss
+    Chest   // Phòng rương báu
+}
+
 public class RoomController : MonoBehaviour
 {
     [Header("Multiplayer Settings (Auto-generated)")]
@@ -8,6 +16,8 @@ public class RoomController : MonoBehaviour
     public string roomUniqueId { get; set; }
 
     [Header("Room Status")]
+    public RoomType roomType = RoomType.Normal; // Loại phòng (mặc định là Normal)
+    public bool isVisited = false;              // Trạng thái đã đi qua phòng
     public bool roomCleared = false;
     public bool roomStarted = false;
     private Transform currentPlayer;
@@ -68,6 +78,17 @@ public class RoomController : MonoBehaviour
     {
         if (collision.CompareTag("Player"))
         {
+            // Kiểm tra xem có phải là người chơi nội bộ (local player) hay không
+            // Tránh việc remote player đi qua cửa kích hoạt minimap của người chơi hiện tại
+            if (collision.GetComponent<PlayerController>() != null)
+            {
+                isVisited = true;
+                if (MinimapManager.Instance != null)
+                {
+                    MinimapManager.Instance.OnPlayerEnterRoom(this);
+                }
+            }
+
             currentPlayer = collision.transform;
             TryStartRoomCombat();
         }
@@ -137,6 +158,12 @@ public class RoomController : MonoBehaviour
         if (RunStatsTracker.Instance != null)
         {
             RunStatsTracker.Instance.LogRoomCleared();
+        }
+
+        // Thông báo cho MinimapManager biết phòng này đã được dọn sạch quái
+        if (MinimapManager.Instance != null)
+        {
+            MinimapManager.Instance.OnRoomCleared(this);
         }
     }
 
