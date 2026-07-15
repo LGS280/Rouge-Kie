@@ -1,10 +1,13 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 
 public class WeaponLaser : MonoBehaviour
 {
     [Header("Cấu hình API kết nối")]
     public int weaponDbId;
+
+    [Header("Prefab tham chiếu để vứt súng")]
+    public GameObject weaponPrefab;
 
     [Header("--- THIẾT LẬP LASER ---")]
     public GameObject laserPrefab;
@@ -46,7 +49,23 @@ public class WeaponLaser : MonoBehaviour
     void OnEnable()
     {
         ApplyConfigFromDb();
+        GameConfigManager.OnConfigLoaded += ApplyConfigFromDb;
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (weaponPrefab == null)
+        {
+            string myPath = UnityEditor.AssetDatabase.GetAssetPath(gameObject);
+            if (!string.IsNullOrEmpty(myPath))
+            {
+                weaponPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(myPath);
+                UnityEditor.EditorUtility.SetDirty(this);
+            }
+        }
+    }
+#endif
 
     public void ApplyConfigFromDb()
     {
@@ -133,6 +152,14 @@ public class WeaponLaser : MonoBehaviour
 
     void CheckAttackInput()
     {
+        // Khóa bắn laser nếu người chơi đang đứng gần súng trên đất để nhặt
+        WeaponManager wm = GetComponentInParent<WeaponManager>();
+        if (wm != null && wm.nearbyWeapons.Count > 0)
+        {
+            isHoldingAttack = false;
+            return;
+        }
+
         PlayerController pc = GetComponentInParent<PlayerController>();
         if (pc != null && pc.currentMode == PlayerController.InputMode.Gamepad)
         {
@@ -261,6 +288,7 @@ public class WeaponLaser : MonoBehaviour
     void OnDisable()
     {
         StopLaser();
+        GameConfigManager.OnConfigLoaded -= ApplyConfigFromDb;
     }
 
     void OnDestroy()

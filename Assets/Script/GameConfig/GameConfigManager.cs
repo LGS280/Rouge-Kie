@@ -9,6 +9,9 @@ public class GameConfigManager : MonoBehaviour
 {
     public static GameConfigManager Instance { get; private set; }
 
+    // Sự kiện báo hiệu khi nạp xong cấu hình từ API
+    public static event Action OnConfigLoaded;
+
     // Xóa const cũ, thay bằng biến private để gán từ file json
     private string baseUrl;
 
@@ -121,6 +124,9 @@ public class GameConfigManager : MonoBehaviour
                 Debug.LogError($"[API Error] Lỗi parse cấu hình vũ khí: {ex.Message} - Json: {json}");
             }
         }));
+
+        // Kích hoạt sự kiện báo hiệu cấu hình đã được nạp xong từ API
+        OnConfigLoaded?.Invoke();
     }
 
     private IEnumerator FetchData(string url, Action<string> onSuccess)

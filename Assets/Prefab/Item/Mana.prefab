@@ -170,7 +170,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LootItem
   lootType: 1
-  value: 1
+  value: 10
   detectRange: 4
   baseAttractSpeed: 3
   acceleration: 5

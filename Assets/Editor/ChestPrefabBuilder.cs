@@ -39,7 +39,8 @@ public class ChestPrefabBuilder
         // 3. Tạo GameObject con: Body (Thân rương)
         GameObject bodyObj = new GameObject("Body");
         bodyObj.transform.SetParent(chestParent.transform);
-        bodyObj.transform.localPosition = Vector3.zero;
+        // Dịch chuyển thân rương xuống -0.09375f (tương đương -1.5 pixel) để bù trừ phần bóng 3px ở đáy (tổng chiều cao từ 8px lên 11px), giúp nắp rương giữ nguyên 0.5f khớp khít
+        bodyObj.transform.localPosition = new Vector3(0f, -0.09375f, 0f);
         SpriteRenderer bodyRenderer = bodyObj.AddComponent<SpriteRenderer>();
         bodyRenderer.sprite = bodySprite;
         bodyRenderer.sortingOrder = 5; // Layer hiển thị phía trên map
@@ -47,8 +48,8 @@ public class ChestPrefabBuilder
         // 4. Tạo GameObject con: Top (Nắp rương khi đóng)
         GameObject topObj = new GameObject("Top");
         topObj.transform.SetParent(chestParent.transform);
-        // Định vị nắp rương nằm ngay phía trên thân rương (0.5 unit - khớp 8 pixel với PPU = 16)
-        topObj.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+        // Định vị nắp rương nằm ngay phía trên thân rương (0.5625f unit - khớp dịch chuyển 9 pixel để đè chồng đúng 1 hàng của thân rương)
+        topObj.transform.localPosition = new Vector3(0f, 0.5625f, 0f);
         SpriteRenderer topRenderer = topObj.AddComponent<SpriteRenderer>();
         topRenderer.sprite = topSprite;
         topRenderer.sortingOrder = 6; // Đè lên trên thân rương
@@ -57,7 +58,7 @@ public class ChestPrefabBuilder
         GameObject insideObj = new GameObject("Inside");
         insideObj.transform.SetParent(chestParent.transform);
         // Định vị lòng rương trùng khớp
-        insideObj.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+        insideObj.transform.localPosition = new Vector3(0f, 0.5625f, 0f);
         SpriteRenderer insideRenderer = insideObj.AddComponent<SpriteRenderer>();
         insideRenderer.sprite = insideSprite;
         insideRenderer.sortingOrder = 6;
