@@ -13986,63 +13986,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
---- !u!1001 &873952991
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 6375133616017450034, guid: c634a5f64678d004f9afbaef98cafedc, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 13.52
-      objectReference: {fileID: 0}
-    - target: {fileID: 6375133616017450034, guid: c634a5f64678d004f9afbaef98cafedc, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 2.18
-      objectReference: {fileID: 0}
-    - target: {fileID: 6375133616017450034, guid: c634a5f64678d004f9afbaef98cafedc, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6375133616017450034, guid: c634a5f64678d004f9afbaef98cafedc, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6375133616017450034, guid: c634a5f64678d004f9afbaef98cafedc, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6375133616017450034, guid: c634a5f64678d004f9afbaef98cafedc, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6375133616017450034, guid: c634a5f64678d004f9afbaef98cafedc, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6375133616017450034, guid: c634a5f64678d004f9afbaef98cafedc, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6375133616017450034, guid: c634a5f64678d004f9afbaef98cafedc, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6375133616017450034, guid: c634a5f64678d004f9afbaef98cafedc, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6415236004820850263, guid: c634a5f64678d004f9afbaef98cafedc, type: 3}
-      propertyPath: m_Name
-      value: WeaponChest
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: c634a5f64678d004f9afbaef98cafedc, type: 3}
 --- !u!1 &876137472
 GameObject:
   m_ObjectHideFlags: 0
@@ -52943,9 +52886,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.014814815
-    width: 1
-    height: 0.96969694
+    y: 0.060185183
+    width: 0.33333334
+    height: 0.32323232
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -64139,5 +64082,4 @@ SceneRoots:
   - {fileID: 381416467}
   - {fileID: 1504340144}
   - {fileID: 1753088113}
-  - {fileID: 873952991}
   - {fileID: 753138633}
