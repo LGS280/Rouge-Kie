@@ -22,6 +22,9 @@ public class DungeonGenerator : MonoBehaviour
     [Header("Door Prefab")]
     public GameObject doorPrefab;
 
+    [Header("Chest Prefab")]
+    public GameObject chestPrefab;
+
     [Header("Door Tilemap")]
     public Tilemap doorTilemap;
     public Tilemap doorTopTilemap;
@@ -1185,6 +1188,7 @@ public class DungeonGenerator : MonoBehaviour
 );
 
             RoomController controller = roomObj.AddComponent<RoomController>();
+            controller.chestPrefab = chestPrefab; // Truyền tham chiếu rương thưởng
             room.controller = controller;
         }
     }
