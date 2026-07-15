@@ -8,6 +8,7 @@ public class WeaponAim : MonoBehaviour
     private SpriteRenderer playerRenderer;
     private PlayerController playerController;
     private PlayerMeleeSlash playerMelee;
+    private WeaponManager weaponManager;
 
     // biến ẩn để biết súng nào đang trên tay nhằm kích hoạt bắn/tốc độ bắn
     [HideInInspector] public WeaponInfo currentWeapon;
@@ -26,6 +27,7 @@ public class WeaponAim : MonoBehaviour
         mainCamera = Camera.main;
         playerController = GetComponentInParent<PlayerController>();
         playerMelee = GetComponentInParent<PlayerMeleeSlash>();
+        weaponManager = GetComponentInParent<WeaponManager>();
 
         if (transform.parent != null)
         {
@@ -165,6 +167,9 @@ public class WeaponAim : MonoBehaviour
 
     void HandleShooting()
     {
+        // Khóa bắn súng nếu có súng ở gần dưới đất để nhặt
+        if (weaponManager != null && weaponManager.nearbyWeapons.Count > 0) return;
+
         if (currentWeapon == null) return;
 
         float currentFireRate = PlayerStats.Instance != null

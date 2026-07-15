@@ -99,13 +99,10 @@ public class LootItem : MonoBehaviour
     {
         if (lootType == LootType.Coin)
         {
-            // Cộng vàng vào hệ thống theo dõi trận đấu (CurrencyEarned)
+            // Cộng vàng vào hệ thống theo dõi trận đấu (CurrencyEarned) đúng lượng value nhặt được
             if (RunStatsTracker.Instance != null)
             {
-                RunStatsTracker.Instance.LogEnemyKilled(); // Hàm này tạm thời cộng coin trong run (mỗi mạng cộng coin)
-                // Hoặc nếu bạn muốn cộng chính xác lượng 'value' của Coin nhặt được:
-                // Ta có thể tạo thêm hàm AddGold trong RunStatsTracker nếu cần, nhưng hiện tại ta cộng trực tiếp:
-                // RunStatsTracker.Instance.CurrencyEarned += value; 
+                RunStatsTracker.Instance.AddCurrency(value);
             }
         }
         else if (lootType == LootType.Mana)

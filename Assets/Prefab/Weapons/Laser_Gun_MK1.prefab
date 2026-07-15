@@ -137,6 +137,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponLaser
   weaponDbId: 5
+  weaponPrefab: {fileID: 5681139341880372300}
   laserPrefab: {fileID: 6231754123693432805, guid: 475cef929f68d3043b3d17cb128c5801, type: 3}
   firePoint: {fileID: 9164787276703503022}
   maxLaserDistance: 15

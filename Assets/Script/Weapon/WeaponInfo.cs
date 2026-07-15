@@ -5,6 +5,12 @@ public class WeaponInfo : MonoBehaviour
     [Header("Cấu hình API kết nối")]
     public int weaponDbId;
 
+    [Header("Prefab tham chiếu để vứt súng")]
+    public GameObject weaponPrefab;
+
+    [Header("Âm thanh bắn súng")]
+    public AudioClip shootSoundClip;
+
     private string soundFileName;
     private float soundVolume = 0.8f;
 
@@ -28,7 +34,28 @@ public class WeaponInfo : MonoBehaviour
     void OnEnable()
     {
         ApplyConfigFromDb();
+        GameConfigManager.OnConfigLoaded += ApplyConfigFromDb;
     }
+
+    void OnDisable()
+    {
+        GameConfigManager.OnConfigLoaded -= ApplyConfigFromDb;
+    }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (weaponPrefab == null)
+        {
+            string myPath = UnityEditor.AssetDatabase.GetAssetPath(gameObject);
+            if (!string.IsNullOrEmpty(myPath))
+            {
+                weaponPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(myPath);
+                UnityEditor.EditorUtility.SetDirty(this);
+            }
+        }
+    }
+#endif
 
     public void ApplyConfigFromDb()
     {
@@ -54,7 +81,11 @@ public class WeaponInfo : MonoBehaviour
 
     private void PlayWeaponSound()
     {
-        if (!string.IsNullOrEmpty(soundFileName) && RogueKie.Audio.AudioManager.Instance != null)
+        if (shootSoundClip != null && RogueKie.Audio.AudioManager.Instance != null)
+        {
+            RogueKie.Audio.AudioManager.Instance.PlaySFXAtPosition(shootSoundClip, transform.position, soundVolume);
+        }
+        else if (!string.IsNullOrEmpty(soundFileName) && RogueKie.Audio.AudioManager.Instance != null)
         {
             // Tự load file âm thanh dựa vào tên file trong thư mục Assets/Resources/Audio/
             AudioClip clip = Resources.Load<AudioClip>($"Audio/{soundFileName}");

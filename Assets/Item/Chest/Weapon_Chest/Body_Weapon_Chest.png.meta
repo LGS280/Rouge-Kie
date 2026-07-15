@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 82be86a2e7429624289b7f0181954c13
+guid: 2e4d01a64dfcb5041b14f6e9818b2846
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5431292314601090805
-    second: Body_ChestV1_0
+      213: 3554297596208223487
+    second: Body_Weapon_Chest_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Body_ChestV1_0
+      name: Body_Weapon_Chest_0
       rect:
         serializedVersion: 2
         x: 0
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b0194e48a6c20a4b0800000000000000
-      internalID: -5431292314601090805
+      spriteID: ff4140015d6635130800000000000000
+      internalID: 3554297596208223487
       vertices: []
       indices: 
       edges: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: f445dba7896074d4c9b6609054ae2994
     internalID: 0
     vertices: []
     indices: 
@@ -137,7 +137,7 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      Body_ChestV1_0: -5431292314601090805
+      Body_Weapon_Chest_0: 3554297596208223487
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

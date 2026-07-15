@@ -67,13 +67,23 @@ public class RunStatsTracker : MonoBehaviour
 
     /// <summary>
     /// Ghi nhận khi tiêu diệt được một kẻ địch (được gọi từ MobHealth.cs)
+    /// Kẻ địch bị tiêu diệt sẽ KHÔNG tự động cộng Coin trực tiếp nữa.
     /// </summary>
     public void LogEnemyKilled()
     {
         if (runEnded) return;
         EnemiesKilled++;
-        CurrencyEarned += 10; // Thưởng 10 Coin cho mỗi mạng hạ gục
         Debug.Log($"[RunStatsTracker] Đã hạ quái. Tổng số: {EnemiesKilled}, Coin hiện tại: {CurrencyEarned}");
+    }
+
+    /// <summary>
+    /// Cộng tiền khi nhặt được vàng rơi từ rương (được gọi từ LootItem.cs)
+    /// </summary>
+    public void AddCurrency(int amount)
+    {
+        if (runEnded) return;
+        CurrencyEarned += amount;
+        Debug.Log($"[RunStatsTracker] Đã nhặt Coin. Cộng thêm: {amount}, Tổng số: {CurrencyEarned}");
     }
 
     /// <summary>
@@ -87,12 +97,12 @@ public class RunStatsTracker : MonoBehaviour
 
     /// <summary>
     /// Ghi nhận khi dọn sạch một phòng quái (được gọi từ RoomController.cs)
+    /// Việc dọn phòng thành công sẽ KHÔNG tự động cộng Coin nữa.
     /// </summary>
     public void LogRoomCleared()
     {
         if (runEnded) return;
         ClearedRoomsCount++;
-        CurrencyEarned += 20; // Thưởng 20 Coin cho mỗi phòng dọn dẹp thành công
         Debug.Log($"[RunStatsTracker] Đã dọn xong phòng ({ClearedRoomsCount}/{TotalCombatRooms}). Coin: {CurrencyEarned}");
 
         // Nếu đã dọn sạch toàn bộ các phòng trong Dungeon -> Chiến thắng màn chơi!
