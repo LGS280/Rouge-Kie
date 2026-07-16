@@ -363,6 +363,14 @@ MonoBehaviour:
   backPosition: {fileID: 5289129472824092616}
   weaponSlot1: {fileID: 3958100353804416116}
   weaponSlot2: {fileID: 7899034397582093655}
+  allWeaponPrefabs:
+  - {fileID: 4136628244467973380, guid: 7ac88ad6a102d7d41ab1ff7cd22148cf, type: 3}
+  - {fileID: 2255413539830745082, guid: 4208f3b8848eb1e44b5e5ce624af72cc, type: 3}
+  - {fileID: 5681139341880372300, guid: b8b6a4057ad786949a8c72836fb4e6ef, type: 3}
+  - {fileID: 2029244562639368729, guid: 3aeb6bb4e6e240744ae1c83a7092d600, type: 3}
+  - {fileID: 4136628244467973380, guid: cf230ddf7040b34489b82a3e47148a70, type: 3}
+  - {fileID: 4136628244467973380, guid: 5847631c04dc23e4395c142e878e76d5, type: 3}
+  nearbyWeapons: []
 --- !u!114 &1417017810891825403
 MonoBehaviour:
   m_ObjectHideFlags: 0

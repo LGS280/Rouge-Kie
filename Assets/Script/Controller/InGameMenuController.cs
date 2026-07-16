@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class InGameMenuController : MonoBehaviour
 {
@@ -7,19 +8,45 @@ public class InGameMenuController : MonoBehaviour
 
     private void Update()
     {
-        // Phím ESC / Nút Cancel (Gamepad) để đóng/mở Settings Panel trong trận đấu
-        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetButtonDown("Cancel"))
+        bool hasPressedToggleKey = false;
+
+        if (settingsPanel != null)
         {
-            if (settingsPanel != null)
+            // Nếu bảng cài đặt đang ĐÓNG: Chỉ cho phép ESC (bàn phím) hoặc nút Start (tay cầm) để MỞ
+            if (!settingsPanel.activeSelf)
             {
-                if (settingsPanel.activeSelf)
+                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.JoystickButton7))
                 {
-                    CloseSettings();
+                    hasPressedToggleKey = true;
                 }
-                else
+                else if (Gamepad.current != null && Gamepad.current.startButton.wasPressedThisFrame)
                 {
-                    OpenSettings();
+                    hasPressedToggleKey = true;
                 }
+            }
+            // Nếu bảng cài đặt đang MỞ: Cho phép ESC, nút Start hoặc nút B (Cancel) để ĐÓNG
+            else
+            {
+                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetButtonDown("Cancel") || Input.GetKeyDown(KeyCode.JoystickButton7))
+                {
+                    hasPressedToggleKey = true;
+                }
+                else if (Gamepad.current != null && (Gamepad.current.startButton.wasPressedThisFrame || Gamepad.current.bButton.wasPressedThisFrame))
+                {
+                    hasPressedToggleKey = true;
+                }
+            }
+        }
+
+        if (hasPressedToggleKey && settingsPanel != null)
+        {
+            if (settingsPanel.activeSelf)
+            {
+                CloseSettings();
+            }
+            else
+            {
+                OpenSettings();
             }
         }
     }

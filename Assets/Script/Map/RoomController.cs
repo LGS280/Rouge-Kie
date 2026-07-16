@@ -21,6 +21,10 @@ public class RoomController : MonoBehaviour
     public bool roomCleared = false;
     public bool roomStarted = false;
     private Transform currentPlayer;
+    private bool chestSpawned = false;
+    
+    [Header("Reward Chest Prefab")]
+    public GameObject chestPrefab;
 
     // Cache lại Collider của phòng để chia sẻ cho các MobAI lấy biên di chuyển
     public Collider2D RoomCollider { get; private set; }
@@ -151,6 +155,11 @@ public class RoomController : MonoBehaviour
 
     public void ExecuteClearRoomLocal()
     {
+        ExecuteClearRoomLocal(transform.position); // Mặc định sinh rương ở tâm phòng
+    }
+
+    public void ExecuteClearRoomLocal(Vector3 spawnPosition)
+    {
         roomCleared = true;
         roomStarted = false;
         OpenDoors();
@@ -164,6 +173,31 @@ public class RoomController : MonoBehaviour
         if (MinimapManager.Instance != null)
         {
             MinimapManager.Instance.OnRoomCleared(this);
+        }
+
+        // Sinh rương thưởng khi dọn sạch phòng quái (Bỏ qua phòng xuất phát Start)
+        if (roomType != RoomType.Start && !chestSpawned)
+        {
+            chestSpawned = true;
+            SpawnRewardChest(spawnPosition);
+        }
+    }
+
+    private void SpawnRewardChest(Vector3 spawnPosition)
+    {
+        if (chestPrefab != null)
+        {
+            // Sinh rương tại vị trí chỉ định (ví dụ vị trí quái cuối cùng chết)
+            GameObject chestObj = Instantiate(chestPrefab, spawnPosition, Quaternion.identity);
+            
+            // Đặt làm con của Room để quản lý phân cấp gọn gàng
+            chestObj.transform.SetParent(transform);
+            
+            Debug.Log($"[RoomController] Đã sinh Rương Thưởng tại vị trí {spawnPosition} ở phòng {gameObject.name}");
+        }
+        else
+        {
+            Debug.LogWarning($"[RoomController] Chưa gán chestPrefab cho RoomController tại phòng {gameObject.name}. Vui lòng kéo thả vào Map_Generator.");
         }
     }
 
@@ -199,10 +233,54 @@ public class RoomController : MonoBehaviour
     private void OnMobDeath(MobHealth deadMob)
     {
         Debug.Log($"{gameObject.name} Mob Died: {deadMob.name}");
-        CheckRoomCleared();
+        
+        // Sinh rương tại vị trí quái cuối cùng chết
+        Vector3 spawnPos = (deadMob != null) ? deadMob.transform.position : transform.position;
+        CheckRoomCleared(spawnPos);
+    }
+
+    private Vector3 GetRandomPositionInRoom()
+    {
+        if (RoomCollider == null) return transform.position;
+
+        Bounds bounds = RoomCollider.bounds;
+        Vector3 center = bounds.center;
+        
+        // Thu hẹp vùng tìm kiếm xung quanh tâm phòng (tránh sát tường ở các góc kẹt)
+        float minX = Mathf.Max(bounds.min.x + 2.0f, center.x - 3.0f);
+        float maxX = Mathf.Min(bounds.max.x - 2.0f, center.x + 3.0f);
+        float minY = Mathf.Max(bounds.min.y + 2.0f, center.y - 3.0f);
+        float maxY = Mathf.Min(bounds.max.y - 2.0f, center.y + 3.0f);
+
+        // Nếu phòng quá nhỏ không đủ biên, trả về tâm phòng làm dự phòng
+        if (minX >= maxX || minY >= maxY) return center;
+
+        Vector3 randomPos = center;
+        int maxAttempts = 30;
+        
+        for (int i = 0; i < maxAttempts; i++)
+        {
+            float rx = Random.Range(minX, maxX);
+            float ry = Random.Range(minY, maxY);
+            randomPos = new Vector3(rx, ry, transform.position.z);
+
+            // Kiểm tra: Nằm trong phạm vi bán kính [1.2, 3.0] tính từ tâm phòng
+            float dist = Vector3.Distance(randomPos, center);
+            if (dist >= 1.2f && dist <= 3.0f)
+            {
+                return randomPos;
+            }
+        }
+
+        return randomPos;
     }
 
     private void CheckRoomCleared()
+    {
+        CheckRoomCleared(transform.position);
+    }
+
+    private void CheckRoomCleared(Vector3 spawnPosition)
     {
         if (GetAliveMobCount() <= 0)
         {
@@ -213,14 +291,19 @@ public class RoomController : MonoBehaviour
             }
             else
             {
-                ClearRoom();
+                ClearRoom(spawnPosition);
             }
         }
     }
 
     private void ClearRoom()
     {
-        ExecuteClearRoomLocal();
+        ClearRoom(transform.position);
+    }
+
+    private void ClearRoom(Vector3 spawnPosition)
+    {
+        ExecuteClearRoomLocal(spawnPosition);
     }
 
     private int GetAliveMobCount()
