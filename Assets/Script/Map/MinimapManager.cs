@@ -38,8 +38,6 @@ public class MinimapManager : MonoBehaviour
 
     private void Start()
     {
-        HidePauseButton(); // Ẩn nút Pause khi bắt đầu chạy đề phòng trường hợp canvas được load trước đó
-
         // Tự động tìm và phục hồi các RoomController từ các GameObject trong Scene
         // (đề phòng trường hợp map đã được sinh từ trước trong Editor và lưu trong Scene,
         // khiến trường dictionary private của DungeonGenerator bị reset trống khi bắt đầu chạy game)
@@ -101,15 +99,6 @@ public class MinimapManager : MonoBehaviour
     /// </summary>
     public void InitializeMinimap()
     {
-        if (container == null)
-        {
-            CreateAutoMinimapUIInstance();
-        }
-        else
-        {
-            HidePauseButton();
-        }
-
         var generator = Object.FindAnyObjectByType<DungeonGenerator>();
         if (generator != null)
         {
@@ -358,19 +347,11 @@ public class MinimapManager : MonoBehaviour
     {
         if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "SampleScene")
         {
-            // Lấy hoặc tạo mới Instance của MinimapManager để đảm bảo nó luôn chạy
-            MinimapManager manager = MinimapManager.Instance;
-            if (manager != null && manager.container == null)
-            {
-                manager.CreateAutoMinimapUIInstance();
-            }
+            CreateAutoMinimapUI();
         }
     }
 
-    /// <summary>
-    /// Tạo UI Minimap động gắn thẳng vào Canvas giao diện chính của game
-    /// </summary>
-    public void CreateAutoMinimapUIInstance()
+    private static void CreateAutoMinimapUI()
     {
         Canvas canvas = FindUICanvas();
         if (canvas == null)
@@ -380,25 +361,21 @@ public class MinimapManager : MonoBehaviour
         }
 
         Transform parentTransform = canvas.transform;
-        // HUD_Canvas thường là con trực tiếp chứa HUD các thanh máu/nút bấm của màn hình chơi
-        Transform hudCanvasTrans = canvas.transform.Find("HUD_Canvas");
-        if (hudCanvasTrans != null)
+        HUDManager hud = Object.FindFirstObjectByType<HUDManager>();
+        if (hud != null)
         {
-            parentTransform = hudCanvasTrans;
-        }
-        else
-        {
-            HUDManager hud = Object.FindFirstObjectByType<HUDManager>();
-            if (hud != null)
-            {
-                parentTransform = hud.transform;
-            }
+            parentTransform = hud.transform;
         }
 
-        // Ẩn nút Pause_Button
-        HidePauseButton();
+        // Tự động ẩn nút Pause_Button trên màn hình chơi nếu tồn tại để nhường chỗ cho Minimap
+        GameObject pauseBtn = GameObject.Find("Pause_Button");
+        if (pauseBtn != null)
+        {
+            pauseBtn.SetActive(false);
+            Debug.Log("[MinimapManager] Đã tự động ẩn Pause_Button để lấy chỗ trống.");
+        }
 
-        // 1. Tạo MinimapWindow làm khung chứa có Mask (Kích thước 240x240 để hiển thị rõ nét)
+        // 1. Tạo MinimapWindow làm khung chứa có Mask (Kích thước 240x240 để hiển thị rõ nét hơn)
         GameObject windowObj = new GameObject("MinimapWindow", typeof(RectTransform));
         windowObj.transform.SetParent(parentTransform, false);
 
@@ -428,55 +405,20 @@ public class MinimapManager : MonoBehaviour
         containerRect.sizeDelta = new Vector2(1000, 1000);
         containerRect.anchoredPosition = Vector2.zero;
 
-        // Gán container và thiết lập layout settings cho Manager hiện tại
-        this.container = containerRect;
-        this.roomSpacing = 55f;
+        // 3. Tạo MinimapManager
+        GameObject managerObj = new GameObject("MinimapManager");
+        MinimapManager manager = managerObj.AddComponent<MinimapManager>();
+        manager.container = containerRect;
+        manager.roomSpacing = 55f; // Tăng khoảng cách ô phòng từ 35f lên 55f giúp các ô phòng to rõ ràng
 
-        // Tải các sprite từ Resources/Minimap
-        this.spriteRoom = LoadSpriteSafely("Minimap/Room");
-        this.spriteHome = LoadSpriteSafely("Minimap/Home");
-        this.spriteBoss = LoadSpriteSafely("Minimap/Boss");
-        this.spriteChest = LoadSpriteSafely("Minimap/Chest");
-        this.spritePlayer = LoadSpriteSafely("UI/Skin/Knob");
+        // Tải các sprite an toàn từ Resources/Minimap
+        manager.spriteRoom = LoadSpriteSafely("Minimap/Room");
+        manager.spriteHome = LoadSpriteSafely("Minimap/Home");
+        manager.spriteBoss = LoadSpriteSafely("Minimap/Boss");
+        manager.spriteChest = LoadSpriteSafely("Minimap/Chest");
+        manager.spritePlayer = LoadSpriteSafely("UI/Skin/Knob");
 
-        Debug.Log("[MinimapManager] Đã tự động tạo và cấu hình Minimap UI thành công.");
-    }
-
-    /// <summary>
-    /// Tìm và ẩn nút Pause_Button trên HUD để lấy chỗ trống cho Minimap
-    /// </summary>
-    public void HidePauseButton()
-    {
-        Canvas canvas = FindUICanvas();
-        if (canvas != null)
-        {
-            // Thử tìm Pause_Button theo đường dẫn phân cấp trong HUD_Canvas
-            Transform pauseBtnTrans = canvas.transform.Find("HUD_Canvas/Pause_Button");
-            if (pauseBtnTrans == null)
-            {
-                // Thử tìm trực tiếp dưới HUD_Canvas
-                GameObject hudCanvasObj = GameObject.Find("HUD_Canvas");
-                if (hudCanvasObj != null)
-                {
-                    pauseBtnTrans = hudCanvasObj.transform.Find("Pause_Button");
-                }
-            }
-
-            if (pauseBtnTrans != null)
-            {
-                pauseBtnTrans.gameObject.SetActive(false);
-                Debug.Log("[MinimapManager] Đã ẩn Pause_Button thành công từ Canvas.");
-                return;
-            }
-        }
-
-        // Cách tìm fallback diện rộng theo tên trong scene
-        GameObject pauseBtn = GameObject.Find("Pause_Button");
-        if (pauseBtn != null)
-        {
-            pauseBtn.SetActive(false);
-            Debug.Log("[MinimapManager] Đã ẩn Pause_Button (Find fallback).");
-        }
+        Debug.Log("[MinimapManager] Đã tự động tạo và cấu hình Minimap UI.");
     }
 
     private static Sprite LoadSpriteSafely(string path)
