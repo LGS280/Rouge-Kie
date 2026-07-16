@@ -83,6 +83,7 @@ public class DungeonGenerator : MonoBehaviour
         public RectInt rect;
         public bool isStartRoom;
         public RoomController controller;
+        public List<BoundsInt> obstacleBoundsList = new List<BoundsInt>(); // Danh sách vùng giới hạn vật cản trong phòng
 
         public Vector2Int Center
         {
@@ -677,11 +678,70 @@ public class DungeonGenerator : MonoBehaviour
                 continue;
             }
 
-            SpawnCenterObstacle(room.Center.x, room.Center.y);
+            // 70% sinh vật cản trung tâm, 30% sinh 4 cột ở 4 góc và để trống ở giữa
+            if (Random.value < 0.7f)
+            {
+                SpawnCenterObstacle(room.Center.x, room.Center.y, room);
+            }
+            else
+            {
+                SpawnCornerObstacles(room);
+            }
         }
     }
 
-    private void SpawnCenterObstacle(int centerX, int centerY)
+    private void SpawnCornerObstacles(MapRoom room)
+    {
+        if (obstacleTile == null || obstacleTilemap == null) return;
+
+        // Mỗi góc phòng đặt 1 cột đá nhỏ kích thước 2x2.
+        // Để cột đá lùi vào sâu hơn, cột đá sẽ cách tường bao quanh 3 ô (offset = 3).
+        int offset = 3;
+        int pillarSize = 2;
+
+        // Danh sách toạ độ bắt đầu của 4 cột ở 4 góc phòng
+        Vector2Int[] corners = new Vector2Int[]
+        {
+            new Vector2Int(room.Left + offset, room.Bottom + offset), // Dưới - Trái
+            new Vector2Int(room.Right - offset - pillarSize + 1, room.Bottom + offset), // Dưới - Phải
+            new Vector2Int(room.Left + offset, room.Top - offset - pillarSize + 1), // Trên - Trái
+            new Vector2Int(room.Right - offset - pillarSize + 1, room.Top - offset - pillarSize + 1) // Trên - Phải
+        };
+
+        foreach (var startPos in corners)
+        {
+            for (int x = 0; x < pillarSize; x++)
+            {
+                for (int y = 0; y < pillarSize; y++)
+                {
+                    Vector3Int tilePos = new Vector3Int(startPos.x + x, startPos.y + y, 0);
+                    obstacleTilemap.SetTile(tilePos, obstacleTile);
+
+                    // Tạo chân tường ở cạnh dưới của cột
+                    if (y == 0)
+                    {
+                        Vector3Int bottomPos = new Vector3Int(startPos.x + x, startPos.y - 1, 0);
+                        obstacleTilemap.SetTile(bottomPos, wallTopBot);
+
+                        Vector3Int shadowPos = new Vector3Int(startPos.x + x, startPos.y - 2, 0);
+                        if (shadowTiles != null && shadowTiles.Length > 0 && floorTilemap.HasTile(shadowPos))
+                        {
+                            floorTilemap.SetTile(shadowPos, shadowTiles[Random.Range(0, shadowTiles.Length)]);
+                        }
+                    }
+                }
+            }
+
+            // Thêm vùng giới hạn của cột này vào danh sách để quái không spawn đè lên
+            BoundsInt pillarBounds = new BoundsInt(
+                new Vector3Int(startPos.x - 1, startPos.y - 2, 0),
+                new Vector3Int(pillarSize + 2, pillarSize + 3, 1)
+            );
+            room.obstacleBoundsList.Add(pillarBounds);
+        }
+    }
+
+    private void SpawnCenterObstacle(int centerX, int centerY, MapRoom room = null)
     {
         if (obstacleTile == null || obstacleTilemap == null)
         {
@@ -775,10 +835,38 @@ public class DungeonGenerator : MonoBehaviour
             { 1, 0, 1, 0, 1 }
         };
 
+        int[,] layout11 = new int[,]
+        {
+            { 0, 0, 1, 0, 0 },
+            { 0, 0, 1, 0, 0 },
+            { 1, 1, 1, 1, 1 },
+            { 0, 0, 1, 0, 0 },
+            { 0, 0, 1, 0, 0 }
+        };
+
+        int[,] layout12 = new int[,]
+        {
+            { 1, 0, 0, 0, 1 },
+            { 1, 0, 0, 0, 1 },
+            { 1, 1, 1, 1, 1 },
+            { 1, 0, 0, 0, 1 },
+            { 1, 0, 0, 0, 1 }
+        };
+
+        int[,] layout13 = new int[,]
+        {
+            { 0, 0, 0, 0, 1 },
+            { 0, 0, 0, 1, 0 },
+            { 0, 0, 1, 0, 0 },
+            { 0, 1, 0, 0, 0 },
+            { 1, 0, 0, 0, 0 }
+        };
+
         int[][,] layouts = new int[][,]
         {
             layout1, layout2, layout3, layout4, layout5,
-            layout6, layout7, layout8, layout9, layout10
+            layout6, layout7, layout8, layout9, layout10,
+            layout11, layout12, layout13
         };
 
         int[,] selectedLayout = layouts[Random.Range(0, layouts.Length)];
@@ -787,6 +875,16 @@ public class DungeonGenerator : MonoBehaviour
 
         int startX = centerX - (layoutWidth / 2);
         int startY = centerY - (layoutHeight / 2);
+
+        if (room != null)
+        {
+            // Thiết lập bounds bao phủ toàn bộ vùng vật cản bao gồm 1 ô đệm an toàn xung quanh và phần chân tường bên dưới
+            BoundsInt bounds = new BoundsInt(
+                new Vector3Int(startX - 1, startY - 2, 0),
+                new Vector3Int(layoutWidth + 2, layoutHeight + 3, 1)
+            );
+            room.obstacleBoundsList.Add(bounds);
+        }
 
         for (int row = 0; row < layoutHeight; row++)
         {
@@ -1153,6 +1251,21 @@ public class DungeonGenerator : MonoBehaviour
 
             Vector3Int cellPos = new Vector3Int(x, y, 0);
 
+            // Bỏ qua nếu ô này nằm trong bất kỳ vùng giới hạn vật cản nào của phòng
+            bool inObstacle = false;
+            foreach (var bounds in room.obstacleBoundsList)
+            {
+                if (bounds.Contains(cellPos))
+                {
+                    inObstacle = true;
+                    break;
+                }
+            }
+            if (inObstacle)
+            {
+                continue;
+            }
+
             bool hasFloor = floorTilemap.HasTile(cellPos);
             bool hasObstacle = obstacleTilemap != null && obstacleTilemap.HasTile(cellPos);
             bool hasWall = wallTilemap != null && wallTilemap.HasTile(cellPos);
@@ -1163,7 +1276,10 @@ public class DungeonGenerator : MonoBehaviour
             }
         }
 
-        return new Vector3Int(room.Center.x, room.Center.y, 0);
+        // Khôi phục dự phòng an toàn ở góc phòng (tránh vị trí Center vốn thường có vật cản)
+        int fallbackX = Mathf.Min(room.Left + 2, room.Center.x);
+        int fallbackY = Mathf.Min(room.Bottom + 2, room.Center.y);
+        return new Vector3Int(fallbackX, fallbackY, 0);
     }
 
     private void CreateAllRoomControllers()
