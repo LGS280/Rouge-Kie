@@ -163,6 +163,11 @@ public class RookieHealth : MonoBehaviour
         }
 
         sr.color = targetColor;
-    
-}
+
+        // Báo cho RunStatsTracker kết thúc trận với kết quả Thất bại
+        if (RunStatsTracker.Instance != null)
+        {
+            RunStatsTracker.Instance.EndRun(false);
+        }
+    }
 }

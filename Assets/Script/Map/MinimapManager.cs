@@ -38,6 +38,8 @@ public class MinimapManager : MonoBehaviour
 
     private void Start()
     {
+        HidePauseButton(); // Ẩn nút Pause khi bắt đầu chạy đề phòng trường hợp canvas được load trước đó
+
         // Tự động tìm và phục hồi các RoomController từ các GameObject trong Scene
         // (đề phòng trường hợp map đã được sinh từ trước trong Editor và lưu trong Scene,
         // khiến trường dictionary private của DungeonGenerator bị reset trống khi bắt đầu chạy game)
@@ -99,6 +101,15 @@ public class MinimapManager : MonoBehaviour
     /// </summary>
     public void InitializeMinimap()
     {
+        if (container == null)
+        {
+            CreateAutoMinimapUIInstance();
+        }
+        else
+        {
+            HidePauseButton();
+        }
+
         var generator = Object.FindAnyObjectByType<DungeonGenerator>();
         if (generator != null)
         {
@@ -347,11 +358,19 @@ public class MinimapManager : MonoBehaviour
     {
         if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "SampleScene")
         {
-            CreateAutoMinimapUI();
+            // Lấy hoặc tạo mới Instance của MinimapManager để đảm bảo nó luôn chạy
+            MinimapManager manager = MinimapManager.Instance;
+            if (manager != null && manager.container == null)
+            {
+                manager.CreateAutoMinimapUIInstance();
+            }
         }
     }
 
-    private static void CreateAutoMinimapUI()
+    /// <summary>
+    /// Tạo UI Minimap động gắn thẳng vào Canvas giao diện chính của game
+    /// </summary>
+    public void CreateAutoMinimapUIInstance()
     {
         Canvas canvas = FindUICanvas();
         if (canvas == null)
@@ -361,21 +380,25 @@ public class MinimapManager : MonoBehaviour
         }
 
         Transform parentTransform = canvas.transform;
-        HUDManager hud = Object.FindFirstObjectByType<HUDManager>();
-        if (hud != null)
+        // HUD_Canvas thường là con trực tiếp chứa HUD các thanh máu/nút bấm của màn hình chơi
+        Transform hudCanvasTrans = canvas.transform.Find("HUD_Canvas");
+        if (hudCanvasTrans != null)
         {
-            parentTransform = hud.transform;
+            parentTransform = hudCanvasTrans;
+        }
+        else
+        {
+            HUDManager hud = Object.FindFirstObjectByType<HUDManager>();
+            if (hud != null)
+            {
+                parentTransform = hud.transform;
+            }
         }
 
-        // Tự động ẩn nút Pause_Button trên màn hình chơi nếu tồn tại để nhường chỗ cho Minimap
-        GameObject pauseBtn = GameObject.Find("Pause_Button");
-        if (pauseBtn != null)
-        {
-            pauseBtn.SetActive(false);
-            Debug.Log("[MinimapManager] Đã tự động ẩn Pause_Button để lấy chỗ trống.");
-        }
+        // Ẩn nút Pause_Button
+        HidePauseButton();
 
-        // 1. Tạo MinimapWindow làm khung chứa có Mask (Kích thước 240x240 để hiển thị rõ nét hơn)
+        // 1. Tạo MinimapWindow làm khung chứa có Mask (Kích thước 240x240 để hiển thị rõ nét)
         GameObject windowObj = new GameObject("MinimapWindow", typeof(RectTransform));
         windowObj.transform.SetParent(parentTransform, false);
 
@@ -405,20 +428,55 @@ public class MinimapManager : MonoBehaviour
         containerRect.sizeDelta = new Vector2(1000, 1000);
         containerRect.anchoredPosition = Vector2.zero;
 
-        // 3. Tạo MinimapManager
-        GameObject managerObj = new GameObject("MinimapManager");
-        MinimapManager manager = managerObj.AddComponent<MinimapManager>();
-        manager.container = containerRect;
-        manager.roomSpacing = 55f; // Tăng khoảng cách ô phòng từ 35f lên 55f giúp các ô phòng to rõ ràng
+        // Gán container và thiết lập layout settings cho Manager hiện tại
+        this.container = containerRect;
+        this.roomSpacing = 55f;
 
-        // Tải các sprite an toàn từ Resources/Minimap
-        manager.spriteRoom = LoadSpriteSafely("Minimap/Room");
-        manager.spriteHome = LoadSpriteSafely("Minimap/Home");
-        manager.spriteBoss = LoadSpriteSafely("Minimap/Boss");
-        manager.spriteChest = LoadSpriteSafely("Minimap/Chest");
-        manager.spritePlayer = LoadSpriteSafely("UI/Skin/Knob");
+        // Tải các sprite từ Resources/Minimap
+        this.spriteRoom = LoadSpriteSafely("Minimap/Room");
+        this.spriteHome = LoadSpriteSafely("Minimap/Home");
+        this.spriteBoss = LoadSpriteSafely("Minimap/Boss");
+        this.spriteChest = LoadSpriteSafely("Minimap/Chest");
+        this.spritePlayer = LoadSpriteSafely("UI/Skin/Knob");
 
-        Debug.Log("[MinimapManager] Đã tự động tạo và cấu hình Minimap UI.");
+        Debug.Log("[MinimapManager] Đã tự động tạo và cấu hình Minimap UI thành công.");
+    }
+
+    /// <summary>
+    /// Tìm và ẩn nút Pause_Button trên HUD để lấy chỗ trống cho Minimap
+    /// </summary>
+    public void HidePauseButton()
+    {
+        Canvas canvas = FindUICanvas();
+        if (canvas != null)
+        {
+            // Thử tìm Pause_Button theo đường dẫn phân cấp trong HUD_Canvas
+            Transform pauseBtnTrans = canvas.transform.Find("HUD_Canvas/Pause_Button");
+            if (pauseBtnTrans == null)
+            {
+                // Thử tìm trực tiếp dưới HUD_Canvas
+                GameObject hudCanvasObj = GameObject.Find("HUD_Canvas");
+                if (hudCanvasObj != null)
+                {
+                    pauseBtnTrans = hudCanvasObj.transform.Find("Pause_Button");
+                }
+            }
+
+            if (pauseBtnTrans != null)
+            {
+                pauseBtnTrans.gameObject.SetActive(false);
+                Debug.Log("[MinimapManager] Đã ẩn Pause_Button thành công từ Canvas.");
+                return;
+            }
+        }
+
+        // Cách tìm fallback diện rộng theo tên trong scene
+        GameObject pauseBtn = GameObject.Find("Pause_Button");
+        if (pauseBtn != null)
+        {
+            pauseBtn.SetActive(false);
+            Debug.Log("[MinimapManager] Đã ẩn Pause_Button (Find fallback).");
+        }
     }
 
     private static Sprite LoadSpriteSafely(string path)
@@ -452,27 +510,91 @@ public class MinimapManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Phân loại lại phòng ở chế độ Runtime cho các Scene đã dựng sẵn từ trước (Chỉ gán phòng Start/Home để kiểm tra hoạt động)
+    /// Phân loại lại phòng ở chế độ Runtime cho các RoomController hiện có để đảm bảo Minimap hoạt động chính xác
     /// </summary>
     private void RecategorizeRoomsRuntime()
     {
         if (roomControllers.Count == 0) return;
 
+        // 1. Đặt tất cả các phòng về Normal mặc định
         foreach (var kvp in roomControllers)
         {
-            Vector2Int gridPos = kvp.Key;
-            RoomController rc = kvp.Value;
-
-            if (rc == null) continue;
-
-            // Reset tất cả về Normal
-            rc.roomType = RoomType.Normal;
-
-            // Chỉ gán phòng (0,0) làm Start/Home
-            if (gridPos == Vector2Int.zero)
+            if (kvp.Value != null)
             {
-                rc.roomType = RoomType.Start;
-                rc.isVisited = true; // Phòng xuất phát mặc định đã được đi qua
+                kvp.Value.roomType = RoomType.Normal;
+            }
+        }
+
+        // 2. Gán phòng (0,0) làm Start (Home)
+        if (roomControllers.TryGetValue(Vector2Int.zero, out RoomController startRc))
+        {
+            startRc.roomType = RoomType.Start;
+            startRc.isVisited = true; // Phòng xuất phát mặc định đã đi qua
+        }
+
+        // 3. Tìm phòng Boss (tọa độ lưới cách xa (0,0) nhất)
+        Vector2Int bossGrid = Vector2Int.zero;
+        float maxDistance = -1f;
+        foreach (var kvp in roomControllers)
+        {
+            if (kvp.Key == Vector2Int.zero) continue;
+            float dist = Vector2Int.Distance(kvp.Key, Vector2Int.zero);
+            if (dist > maxDistance)
+            {
+                maxDistance = dist;
+                bossGrid = kvp.Key;
+            }
+        }
+
+        if (bossGrid != Vector2Int.zero && roomControllers.TryGetValue(bossGrid, out RoomController bossRc))
+        {
+            bossRc.roomType = RoomType.Boss;
+            Debug.Log($"[MinimapManager] Đã nhận diện phòng Boss tại: {bossGrid}");
+        }
+
+        // 4. Tìm phòng Rương báu (Chest)
+        // Tìm phòng cụt (chỉ có duy nhất 1 phòng kề cạnh trong lưới) và không phải Start/Boss
+        List<Vector2Int> deadEnds = new List<Vector2Int>();
+        List<Vector2Int> otherCandidates = new List<Vector2Int>();
+
+        foreach (var kvp in roomControllers)
+        {
+            Vector2Int pos = kvp.Key;
+            if (pos == Vector2Int.zero || pos == bossGrid) continue;
+
+            int neighbors = 0;
+            Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+            foreach (var dir in dirs)
+            {
+                if (roomControllers.ContainsKey(pos + dir)) neighbors++;
+            }
+
+            if (neighbors == 1)
+            {
+                deadEnds.Add(pos);
+            }
+            else
+            {
+                otherCandidates.Add(pos);
+            }
+        }
+
+        Vector2Int chestGrid = Vector2Int.zero;
+        if (deadEnds.Count > 0)
+        {
+            chestGrid = deadEnds[Random.Range(0, deadEnds.Count)];
+        }
+        else if (otherCandidates.Count > 0)
+        {
+            chestGrid = otherCandidates[Random.Range(0, otherCandidates.Count)];
+        }
+
+        if (chestGrid != Vector2Int.zero && roomControllers.TryGetValue(chestGrid, out RoomController chestRc))
+        {
+            if (chestRc.roomType == RoomType.Normal)
+            {
+                chestRc.roomType = RoomType.Chest;
+                Debug.Log($"[MinimapManager] Đã nhận diện phòng Rương báu tại: {chestGrid}");
             }
         }
     }

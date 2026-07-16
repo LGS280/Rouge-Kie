@@ -179,8 +179,47 @@ public class RoomController : MonoBehaviour
         if (roomType != RoomType.Start && !chestSpawned)
         {
             chestSpawned = true;
-            SpawnRewardChest(spawnPosition);
+            // Nếu là phòng Boss, dịch vị trí rương sang bên cạnh để nhường tâm phòng cho Portal
+            Vector3 chestPos = (roomType == RoomType.Boss) ? transform.position + Vector3.right * 2.0f : spawnPosition;
+            SpawnRewardChest(chestPos);
         }
+
+        // Sinh cổng dịch chuyển chuyển tầng (Portal) nếu đây là phòng Boss
+        if (roomType == RoomType.Boss)
+        {
+            SpawnTeleportPortal();
+        }
+    }
+
+    /// <summary>
+    /// Sinh cổng dịch chuyển mượt mà tại tâm phòng Boss
+    /// </summary>
+    private void SpawnTeleportPortal()
+    {
+        Debug.Log($"[RoomController] Đang khởi tạo cổng dịch chuyển tại phòng Boss {gameObject.name}");
+
+        // 1. Tạo GameObject Portal mới
+        GameObject portalObj = new GameObject("TeleportPortal");
+        portalObj.transform.position = transform.position; // Đặt tại tâm phòng Boss
+
+        // 2. Thêm SpriteRenderer và thiết lập sprite
+        SpriteRenderer renderer = portalObj.AddComponent<SpriteRenderer>();
+        Sprite portalSprite = Resources.Load<Sprite>("Minimap/Room"); // Nền ô phòng hình vuông
+        if (portalSprite != null)
+        {
+            renderer.sprite = portalSprite;
+        }
+        renderer.color = new Color(0f, 0.8f, 1f, 0.8f); // Màu xanh cyan phát sáng mờ ảo
+        portalObj.transform.localScale = new Vector3(2.0f, 2.0f, 1f); // Tỷ lệ cổng
+        renderer.sortingOrder = 5; // Hiển thị trên mặt đất
+
+        // 3. Thêm Collider 2D làm vùng va chạm Trigger
+        CircleCollider2D col = portalObj.AddComponent<CircleCollider2D>();
+        col.isTrigger = true;
+        col.radius = 0.5f;
+
+        // 4. Gắn script quản lý chuyển tiếp
+        portalObj.AddComponent<TeleportPortal>();
     }
 
     private void SpawnRewardChest(Vector3 spawnPosition)

@@ -62,6 +62,13 @@ public class RunStatsTracker : MonoBehaviour
         WavesSurvived = 1;
         startTime = Time.time;
         runEnded = false;
+
+        // Reset lại tiến trình leo tầng về Tầng 1
+        if (GameProgressionManager.Instance != null)
+        {
+            GameProgressionManager.Instance.ResetProgression();
+        }
+
         Debug.Log($"[RunStatsTracker] Khởi tạo Run mới. Tổng số phòng cần dọn: {TotalCombatRooms}");
     }
 
@@ -105,11 +112,7 @@ public class RunStatsTracker : MonoBehaviour
         ClearedRoomsCount++;
         Debug.Log($"[RunStatsTracker] Đã dọn xong phòng ({ClearedRoomsCount}/{TotalCombatRooms}). Coin: {CurrencyEarned}");
 
-        // Nếu đã dọn sạch toàn bộ các phòng trong Dungeon -> Chiến thắng màn chơi!
-        if (ClearedRoomsCount >= TotalCombatRooms && TotalCombatRooms > 0)
-        {
-            EndRun(true);
-        }
+        // CHÚ Ý: Đã xoá bỏ điều kiện tự động thắng khi dọn hết phòng (chuyển sang thắng khi qua tầng 5 bằng Portal)
     }
 
     /// <summary>
@@ -126,14 +129,21 @@ public class RunStatsTracker : MonoBehaviour
         int victoryBonus = isVictory ? 100 : 0;
         CurrencyEarned += victoryBonus;
 
-        // Nếu chiến thắng, WavesSurvived mặc định = 5 (tầng cuối cùng hoàn thành), ngược lại tính tỉ lệ theo phòng đã dọn
+        // Nếu chiến thắng, WavesSurvived mặc định = 5 (tầng cuối cùng hoàn thành), ngược lại tính theo tầng hiện tại đang chơi
         if (isVictory)
         {
             WavesSurvived = 5;
         }
         else
         {
-            WavesSurvived = Mathf.Clamp(1 + (int)((float)ClearedRoomsCount / Math.Max(1, TotalCombatRooms) * 4), 1, 4);
+            if (GameProgressionManager.Instance != null)
+            {
+                WavesSurvived = GameProgressionManager.Instance.currentFloor;
+            }
+            else
+            {
+                WavesSurvived = Mathf.Clamp(1 + (int)((float)ClearedRoomsCount / Math.Max(1, TotalCombatRooms) * 4), 1, 4);
+            }
         }
 
         Debug.Log($"[RunStatsTracker] Trận đấu kết thúc. Chiến thắng: {isVictory}. Đang gửi dữ liệu lên Backend...");
