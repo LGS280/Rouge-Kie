@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -21,6 +21,9 @@ public class DungeonGenerator : MonoBehaviour
 
     [Header("Door Prefab")]
     public GameObject doorPrefab;
+
+    [Header("Chest Prefab")]
+    public GameObject chestPrefab;
 
     [Header("Door Tilemap")]
     public Tilemap doorTilemap;
@@ -143,7 +146,16 @@ public class DungeonGenerator : MonoBehaviour
         SpawnAllRoomObstacles();
         SpawnAllRoomMobs();
 
-        Debug.Log("?ã generate map ki?u Soul Knight t? logic build 1 phòng c?.");
+        // Phân loại phòng (Start, Boss, Chest, Normal)
+        CategorizeRooms();
+
+        // Khởi tạo Minimap
+        if (MinimapManager.Instance != null)
+        {
+            MinimapManager.Instance.InitializeMinimap();
+        }
+
+        Debug.Log("Đã generate map kiểu Soul Knight và cập nhật Minimap.");
     }
 
     private void GenerateLayout()
@@ -1176,7 +1188,47 @@ public class DungeonGenerator : MonoBehaviour
 );
 
             RoomController controller = roomObj.AddComponent<RoomController>();
+            controller.chestPrefab = chestPrefab; // Truyền tham chiếu rương thưởng
             room.controller = controller;
+        }
+    }
+
+    /// <summary>
+    /// Lấy danh sách các RoomController theo gridPos để MinimapManager truy vấn
+    /// </summary>
+    public Dictionary<Vector2Int, RoomController> GetRoomControllers()
+    {
+        var dict = new Dictionary<Vector2Int, RoomController>();
+        foreach (var kvp in roomsByGrid)
+        {
+            if (kvp.Value.controller != null)
+            {
+                dict.Add(kvp.Key, kvp.Value.controller);
+            }
+        }
+        return dict;
+    }
+
+    /// <summary>
+    /// Phân loại phòng (Chỉ gán phòng Start/Home để kiểm tra hoạt động)
+    /// </summary>
+    private void CategorizeRooms()
+    {
+        if (roomsByGrid.Count == 0) return;
+
+        foreach (var kvp in roomsByGrid)
+        {
+            if (kvp.Value.controller == null) continue;
+
+            // Reset tất cả về Normal
+            kvp.Value.controller.roomType = RoomType.Normal;
+
+            // Chỉ gán phòng Start
+            if (kvp.Value.isStartRoom)
+            {
+                kvp.Value.controller.roomType = RoomType.Start;
+                kvp.Value.controller.isVisited = true; // Phòng xuất phát mặc định đã được đi qua
+            }
         }
     }
 }

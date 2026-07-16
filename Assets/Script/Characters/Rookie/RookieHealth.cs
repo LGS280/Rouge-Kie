@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Events;
 
 public class RookieHealth : MonoBehaviour
@@ -105,6 +105,12 @@ public class RookieHealth : MonoBehaviour
         currentMana -= amount;
         onHealthChanged?.Invoke();
         return true;
+    }
+
+    public void RestoreMana(int amount)
+    {
+        currentMana = Mathf.Clamp(currentMana + amount, 0, maxMana);
+        onHealthChanged?.Invoke();
     }
 
     public int GetCurrentHealth() => currentHealth;
