@@ -142,12 +142,13 @@ public class DungeonGenerator : MonoBehaviour
         RebuildWallsFromFloorPositions();
         DecorateWallsByCluster();
         CreateAllRoomControllers();
+
+        // Phân loại phòng (Start, Boss, Chest, Normal) trước khi sinh quái và rương
+        CategorizeRooms();
+
         CreateAllDoors();
         SpawnAllRoomObstacles();
         SpawnAllRoomMobs();
-
-        // Phân loại phòng (Start, Boss, Chest, Normal)
-        CategorizeRooms();
 
         // Khởi tạo Minimap
         if (MinimapManager.Instance != null)
@@ -1074,7 +1075,38 @@ public class DungeonGenerator : MonoBehaviour
             if (room.isStartRoom && !currentTheme.spawnMobInStartRoom)
                 continue;
 
+            // Nếu là phòng Rương Báu, không sinh quái mà sinh rương thưởng trực tiếp
+            if (room.controller != null && room.controller.roomType == RoomType.Chest)
+            {
+                SpawnChestInChestRoom(room);
+                continue;
+            }
+
             SpawnMobsInRoom(room);
+        }
+    }
+
+    /// <summary>
+    /// Sinh rương thưởng trực tiếp tại tâm phòng Rương Báu
+    /// </summary>
+    private void SpawnChestInChestRoom(MapRoom room)
+    {
+        if (room.controller == null) return;
+
+        if (chestPrefab != null)
+        {
+            Vector3 worldPos = floorTilemap.CellToWorld((Vector3Int)room.Center) + new Vector3(0.5f, 0.5f, 0f);
+            GameObject chestObj = Instantiate(chestPrefab, worldPos, Quaternion.identity);
+            chestObj.transform.SetParent(transform);
+
+            // Cấu hình phòng Rương đã được dọn sạch để mở cửa
+            room.controller.roomCleared = true;
+            room.controller.chestSpawned = true; // Chặn sinh rương thêm lần nữa khi dọn dẹp
+            Debug.Log($"[DungeonGenerator] Đã sinh Rương tại phòng Rương báu: {room.gridPos}");
+        }
+        else
+        {
+            Debug.LogWarning("[DungeonGenerator] Chưa gán chestPrefab để sinh trong phòng Rương báu.");
         }
     }
 

@@ -21,7 +21,7 @@ public class RoomController : MonoBehaviour
     public bool roomCleared = false;
     public bool roomStarted = false;
     private Transform currentPlayer;
-    private bool chestSpawned = false;
+    [HideInInspector] public bool chestSpawned = false;
     
     [Header("Reward Chest Prefab")]
     public GameObject chestPrefab;
@@ -107,6 +107,22 @@ public class RoomController : MonoBehaviour
 
         if (roomCleared || roomStarted)
             return;
+
+        // KIỂM TRA AN TOÀN: Chỉ bắt đầu combat nếu người chơi thực sự đã bước vào trong phòng.
+        // Việc này tránh trường hợp người chơi đứng ở hành lang chạm nhẹ vào trigger cửa làm sập cửa sớm.
+        if (currentPlayer == null)
+        {
+            GameObject pObj = GameObject.FindWithTag("Player");
+            if (pObj != null) currentPlayer = pObj.transform;
+        }
+
+        if (currentPlayer != null && RoomCollider != null)
+        {
+            if (!RoomCollider.OverlapPoint(currentPlayer.position))
+            {
+                return; // Chưa bước vào phòng, bỏ qua đóng cửa
+            }
+        }
 
         bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
 

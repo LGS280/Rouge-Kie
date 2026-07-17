@@ -90,13 +90,22 @@ public class GameProgressionManager : MonoBehaviour
 
     private IEnumerator TransitionToNextFloorRoutine()
     {
-        // 1. Tìm và vô hiệu hoá tạm thời di chuyển của người chơi để tránh di chuyển lúc load
+        // 1. Tìm và vô hiệu hoá di chuyển + TẤT CẢ Collider của người chơi (bao gồm cả các object con)
         GameObject player = GameObject.FindWithTag("Player");
         PlayerMovement movement = null;
+        Collider2D[] playerColliders = null;
+
         if (player != null)
         {
             movement = player.GetComponent<PlayerMovement>();
             if (movement != null) movement.enabled = false;
+
+            playerColliders = player.GetComponentsInChildren<Collider2D>();
+            foreach (var col in playerColliders)
+            {
+                if (col != null) col.enabled = false;
+            }
+            Debug.Log($"[GameProgressionManager] Đã vô hiệu hoá {playerColliders.Length} Collider của Player.");
         }
 
         // 2. Clear bản đồ cũ và sinh bản đồ mới ngẫu nhiên
@@ -107,17 +116,46 @@ public class GameProgressionManager : MonoBehaviour
             yield return new WaitForSeconds(0.2f); // Chờ gạch sàn sinh xong
         }
 
-        // 3. Dịch chuyển người chơi về tâm phòng xuất phát mới
+        // 3. Dịch chuyển người chơi về tâm phòng xuất phát mới (lấy tọa độ thực tế của RoomController Start)
         if (player != null && generator != null)
         {
-            // Start room nằm ở gridPos (0,0) nên world center của nó luôn là:
-            float startCenterX = generator.fixedRoomWidth / 2f;
-            float startCenterY = generator.fixedRoomHeight / 2f;
-            player.transform.position = new Vector3(startCenterX, startCenterY, 0);
-            Debug.Log($"[GameProgressionManager] Đã dịch chuyển người chơi về phòng xuất phát mới: ({startCenterX}, {startCenterY})");
+            RoomController[] controllers = FindObjectsByType<RoomController>(FindObjectsSortMode.None);
+            RoomController startRoom = null;
+            foreach (var rc in controllers)
+            {
+                if (rc.roomType == RoomType.Start)
+                {
+                    startRoom = rc;
+                    break;
+                }
+            }
+
+            if (startRoom != null)
+            {
+                player.transform.position = startRoom.transform.position;
+                Physics2D.SyncTransforms(); // Đồng bộ vị trí vật lý ngay lập tức để tránh lỗi vị trí cũ
+                Debug.Log($"[GameProgressionManager] Đã dịch chuyển Player về phòng Start: {startRoom.transform.position}");
+            }
+            else
+            {
+                // Fallback nếu không tìm thấy RoomController Start
+                float startCenterX = generator.fixedRoomWidth / 2f;
+                float startCenterY = generator.fixedRoomHeight / 2f;
+                player.transform.position = new Vector3(startCenterX, startCenterY, 0);
+                Physics2D.SyncTransforms();
+                Debug.LogWarning("[GameProgressionManager] Không tìm thấy Room Start, dùng tọa độ dự phòng.");
+            }
         }
 
-        // 4. Kích hoạt lại di chuyển người chơi
+        // 4. Kích hoạt lại di chuyển và toàn bộ collider của người chơi
+        if (playerColliders != null)
+        {
+            foreach (var col in playerColliders)
+            {
+                if (col != null) col.enabled = true;
+            }
+            Debug.Log("[GameProgressionManager] Đã kích hoạt lại toàn bộ Collider của Player.");
+        }
         if (movement != null)
         {
             movement.enabled = true;
