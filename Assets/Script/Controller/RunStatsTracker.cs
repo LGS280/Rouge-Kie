@@ -175,6 +175,15 @@ public class RunStatsTracker : MonoBehaviour
             return;
         }
 
+        // KIỂM TRA CHƯA ĐĂNG NHẬP: Nếu không có Token (chơi offline/test scene trực tiếp), 
+        // bỏ qua việc gửi API để tránh hiển thị cảnh báo lỗi 401 Unauthorized.
+        string token = PlayerPrefs.GetString("jwt_token", "");
+        if (string.IsNullOrEmpty(token))
+        {
+            Debug.LogWarning("[RunStatsTracker] Chơi ở chế độ Offline/Test Scene trực tiếp (Không có Token). Bỏ qua việc gửi lịch sử đấu lên server.");
+            return;
+        }
+
         var requestBody = new RunHistoryRequest
         {
             characterId = 1, // Mặc định sử dụng nhân vật Chiến Binh (Kie Warrior - ID 1)
@@ -208,18 +217,18 @@ public class RunStatsTracker : MonoBehaviour
 
         if (resultTitleText != null)
         {
-            resultTitleText.text = isVictory ? "CHIẾN THẮNG!" : "THẤT BẠI!";
+            resultTitleText.text = isVictory ? "VICTORY!" : "DEFEAT!";
             resultTitleText.color = isVictory ? Color.green : Color.red;
         }
 
         if (statsText != null)
         {
             string timeStr = $"{durationSeconds / 60:D2}:{durationSeconds % 60:D2}";
-            statsText.text = $"Thời gian chơi: {timeStr}\n" +
-                             $"Ải đã vượt qua: {WavesSurvived}/5\n" +
-                             $"Kẻ địch hạ gục: {EnemiesKilled}\n" +
-                             $"Sát thương gây ra: {(int)DamageDealt}\n" +
-                             $"Coin kiếm được: +{CurrencyEarned} Coin";
+            statsText.text = $"Time Played: {timeStr}\n" +
+                             $"Stages Cleared: {WavesSurvived}/5\n" +
+                             $"Enemies Killed: {EnemiesKilled}\n" +
+                             $"Damage Dealt: {(int)DamageDealt}\n" +
+                             $"Coins Earned: +{CurrencyEarned} Coins";
         }
     }
 
