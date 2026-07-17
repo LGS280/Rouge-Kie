@@ -146,6 +146,34 @@ public class RunStatsTracker : MonoBehaviour
             }
         }
 
+        // VÔ HIỆU HÓA DI CHUYỂN VÀ SÚNG CỦA PLAYER KHI KẾT THÚC RUN
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player != null)
+        {
+            PlayerMovement pm = player.GetComponent<PlayerMovement>();
+            if (pm != null)
+            {
+                pm.enabled = false;
+                // Dừng hoạt ảnh di chuyển
+                Animator anim = player.GetComponent<Animator>();
+                if (anim != null) anim.SetFloat("Speed", 0f);
+                // Dừng quán tính vật lý
+                Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+                if (rb != null) rb.linearVelocity = Vector2.zero; // Hoặc velocity = Vector2.zero tùy phiên bản Unity
+            }
+
+            // Tìm và tắt các component điều khiển súng/nhắm bắn
+            MonoBehaviour[] allScripts = player.GetComponentsInChildren<MonoBehaviour>();
+            foreach (var script in allScripts)
+            {
+                if (script != null && (script.GetType().Name == "WeaponAim" || script.GetType().Name == "WeaponLaser"))
+                {
+                    script.enabled = false;
+                }
+            }
+            Debug.Log("[RunStatsTracker] Đã vô hiệu hoá di chuyển và ngắm bắn của Player.");
+        }
+
         Debug.Log($"[RunStatsTracker] Trận đấu kết thúc. Chiến thắng: {isVictory}. Đang gửi dữ liệu lên Backend...");
 
         // Gửi kết quả trận đấu lên máy chủ
