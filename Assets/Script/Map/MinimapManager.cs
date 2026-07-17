@@ -452,27 +452,91 @@ public class MinimapManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Phân loại lại phòng ở chế độ Runtime cho các Scene đã dựng sẵn từ trước (Chỉ gán phòng Start/Home để kiểm tra hoạt động)
+    /// Phân loại lại phòng ở chế độ Runtime cho các RoomController hiện có để đảm bảo Minimap hoạt động chính xác
     /// </summary>
     private void RecategorizeRoomsRuntime()
     {
         if (roomControllers.Count == 0) return;
 
+        // 1. Đặt tất cả các phòng về Normal mặc định
         foreach (var kvp in roomControllers)
         {
-            Vector2Int gridPos = kvp.Key;
-            RoomController rc = kvp.Value;
-
-            if (rc == null) continue;
-
-            // Reset tất cả về Normal
-            rc.roomType = RoomType.Normal;
-
-            // Chỉ gán phòng (0,0) làm Start/Home
-            if (gridPos == Vector2Int.zero)
+            if (kvp.Value != null)
             {
-                rc.roomType = RoomType.Start;
-                rc.isVisited = true; // Phòng xuất phát mặc định đã được đi qua
+                kvp.Value.roomType = RoomType.Normal;
+            }
+        }
+
+        // 2. Gán phòng (0,0) làm Start (Home)
+        if (roomControllers.TryGetValue(Vector2Int.zero, out RoomController startRc))
+        {
+            startRc.roomType = RoomType.Start;
+            startRc.isVisited = true; // Phòng xuất phát mặc định đã đi qua
+        }
+
+        // 3. Tìm phòng Boss (tọa độ lưới cách xa (0,0) nhất)
+        Vector2Int bossGrid = Vector2Int.zero;
+        float maxDistance = -1f;
+        foreach (var kvp in roomControllers)
+        {
+            if (kvp.Key == Vector2Int.zero) continue;
+            float dist = Vector2Int.Distance(kvp.Key, Vector2Int.zero);
+            if (dist > maxDistance)
+            {
+                maxDistance = dist;
+                bossGrid = kvp.Key;
+            }
+        }
+
+        if (bossGrid != Vector2Int.zero && roomControllers.TryGetValue(bossGrid, out RoomController bossRc))
+        {
+            bossRc.roomType = RoomType.Boss;
+            Debug.Log($"[MinimapManager] Đã nhận diện phòng Boss tại: {bossGrid}");
+        }
+
+        // 4. Tìm phòng Rương báu (Chest)
+        // Tìm phòng cụt (chỉ có duy nhất 1 phòng kề cạnh trong lưới) và không phải Start/Boss
+        List<Vector2Int> deadEnds = new List<Vector2Int>();
+        List<Vector2Int> otherCandidates = new List<Vector2Int>();
+
+        foreach (var kvp in roomControllers)
+        {
+            Vector2Int pos = kvp.Key;
+            if (pos == Vector2Int.zero || pos == bossGrid) continue;
+
+            int neighbors = 0;
+            Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+            foreach (var dir in dirs)
+            {
+                if (roomControllers.ContainsKey(pos + dir)) neighbors++;
+            }
+
+            if (neighbors == 1)
+            {
+                deadEnds.Add(pos);
+            }
+            else
+            {
+                otherCandidates.Add(pos);
+            }
+        }
+
+        Vector2Int chestGrid = Vector2Int.zero;
+        if (deadEnds.Count > 0)
+        {
+            chestGrid = deadEnds[Random.Range(0, deadEnds.Count)];
+        }
+        else if (otherCandidates.Count > 0)
+        {
+            chestGrid = otherCandidates[Random.Range(0, otherCandidates.Count)];
+        }
+
+        if (chestGrid != Vector2Int.zero && roomControllers.TryGetValue(chestGrid, out RoomController chestRc))
+        {
+            if (chestRc.roomType == RoomType.Normal)
+            {
+                chestRc.roomType = RoomType.Chest;
+                Debug.Log($"[MinimapManager] Đã nhận diện phòng Rương báu tại: {chestGrid}");
             }
         }
     }

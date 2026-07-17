@@ -62,6 +62,13 @@ public class RunStatsTracker : MonoBehaviour
         WavesSurvived = 1;
         startTime = Time.time;
         runEnded = false;
+
+        // Reset lại tiến trình leo tầng về Tầng 1
+        if (GameProgressionManager.Instance != null)
+        {
+            GameProgressionManager.Instance.ResetProgression();
+        }
+
         Debug.Log($"[RunStatsTracker] Khởi tạo Run mới. Tổng số phòng cần dọn: {TotalCombatRooms}");
     }
 
@@ -105,11 +112,7 @@ public class RunStatsTracker : MonoBehaviour
         ClearedRoomsCount++;
         Debug.Log($"[RunStatsTracker] Đã dọn xong phòng ({ClearedRoomsCount}/{TotalCombatRooms}). Coin: {CurrencyEarned}");
 
-        // Nếu đã dọn sạch toàn bộ các phòng trong Dungeon -> Chiến thắng màn chơi!
-        if (ClearedRoomsCount >= TotalCombatRooms && TotalCombatRooms > 0)
-        {
-            EndRun(true);
-        }
+        // CHÚ Ý: Đã xoá bỏ điều kiện tự động thắng khi dọn hết phòng (chuyển sang thắng khi qua tầng 5 bằng Portal)
     }
 
     /// <summary>
@@ -126,14 +129,21 @@ public class RunStatsTracker : MonoBehaviour
         int victoryBonus = isVictory ? 100 : 0;
         CurrencyEarned += victoryBonus;
 
-        // Nếu chiến thắng, WavesSurvived mặc định = 5 (tầng cuối cùng hoàn thành), ngược lại tính tỉ lệ theo phòng đã dọn
+        // Nếu chiến thắng, WavesSurvived mặc định = 5 (tầng cuối cùng hoàn thành), ngược lại tính theo tầng hiện tại đang chơi
         if (isVictory)
         {
             WavesSurvived = 5;
         }
         else
         {
-            WavesSurvived = Mathf.Clamp(1 + (int)((float)ClearedRoomsCount / Math.Max(1, TotalCombatRooms) * 4), 1, 4);
+            if (GameProgressionManager.Instance != null)
+            {
+                WavesSurvived = GameProgressionManager.Instance.currentFloor;
+            }
+            else
+            {
+                WavesSurvived = Mathf.Clamp(1 + (int)((float)ClearedRoomsCount / Math.Max(1, TotalCombatRooms) * 4), 1, 4);
+            }
         }
 
         Debug.Log($"[RunStatsTracker] Trận đấu kết thúc. Chiến thắng: {isVictory}. Đang gửi dữ liệu lên Backend...");
@@ -162,6 +172,15 @@ public class RunStatsTracker : MonoBehaviour
         if (ApiClient.Instance == null)
         {
             Debug.LogWarning("[RunStatsTracker] Không tìm thấy ApiClient.Instance. Không thể lưu lịch sử.");
+            return;
+        }
+
+        // KIỂM TRA CHƯA ĐĂNG NHẬP: Nếu không có Token (chơi offline/test scene trực tiếp), 
+        // bỏ qua việc gửi API để tránh hiển thị cảnh báo lỗi 401 Unauthorized.
+        string token = PlayerPrefs.GetString("jwt_token", "");
+        if (string.IsNullOrEmpty(token))
+        {
+            Debug.LogWarning("[RunStatsTracker] Chơi ở chế độ Offline/Test Scene trực tiếp (Không có Token). Bỏ qua việc gửi lịch sử đấu lên server.");
             return;
         }
 
@@ -198,18 +217,18 @@ public class RunStatsTracker : MonoBehaviour
 
         if (resultTitleText != null)
         {
-            resultTitleText.text = isVictory ? "CHIẾN THẮNG!" : "THẤT BẠI!";
+            resultTitleText.text = isVictory ? "VICTORY!" : "DEFEAT!";
             resultTitleText.color = isVictory ? Color.green : Color.red;
         }
 
         if (statsText != null)
         {
             string timeStr = $"{durationSeconds / 60:D2}:{durationSeconds % 60:D2}";
-            statsText.text = $"Thời gian chơi: {timeStr}\n" +
-                             $"Ải đã vượt qua: {WavesSurvived}/5\n" +
-                             $"Kẻ địch hạ gục: {EnemiesKilled}\n" +
-                             $"Sát thương gây ra: {(int)DamageDealt}\n" +
-                             $"Coin kiếm được: +{CurrencyEarned} Coin";
+            statsText.text = $"Time Played: {timeStr}\n" +
+                             $"Stages Cleared: {WavesSurvived}/5\n" +
+                             $"Enemies Killed: {EnemiesKilled}\n" +
+                             $"Damage Dealt: {(int)DamageDealt}\n" +
+                             $"Coins Earned: +{CurrencyEarned} Coins";
         }
     }
 

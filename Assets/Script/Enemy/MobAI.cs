@@ -45,9 +45,14 @@ public class MobAI : MonoBehaviour
         mobHealth = GetComponent<MobHealth>();
         originalScale = transform.localScale;
 
-        if (NetworkManager.Instance != null)
+        bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+        if (isMultiplayer)
         {
             isHost = (NetworkManager.Instance.UserRole == "Host");
+        }
+        else
+        {
+            isHost = true; // Chơi đơn (Solo) thì luôn chạy AI cục bộ
         }
         
         lastPos = transform.position;
