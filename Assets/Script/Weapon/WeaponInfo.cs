@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class WeaponInfo : MonoBehaviour
 {
-    [Header("Cấu hình API kết nối")]
-    public int weaponDbId;
+    [Header("Cấu hình API kết nối (Tự động theo PrefabName)")]
+    [HideInInspector] public int weaponDbId;
 
     [Header("Prefab tham chiếu để vứt súng")]
     public GameObject weaponPrefab;
@@ -57,9 +57,28 @@ public class WeaponInfo : MonoBehaviour
     }
 #endif
 
+    public WeaponConfig GetWeaponConfig()
+    {
+        if (GameConfigManager.Instance == null) return null;
+
+        string keyName = weaponPrefab != null ? weaponPrefab.name : gameObject.name.Replace("(Clone)", "").Trim();
+        if (GameConfigManager.Instance.WeaponDbByName.TryGetValue(keyName, out WeaponConfig config))
+        {
+            return config;
+        }
+
+        if (weaponDbId > 0 && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig idConfig))
+        {
+            return idConfig;
+        }
+
+        return null;
+    }
+
     public void ApplyConfigFromDb()
     {
-        if (GameConfigManager.Instance != null && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig config))
+        WeaponConfig config = GetWeaponConfig();
+        if (config != null)
         {
             fireRate = config.fireRate;
             manaCostPerShot = config.manaCost;
@@ -114,9 +133,11 @@ public class WeaponInfo : MonoBehaviour
 
         if (bulletPrefab != null && firePoint != null)
         {
+            WeaponConfig wConfig = GetWeaponConfig();
+
             // Áp dụng góc lệch tâm SpreadAngle từ DB vào hướng đạn bắn ra
             Quaternion bulletRotation = firePoint.rotation;
-            if (GameConfigManager.Instance != null && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig wConfig))
+            if (wConfig != null)
             {
                 float randomSpread = Random.Range(-wConfig.spreadAngle, wConfig.spreadAngle);
                 bulletRotation *= Quaternion.Euler(0, 0, randomSpread);
@@ -124,16 +145,13 @@ public class WeaponInfo : MonoBehaviour
 
             GameObject spawnedBullet = Instantiate(bulletPrefab, firePoint.position, bulletRotation);
 
-            if (GameConfigManager.Instance != null && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig wConfig2))
+            if (wConfig != null)
             {
-                var bNormal = spawnedBullet.GetComponent<Bullet>();
-                if (bNormal != null) bNormal.InitFromDb(wConfig2.bulletId);
-
-                var bDE = spawnedBullet.GetComponent<Desert_Eagle_Bullet>();
-                if (bDE != null) bDE.InitFromDb(wConfig2.bulletId);
+                var bullet = spawnedBullet.GetComponent<NormalBullet>();
+                if (bullet != null) bullet.InitFromDb(wConfig.bulletId);
 
                 var bSlash = spawnedBullet.GetComponent<MeleeSlash>();
-                if (bSlash != null) bSlash.InitFromDb(wConfig2.bulletId);
+                if (bSlash != null) bSlash.InitFromDb(wConfig.bulletId);
             }
 
             PlayWeaponSound();
@@ -157,8 +175,10 @@ public class WeaponInfo : MonoBehaviour
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.forward);
 
+            WeaponConfig wConfig = GetWeaponConfig();
+
             // Đồng bộ góc lệch đạn cho client remote mạng
-            if (GameConfigManager.Instance != null && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig wConfig))
+            if (wConfig != null)
             {
                 float randomSpread = Random.Range(-wConfig.spreadAngle, wConfig.spreadAngle);
                 rotation *= Quaternion.Euler(0, 0, randomSpread);
@@ -167,16 +187,13 @@ public class WeaponInfo : MonoBehaviour
             GameObject spawnedBullet = Instantiate(bulletPrefab, spawnPosition, rotation);
             spawnedBullet.name += "_Remote";
 
-            if (GameConfigManager.Instance != null && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig wConfig2))
+            if (wConfig != null)
             {
-                var bNormal = spawnedBullet.GetComponent<Bullet>();
-                if (bNormal != null) bNormal.InitFromDb(wConfig2.bulletId);
-
-                var bDE = spawnedBullet.GetComponent<Desert_Eagle_Bullet>();
-                if (bDE != null) bDE.InitFromDb(wConfig2.bulletId);
+                var bullet = spawnedBullet.GetComponent<NormalBullet>();
+                if (bullet != null) bullet.InitFromDb(wConfig.bulletId);
 
                 var bSlash = spawnedBullet.GetComponent<MeleeSlash>();
-                if (bSlash != null) bSlash.InitFromDb(wConfig2.bulletId);
+                if (bSlash != null) bSlash.InitFromDb(wConfig.bulletId);
             }
 
             PlayWeaponSound();

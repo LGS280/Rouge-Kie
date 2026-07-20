@@ -81,6 +81,16 @@ public class LootItem : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        TryCollect(collision);
+    }
+
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        TryCollect(collision);
+    }
+
+    private void TryCollect(Collider2D collision)
+    {
         // Chỉ cho phép nhặt sau khi hết thời gian trễ văng ra ngoài để người chơi nhìn rõ quà
         if (Time.time - spawnTime < pickupDelay) return;
 
@@ -88,6 +98,11 @@ public class LootItem : MonoBehaviour
         if (collision.CompareTag("Player"))
         {
             RookieHealth playerHealth = collision.GetComponent<RookieHealth>();
+            if (playerHealth == null)
+            {
+                playerHealth = collision.GetComponentInParent<RookieHealth>();
+            }
+
             if (playerHealth != null && !playerHealth.isDead)
             {
                 CollectLoot(playerHealth);

@@ -5,7 +5,7 @@ public class MeleeSlash : MonoBehaviour
     public float delayTime = 0.1f;
     [HideInInspector] public float damage;
     [HideInInspector] public float critChance;
-    public float critMultiplier = 2f;
+    [HideInInspector] public float critMultiplier;
 
     public void InitFromDb(int bulletId)
     {
