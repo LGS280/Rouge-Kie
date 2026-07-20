@@ -7,6 +7,7 @@ public class BulletConfig
     public string bulletName;
     public int damage;
     public float critRate;
+    public float critMultiplier;
     public float flightSpeed;
     public int piercingCount;
     public string prefabName;

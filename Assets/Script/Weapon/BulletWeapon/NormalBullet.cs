@@ -5,9 +5,9 @@ public class NormalBullet : MonoBehaviour
     [HideInInspector] public float speed;
     [HideInInspector] public float baseDamage;
     [HideInInspector] public float critChance;
+    [HideInInspector] public float critMultiplier;
 
     public float lifeTime = 3f;
-    public float critMultiplier = 1.5f;
 
     // Hàm nhận dữ liệu từ DB truyền qua
     public void InitFromDb(int bulletId)
@@ -17,6 +17,7 @@ public class NormalBullet : MonoBehaviour
             speed = config.flightSpeed;
             baseDamage = config.damage;
             critChance = config.critRate * 100f; // Đổi thập phân (0.2) thành phần trăm (20%)
+            critMultiplier = config.critMultiplier;
         }
     }
 

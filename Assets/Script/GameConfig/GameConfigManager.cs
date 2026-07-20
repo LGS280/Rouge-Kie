@@ -20,6 +20,7 @@ public class GameConfigManager : MonoBehaviour
 
     public Dictionary<int, BulletConfig> BulletDb = new Dictionary<int, BulletConfig>();
     public Dictionary<int, WeaponConfig> WeaponDb = new Dictionary<int, WeaponConfig>();
+    public Dictionary<string, WeaponConfig> WeaponDbByName = new Dictionary<string, WeaponConfig>(System.StringComparer.OrdinalIgnoreCase);
 
     private void Awake()
     {
@@ -115,8 +116,15 @@ public class GameConfigManager : MonoBehaviour
                 var wrapper = JsonUtility.FromJson<WeaponArrayWrapper>(wrappedJson);
                 if (wrapper != null && wrapper.data != null)
                 {
-                    foreach (var w in wrapper.data) WeaponDb[w.id] = w;
-                    Debug.Log($"[API] Đã nạp {WeaponDb.Count} cấu hình vũ khí thành công.");
+                    foreach (var w in wrapper.data)
+                    {
+                        WeaponDb[w.id] = w;
+                        if (!string.IsNullOrEmpty(w.prefabName))
+                        {
+                            WeaponDbByName[w.prefabName.Trim()] = w;
+                        }
+                    }
+                    Debug.Log($"[API] Đã nạp {WeaponDb.Count} cấu hình vũ khí ({WeaponDbByName.Count} theo tên Prefab) thành công.");
                 }
             }
             catch (Exception ex)

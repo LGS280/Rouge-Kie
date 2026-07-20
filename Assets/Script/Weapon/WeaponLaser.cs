@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 public class WeaponLaser : MonoBehaviour
 {
-    [Header("Cấu hình API kết nối")]
-    public int weaponDbId;
+    [Header("Cấu hình API kết nối (Tự động theo PrefabName)")]
+    [HideInInspector] public int weaponDbId;
 
     [Header("Prefab tham chiếu để vứt súng")]
     public GameObject weaponPrefab;
@@ -67,9 +67,28 @@ public class WeaponLaser : MonoBehaviour
     }
 #endif
 
+    public WeaponConfig GetWeaponConfig()
+    {
+        if (GameConfigManager.Instance == null) return null;
+
+        string keyName = weaponPrefab != null ? weaponPrefab.name : gameObject.name.Replace("(Clone)", "").Trim();
+        if (GameConfigManager.Instance.WeaponDbByName.TryGetValue(keyName, out WeaponConfig config))
+        {
+            return config;
+        }
+
+        if (weaponDbId > 0 && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig idConfig))
+        {
+            return idConfig;
+        }
+
+        return null;
+    }
+
     public void ApplyConfigFromDb()
     {
-        if (GameConfigManager.Instance != null && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig wConfig))
+        WeaponConfig wConfig = GetWeaponConfig();
+        if (wConfig != null)
         {
             chargeDuration = wConfig.fireRate;
 
@@ -77,7 +96,7 @@ public class WeaponLaser : MonoBehaviour
             customHandPosition = new Vector3(wConfig.handPositionX, wConfig.handPositionY, wConfig.handPositionZ);
             transform.localPosition = customHandPosition;
 
-            if (GameConfigManager.Instance.BulletDb.TryGetValue(wConfig.bulletId, out BulletConfig bConfig))
+            if (GameConfigManager.Instance != null && GameConfigManager.Instance.BulletDb.TryGetValue(wConfig.bulletId, out BulletConfig bConfig))
             {
                 baseDamage = bConfig.damage;
             }

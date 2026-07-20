@@ -5,7 +5,7 @@ public class MeleeSlash : MonoBehaviour
     public float delayTime = 0.1f;
     [HideInInspector] public float damage;
     [HideInInspector] public float critChance;
-    public float critMultiplier = 2f;
+    [HideInInspector] public float critMultiplier;
 
     public void InitFromDb(int bulletId)
     {
@@ -13,6 +13,7 @@ public class MeleeSlash : MonoBehaviour
         {
             damage = config.damage;
             critChance = config.critRate; // Script cận chiến của bạn dùng [Range(0,1)] nên giữ nguyên hệ thập phân
+            critMultiplier = config.critMultiplier;
         }
     }
 
