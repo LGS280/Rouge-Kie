@@ -13,8 +13,11 @@ public class MobHealth : MonoBehaviour
     private Rigidbody2D rb;
     private MobNetworkIdentity networkIdentity;
 
+    private int originalMaxHealth = 0;
+
     private void Awake()
     {
+        originalMaxHealth = maxHealth; // Lưu trữ máu gốc
         networkIdentity = GetComponent<MobNetworkIdentity>();
         if (networkIdentity == null)
         {
@@ -22,8 +25,27 @@ public class MobHealth : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Tính toán và nhân tỉ lệ máu tối đa của quái theo tầng hiện tại từ GameProgressionManager
+    /// </summary>
+    private void ScaleHealthByProgression()
+    {
+        // Nếu quái này là Boss (tên chứa chữ BOSS), bỏ qua cơ chế tự động scale quái thường
+        if (gameObject.name.Contains("BOSS"))
+        {
+            return;
+        }
+
+        if (GameProgressionManager.Instance != null)
+        {
+            float mult = GameProgressionManager.Instance.GetMonsterHPMultiplier();
+            maxHealth = Mathf.RoundToInt(originalMaxHealth * mult);
+        }
+    }
+
     void Start()
     {
+        ScaleHealthByProgression();
         currentHealth = maxHealth;
         isDead = false;
 
@@ -34,6 +56,7 @@ public class MobHealth : MonoBehaviour
 
     void OnEnable()
     {
+        ScaleHealthByProgression();
         currentHealth = maxHealth;
         isDead = false;
         if (mobCollider != null) mobCollider.enabled = true;

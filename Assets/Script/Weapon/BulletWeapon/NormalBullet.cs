@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Bullet : MonoBehaviour
+public class NormalBullet : MonoBehaviour
 {
     [HideInInspector] public float speed;
     [HideInInspector] public float baseDamage;

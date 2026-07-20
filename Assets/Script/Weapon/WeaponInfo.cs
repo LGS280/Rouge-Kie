@@ -126,11 +126,8 @@ public class WeaponInfo : MonoBehaviour
 
             if (GameConfigManager.Instance != null && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig wConfig2))
             {
-                var bNormal = spawnedBullet.GetComponent<Bullet>();
-                if (bNormal != null) bNormal.InitFromDb(wConfig2.bulletId);
-
-                var bDE = spawnedBullet.GetComponent<Desert_Eagle_Bullet>();
-                if (bDE != null) bDE.InitFromDb(wConfig2.bulletId);
+                var bullet = spawnedBullet.GetComponent<NormalBullet>();
+                if (bullet != null) bullet.InitFromDb(wConfig2.bulletId);
 
                 var bSlash = spawnedBullet.GetComponent<MeleeSlash>();
                 if (bSlash != null) bSlash.InitFromDb(wConfig2.bulletId);
@@ -169,11 +166,8 @@ public class WeaponInfo : MonoBehaviour
 
             if (GameConfigManager.Instance != null && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig wConfig2))
             {
-                var bNormal = spawnedBullet.GetComponent<Bullet>();
-                if (bNormal != null) bNormal.InitFromDb(wConfig2.bulletId);
-
-                var bDE = spawnedBullet.GetComponent<Desert_Eagle_Bullet>();
-                if (bDE != null) bDE.InitFromDb(wConfig2.bulletId);
+                var bullet = spawnedBullet.GetComponent<NormalBullet>();
+                if (bullet != null) bullet.InitFromDb(wConfig2.bulletId);
 
                 var bSlash = spawnedBullet.GetComponent<MeleeSlash>();
                 if (bSlash != null) bSlash.InitFromDb(wConfig2.bulletId);
