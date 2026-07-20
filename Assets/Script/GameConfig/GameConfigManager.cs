@@ -21,6 +21,7 @@ public class GameConfigManager : MonoBehaviour
     public Dictionary<int, BulletConfig> BulletDb = new Dictionary<int, BulletConfig>();
     public Dictionary<int, WeaponConfig> WeaponDb = new Dictionary<int, WeaponConfig>();
     public Dictionary<string, WeaponConfig> WeaponDbByName = new Dictionary<string, WeaponConfig>(System.StringComparer.OrdinalIgnoreCase);
+    public List<BuffConfig> BuffDb = new List<BuffConfig>();
 
     private void Awake()
     {
@@ -130,6 +131,25 @@ public class GameConfigManager : MonoBehaviour
             catch (Exception ex)
             {
                 Debug.LogError($"[API Error] Lỗi parse cấu hình vũ khí: {ex.Message} - Json: {json}");
+            }
+        }));
+
+        yield return StartCoroutine(FetchData($"{baseUrl}/buffs", (json) => {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(json)) throw new Exception("Empty response");
+                string wrappedJson = "{\"data\":" + json + "}";
+                var wrapper = JsonUtility.FromJson<BuffArrayWrapper>(wrappedJson);
+                if (wrapper != null && wrapper.data != null)
+                {
+                    BuffDb.Clear();
+                    foreach (var b in wrapper.data) BuffDb.Add(b);
+                    Debug.Log($"[API] Đã nạp {BuffDb.Count} cấu hình Buff thành công.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[API Error] Lỗi parse cấu hình Buff: {ex.Message} - Json: {json}");
             }
         }));
 

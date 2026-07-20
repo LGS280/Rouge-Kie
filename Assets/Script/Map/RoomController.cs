@@ -118,7 +118,9 @@ public class RoomController : MonoBehaviour
 
         if (currentPlayer != null && RoomCollider != null)
         {
-            if (!RoomCollider.OverlapPoint(currentPlayer.position))
+            Bounds bounds = RoomCollider.bounds;
+            bounds.Expand(0.8f); // Mở rộng biên an toàn 0.8 unit để bao phủ cả mép trong của cửa
+            if (!bounds.Contains(currentPlayer.position))
             {
                 return; // Chưa bước vào phòng, bỏ qua đóng cửa
             }

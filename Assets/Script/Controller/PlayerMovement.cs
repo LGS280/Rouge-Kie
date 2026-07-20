@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -45,6 +45,11 @@ public class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        rb2d.MovePosition(rb2d.position + moveInput * moveSpeed * Time.fixedDeltaTime);
+        float speed = moveSpeed;
+        if (PlayerBuffManager.Instance != null)
+        {
+            speed *= PlayerBuffManager.Instance.moveSpeedMultiplier;
+        }
+        rb2d.MovePosition(rb2d.position + moveInput * speed * Time.fixedDeltaTime);
     }
 }

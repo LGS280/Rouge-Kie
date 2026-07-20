@@ -176,6 +176,11 @@ public class WeaponAim : MonoBehaviour
             ? currentWeapon.fireRate / PlayerStats.Instance.attackSpeedMultiplier
             : currentWeapon.fireRate;
 
+        if (PlayerBuffManager.Instance != null)
+        {
+            currentFireRate *= PlayerBuffManager.Instance.fireRateMultiplier;
+        }
+
         if (Time.time >= nextFireTime)
         {
             bool isShooting = false;

@@ -27,11 +27,22 @@ public class MeleeSlash : MonoBehaviour
         if (collision.CompareTag("Enemy"))
         {
             float finalDamage = damage;
+            if (PlayerBuffManager.Instance != null)
+            {
+                finalDamage *= PlayerBuffManager.Instance.damageMultiplier;
+            }
+
             bool isCrit = false;
 
-            if (Random.value <= critChance)
+            float finalCritChance = critChance;
+            if (PlayerBuffManager.Instance != null)
             {
-                finalDamage = damage * critMultiplier;
+                finalCritChance += PlayerBuffManager.Instance.critChanceOffset / 100f; // Chia 100 vì critChance ở dạng 0-1
+            }
+
+            if (Random.value <= finalCritChance)
+            {
+                finalDamage *= critMultiplier; // Nhân critMultiplier của cận chiến
                 isCrit = true;
             }
 
@@ -40,7 +51,7 @@ public class MeleeSlash : MonoBehaviour
             {
                 if (!gameObject.name.EndsWith("_Remote"))
                 {
-                    enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage));
+                    enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage), isCrit); // Truyền isCrit để hiển thị màu text crit nếu cần
                 }
             }
         }
