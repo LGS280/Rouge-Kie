@@ -1164,13 +1164,47 @@ public class DungeonGenerator : MonoBehaviour
             if (room.isStartRoom && !currentTheme.spawnMobInStartRoom)
                 continue;
 
+            // Nếu là phòng Rương Báu, không sinh quái mà sinh rương thưởng trực tiếp
+            if (room.controller != null && room.controller.roomType == RoomType.Chest)
+            {
+                SpawnChestInChestRoom(room);
+                continue;
+            }
+
             SpawnMobsInRoom(room);
+        }
+    }
+
+    /// <summary>
+    /// Sinh rương thưởng trực tiếp tại tâm phòng Rương Báu
+    /// </summary>
+    private void SpawnChestInChestRoom(MapRoom room)
+    {
+        if (room.controller == null) return;
+
+        if (chestPrefab != null)
+        {
+            Vector3 worldPos = floorTilemap.CellToWorld((Vector3Int)room.Center) + new Vector3(0.5f, 0.5f, 0f);
+            GameObject chestObj = Instantiate(chestPrefab, worldPos, Quaternion.identity);
+            chestObj.transform.SetParent(transform);
+
+            // Cấu hình phòng Rương đã được dọn sạch để mở cửa
+            room.controller.roomCleared = true;
+            room.controller.chestSpawned = true; // Chặn sinh rương thêm lần nữa khi dọn dẹp
+            Debug.Log($"[DungeonGenerator] Đã sinh Rương tại phòng Rương báu: {room.gridPos}");
+        }
+        else
+        {
+            Debug.LogWarning("[DungeonGenerator] Chưa gán chestPrefab để sinh trong phòng Rương báu.");
         }
     }
 
     private void SpawnMobsInRoom(MapRoom room)
     {
-        int mobCount = Random.Range(
+        // Kiểm tra xem phòng hiện tại có phải là phòng Boss hay không
+        bool isBossRoom = room.controller != null && room.controller.roomType == RoomType.Boss;
+
+        int mobCount = isBossRoom ? 1 : Random.Range(
             currentTheme.minMobPerRoom,
             currentTheme.maxMobPerRoom + 1
         );
@@ -1182,16 +1216,52 @@ public class DungeonGenerator : MonoBehaviour
             if (mobPrefab == null)
                 continue;
 
-            Vector3Int cellPos = GetRandomMobSpawnCell(room);
+            // Nếu là phòng Boss, luôn sinh ở tâm phòng
+            Vector3Int cellPos = isBossRoom ? (Vector3Int)room.Center : GetRandomMobSpawnCell(room);
             Vector3 worldPos = floorTilemap.CellToWorld(cellPos) + new Vector3(0.5f, 0.5f, 0f);
 
             GameObject mobObj = Instantiate(mobPrefab, worldPos, Quaternion.identity);
             mobObj.transform.SetParent(transform);
 
-            MobHealth mobHealth = mobObj.GetComponent<MobHealth>();
-            if (mobHealth != null && room.controller != null)
+            // Cấu hình Boss hoặc Mini-Boss nếu là phòng Boss
+            if (isBossRoom)
             {
-                room.controller.AddMob(mobHealth);
+                int floor = 1;
+                if (GameProgressionManager.Instance != null)
+                {
+                    floor = GameProgressionManager.Instance.currentFloor;
+                }
+
+                // Nếu là tầng 5 -> Boss cuối Goliath Root khổng lồ
+                if (floor >= 5)
+                {
+                    mobObj.name = "ELITE BOSS - GOLIATH ROOT";
+                    mobObj.transform.localScale = new Vector3(2.5f, 2.5f, 1f);
+
+                    MobHealth mobHealth = mobObj.GetComponent<MobHealth>();
+                    if (mobHealth != null)
+                    {
+                        mobHealth.maxHealth = 1500; // Đặt máu khủng cho Boss cuối
+                    }
+                }
+                else
+                {
+                    // Mini-Boss ở các tầng dưới
+                    mobObj.name = $"MINI BOSS - FLOOR {floor}";
+                    mobObj.transform.localScale = new Vector3(1.7f, 1.7f, 1f);
+
+                    MobHealth mobHealth = mobObj.GetComponent<MobHealth>();
+                    if (mobHealth != null)
+                    {
+                        mobHealth.maxHealth = 400 + (floor * 100); // Máu tăng dần qua các tầng
+                    }
+                }
+            }
+
+            MobHealth mobH = mobObj.GetComponent<MobHealth>();
+            if (mobH != null && room.controller != null)
+            {
+                room.controller.AddMob(mobH);
             }
             else
             {
@@ -1332,18 +1402,98 @@ public class DungeonGenerator : MonoBehaviour
     {
         if (roomsByGrid.Count == 0) return;
 
+        // 1. Đặt tất cả các phòng về Normal mặc định
         foreach (var kvp in roomsByGrid)
         {
-            if (kvp.Value.controller == null) continue;
+            if (kvp.Value.controller != null)
+            {
+                kvp.Value.controller.roomType = RoomType.Normal;
+            }
+        }
 
-            // Reset tất cả về Normal
-            kvp.Value.controller.roomType = RoomType.Normal;
-
-            // Chỉ gán phòng Start
+        // 2. Gán phòng Start
+        foreach (var kvp in roomsByGrid)
+        {
             if (kvp.Value.isStartRoom)
             {
-                kvp.Value.controller.roomType = RoomType.Start;
-                kvp.Value.controller.isVisited = true; // Phòng xuất phát mặc định đã được đi qua
+                kvp.Value.isStartRoom = true;
+                if (kvp.Value.controller != null)
+                {
+                    kvp.Value.controller.roomType = RoomType.Start;
+                    kvp.Value.controller.isVisited = true;
+                }
+            }
+        }
+
+        // 3. Tìm phòng Boss (phòng có khoảng cách xa phòng Start (0,0) nhất theo tọa độ lưới)
+        MapRoom bossRoom = null;
+        float maxDistance = -1f;
+
+        foreach (var kvp in roomsByGrid)
+        {
+            if (kvp.Value.isStartRoom) continue;
+
+            float dist = Vector2Int.Distance(kvp.Key, Vector2Int.zero);
+            if (dist > maxDistance)
+            {
+                maxDistance = dist;
+                bossRoom = kvp.Value;
+            }
+        }
+
+        if (bossRoom != null && bossRoom.controller != null)
+        {
+            bossRoom.controller.roomType = RoomType.Boss;
+            Debug.Log($"[DungeonGenerator] Đã gán phòng Boss tại tọa độ lưới: {bossRoom.gridPos}");
+        }
+
+        // 4. Tìm các phòng cụt (chỉ có duy nhất 1 liên kết với các phòng khác) và không trùng Start/Boss
+        List<MapRoom> deadEnds = new List<MapRoom>();
+        List<MapRoom> otherCandidates = new List<MapRoom>();
+
+        foreach (var kvp in roomsByGrid)
+        {
+            MapRoom room = kvp.Value;
+            if (room.isStartRoom || room == bossRoom) continue;
+
+            int neighbors = 0;
+            Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+            foreach (var dir in dirs)
+            {
+                if (roomsByGrid.ContainsKey(room.gridPos + dir))
+                {
+                    neighbors++;
+                }
+            }
+
+            if (neighbors == 1)
+            {
+                deadEnds.Add(room);
+            }
+            else
+            {
+                otherCandidates.Add(room);
+            }
+        }
+
+        MapRoom chestRoom = null;
+        if (deadEnds.Count > 0)
+        {
+            // Lấy ngẫu nhiên một phòng cụt
+            chestRoom = deadEnds[UnityEngine.Random.Range(0, deadEnds.Count)];
+        }
+        else if (otherCandidates.Count > 0)
+        {
+            // Nếu không có phòng cụt, lấy ngẫu nhiên một phòng thường bất kỳ làm phòng rương
+            chestRoom = otherCandidates[UnityEngine.Random.Range(0, otherCandidates.Count)];
+        }
+
+        if (chestRoom != null && chestRoom.controller != null)
+        {
+            if (chestRoom.controller.roomType == RoomType.Normal)
+            {
+                chestRoom.controller.roomType = RoomType.Chest;
+                Debug.Log($"[DungeonGenerator] Đã gán phòng Rương báu tại tọa độ lưới: {chestRoom.gridPos}");
             }
         }
     }
