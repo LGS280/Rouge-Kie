@@ -1,9 +1,55 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class InGameMenuController : MonoBehaviour
 {
     [Header("UI Panels")]
     [SerializeField] private GameObject settingsPanel; // Kéo Prefab Settings_Panel vào đây
+
+    private void Update()
+    {
+        bool hasPressedToggleKey = false;
+
+        if (settingsPanel != null)
+        {
+            // Nếu bảng cài đặt đang ĐÓNG: Chỉ cho phép ESC (bàn phím) hoặc nút Start (tay cầm) để MỞ
+            if (!settingsPanel.activeSelf)
+            {
+                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.JoystickButton7))
+                {
+                    hasPressedToggleKey = true;
+                }
+                else if (Gamepad.current != null && Gamepad.current.startButton.wasPressedThisFrame)
+                {
+                    hasPressedToggleKey = true;
+                }
+            }
+            // Nếu bảng cài đặt đang MỞ: Cho phép ESC, nút Start hoặc nút B (Cancel) để ĐÓNG
+            else
+            {
+                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetButtonDown("Cancel") || Input.GetKeyDown(KeyCode.JoystickButton7))
+                {
+                    hasPressedToggleKey = true;
+                }
+                else if (Gamepad.current != null && (Gamepad.current.startButton.wasPressedThisFrame || Gamepad.current.bButton.wasPressedThisFrame))
+                {
+                    hasPressedToggleKey = true;
+                }
+            }
+        }
+
+        if (hasPressedToggleKey && settingsPanel != null)
+        {
+            if (settingsPanel.activeSelf)
+            {
+                CloseSettings();
+            }
+            else
+            {
+                OpenSettings();
+            }
+        }
+    }
 
     public void OpenSettings()
     {
@@ -54,5 +100,21 @@ public class InGameMenuController : MonoBehaviour
         {
             Debug.LogWarning("Không tìm thấy GameObject nhân vật có Tag 'Player'!");
         }
+    }
+
+    // Thêm mới: Hàm xử lý thoát game ra Menu chính
+    public async void QuitToMainMenu()
+    {
+        // Khôi phục timeScale đề phòng game đang bị pause
+        Time.timeScale = 1f;
+
+        // Nếu đang kết nối mạng, tiến hành ngắt kết nối phòng và reconnect để reset trạng thái
+        if (NetworkManager.Instance != null)
+        {
+            await NetworkManager.Instance.DisconnectAndReconnect();
+        }
+
+        // Chuyển về Scene Menu chính
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Scene_Menu");
     }
 }

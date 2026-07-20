@@ -136,14 +136,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68aa03e8383c9994b9b50ac8b3b180f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponLaser
+  weaponDbId: 5
+  weaponPrefab: {fileID: 5681139341880372300}
   laserPrefab: {fileID: 6231754123693432805, guid: 475cef929f68d3043b3d17cb128c5801, type: 3}
   firePoint: {fileID: 9164787276703503022}
-  baseDamage: 150
   maxLaserDistance: 15
   customHandPosition: {x: 0.088, y: 0.138, z: 0}
   obstacleTag: Obstacle
   enemyTag: Enemy
   doorTag: Door
-  chargeDuration: 0.15
   maxLaserWidth: 0.4
   lerpSpeed: 15
+  baseDamage: 150
+  chargeDuration: 0.15

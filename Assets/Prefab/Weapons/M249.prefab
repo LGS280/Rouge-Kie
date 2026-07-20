@@ -105,15 +105,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df397456b8e4f78429e2e244b759fab4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponInfo
-  shootSound: {fileID: 8300000, guid: 4ae2095f19431574292a3de087a0bfab, type: 3}
-  shootVolume: 0.8
+  weaponDbId: 2
+  weaponPrefab: {fileID: 2029244562639368729}
+  shootSoundClip: {fileID: 8300000, guid: 4ae2095f19431574292a3de087a0bfab, type: 3}
   customHandPosition: {x: 0.226, y: 0.087, z: 0}
   bulletPrefab: {fileID: 5457056256669451622, guid: fdfcd43ad686eb945ad5ed4e3fc6bddb, type: 3}
   firePoint: {fileID: 702301490329630259}
   fireRate: 0.2
-  recoilDistance: 0.15
-  recoilDuration: 0.05
-  returnDuration: 0.1
+  manaCostPerShot: 0
 --- !u!1 &4513706913163337098
 GameObject:
   m_ObjectHideFlags: 0

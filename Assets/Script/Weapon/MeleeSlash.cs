@@ -1,41 +1,58 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class MeleeSlash : MonoBehaviour
 {
-    [Header("THIẾT LẬP SÁT THƯƠNG GỐC")]
-    public float delayTime = 0.1f;    // Thời gian vệt chém tồn tại trên màn hình
-    public float damage = 15f;        // Sát thương cận chiến cơ bản
+    public float delayTime = 0.1f;
+    [HideInInspector] public float damage;
+    [HideInInspector] public float critChance;
+    [HideInInspector] public float critMultiplier;
 
-    [Header("THIẾT LẬP CHÍ MẠNG (CRITICAL)")]
-    [Range(0f, 1f)]
-    public float critChance = 0.2f;    // 0.2 nghĩa là 20% tỷ lệ ra đòn chí mạng
-    public float critMultiplier = 2f;  // Nhân đôi sát thương khi chí mạng
+    public void InitFromDb(int bulletId)
+    {
+        if (GameConfigManager.Instance != null && GameConfigManager.Instance.BulletDb.TryGetValue(bulletId, out BulletConfig config))
+        {
+            damage = config.damage;
+            critChance = config.critRate; // Script cận chiến của bạn dùng [Range(0,1)] nên giữ nguyên hệ thập phân
+            critMultiplier = config.critMultiplier;
+        }
+    }
 
     void Start()
     {
-        // Vừa sinh ra là tự hủy liền sau delayTime giây cho nhẹ game, không bị dính hình
         Destroy(gameObject, delayTime);
     }
 
-    // Hàm xử lý khi vệt chém quét trúng quái vật
     void OnTriggerEnter2D(Collider2D collision)
     {
-        // Kiểm tra xem có vả trúng quái vật mang Tag Enemy không
         if (collision.CompareTag("Enemy"))
         {
             float finalDamage = damage;
+            if (PlayerBuffManager.Instance != null)
+            {
+                finalDamage *= PlayerBuffManager.Instance.damageMultiplier;
+            }
+
             bool isCrit = false;
 
-            if (Random.value <= critChance)
+            float finalCritChance = critChance;
+            if (PlayerBuffManager.Instance != null)
             {
-                finalDamage = damage * critMultiplier;
+                finalCritChance += PlayerBuffManager.Instance.critChanceOffset / 100f; // Chia 100 vì critChance ở dạng 0-1
+            }
+
+            if (Random.value <= finalCritChance)
+            {
+                finalDamage *= critMultiplier; // Nhân critMultiplier của cận chiến
                 isCrit = true;
             }
 
             MobHealth enemyHealth = collision.GetComponent<MobHealth>();
             if (enemyHealth != null)
             {
-                enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage));
+                if (!gameObject.name.EndsWith("_Remote"))
+                {
+                    enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage), isCrit); // Truyền isCrit để hiển thị màu text crit nếu cần
+                }
             }
         }
     }

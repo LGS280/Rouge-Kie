@@ -176,7 +176,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5457056256669451622}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e6b742480d7a1d4199f381023217f95, type: 3}
+  m_Script: {fileID: 11500000, guid: c1f76b9d367cd0d4cabe5d31c4db870f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Desert_Eagle_Bullet
   speed: 25

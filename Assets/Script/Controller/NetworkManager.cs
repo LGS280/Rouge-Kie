@@ -38,8 +38,14 @@ public class NetworkManager : MonoBehaviour
     // Sự kiện bắt đầu game
     public event Action OnGameStarted;
 
+    // CÁC SỰ KIỆN ĐỒNG BỘ PHÒNG (ROOM COMBAT)
+    public event Action<string, float, float> OnRoomCombatStarted; // roomId, centerX, centerY
+    public event Action<string> OnRoomClearedFromServer;          // roomId
+    public event Action<string, float, float> OnReceiveEnemyPosition; // enemyId, x, y
+
     public string MyConnectionId => hubConnection?.ConnectionId;
 
+    // QUYỀN HẠN TRONG TRẬN: Sẽ được Server định đoạt khi tạo hoặc vào phòng thành công
     public string UserRole = "Guest";
 
     private void Awake()
@@ -49,6 +55,17 @@ public class NetworkManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
             unityContext = SynchronizationContext.Current;
+
+            // Tự động khôi phục phiên đăng nhập từ PlayerPrefs khi khởi động game (Đặt trong Awake để chạy trước Start của các UI khác)
+            string savedToken = PlayerPrefs.GetString("jwt_token", "");
+            string savedUsername = PlayerPrefs.GetString("username", "Guest");
+            if (!string.IsNullOrEmpty(savedToken))
+            {
+                IsLoggedIn = true;
+                LoggedInUsername = savedUsername;
+                UserRole = "Player";
+                Debug.Log($"[NetworkManager] Tự động đăng nhập người dùng: {LoggedInUsername}");
+            }
         }
         else
         {
@@ -58,6 +75,12 @@ public class NetworkManager : MonoBehaviour
 
     private async void Start()
     {
+        // BỔ SUNG: Tự động đồng bộ URL Server SignalR dựa trên cấu hình appsettings.json của GameConfigManager
+        if (GameConfigManager.Instance != null && !string.IsNullOrEmpty(GameConfigManager.Instance.BaseUrl))
+        {
+            serverUrl = GameConfigManager.Instance.BaseUrl.Replace("/api", "/gamehub");
+        }
+
         hubConnection = new HubConnectionBuilder()
             .WithUrl(serverUrl)
             .WithAutomaticReconnect()
@@ -65,15 +88,23 @@ public class NetworkManager : MonoBehaviour
 
         // --- ĐĂNG KÝ LẮNG NGHE TỪ SERVER ---
 
-        hubConnection.On<string>("OnRoomCreated", (roomCode) =>
+        // CẬP NHẬT CÁCH 1: Hứng thêm biến bool isHost từ Server gửi về để phân quyền
+        hubConnection.On<string, bool>("OnRoomCreated", (roomCode, isHost) =>
         {
-            CurrentRoomId = roomCode; // CẬP NHẬT: Lưu lại Room ID cục bộ
+            CurrentRoomId = roomCode;
+            UserRole = isHost ? "Host" : "Client";
+            Debug.Log($"Đã tạo phòng thành công! RoomCode: {roomCode} | Quyền của bạn: {UserRole}");
+
             unityContext.Post(_ => OnRoomCreated?.Invoke(roomCode), null);
         });
 
-        hubConnection.On<string, List<string>>("OnJoinRoomSuccess", (roomCode, players) =>
+        // CẬP NHẬT CÁCH 1: Hứng thêm biến bool isHost từ Server gửi về khi vào phòng thành công
+        hubConnection.On<string, List<string>, bool>("OnJoinRoomSuccess", (roomCode, players, isHost) =>
         {
-            CurrentRoomId = roomCode; // CẬP NHẬT: Lưu lại Room ID cục bộ
+            CurrentRoomId = roomCode;
+            UserRole = isHost ? "Host" : "Client";
+            Debug.Log($"Đã vào phòng thành công! RoomCode: {roomCode} | Quyền của bạn: {UserRole}");
+
             unityContext.Post(_ => OnJoinRoomSuccess?.Invoke(roomCode, players), null);
         });
 
@@ -102,6 +133,17 @@ public class NetworkManager : MonoBehaviour
         hubConnection.On("OnGameStarted", () =>
         {
             unityContext.Post(_ => OnGameStarted?.Invoke(), null);
+        });
+
+        // LẮNG NGHE LỆNH ROOM TỪ SERVER HUB GỬI VỀ
+        hubConnection.On<string, float, float>("OnRoomCombatStarted", (roomId, centerX, centerY) =>
+        {
+            unityContext.Post(_ => OnRoomCombatStarted?.Invoke(roomId, centerX, centerY), null);
+        });
+
+        hubConnection.On<string>("OnRoomClearedFromServer", (roomId) =>
+        {
+            unityContext.Post(_ => OnRoomClearedFromServer?.Invoke(roomId), null);
         });
 
         // Gọi hàm đăng ký các sự kiện Combat mạng
@@ -154,6 +196,27 @@ public class NetworkManager : MonoBehaviour
         }
     }
 
+    // CÁC PHƯƠNG THỨC GỬI SỰ KIỆN ROOM LÊN SERVER
+
+    // Gọi khi có bất kỳ ai bước vào một phòng combat (Gửi vị trí người kích hoạt thay vì tâm phòng)
+    public async void SendRoomCombatTrigger(string targetRoomId, Vector3 triggerPlayerPos)
+    {
+        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        {
+            // Gửi lên Hub: Match Room Id hiện tại, Unique Room Id tự sinh, và tọa độ người kích hoạt ngay cửa
+            await hubConnection.InvokeAsync("TriggerRoomCombat", CurrentRoomId, targetRoomId, triggerPlayerPos.x, triggerPlayerPos.y);
+        }
+    }
+
+    // Gọi khi một phòng đã hết sạch quái
+    public async void SendRoomClearedEvent(string targetRoomId)
+    {
+        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        {
+            await hubConnection.InvokeAsync("RegisterRoomCleared", CurrentRoomId, targetRoomId);
+        }
+    }
+
     private async void OnDestroy()
     {
         if (hubConnection != null)
@@ -184,7 +247,7 @@ public class NetworkManager : MonoBehaviour
             }, null);
         });
 
-        // Đồng bộ góc quay súng
+        // Đăng ký lắng nghe góc quay súng
         hubConnection.On<string, float, float, float>("OnReceiveShoot", (connId, angle, px, py) =>
         {
             unityContext.Post(_ =>
@@ -192,17 +255,23 @@ public class NetworkManager : MonoBehaviour
                 OnReceiveWeaponAngle?.Invoke(connId, angle, px, py);
             }, null);
         });
+
+        // Đăng ký lắng nghe vị trí quái vật
+        hubConnection.On<string, float, float>("OnReceiveEnemyPosition", (enemyId, x, y) =>
+        {
+            unityContext.Post(_ =>
+            {
+                OnReceiveEnemyPosition?.Invoke(enemyId, x, y);
+            }, null);
+        });
     }
 
     // --- PHƯƠNG THỨC GỬI LÊN SERVER (API KHÁCH GỌI) ---
 
-    // TỐI ƯU HÓA: Vũ khí chỉ cần truyền tham số vũ khí và vị trí hướng bắn, 
-    // hàm này tự lấy CurrentRoomId đã lưu để gửi lên server để giảm thiểu sai sót.
     public async void SendShootEvent(string weaponId, Vector3 position, Vector3 direction)
     {
         if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
         {
-            // Sử dụng trực tiếp CurrentRoomId nội bộ tự động nhận diện từ phòng chơi
             await hubConnection.InvokeAsync("SendShoot", CurrentRoomId, weaponId, position.x, position.y, direction.x, direction.y);
         }
     }
@@ -220,6 +289,35 @@ public class NetworkManager : MonoBehaviour
         if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
         {
             await hubConnection.InvokeAsync("SyncShoot", angle, px, py);
+        }
+    }
+
+    public async void SendEnemyPosition(string enemyId, float x, float y)
+    {
+        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        {
+            await hubConnection.InvokeAsync("SyncEnemyPosition", CurrentRoomId, enemyId, x, y);
+        }
+    }
+
+    // Thêm mới: Ngắt kết nối phòng chơi hiện tại và kết nối lại để reset trạng thái phòng nhưng giữ phiên đăng nhập
+    public async System.Threading.Tasks.Task DisconnectAndReconnect()
+    {
+        CurrentRoomId = null;
+        UserRole = "Guest";
+
+        if (hubConnection != null)
+        {
+            try
+            {
+                await hubConnection.StopAsync();
+                await hubConnection.StartAsync();
+                Debug.Log("[NetworkManager] Đã ngắt kết nối phòng cũ và reconnect SignalR thành công.");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[NetworkManager] Lỗi khi reconnect SignalR: {ex.Message}");
+            }
         }
     }
 }

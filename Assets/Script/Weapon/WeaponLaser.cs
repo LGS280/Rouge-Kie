@@ -1,25 +1,32 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 
 public class WeaponLaser : MonoBehaviour
 {
+    [Header("Cấu hình API kết nối (Tự động theo PrefabName)")]
+    [HideInInspector] public int weaponDbId;
+
+    [Header("Prefab tham chiếu để vứt súng")]
+    public GameObject weaponPrefab;
+
     [Header("--- THIẾT LẬP LASER ---")]
     public GameObject laserPrefab;
     public Transform firePoint;
-    public float baseDamage = 10f;
     public float maxLaserDistance = 15f;
 
-    [Header("VỊ TRÍ CẦM SÚNG")]
-    public Vector3 customHandPosition;
+    [Header("VỊ TRÍ CẦM SÚNG (Đọc từ DB)")]
+    [HideInInspector] public Vector3 customHandPosition;
 
     [Header("--- THIẾT LẬP TAG ---")]
     public string obstacleTag = "Obstacle";
     public string enemyTag = "Enemy";
     public string doorTag = "Door";
 
-    public float chargeDuration = 0.15f;
     public float maxLaserWidth = 1.0f;
     public float lerpSpeed = 15f;
+
+    [HideInInspector] public float baseDamage;
+    [HideInInspector] public float chargeDuration;
 
     private LineRenderer currentLaserLine;
     private Transform startGlowCircle;
@@ -37,6 +44,63 @@ public class WeaponLaser : MonoBehaviour
     void Start()
     {
         playerMelee = GetComponentInParent<PlayerMeleeSlash>();
+    }
+
+    void OnEnable()
+    {
+        ApplyConfigFromDb();
+        GameConfigManager.OnConfigLoaded += ApplyConfigFromDb;
+    }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (weaponPrefab == null)
+        {
+            string myPath = UnityEditor.AssetDatabase.GetAssetPath(gameObject);
+            if (!string.IsNullOrEmpty(myPath))
+            {
+                weaponPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(myPath);
+                UnityEditor.EditorUtility.SetDirty(this);
+            }
+        }
+    }
+#endif
+
+    public WeaponConfig GetWeaponConfig()
+    {
+        if (GameConfigManager.Instance == null) return null;
+
+        string keyName = weaponPrefab != null ? weaponPrefab.name : gameObject.name.Replace("(Clone)", "").Trim();
+        if (GameConfigManager.Instance.WeaponDbByName.TryGetValue(keyName, out WeaponConfig config))
+        {
+            return config;
+        }
+
+        if (weaponDbId > 0 && GameConfigManager.Instance.WeaponDb.TryGetValue(weaponDbId, out WeaponConfig idConfig))
+        {
+            return idConfig;
+        }
+
+        return null;
+    }
+
+    public void ApplyConfigFromDb()
+    {
+        WeaponConfig wConfig = GetWeaponConfig();
+        if (wConfig != null)
+        {
+            chargeDuration = wConfig.fireRate;
+
+            // Nạp vị trí cầm súng từ DB
+            customHandPosition = new Vector3(wConfig.handPositionX, wConfig.handPositionY, wConfig.handPositionZ);
+            transform.localPosition = customHandPosition;
+
+            if (GameConfigManager.Instance != null && GameConfigManager.Instance.BulletDb.TryGetValue(wConfig.bulletId, out BulletConfig bConfig))
+            {
+                baseDamage = bConfig.damage;
+            }
+        }
     }
 
     void Update()
@@ -107,6 +171,14 @@ public class WeaponLaser : MonoBehaviour
 
     void CheckAttackInput()
     {
+        // Khóa bắn laser nếu người chơi đang đứng gần súng trên đất để nhặt
+        WeaponManager wm = GetComponentInParent<WeaponManager>();
+        if (wm != null && wm.nearbyWeapons.Count > 0)
+        {
+            isHoldingAttack = false;
+            return;
+        }
+
         PlayerController pc = GetComponentInParent<PlayerController>();
         if (pc != null && pc.currentMode == PlayerController.InputMode.Gamepad)
         {
@@ -181,7 +253,13 @@ public class WeaponLaser : MonoBehaviour
                         damageAccumulators[enemyID] = 0f;
                     }
 
-                    damageAccumulators[enemyID] += baseDamage * Time.deltaTime;
+                    float finalDamage = baseDamage;
+                    if (PlayerBuffManager.Instance != null)
+                    {
+                        finalDamage *= PlayerBuffManager.Instance.damageMultiplier;
+                    }
+
+                    damageAccumulators[enemyID] += finalDamage * Time.deltaTime;
 
                     if (damageAccumulators[enemyID] >= 1f)
                     {
@@ -235,6 +313,7 @@ public class WeaponLaser : MonoBehaviour
     void OnDisable()
     {
         StopLaser();
+        GameConfigManager.OnConfigLoaded -= ApplyConfigFromDb;
     }
 
     void OnDestroy()
