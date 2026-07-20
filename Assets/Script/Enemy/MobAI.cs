@@ -10,6 +10,7 @@ public class MobAI : MonoBehaviour
     public float detectRange = 7f;
     public float attackRange = 1.5f;
     public float attackCooldown = 1.5f;
+    public int attackDamage = 10; // Sát thương của quái vật gây ra cho người chơi
     private float nextAttackTime = 0f;
 
     [Header("Network Status")]
@@ -45,9 +46,14 @@ public class MobAI : MonoBehaviour
         mobHealth = GetComponent<MobHealth>();
         originalScale = transform.localScale;
 
-        if (NetworkManager.Instance != null)
+        bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+        if (isMultiplayer)
         {
             isHost = (NetworkManager.Instance.UserRole == "Host");
+        }
+        else
+        {
+            isHost = true; // Chơi đơn (Solo) thì luôn chạy AI cục bộ
         }
         
         lastPos = transform.position;
@@ -262,5 +268,27 @@ public class MobAI : MonoBehaviour
     void AttackTarget()
     {
         animator.SetTrigger("attack");
+        StartCoroutine(DealDamageWithDelay());
+    }
+
+    private System.Collections.IEnumerator DealDamageWithDelay()
+    {
+        // Đợi 0.35 giây để hoạt ảnh chém/vung tay của quái trùng khớp với thời điểm gây dame
+        yield return new WaitForSeconds(0.35f);
+
+        if (targetPlayer != null && mobHealth != null && !mobHealth.isDead)
+        {
+            float distance = Vector2.Distance(transform.position, targetPlayer.position);
+            // Nếu người chơi vẫn ở trong tầm đánh (nới rộng thêm 0.5 unit đề phòng người chơi di chuyển nhẹ)
+            if (distance <= attackRange + 0.5f)
+            {
+                RookieHealth playerHealth = targetPlayer.GetComponent<RookieHealth>();
+                if (playerHealth != null)
+                {
+                    playerHealth.TakeDamage(attackDamage);
+                    Debug.Log($"[MobAI] {gameObject.name} đã tấn công gây {attackDamage} sát thương cho Player.");
+                }
+            }
+        }
     }
 }
