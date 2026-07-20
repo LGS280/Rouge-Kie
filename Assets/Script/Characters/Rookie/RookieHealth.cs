@@ -75,6 +75,8 @@ public class RookieHealth : MonoBehaviour
     {
         if (isDead) return;
 
+        int originalDamage = damage; // Lưu lại lượng sát thương thực tế để hiển thị chữ số bay
+
         if (currentArmor > 0)
         {
             int absorbed = Mathf.Min(currentArmor, damage);
@@ -89,8 +91,43 @@ public class RookieHealth : MonoBehaviour
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
         onHealthChanged?.Invoke();
 
-        if (animator != null) animator.SetTrigger("hurt");
+        // Hiệu ứng chớp đỏ báo hiệu chịu sát thương
+        StartCoroutine(HurtFlashRoutine());
+
+        // Hiển thị số sát thương màu cam nổi bật và có dấu trừ bay lên đầu nhân vật
+        if (DamageNumberSpawner.Instance != null && originalDamage > 0)
+        {
+            DamageNumber dn = DamageNumberSpawner.Instance.Spawn(transform.position, originalDamage, false);
+            if (dn != null)
+            {
+                dn.SetColor(new Color(1f, 0.4f, 0f)); // Màu cam sáng nổi bật để phân biệt với sát thương quái
+                dn.SetText("-" + originalDamage);      // Thêm dấu trừ
+            }
+        }
+
+        if (animator != null && HasParameter("hurt", animator)) animator.SetTrigger("hurt");
         if (currentHealth <= 0) Die();
+    }
+
+    private bool HasParameter(string paramName, Animator anim)
+    {
+        if (anim == null) return false;
+        foreach (AnimatorControllerParameter param in anim.parameters)
+        {
+            if (param.name == paramName) return true;
+        }
+        return false;
+    }
+
+    private System.Collections.IEnumerator HurtFlashRoutine()
+    {
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            sr.color = new Color(1f, 0.4f, 0.4f); // Chớp đỏ nhạt
+            yield return new WaitForSeconds(0.15f);
+            sr.color = Color.white; // Trả lại màu gốc
+        }
     }
 
     public void Heal(int amount)
@@ -163,6 +200,11 @@ public class RookieHealth : MonoBehaviour
         }
 
         sr.color = targetColor;
-    
-}
+
+        // Báo cho RunStatsTracker kết thúc trận với kết quả Thất bại
+        if (RunStatsTracker.Instance != null)
+        {
+            RunStatsTracker.Instance.EndRun(false);
+        }
+    }
 }
