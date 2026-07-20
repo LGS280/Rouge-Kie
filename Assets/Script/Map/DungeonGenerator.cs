@@ -145,10 +145,10 @@ public class DungeonGenerator : MonoBehaviour
         CreateAllRoomControllers();
         CreateAllDoors();
         SpawnAllRoomObstacles();
-        SpawnAllRoomMobs();
-
-        // Phân loại phòng (Start, Boss, Chest, Normal)
+        // Phân loại phòng (Start, Boss, Chest, Normal) trước khi sinh quái và rương
         CategorizeRooms();
+
+        SpawnAllRoomMobs();
 
         // Khởi tạo Minimap
         if (MinimapManager.Instance != null)
@@ -1008,7 +1008,15 @@ public class DungeonGenerator : MonoBehaviour
 
         for (int i = transform.childCount - 1; i >= 0; i--)
         {
-            DestroyImmediate(transform.GetChild(i).gameObject);
+            GameObject child = transform.GetChild(i).gameObject;
+            if (Application.isPlaying)
+            {
+                Destroy(child);
+            }
+            else
+            {
+                DestroyImmediate(child);
+            }
         }
 
         Debug.Log("?ã xoá s?ch toàn b? Tilemap và các Prefab c?a c?.");
