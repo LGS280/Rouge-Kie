@@ -17,10 +17,24 @@ public class TeleportPortal : MonoBehaviour
             hasTriggered = true;
             Debug.Log("[TeleportPortal] Người chơi chính đã bước vào cổng dịch chuyển chuyển tầng.");
 
-            // Kích hoạt chuyển tầng thông qua GameProgressionManager
+            // Kích hoạt chuyển tầng hoặc hiện bảng chọn nâng cấp dựa theo Tầng hiện tại
             if (GameProgressionManager.Instance != null)
             {
-                GameProgressionManager.Instance.StartNextFloor();
+                int floor = GameProgressionManager.Instance.currentFloor;
+                if ((floor == 1 || floor == 3) && UpgradeSelectionUI.Instance != null)
+                {
+                    UpgradeSelectionUI.Instance.OpenUpgradeMenu(() =>
+                    {
+                        if (GameProgressionManager.Instance != null)
+                        {
+                            GameProgressionManager.Instance.StartNextFloor();
+                        }
+                    });
+                }
+                else
+                {
+                    GameProgressionManager.Instance.StartNextFloor();
+                }
             }
             else
             {

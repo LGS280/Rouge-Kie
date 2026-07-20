@@ -234,7 +234,13 @@ public class WeaponLaser : MonoBehaviour
                         damageAccumulators[enemyID] = 0f;
                     }
 
-                    damageAccumulators[enemyID] += baseDamage * Time.deltaTime;
+                    float finalDamage = baseDamage;
+                    if (PlayerBuffManager.Instance != null)
+                    {
+                        finalDamage *= PlayerBuffManager.Instance.damageMultiplier;
+                    }
+
+                    damageAccumulators[enemyID] += finalDamage * Time.deltaTime;
 
                     if (damageAccumulators[enemyID] >= 1f)
                     {
