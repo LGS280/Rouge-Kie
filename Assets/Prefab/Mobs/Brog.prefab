@@ -138,7 +138,10 @@ MonoBehaviour:
   detectRange: 7
   attackRange: 1.5
   attackCooldown: 1.5
+  attackDamage: 10
   isHost: 1
+  wallPadding: 0
+  myRoom: {fileID: 0}
 --- !u!114 &4397270787726877154
 MonoBehaviour:
   m_ObjectHideFlags: 0
