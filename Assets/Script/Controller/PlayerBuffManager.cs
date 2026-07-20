@@ -66,7 +66,7 @@ public class PlayerBuffManager : MonoBehaviour
         Debug.Log("[PlayerBuffManager] Đã reset toàn bộ Buff về mặc định.");
     }
 
-    public void ApplyBuff(GameConfigManager.BuffConfig buff)
+    public void ApplyBuff(BuffConfig buff)
     {
         if (buff == null) return;
 

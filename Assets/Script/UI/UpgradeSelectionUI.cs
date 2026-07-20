@@ -50,8 +50,8 @@ public class UpgradeSelectionUI : MonoBehaviour
         Time.timeScale = 0f;
 
         // Chọn ngẫu nhiên 3 Buff từ DB
-        List<GameConfigManager.BuffConfig> availableBuffs = new List<GameConfigManager.BuffConfig>(GameConfigManager.Instance.BuffDb);
-        List<GameConfigManager.BuffConfig> selectedBuffs = new List<GameConfigManager.BuffConfig>();
+        List<BuffConfig> availableBuffs = new List<BuffConfig>(GameConfigManager.Instance.BuffDb);
+        List<BuffConfig> selectedBuffs = new List<BuffConfig>();
 
         // Chọn ngẫu nhiên không trùng lặp
         int countToSelect = Mathf.Min(3, availableBuffs.Count);
@@ -95,7 +95,7 @@ public class UpgradeSelectionUI : MonoBehaviour
         titleObj.transform.SetParent(canvasObj.transform, false);
         Text titleText = titleObj.AddComponent<Text>();
         titleText.text = "SELECT AN UPGRADE";
-        titleText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         titleText.fontSize = 42;
         titleText.alignment = TextAnchor.MiddleCenter;
         titleText.color = new Color(0.9f, 0.9f, 0.95f);
@@ -168,7 +168,7 @@ public class UpgradeSelectionUI : MonoBehaviour
             iconObj.transform.SetParent(cardObj.transform, false);
             Text iconText = iconObj.AddComponent<Text>();
             iconText.text = GetSymbolForBuffType(buff.buffType);
-            iconText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            iconText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             iconText.fontSize = 55;
             iconText.alignment = TextAnchor.MiddleCenter;
             iconText.color = GetColorForBuffType(buff.buffType);
@@ -184,7 +184,7 @@ public class UpgradeSelectionUI : MonoBehaviour
             nameObj.transform.SetParent(cardObj.transform, false);
             Text nameText = nameObj.AddComponent<Text>();
             nameText.text = buff.buffName;
-            nameText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            nameText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             nameText.fontSize = 24;
             nameText.fontStyle = FontStyle.Bold;
             nameText.alignment = TextAnchor.MiddleCenter;
@@ -201,7 +201,7 @@ public class UpgradeSelectionUI : MonoBehaviour
             rarityObj.transform.SetParent(cardObj.transform, false);
             Text rarityText = rarityObj.AddComponent<Text>();
             rarityText.text = buff.rarity.ToUpper();
-            rarityText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            rarityText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             rarityText.fontSize = 14;
             rarityText.alignment = TextAnchor.MiddleCenter;
             rarityText.color = new Color(0.7f, 0.7f, 0.75f);
@@ -217,7 +217,7 @@ public class UpgradeSelectionUI : MonoBehaviour
             descObj.transform.SetParent(cardObj.transform, false);
             Text descText = descObj.AddComponent<Text>();
             descText.text = buff.description;
-            descText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            descText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             descText.fontSize = 16;
             descText.alignment = TextAnchor.MiddleCenter;
             descText.color = new Color(0.8f, 0.8f, 0.85f);
