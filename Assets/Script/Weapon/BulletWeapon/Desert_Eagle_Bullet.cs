@@ -16,6 +16,7 @@ public class Desert_Eagle_Bullet : MonoBehaviour
             speed = config.flightSpeed;
             baseDamage = config.damage;
             critChance = config.critRate * 100f;
+            critMultiplier = config.critMultiplier;
         }
     }
 
@@ -44,12 +45,23 @@ public class Desert_Eagle_Bullet : MonoBehaviour
     private void CalculateAndApplyDamage(Collider2D collision)
     {
         float finalDamage = baseDamage;
+        if (PlayerBuffManager.Instance != null)
+        {
+            finalDamage *= PlayerBuffManager.Instance.damageMultiplier;
+        }
+
         bool isCrit = false;
         float roll = UnityEngine.Random.Range(0f, 100f);
 
-        if (roll <= critChance)
+        float finalCritChance = critChance;
+        if (PlayerBuffManager.Instance != null)
         {
-            finalDamage = baseDamage * critMultiplier;
+            finalCritChance += PlayerBuffManager.Instance.critChanceOffset;
+        }
+
+        if (roll <= finalCritChance)
+        {
+            finalDamage *= critMultiplier; // Nhân hệ số chí mạng của đạn
             isCrit = true;
         }
 

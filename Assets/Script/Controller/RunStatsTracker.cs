@@ -69,6 +69,12 @@ public class RunStatsTracker : MonoBehaviour
             GameProgressionManager.Instance.ResetProgression();
         }
 
+        // Reset lại các Buff của người chơi ở lượt chơi mới
+        if (PlayerBuffManager.Instance != null)
+        {
+            PlayerBuffManager.Instance.ResetBuffs();
+        }
+
         Debug.Log($"[RunStatsTracker] Khởi tạo Run mới. Tổng số phòng cần dọn: {TotalCombatRooms}");
     }
 
@@ -89,8 +95,15 @@ public class RunStatsTracker : MonoBehaviour
     public void AddCurrency(int amount)
     {
         if (runEnded) return;
-        CurrencyEarned += amount;
-        Debug.Log($"[RunStatsTracker] Đã nhặt Coin. Cộng thêm: {amount}, Tổng số: {CurrencyEarned}");
+
+        int finalAmount = amount;
+        if (PlayerBuffManager.Instance != null)
+        {
+            finalAmount = Mathf.RoundToInt(amount * PlayerBuffManager.Instance.coinGainMultiplier);
+        }
+
+        CurrencyEarned += finalAmount;
+        Debug.Log($"[RunStatsTracker] Đã nhặt Coin. Cộng thêm: {finalAmount} (Gốc: {amount}), Tổng số: {CurrencyEarned}");
     }
 
     /// <summary>

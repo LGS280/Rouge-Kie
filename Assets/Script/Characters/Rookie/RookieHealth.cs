@@ -150,6 +150,24 @@ public class RookieHealth : MonoBehaviour
         onHealthChanged?.Invoke();
     }
 
+    public void ApplyUpgradeStats(int hpBonus, int armorBonus, int manaBonus)
+    {
+        maxHealth += hpBonus;
+        currentHealth += hpBonus;
+
+        maxArmor += armorBonus;
+        currentArmor += armorBonus;
+
+        maxMana += manaBonus;
+        currentMana += manaBonus;
+
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+        currentArmor = Mathf.Clamp(currentArmor, 0, maxArmor);
+        currentMana = Mathf.Clamp(currentMana, 0, maxMana);
+
+        onHealthChanged?.Invoke();
+    }
+
     public int GetCurrentHealth() => currentHealth;
     public int GetMaxHealth() => maxHealth;
     public int GetCurrentArmor() => currentArmor;
