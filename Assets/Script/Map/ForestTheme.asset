@@ -19,9 +19,17 @@ MonoBehaviour:
   maxMobPerRoom: 7
   spawnMobInStartRoom: 0
   mobSpawnPadding: 3
-  baseTiles: []
-  detailTiles: []
-  shadowTiles: []
+  baseTiles:
+  - {fileID: 11400000, guid: e2a2b89cc605cd149b5a1ae53630fe9d, type: 2}
+  - {fileID: 11400000, guid: 633588d6c24b4e341bd851a287f3cbf5, type: 2}
+  - {fileID: 11400000, guid: 0d8805e627de5104abbe54297d47cd49, type: 2}
+  detailTiles:
+  - {fileID: 11400000, guid: 1b5f599058291a546846e7257e6a0800, type: 2}
+  - {fileID: 11400000, guid: 3252a2bb8c02beb4d9191a0de713b763, type: 2}
+  - {fileID: 11400000, guid: 2893feeca7ea0b54492ea492712223d9, type: 2}
+  shadowTiles:
+  - {fileID: 11400000, guid: b0add8206dac4624494aa9fa8f03edf9, type: 2}
+  - {fileID: 11400000, guid: f5515c355c608a943aecb8038972f83c, type: 2}
   wallTopSide: {fileID: 11400000, guid: 64f9e06570c9c0442ae53c74ee233616, type: 2}
   wallTopBot: {fileID: 11400000, guid: 1075e41c347570944b4bc687962f9a73, type: 2}
   wallDefault: {fileID: 11400000, guid: 190f9609d69c5c14a9d8dfbd989ff6ed, type: 2}
@@ -32,3 +40,6 @@ MonoBehaviour:
     minClusterSize: 2
     maxClusterSize: 4
   decorationChance: 0.2
+  obstacleTile: {fileID: 11400000, guid: 64f9e06570c9c0442ae53c74ee233616, type: 2}
+  doorTile: {fileID: 11400000, guid: 64c65e1135088834aad262fb0aeb340d, type: 2}
+  doorTopTile: {fileID: 11400000, guid: b8ffbcbae66da6b4c9ffb6658928ff0f, type: 2}

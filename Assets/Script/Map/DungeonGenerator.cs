@@ -29,23 +29,20 @@ public class DungeonGenerator : MonoBehaviour
     public Tilemap doorTilemap;
     public Tilemap doorTopTilemap;
 
-    [Header("Danh sách gach sàn")]
-    public TileBase[] baseTiles;
-    public TileBase[] detailTiles;
-    public TileBase[] shadowTiles;
+    // Các Tile Assets được lấy động trực tiếp từ currentTheme (DungeonTheme ScriptableObject)
+    public TileBase doorTile => currentTheme != null ? currentTheme.doorTile : null;
+    public TileBase doorTopTile => currentTheme != null ? currentTheme.doorTopTile : null;
 
-    [Header("Wall Tiles")]
-    public TileBase wallTopSide;
-    public TileBase wallTopBot;
-    public TileBase wallDefault;
-    public TileBase wallBottomFoot;
+    public TileBase[] baseTiles => currentTheme != null ? currentTheme.baseTiles : null;
+    public TileBase[] detailTiles => currentTheme != null ? currentTheme.detailTiles : null;
+    public TileBase[] shadowTiles => currentTheme != null ? currentTheme.shadowTiles : null;
 
-    [Header("Door Tiles")]
-    public TileBase doorTile;
-    public TileBase doorTopTile;
+    public TileBase wallTopSide => currentTheme != null ? currentTheme.wallTopSide : null;
+    public TileBase wallTopBot => currentTheme != null ? currentTheme.wallTopBot : null;
+    public TileBase wallDefault => currentTheme != null ? currentTheme.wallDefault : null;
+    public TileBase wallBottomFoot => currentTheme != null ? currentTheme.wallBottomFoot : null;
 
-    [Header("Obstacle Asset")]
-    public TileBase obstacleTile;
+    public TileBase obstacleTile => currentTheme != null ? currentTheme.obstacleTile : null;
 
     [Header("Room Size")]
     public int minRoomSize = 14;
