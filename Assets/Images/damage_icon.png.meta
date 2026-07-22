@@ -1,13 +1,10 @@
 fileFormatVersion: 2
-guid: 9067f77bec345cc4c941cc19fe0583e2
+guid: 4228f0a5aeeecef4d825dd2545894ced
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5189441791716951647
-    second: bd0940582de4d5a59d69d64682c0a7f2_tplv-tiktokx-cropcenter_1080_1080-removebg-preview_0
-  - first:
-      213: -8434489145367531686
-    second: bd0940582de4d5a59d69d64682c0a7f2_tplv-tiktokx-cropcenter_1080_1080-removebg-preview_1
+      213: -532852011725973319
+    second: damage_icon _0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -40,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 0
+    filterMode: 1
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -54,7 +51,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 16
+  spritePixelsToUnits: 100
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -78,7 +75,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 0
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -103,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: bd0940582de4d5a59d69d64682c0a7f2_tplv-tiktokx-cropcenter_1080_1080-removebg-preview_0
+      name: damage_icon _0
       rect:
         serializedVersion: 2
-        x: 3
-        y: 24
-        width: 493
-        height: 457
+        x: 8
+        y: 0
+        width: 16
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -118,30 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 1a9f42e6f266bf7b0800000000000000
-      internalID: -5189441791716951647
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: bd0940582de4d5a59d69d64682c0a7f2_tplv-tiktokx-cropcenter_1080_1080-removebg-preview_1
-      rect:
-        serializedVersion: 2
-        x: 126
-        y: 7
-        width: 88
-        height: 43
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: a5fea746fcca2fa80800000000000000
-      internalID: -8434489145367531686
+      spriteID: 9b898332bedea98f0800000000000000
+      internalID: -532852011725973319
       vertices: []
       indices: 
       edges: []
@@ -160,8 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      bd0940582de4d5a59d69d64682c0a7f2_tplv-tiktokx-cropcenter_1080_1080-removebg-preview_0: -5189441791716951647
-      bd0940582de4d5a59d69d64682c0a7f2_tplv-tiktokx-cropcenter_1080_1080-removebg-preview_1: -8434489145367531686
+      damage_icon _0: -532852011725973319
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
