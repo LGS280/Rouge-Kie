@@ -135,11 +135,11 @@ public class GroundWeapon : MonoBehaviour
             
             if (InputDeviceHelper.IsGamepadActive())
             {
-                tm.text = cleanName + "\n(Button X)";
+                tm.text = cleanName + "\n(Nút B)";
             }
             else
             {
-                tm.text = cleanName + "\n(Click)";
+                tm.text = cleanName + "\n(Bấm E)";
             }
 
             if (nameTagTrans != null)

@@ -20,6 +20,7 @@ public class WeaponManager : MonoBehaviour
 
     private bool isUsingSlot1 = true;
     private WeaponAim handWeaponAim;
+    private float nextScrollSwapTime = 0f;
 
     void Start()
     {
@@ -46,10 +47,10 @@ public class WeaponManager : MonoBehaviour
 
     void Update()
     {
-        // 1. Kiểm tra nhặt vũ khí (Chuột trái hoặc nút X tay cầm khi có súng gần đó)
+        // 1. Kiểm tra nhặt vũ khí (Phím E bàn phím hoặc Nút B tay cầm khi có súng gần đó)
         CheckWeaponPickup();
 
-        // 2. Logic đổi vũ khí (Swap) - Giữ nguyên hoàn toàn logic đổi súng hiện tại của bạn
+        // 2. Logic đổi vũ khí (Swap) - Thêm Delay 1s khi lăn chuột cuộn
         bool hasPressedSwapKey = false;
 
         if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
@@ -62,7 +63,11 @@ public class WeaponManager : MonoBehaviour
         }
         else if (Mouse.current != null && Mathf.Abs(Mouse.current.scroll.ReadValue().y) > 0.1f)
         {
-            hasPressedSwapKey = true;
+            if (Time.time >= nextScrollSwapTime)
+            {
+                hasPressedSwapKey = true;
+                nextScrollSwapTime = Time.time + 1.0f; // Delay 1s giữa các lần cuộn chuột đổi súng
+            }
         }
 
         if (hasPressedSwapKey)
@@ -77,13 +82,13 @@ public class WeaponManager : MonoBehaviour
 
         bool hasPressedPickupKey = false;
 
-        // Bàn phím bấm Chuột trái
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        // Bàn phím bấm E (vừa mở rương vừa nhặt súng)
+        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
         {
             hasPressedPickupKey = true;
         }
-        // Tay cầm bấm nút X
-        else if (Gamepad.current != null && Gamepad.current.xButton.wasPressedThisFrame)
+        // Tay cầm bấm Nút B (vừa mở rương vừa nhặt súng)
+        else if (Gamepad.current != null && Gamepad.current.bButton.wasPressedThisFrame)
         {
             hasPressedPickupKey = true;
         }
