@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 04054c2e8694ce04d8a406dfb828d578
+guid: 247e31419aa862e43946da8f0012d6e6
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6926853325784373974
-    second: Assault_Shotgun_0
+      213: -6797867435222064227
+    second: Gold_Katana_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,7 +51,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 42
+  spritePixelsToUnits: 40
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -100,23 +100,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Assault_Shotgun_0
+      name: Gold_Katana_0
       rect:
         serializedVersion: 2
-        x: 5
-        y: 13
-        width: 26
-        height: 10
+        x: 4
+        y: 29
+        width: 37
+        height: 8
       alignment: 9
-      pivot: {x: 0.3291838, y: 0.37605858}
+      pivot: {x: 0.12969512, y: 0.50605106}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6da5c965660212060800000000000000
-      internalID: 6926853325784373974
+      spriteID: d93a465959f19a1a0800000000000000
+      internalID: -6797867435222064227
       vertices: []
       indices: 
       edges: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 1c0b60e042cc16b47908f45d14a667e5
+    spriteID: e67c135e934320b46b5d5b67be640ab5
     internalID: 0
     vertices: []
     indices: 
@@ -133,11 +133,9 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries:
-      - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+      entries: []
     nameFileIdTable:
-      Assault_Shotgun_0: 6926853325784373974
+      Gold_Katana_0: -6797867435222064227
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

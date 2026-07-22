@@ -61,7 +61,9 @@ public class WeaponInfo : MonoBehaviour
     {
         if (GameConfigManager.Instance == null) return null;
 
-        string keyName = weaponPrefab != null ? weaponPrefab.name : gameObject.name.Replace("(Clone)", "").Trim();
+        string rawName = weaponPrefab != null ? weaponPrefab.name : gameObject.name;
+        string keyName = rawName.Replace("(Clone)", "").Trim();
+
         if (GameConfigManager.Instance.WeaponDbByName.TryGetValue(keyName, out WeaponConfig config))
         {
             return config;
@@ -134,31 +136,46 @@ public class WeaponInfo : MonoBehaviour
         if (bulletPrefab != null && firePoint != null)
         {
             WeaponConfig wConfig = GetWeaponConfig();
-
-            // Áp dụng góc lệch tâm SpreadAngle từ DB vào hướng đạn bắn ra
-            Quaternion bulletRotation = firePoint.rotation;
-            if (wConfig != null)
+            if (wConfig == null)
             {
-                float randomSpread = Random.Range(-wConfig.spreadAngle, wConfig.spreadAngle);
-                bulletRotation *= Quaternion.Euler(0, 0, randomSpread);
+                string rawName = weaponPrefab != null ? weaponPrefab.name : gameObject.name;
+                string keyName = rawName.Replace("(Clone)", "").Trim();
+                Debug.LogWarning($"[WeaponInfo] ⚠️ KHÔNG TÌM THẤY cấu hình DB cho súng '{keyName}'! Hãy đảm bảo Backend API đã được khởi động lại và trả về tên PrefabName = '{keyName}'.");
             }
 
-            GameObject spawnedBullet = Instantiate(bulletPrefab, firePoint.position, bulletRotation);
+            int count = (wConfig != null && wConfig.bulletsPerShot > 0) ? wConfig.bulletsPerShot : 1;
+            float spread = (wConfig != null && wConfig.spreadAngle > 0) ? wConfig.spreadAngle : 20f;
+            float baseAngle = firePoint.eulerAngles.z;
 
-            if (wConfig != null)
+            for (int i = 0; i < count; i++)
             {
+                float angleOffset = 0f;
+                if (count > 1)
+                {
+                    // Bắn tỏa đều các viên đạn theo hình quạt từ -spread đến +spread
+                    angleOffset = Mathf.Lerp(-spread, spread, (float)i / (count - 1));
+                }
+                else
+                {
+                    // 1 viên duy nhất -> lệch ngẫu nhiên trong khoảng spread
+                    angleOffset = Random.Range(-spread, spread);
+                }
+
+                Quaternion bulletRotation = Quaternion.Euler(0, 0, baseAngle + angleOffset);
+                GameObject spawnedBullet = Instantiate(bulletPrefab, firePoint.position, bulletRotation);
+
+                int targetBulletId = (wConfig != null) ? wConfig.bulletId : 13; // Fallback thử đạn nếu wConfig null
                 var bullet = spawnedBullet.GetComponent<NormalBullet>();
-                if (bullet != null) bullet.InitFromDb(wConfig.bulletId);
+                if (bullet != null) bullet.InitFromDb(targetBulletId);
 
                 var bSlash = spawnedBullet.GetComponent<MeleeSlash>();
-                if (bSlash != null) bSlash.InitFromDb(wConfig.bulletId);
+                if (bSlash != null) bSlash.InitFromDb(targetBulletId);
             }
 
             PlayWeaponSound();
         }
 
-        StopAllCoroutines();
-        StartCoroutine(RecoilRoutine());
+        TriggerAttackAnimation();
     }
 
     public void RemoteShoot(Vector3 position, Vector3 direction)
@@ -173,34 +190,104 @@ public class WeaponInfo : MonoBehaviour
         {
             Vector3 spawnPosition = (firePoint != null) ? firePoint.position : position;
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-            Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.forward);
+            Quaternion baseRotation = Quaternion.AngleAxis(angle, Vector3.forward);
 
             WeaponConfig wConfig = GetWeaponConfig();
+            int count = (wConfig != null && wConfig.bulletsPerShot > 0) ? wConfig.bulletsPerShot : 1;
+            float spread = (wConfig != null) ? wConfig.spreadAngle : 0f;
 
-            // Đồng bộ góc lệch đạn cho client remote mạng
-            if (wConfig != null)
+            for (int i = 0; i < count; i++)
             {
-                float randomSpread = Random.Range(-wConfig.spreadAngle, wConfig.spreadAngle);
-                rotation *= Quaternion.Euler(0, 0, randomSpread);
-            }
+                float angleOffset = 0f;
+                if (count > 1)
+                {
+                    angleOffset = Mathf.Lerp(-spread, spread, (float)i / (count - 1));
+                }
+                else
+                {
+                    angleOffset = Random.Range(-spread, spread);
+                }
 
-            GameObject spawnedBullet = Instantiate(bulletPrefab, spawnPosition, rotation);
-            spawnedBullet.name += "_Remote";
+                Quaternion bulletRotation = baseRotation * Quaternion.Euler(0, 0, angleOffset);
+                GameObject spawnedBullet = Instantiate(bulletPrefab, spawnPosition, bulletRotation);
+                spawnedBullet.name += "_Remote";
 
-            if (wConfig != null)
-            {
-                var bullet = spawnedBullet.GetComponent<NormalBullet>();
-                if (bullet != null) bullet.InitFromDb(wConfig.bulletId);
+                if (wConfig != null)
+                {
+                    var bullet = spawnedBullet.GetComponent<NormalBullet>();
+                    if (bullet != null) bullet.InitFromDb(wConfig.bulletId);
 
-                var bSlash = spawnedBullet.GetComponent<MeleeSlash>();
-                if (bSlash != null) bSlash.InitFromDb(wConfig.bulletId);
+                    var bSlash = spawnedBullet.GetComponent<MeleeSlash>();
+                    if (bSlash != null) bSlash.InitFromDb(wConfig.bulletId);
+                }
             }
 
             PlayWeaponSound();
         }
 
+        TriggerAttackAnimation();
+    }
+
+    private void TriggerAttackAnimation()
+    {
         StopAllCoroutines();
-        StartCoroutine(RecoilRoutine());
+        bool isMelee = (bulletPrefab != null && bulletPrefab.GetComponent<MeleeSlash>() != null);
+        if (isMelee)
+        {
+            StartCoroutine(SwordSlashRoutine());
+        }
+        else
+        {
+            StartCoroutine(RecoilRoutine());
+        }
+    }
+
+    private bool slashDownward = true; // Đổi hướng chém luân phiên (Chém xuôi & Chém ngược)
+
+    System.Collections.IEnumerator SwordSlashRoutine()
+    {
+        float slashDuration = 0.08f;  // Thời gian vung kiếm quạt nhanh
+        float returnDuration = 0.12f; // Thời gian thu kiếm về góc nghỉ
+
+        float startAngle = slashDownward ? 60f : -60f;
+        float endAngle = slashDownward ? -60f : 60f;
+        slashDownward = !slashDownward;
+
+        Vector3 forwardThrust = originalLocalPos + Vector3.right * 0.25f;
+
+        float t = 0f;
+        while (t < slashDuration)
+        {
+            t += Time.deltaTime;
+            float progress = t / slashDuration;
+
+            // Xoay vung lưỡi kiếm từ góc trên xuống góc dưới (hoặc ngược lại)
+            float currentAngle = Mathf.Lerp(startAngle, endAngle, progress);
+            transform.localRotation = Quaternion.Euler(0, 0, currentAngle);
+
+            // Nhích nhẹ lưỡi kiếm ra phía trước theo quán tính nhát chém
+            transform.localPosition = Vector3.Lerp(originalLocalPos, forwardThrust, Mathf.Sin(progress * Mathf.PI));
+
+            yield return null;
+        }
+
+        // Thu kiếm trở lại góc nghỉ ban đầu
+        t = 0f;
+        Quaternion currentRot = transform.localRotation;
+        Quaternion targetRot = Quaternion.identity;
+
+        while (t < returnDuration)
+        {
+            t += Time.deltaTime;
+            float progress = t / returnDuration;
+
+            transform.localRotation = Quaternion.Lerp(currentRot, targetRot, progress);
+            transform.localPosition = Vector3.Lerp(transform.localPosition, originalLocalPos, progress);
+            yield return null;
+        }
+
+        transform.localRotation = Quaternion.identity;
+        transform.localPosition = originalLocalPos;
     }
 
     System.Collections.IEnumerator RecoilRoutine()

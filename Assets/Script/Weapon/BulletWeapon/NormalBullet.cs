@@ -18,6 +18,11 @@ public class NormalBullet : MonoBehaviour
             baseDamage = config.damage;
             critChance = config.critRate * 100f; // Đổi thập phân (0.2) thành phần trăm (20%)
             critMultiplier = config.critMultiplier;
+            Debug.Log($"[NormalBullet] Nạp thành công bulletId={bulletId}: Speed={speed}, Damage={baseDamage}");
+        }
+        else
+        {
+            Debug.LogError($"[NormalBullet] ❌ KHÔNG TÌM THẤY bulletId={bulletId} trong GameConfigManager.Instance.BulletDb! (Speed hiện tại vẫn = 0)");
         }
     }
 
