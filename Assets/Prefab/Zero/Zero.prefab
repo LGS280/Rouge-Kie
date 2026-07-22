@@ -604,7 +604,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.75000006, y: 0.7083334}
+    oldSize: {x: 0.76086956, y: 0.7173913}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -776,7 +776,9 @@ MonoBehaviour:
   weaponSlot2: {fileID: 1153554913365081128}
   allWeaponPrefabs:
   - {fileID: 4136628244467973380, guid: 7ac88ad6a102d7d41ab1ff7cd22148cf, type: 3}
+  - {fileID: 4424471354267104048, guid: 62ef3a633e308f54886381dd3544c7c4, type: 3}
   - {fileID: 2255413539830745082, guid: 4208f3b8848eb1e44b5e5ce624af72cc, type: 3}
+  - {fileID: 1300466152470820163, guid: 14aa536d406343343a1646e286f7cb18, type: 3}
   - {fileID: 5681139341880372300, guid: b8b6a4057ad786949a8c72836fb4e6ef, type: 3}
   - {fileID: 2029244562639368729, guid: 3aeb6bb4e6e240744ae1c83a7092d600, type: 3}
   - {fileID: 4136628244467973380, guid: cf230ddf7040b34489b82a3e47148a70, type: 3}

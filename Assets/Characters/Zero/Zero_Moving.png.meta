@@ -72,7 +72,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 48
+  spritePixelsToUnits: 46
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -124,10 +124,10 @@ TextureImporter:
       name: Zero_Moving_0
       rect:
         serializedVersion: 2
-        x: 112
-        y: 112
-        width: 36
-        height: 36
+        x: 76
+        y: 52
+        width: 35
+        height: 34
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -146,10 +146,10 @@ TextureImporter:
       name: Zero_Moving_1
       rect:
         serializedVersion: 2
-        x: 412
-        y: 112
-        width: 36
-        height: 34
+        x: 118
+        y: 53
+        width: 34
+        height: 33
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -168,10 +168,10 @@ TextureImporter:
       name: Zero_Moving_2
       rect:
         serializedVersion: 2
-        x: 712
-        y: 112
-        width: 36
-        height: 34
+        x: 157
+        y: 53
+        width: 34
+        height: 33
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -190,10 +190,10 @@ TextureImporter:
       name: Zero_Moving_3
       rect:
         serializedVersion: 2
-        x: 1013
-        y: 112
-        width: 35
-        height: 36
+        x: 196
+        y: 52
+        width: 34
+        height: 34
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -212,10 +212,10 @@ TextureImporter:
       name: Zero_Moving_4
       rect:
         serializedVersion: 2
-        x: 1312
-        y: 114
-        width: 36
-        height: 34
+        x: 236
+        y: 53
+        width: 34
+        height: 33
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -234,9 +234,9 @@ TextureImporter:
       name: Zero_Moving_5
       rect:
         serializedVersion: 2
-        x: 1612
-        y: 114
-        width: 36
+        x: 275
+        y: 54
+        width: 34
         height: 32
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -256,9 +256,9 @@ TextureImporter:
       name: Zero_Moving_6
       rect:
         serializedVersion: 2
-        x: 1910
-        y: 114
-        width: 38
+        x: 315
+        y: 54
+        width: 34
         height: 32
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -278,10 +278,10 @@ TextureImporter:
       name: Zero_Moving_7
       rect:
         serializedVersion: 2
-        x: 2211
-        y: 114
-        width: 37
-        height: 34
+        x: 352
+        y: 53
+        width: 35
+        height: 33
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -300,7 +300,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: a04c293d3982bde40ae57a5446da9daa
+    spriteID: 1c734d58a1a340b419a44ea53a5bb258
     internalID: 0
     vertices: []
     indices: 
