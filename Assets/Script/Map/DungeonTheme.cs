@@ -33,6 +33,13 @@ public class DungeonTheme : ScriptableObject
     public WallDecorationSet[] wallDecorations;
     [Range(0f, 1f)] public float decorationChance = 0.08f;
 
+    [Header("Obstacle Asset")]
+    public TileBase obstacleTile;
+
+    [Header("Door")]
+    public TileBase doorTile;
+    public TileBase doorTopTile;
+
     [System.Serializable]
     public class WallDecorationSet
     {
