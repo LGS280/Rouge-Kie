@@ -26,12 +26,12 @@ public class NormalBullet : MonoBehaviour
         }
     }
 
-    void Start()
+    protected virtual void Start()
     {
         Destroy(gameObject, lifeTime);
     }
 
-    void Update()
+    protected virtual void Update()
     {
         transform.Translate(Vector2.right * speed * Time.deltaTime);
     }
