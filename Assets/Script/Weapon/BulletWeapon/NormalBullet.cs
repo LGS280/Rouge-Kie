@@ -9,6 +9,9 @@ public class NormalBullet : MonoBehaviour
 
     public float lifeTime = 3f;
 
+    [Header("Impact Effect")]
+    public GameObject explosionEffectPrefab; // Prefab hiệu ứng vụ nổ (tùy chọn)
+
     // Hàm nhận dữ liệu từ DB truyền qua
     public void InitFromDb(int bulletId)
     {
@@ -26,17 +29,17 @@ public class NormalBullet : MonoBehaviour
         }
     }
 
-    void Start()
+    protected virtual void Start()
     {
         Destroy(gameObject, lifeTime);
     }
 
-    void Update()
+    protected virtual void Update()
     {
         transform.Translate(Vector2.right * speed * Time.deltaTime);
     }
 
-    void OnTriggerEnter2D(Collider2D collision)
+    protected virtual void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Obstacle") || collision.CompareTag("Enemy") || collision.CompareTag("Door"))
         {
@@ -44,6 +47,12 @@ public class NormalBullet : MonoBehaviour
             {
                 CalculateAndApplyDamage(collision);
             }
+
+            if (explosionEffectPrefab != null)
+            {
+                Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
+            }
+
             Destroy(gameObject);
         }
     }

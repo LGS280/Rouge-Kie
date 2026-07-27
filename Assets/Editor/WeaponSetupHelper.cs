@@ -217,6 +217,66 @@ public class WeaponSetupHelper
         AssetDatabase.Refresh();
     }
 
+    [MenuItem("Tools/Make Explosion Prefab From Selected Sprites")]
+    public static void MakeExplosionPrefabFromSelectedSprites()
+    {
+        Object[] selectedObjects = Selection.objects;
+        System.Collections.Generic.List<Sprite> spriteList = new System.Collections.Generic.List<Sprite>();
+
+        foreach (Object obj in selectedObjects)
+        {
+            if (obj is Sprite sp)
+            {
+                spriteList.Add(sp);
+            }
+            else if (obj is Texture2D)
+            {
+                string path = AssetDatabase.GetAssetPath(obj);
+                Object[] assets = AssetDatabase.LoadAllAssetsAtPath(path);
+                foreach (Object asset in assets)
+                {
+                    if (asset is Sprite subSp)
+                    {
+                        spriteList.Add(subSp);
+                    }
+                }
+            }
+        }
+
+        if (spriteList.Count == 0)
+        {
+            Debug.LogError("[WeaponSetupHelper] ❌ Vui lòng chọn các file ảnh Sprite (hoặc Sprite Sheet) vụ nổ trong cửa sổ Project!");
+            return;
+        }
+
+        // Sắp xếp các sprite theo thứ tự tên (ví dụ: _1 -> _2 -> _3 -> _4 -> _5)
+        spriteList.Sort((a, b) => string.Compare(a.name, b.name, System.StringComparison.OrdinalIgnoreCase));
+
+        // Tự động đặt tên cho Prefab từ tên của Sprite
+        string firstName = spriteList[0].name;
+        string prefabName = firstName.Replace("_1", "").Replace("-1", "").Replace("_0", "").Trim();
+        if (string.IsNullOrEmpty(prefabName)) prefabName = "Custom_Explosion_Effect";
+        if (!prefabName.EndsWith("_Effect")) prefabName += "_Effect";
+
+        if (!Directory.Exists("Assets/Prefab/Effects")) Directory.CreateDirectory("Assets/Prefab/Effects");
+
+        GameObject expObj = new GameObject(prefabName);
+        SpriteRenderer sr = expObj.AddComponent<SpriteRenderer>();
+        sr.sprite = spriteList[0];
+        sr.sortingOrder = 15;
+
+        RogueKie.Effects.AutoDestroyEffect effectScript = expObj.AddComponent<RogueKie.Effects.AutoDestroyEffect>();
+        effectScript.animationFrames = spriteList.ToArray();
+        effectScript.frameDuration = 0.1f;
+
+        string prefabPath = $"Assets/Prefab/Effects/{prefabName}.prefab";
+        GameObject explosionPrefab = PrefabUtility.SaveAsPrefabAsset(expObj, prefabPath);
+        Object.DestroyImmediate(expObj);
+
+        Debug.Log($"[WeaponSetupHelper] 🎉 Đã tạo thành công Prefab Vụ Nổ mới từ {spriteList.Count} ảnh tại: {prefabPath}");
+        AssetDatabase.Refresh();
+    }
+
     private static Sprite LoadSpriteFromSheet(string path, string spriteName)
     {
         Object[] assets = AssetDatabase.LoadAllAssetsAtPath(path);
