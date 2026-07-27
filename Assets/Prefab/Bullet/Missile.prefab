@@ -186,6 +186,7 @@ MonoBehaviour:
   critChance: 0
   critMultiplier: 0
   lifeTime: 3
+  explosionEffectPrefab: {fileID: 6483934579231364458, guid: a17a21628867ba049b960ef193a1d2dc, type: 3}
   detectRadius: 10
   turnSpeed: 260
   initialDirectTime: 0.05

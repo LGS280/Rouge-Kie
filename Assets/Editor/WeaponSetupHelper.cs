@@ -217,180 +217,64 @@ public class WeaponSetupHelper
         AssetDatabase.Refresh();
     }
 
-    [MenuItem("Tools/Build Missile Launcher Prefab")]
-    public static void BuildMissileLauncherPrefab()
+    [MenuItem("Tools/Make Explosion Prefab From Selected Sprites")]
+    public static void MakeExplosionPrefabFromSelectedSprites()
     {
-        // 1. Đảm bảo thư mục lưu trữ Prefabs tồn tại
-        if (!Directory.Exists("Assets/Prefab/Bullet")) Directory.CreateDirectory("Assets/Prefab/Bullet");
-        if (!Directory.Exists("Assets/Prefab/Weapons")) Directory.CreateDirectory("Assets/Prefab/Weapons");
+        Object[] selectedObjects = Selection.objects;
+        System.Collections.Generic.List<Sprite> spriteList = new System.Collections.Generic.List<Sprite>();
 
-        // 2. Dựng Prefab Đạn Tên Lửa (Bullet_Missile / Bullet_Missle)
-        string folderDir = "Assets/Weapons/Player_Weapon/Missile_Launcher";
-        if (!Directory.Exists(folderDir)) folderDir = "Assets/Weapons/Player_Weapon/Missle_Launcher";
-
-        string missleSpritePath = $"{folderDir}/Missile.png";
-        if (!File.Exists(missleSpritePath)) missleSpritePath = $"{folderDir}/Missle.png";
-
-        string fireTailSpritePath = $"{folderDir}/Fire_Tail.png";
-
-        Sprite missleSprite = AssetDatabase.LoadAssetAtPath<Sprite>(missleSpritePath);
-        Sprite fireTailSprite = AssetDatabase.LoadAssetAtPath<Sprite>(fireTailSpritePath);
-
-        if (missleSprite == null)
+        foreach (Object obj in selectedObjects)
         {
-            Debug.LogError($"[WeaponSetupHelper] Không tìm thấy Sprite tên lửa tại: {missleSpritePath}");
-            return;
-        }
-
-        GameObject bulletObj = new GameObject("Missile");
-        
-        // Sprite Renderer tên lửa chính
-        SpriteRenderer bulletSr = bulletObj.AddComponent<SpriteRenderer>();
-        bulletSr.sprite = missleSprite;
-        bulletSr.sortingOrder = 12;
-
-        // BoxCollider2D (Trigger)
-        BoxCollider2D col = bulletObj.AddComponent<BoxCollider2D>();
-        col.isTrigger = true;
-        col.size = new Vector2(missleSprite.rect.width / missleSprite.pixelsPerUnit, missleSprite.rect.height / missleSprite.pixelsPerUnit);
-
-        // Rigidbody2D (Kinematic)
-        Rigidbody2D rb = bulletObj.AddComponent<Rigidbody2D>();
-        rb.bodyType = RigidbodyType2D.Kinematic;
-
-        // Script MissleBullet (Đuổi quái + Đuôi lửa)
-        MissileBullet missleScript = bulletObj.AddComponent<MissileBullet>();
-        missleScript.detectRadius = 10.0f;
-        missleScript.turnSpeed = 260.0f;
-        missleScript.initialDirectTime = 0.05f;
-        missleScript.hasFireTail = true;
-
-        // Tạo GameObject con: Fire_Tail (Loa lửa ngay đít tên lửa)
-        if (fireTailSprite != null)
-        {
-            GameObject tailObj = new GameObject("Fire_Tail");
-            tailObj.transform.SetParent(bulletObj.transform);
-            
-            // Định vị loa lửa nằm ở đít tên lửa
-            float missileWidth = missleSprite.rect.width / missleSprite.pixelsPerUnit;
-            float tailWidth = fireTailSprite.rect.width / fireTailSprite.pixelsPerUnit;
-            tailObj.transform.localPosition = new Vector3(-(missileWidth / 2f + tailWidth * 0.25f), 0f, 0f);
-
-            SpriteRenderer tailSr = tailObj.AddComponent<SpriteRenderer>();
-            tailSr.sprite = fireTailSprite;
-            tailSr.sortingOrder = 11; // Nằm sau quả tên lửa
-
-            missleScript.fireTailObject = tailObj;
-        }
-
-        // Bổ sung TrailRenderer: Dải vệt khói lửa uốn lượn dài kéo theo sau đạn (chuẩn phong cách Soul Knight)
-        TrailRenderer trail = bulletObj.AddComponent<TrailRenderer>();
-        trail.time = 0.35f;             // Độ dài dải lửa kéo vệt sau đạn
-        trail.startWidth = 0.14f;       // Độ rộng đầu dải lửa (ôm khít đít tên lửa)
-        trail.endWidth = 0.01f;         // Độ rộng đuôi vệt khói lửa (vuốt nhọn dần)
-        trail.minVertexDistance = 0.05f;// Mượt mà theo đường cong
-        trail.sortingOrder = 10;        // Vẽ dưới tên lửa và loa lửa
-
-        // Dải màu lửa chuyển tiếp từ Vàng rực -> Cam lửa -> Đỏ nhạt mờ dần
-        Gradient gradient = new Gradient();
-        gradient.SetKeys(
-            new GradientColorKey[] { 
-                new GradientColorKey(new Color(1.0f, 0.75f, 0.2f), 0.0f), 
-                new GradientColorKey(new Color(1.0f, 0.35f, 0.05f), 0.5f),
-                new GradientColorKey(new Color(0.8f, 0.15f, 0.05f), 1.0f)
-            },
-            new GradientAlphaKey[] { 
-                new GradientAlphaKey(0.95f, 0.0f), 
-                new GradientAlphaKey(0.5f, 0.6f), 
-                new GradientAlphaKey(0.0f, 1.0f) 
+            if (obj is Sprite sp)
+            {
+                spriteList.Add(sp);
             }
-        );
-        trail.colorGradient = gradient;
+            else if (obj is Texture2D)
+            {
+                string path = AssetDatabase.GetAssetPath(obj);
+                Object[] assets = AssetDatabase.LoadAllAssetsAtPath(path);
+                foreach (Object asset in assets)
+                {
+                    if (asset is Sprite subSp)
+                    {
+                        spriteList.Add(subSp);
+                    }
+                }
+            }
+        }
 
-        Material spriteMat = AssetDatabase.GetBuiltinExtraResource<Material>("Sprites-Default.mat");
-        if (spriteMat != null) trail.material = spriteMat;
-
-        // Lưu Prefab Đạn (Tên Missile.prefab chuẩn 1-1 theo DB "prefabName": "Missile")
-        string bulletPrefabPath = "Assets/Prefab/Bullet/Missile.prefab";
-        GameObject bulletPrefab = PrefabUtility.SaveAsPrefabAsset(bulletObj, bulletPrefabPath);
-        Object.DestroyImmediate(bulletObj);
-        Debug.Log($"[WeaponSetupHelper] Đã dựng thành công Prefab đạn tên lửa tại: {bulletPrefabPath}");
-
-        // 3. Dựng Prefab Khẩu Súng (Missile_Launcher.prefab)
-        string launcherSpritePath = $"{folderDir}/Missile_Launcher.png";
-        if (!File.Exists(launcherSpritePath)) launcherSpritePath = $"{folderDir}/Missle_Launcher.png";
-        Sprite launcherSprite = AssetDatabase.LoadAssetAtPath<Sprite>(launcherSpritePath);
-
-        if (launcherSprite == null)
+        if (spriteList.Count == 0)
         {
-            Debug.LogError($"[WeaponSetupHelper] Không tìm thấy Sprite súng tên lửa tại: {launcherSpritePath}");
+            Debug.LogError("[WeaponSetupHelper] ❌ Vui lòng chọn các file ảnh Sprite (hoặc Sprite Sheet) vụ nổ trong cửa sổ Project!");
             return;
         }
 
-        GameObject launcherObj = new GameObject("Missile_Launcher");
-        SpriteRenderer launcherSr = launcherObj.AddComponent<SpriteRenderer>();
-        launcherSr.sprite = launcherSprite;
-        launcherSr.sortingOrder = 11;
+        // Sắp xếp các sprite theo thứ tự tên (ví dụ: _1 -> _2 -> _3 -> _4 -> _5)
+        spriteList.Sort((a, b) => string.Compare(a.name, b.name, System.StringComparison.OrdinalIgnoreCase));
 
-        // Script WeaponInfo
-        WeaponInfo info = launcherObj.AddComponent<WeaponInfo>();
-        info.weaponPrefab = launcherObj;
-        info.bulletPrefab = bulletPrefab;
+        // Tự động đặt tên cho Prefab từ tên của Sprite
+        string firstName = spriteList[0].name;
+        string prefabName = firstName.Replace("_1", "").Replace("-1", "").Replace("_0", "").Trim();
+        if (string.IsNullOrEmpty(prefabName)) prefabName = "Custom_Explosion_Effect";
+        if (!prefabName.EndsWith("_Effect")) prefabName += "_Effect";
 
-        // Tạo FirePoint ở đầu nòng súng
-        GameObject firePointObj = new GameObject("FirePoint");
-        firePointObj.transform.SetParent(launcherObj.transform);
-        float launcherWidth = launcherSprite.rect.width / launcherSprite.pixelsPerUnit;
-        firePointObj.transform.localPosition = new Vector3(launcherWidth / 2f + 0.1f, 0.05f, 0f);
-        info.firePoint = firePointObj.transform;
+        if (!Directory.Exists("Assets/Prefab/Effects")) Directory.CreateDirectory("Assets/Prefab/Effects");
 
-        // Lưu Prefab Súng chuẩn tên Missile_Launcher.prefab theo DB
-        string launcherPrefabPath = "Assets/Prefab/Weapons/Missile_Launcher.prefab";
-        GameObject launcherPrefab = PrefabUtility.SaveAsPrefabAsset(launcherObj, launcherPrefabPath);
-        
-        // Cập nhật lại tự tham chiếu cho Prefab súng vừa tạo
-        WeaponInfo prefabInfo = launcherPrefab.GetComponent<WeaponInfo>();
-        if (prefabInfo != null)
-        {
-            prefabInfo.weaponPrefab = launcherPrefab;
-            EditorUtility.SetDirty(launcherPrefab);
-        }
+        GameObject expObj = new GameObject(prefabName);
+        SpriteRenderer sr = expObj.AddComponent<SpriteRenderer>();
+        sr.sprite = spriteList[0];
+        sr.sortingOrder = 15;
 
-        Object.DestroyImmediate(launcherObj);
-        Debug.Log($"[WeaponSetupHelper] Đã dựng thành công Prefab khẩu Missile Launcher tại: {launcherPrefabPath}");
+        RogueKie.Effects.AutoDestroyEffect effectScript = expObj.AddComponent<RogueKie.Effects.AutoDestroyEffect>();
+        effectScript.animationFrames = spriteList.ToArray();
+        effectScript.frameDuration = 0.1f;
 
-        // Gọi đồng bộ lại toàn bộ súng
-        SetupPrefabs();
+        string prefabPath = $"Assets/Prefab/Effects/{prefabName}.prefab";
+        GameObject explosionPrefab = PrefabUtility.SaveAsPrefabAsset(expObj, prefabPath);
+        Object.DestroyImmediate(expObj);
+
+        Debug.Log($"[WeaponSetupHelper] 🎉 Đã tạo thành công Prefab Vụ Nổ mới từ {spriteList.Count} ảnh tại: {prefabPath}");
         AssetDatabase.Refresh();
-    }
-
-    [MenuItem("Tools/Make Selected Prefab A Missile Bullet")]
-    public static void MakeSelectedMissileBullet()
-    {
-        GameObject selectedObj = Selection.activeGameObject;
-        if (selectedObj == null)
-        {
-            Debug.LogError("Vui lòng chọn 1 Prefab đạn hoặc GameObject đạn trong Unity!");
-            return;
-        }
-
-        // Thêm BoxCollider2D Trigger
-        BoxCollider2D col = selectedObj.GetComponent<BoxCollider2D>();
-        if (col == null) col = selectedObj.AddComponent<BoxCollider2D>();
-        col.isTrigger = true;
-
-        // Thêm Rigidbody2D Kinematic
-        Rigidbody2D rb = selectedObj.GetComponent<Rigidbody2D>();
-        if (rb == null) rb = selectedObj.AddComponent<Rigidbody2D>();
-        rb.bodyType = RigidbodyType2D.Kinematic;
-
-        // Thêm Script MissileBullet (Tự đuổi quái)
-        MissileBullet missleScript = selectedObj.GetComponent<MissileBullet>();
-        if (missleScript == null) missleScript = selectedObj.AddComponent<MissileBullet>();
-        missleScript.detectRadius = 8.0f;
-        missleScript.turnSpeed = 360.0f;
-
-        Debug.Log($"[WeaponSetupHelper] Đã cấu hình thành công đạn đuổi quái (MissileBullet) cho: {selectedObj.name}");
     }
 
     private static Sprite LoadSpriteFromSheet(string path, string spriteName)
