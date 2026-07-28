@@ -1,13 +1,10 @@
 fileFormatVersion: 2
-guid: 9067f77bec345cc4c941cc19fe0583e2
+guid: b4cc15f6650dfe94cbea086dd7c8093a
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5189441791716951647
-    second: bd0940582de4d5a59d69d64682c0a7f2_tplv-tiktokx-cropcenter_1080_1080-removebg-preview_0
-  - first:
-      213: -8434489145367531686
-    second: bd0940582de4d5a59d69d64682c0a7f2_tplv-tiktokx-cropcenter_1080_1080-removebg-preview_1
+      213: -1344535351539388054
+    second: Missle_Launcher_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -54,7 +51,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 16
+  spritePixelsToUnits: 36
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -78,7 +75,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 0
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -103,45 +100,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: bd0940582de4d5a59d69d64682c0a7f2_tplv-tiktokx-cropcenter_1080_1080-removebg-preview_0
+      name: Missle_Launcher_0
       rect:
         serializedVersion: 2
-        x: 3
-        y: 24
-        width: 493
-        height: 457
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 0
+        width: 18
+        height: 10
+      alignment: 9
+      pivot: {x: 0.2514404, y: 0.49703708}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 1a9f42e6f266bf7b0800000000000000
-      internalID: -5189441791716951647
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: bd0940582de4d5a59d69d64682c0a7f2_tplv-tiktokx-cropcenter_1080_1080-removebg-preview_1
-      rect:
-        serializedVersion: 2
-        x: 126
-        y: 7
-        width: 88
-        height: 43
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: a5fea746fcca2fa80800000000000000
-      internalID: -8434489145367531686
+      spriteID: a613a8fa830475de0800000000000000
+      internalID: -1344535351539388054
       vertices: []
       indices: 
       edges: []
@@ -150,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 1ee2fc7e941348645ab0f4a8682b53c1
     internalID: 0
     vertices: []
     indices: 
@@ -158,10 +133,11 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      bd0940582de4d5a59d69d64682c0a7f2_tplv-tiktokx-cropcenter_1080_1080-removebg-preview_0: -5189441791716951647
-      bd0940582de4d5a59d69d64682c0a7f2_tplv-tiktokx-cropcenter_1080_1080-removebg-preview_1: -8434489145367531686
+      Missle_Launcher_0: -1344535351539388054
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
