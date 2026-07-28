@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 [Serializable]
 public class WeaponConfig
@@ -20,6 +20,10 @@ public class WeaponConfig
     public float recoilDistance;
     public float recoilDuration;
     public float returnDuration;
+
+    // 2 Cột mới bổ sung từ Backend Database API
+    public string weaponType; // "Pistol", "Heavy Gun", "Sniper", "Rifle", "Laser Gun", "SMG", "Shotgun", "Sword"
+    public string rarity;     // "Common", "Rare", "Epic", "Legendary"
 }
 
 [Serializable]

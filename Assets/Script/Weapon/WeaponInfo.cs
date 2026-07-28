@@ -228,11 +228,24 @@ public class WeaponInfo : MonoBehaviour
         TriggerAttackAnimation();
     }
 
+    public bool IsMeleeWeapon()
+    {
+        WeaponConfig config = GetWeaponConfig();
+        if (config != null && !string.IsNullOrEmpty(config.weaponType))
+        {
+            if (config.weaponType.Equals("Sword", System.StringComparison.OrdinalIgnoreCase) ||
+                config.weaponType.Equals("Melee", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+        return (bulletPrefab != null && bulletPrefab.GetComponent<MeleeSlash>() != null);
+    }
+
     private void TriggerAttackAnimation()
     {
         StopAllCoroutines();
-        bool isMelee = (bulletPrefab != null && bulletPrefab.GetComponent<MeleeSlash>() != null);
-        if (isMelee)
+        if (IsMeleeWeapon())
         {
             StartCoroutine(SwordSlashRoutine());
         }
