@@ -194,11 +194,8 @@ public class DungeonGenerator : MonoBehaviour
 
         SpawnAllRoomMobs();
 
-        // Khởi tạo Minimap
-        if (MinimapManager.Instance != null)
-        {
-            MinimapManager.Instance.InitializeMinimap();
-        }
+        // Khởi tạo và đảm bảo Minimap UI hiển thị
+        MinimapManager.EnsureMinimapExists();
 
         Debug.Log("Đã generate map kiểu Soul Knight và cập nhật Minimap.");
     }

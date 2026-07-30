@@ -340,19 +340,36 @@ public class MinimapManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Tự động khởi tạo Minimap UI khi tải Scene SampleScene
+    /// Đảm bảo Minimap UI luôn được khởi tạo và hiển thị trong Scene
     /// </summary>
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void OnSceneLoaded()
+    public static void EnsureMinimapExists()
     {
-        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "SampleScene")
+        if (Instance == null)
         {
             CreateAutoMinimapUI();
         }
+        if (Instance != null)
+        {
+            Instance.InitializeMinimap();
+        }
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void RegisterSceneLoadCallback()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += (scene, mode) =>
+        {
+            if (scene.name == "SampleScene")
+            {
+                EnsureMinimapExists();
+            }
+        };
     }
 
     private static void CreateAutoMinimapUI()
     {
+        if (Instance != null) return;
+
         Canvas canvas = FindUICanvas();
         if (canvas == null)
         {
@@ -419,6 +436,7 @@ public class MinimapManager : MonoBehaviour
         manager.spritePlayer = LoadSpriteSafely("UI/Skin/Knob");
 
         Debug.Log("[MinimapManager] Đã tự động tạo và cấu hình Minimap UI.");
+        manager.InitializeMinimap();
     }
 
     private static Sprite LoadSpriteSafely(string path)
