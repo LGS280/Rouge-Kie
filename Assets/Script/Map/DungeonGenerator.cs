@@ -134,9 +134,47 @@ public class DungeonGenerator : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Khởi tạo Hạt giống ngẫu nhiên (Map Seed) đồng bộ cho chế độ Co-op
+    /// </summary>
+    private void InitMapSeed()
+    {
+        int currentFloor = 1;
+        if (GameProgressionManager.Instance != null)
+        {
+            currentFloor = GameProgressionManager.Instance.currentFloor;
+        }
+
+        bool isMultiplayer = NetworkManager.Instance != null && 
+                             NetworkManager.Instance.IsLoggedIn && 
+                             !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+
+        int mapSeed;
+        if (isMultiplayer)
+        {
+            // Trong Co-op: Dùng Hash của mã phòng (RoomCode) kết hợp với Tầng hiện tại
+            // Đảm bảo cả Host và Guest tính ra đúng 1 con số mapSeed DUY NHẤT
+            string roomCode = NetworkManager.Instance.CurrentRoomId.ToUpper();
+            mapSeed = (roomCode.GetHashCode() ^ (currentFloor * 397)) & 0x7FFFFFFF;
+            Debug.Log($"[DungeonGenerator] [Co-op] Nạp Map Seed đồng bộ cho phòng '{roomCode}' (Tầng {currentFloor}): {mapSeed}");
+        }
+        else
+        {
+            // Trong Solo: Sinh Seed ngẫu nhiên theo thời gian
+            mapSeed = UnityEngine.Random.Range(100000, 999999);
+            Debug.Log($"[DungeonGenerator] [Solo] Nạp Map Seed ngẫu nhiên (Tầng {currentFloor}): {mapSeed}");
+        }
+
+        // Khởi tạo trạng thái ngẫu nhiên cho toàn bộ hàm UnityEngine.Random trong lần sinh map này
+        UnityEngine.Random.InitState(mapSeed);
+    }
+
     [ContextMenu("Generate Soul Knight Map")]
     public void GenerateSoulKnightMap()
     {
+        // 1. Nạp Hạt giống ngẫu nhiên đồng bộ cho Co-op
+        InitMapSeed();
+
         ClearMap();
 
         roomsByGrid.Clear();
