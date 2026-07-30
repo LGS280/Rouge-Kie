@@ -11,6 +11,12 @@ public class TeleportPortal : MonoBehaviour
     {
         if (hasTriggered) return;
 
+        // Bỏ qua nếu đối tượng va chạm là Remote Player (người chơi khác qua mạng)
+        if (collision.GetComponent<RemotePlayerController>() != null || collision.GetComponentInParent<RemotePlayerController>() != null)
+        {
+            return;
+        }
+
         // Kiểm tra đối tượng va chạm có phải người chơi chính hay không
         if (collision.CompareTag("Player"))
         {

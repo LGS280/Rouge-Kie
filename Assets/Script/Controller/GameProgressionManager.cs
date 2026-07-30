@@ -34,6 +34,9 @@ public class GameProgressionManager : MonoBehaviour
     [Tooltip("Hệ số nhân máu quái vật tăng thêm mỗi tầng")]
     public float hpMultiplierPerFloor = 0.3f; // Tầng 1: 1.0x, Tầng 2: 1.3x, Tầng 3: 1.6x, Tầng 4: 1.9x, Tầng 5: 2.2x
 
+    [Header("Trạng Thái Transiton")]
+    public bool isTransitioning = false; // Cờ bảo vệ ngăn chặn gọi nhảy tầng trùng lặp
+
     private void Awake()
     {
         if (_instance == null)
@@ -53,6 +56,7 @@ public class GameProgressionManager : MonoBehaviour
     public void ResetProgression()
     {
         currentFloor = 1;
+        isTransitioning = false;
         Debug.Log("[GameProgressionManager] Đã khởi tạo lại tiến trình màn chơi về Tầng 1.");
     }
 
@@ -70,6 +74,13 @@ public class GameProgressionManager : MonoBehaviour
     /// </summary>
     public void StartNextFloor()
     {
+        if (isTransitioning)
+        {
+            Debug.LogWarning("[GameProgressionManager] Đang trong quá trình chuyển tầng, bỏ qua yêu cầu gọi trùng lặp.");
+            return;
+        }
+
+        isTransitioning = true;
         currentFloor++;
         Debug.Log($"[GameProgressionManager] Đang chuyển sang Tầng {currentFloor}/{maxFloor}...");
 
@@ -77,6 +88,7 @@ public class GameProgressionManager : MonoBehaviour
         {
             // Nếu đã vượt qua tầng 5 -> Chiến thắng game!
             Debug.Log("[GameProgressionManager] Đã vượt qua tầng cuối cùng! Chiến thắng trận đấu!");
+            isTransitioning = false;
             if (RunStatsTracker.Instance != null)
             {
                 RunStatsTracker.Instance.EndRun(true);
@@ -161,6 +173,7 @@ public class GameProgressionManager : MonoBehaviour
             movement.enabled = true;
         }
 
+        isTransitioning = false;
         Debug.Log($"[GameProgressionManager] Tải Tầng {currentFloor} thành công!");
     }
 }

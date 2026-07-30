@@ -125,6 +125,15 @@ public class DungeonGenerator : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        // Tự động sinh bản đồ khi Scene SampleScene được nạp nếu bản đồ đang trống
+        if (roomsByGrid == null || roomsByGrid.Count == 0)
+        {
+            GenerateSoulKnightMap();
+        }
+    }
+
     [ContextMenu("Generate Soul Knight Map")]
     public void GenerateSoulKnightMap()
     {
