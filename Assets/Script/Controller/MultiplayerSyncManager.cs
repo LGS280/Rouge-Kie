@@ -231,6 +231,13 @@ public class MultiplayerSyncManager : MonoBehaviour
             // Thêm script điều khiển từ xa
             newRemote.AddComponent<RemotePlayerController>();
 
+            // Nạp cấu hình vị trí tay customHandPosition từ DB cho vũ khí Remote Player
+            WeaponInfo remoteWeapon = newRemote.GetComponentInChildren<WeaponInfo>();
+            if (remoteWeapon != null)
+            {
+                remoteWeapon.ApplyConfigFromDb();
+            }
+
             remotePlayers.Add(connId, newRemote);
         }
         else
@@ -284,7 +291,18 @@ public class MultiplayerSyncManager : MonoBehaviour
                 if (angle > 180f) angle -= 360f;
                 if (angle < -180f) angle += 360f;
 
-                remoteWeapon.transform.rotation = Quaternion.Euler(0, 0, angle);
+                // Nạp customHandPosition nếu chưa có
+                if (remoteWeapon.customHandPosition != Vector3.zero)
+                {
+                    remoteWeapon.transform.localPosition = remoteWeapon.customHandPosition;
+                }
+
+                // Tìm Pivot tay (handPosition hoặc Transform cha của WeaponInfo)
+                Transform pivotTransform = (remoteWeapon.transform.parent != null && remoteWeapon.transform.parent != remote.transform)
+                    ? remoteWeapon.transform.parent
+                    : remoteWeapon.transform;
+
+                pivotTransform.rotation = Quaternion.Euler(0, 0, angle);
 
                 SpriteRenderer playerRenderer = remote.GetComponent<SpriteRenderer>();
                 if (playerRenderer != null)
@@ -292,12 +310,12 @@ public class MultiplayerSyncManager : MonoBehaviour
                     if (angle > 90f || angle < -90f)
                     {
                         playerRenderer.flipX = true;
-                        remoteWeapon.transform.localScale = new Vector3(1f, -1f, 1f);
+                        pivotTransform.localScale = new Vector3(1f, -1f, 1f);
                     }
                     else
                     {
                         playerRenderer.flipX = false;
-                        remoteWeapon.transform.localScale = new Vector3(1f, 1f, 1f);
+                        pivotTransform.localScale = new Vector3(1f, 1f, 1f);
                     }
                 }
             }
@@ -314,7 +332,12 @@ public class MultiplayerSyncManager : MonoBehaviour
             if (remoteWeapon != null)
             {
                 float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-                remoteWeapon.transform.rotation = Quaternion.Euler(0, 0, angle);
+
+                Transform pivotTransform = (remoteWeapon.transform.parent != null && remoteWeapon.transform.parent != remotePlayer.transform)
+                    ? remoteWeapon.transform.parent
+                    : remoteWeapon.transform;
+
+                pivotTransform.rotation = Quaternion.Euler(0, 0, angle);
 
                 SpriteRenderer playerRenderer = remotePlayer.GetComponent<SpriteRenderer>();
                 if (playerRenderer != null)
@@ -322,12 +345,12 @@ public class MultiplayerSyncManager : MonoBehaviour
                     if (angle > 90f || angle < -90f)
                     {
                         playerRenderer.flipX = true;
-                        remoteWeapon.transform.localScale = new Vector3(1f, -1f, 1f);
+                        pivotTransform.localScale = new Vector3(1f, -1f, 1f);
                     }
                     else
                     {
                         playerRenderer.flipX = false;
-                        remoteWeapon.transform.localScale = new Vector3(1f, 1f, 1f);
+                        pivotTransform.localScale = new Vector3(1f, 1f, 1f);
                     }
                 }
 
