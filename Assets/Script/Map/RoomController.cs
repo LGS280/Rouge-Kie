@@ -214,6 +214,12 @@ public class RoomController : MonoBehaviour
     /// </summary>
     private void SpawnTeleportPortal()
     {
+        if (GameObject.Find("TeleportPortal") != null)
+        {
+            Debug.Log("[RoomController] Cổng dịch chuyển đã tồn tại trong Scene. Bỏ qua khởi tạo trùng.");
+            return;
+        }
+
         Debug.Log($"[RoomController] Đang khởi tạo cổng dịch chuyển tại phòng Boss {gameObject.name}");
 
         // 1. Tạo GameObject Portal mới

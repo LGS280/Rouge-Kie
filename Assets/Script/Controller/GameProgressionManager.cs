@@ -69,10 +69,64 @@ public class GameProgressionManager : MonoBehaviour
         return 1.0f + (currentFloor - 1) * hpMultiplierPerFloor;
     }
 
+    private void Start()
+    {
+        // BỔ SUNG: Đăng ký lắng nghe sự kiện chuyển tầng đồng bộ qua mạng từ NetworkManager
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.OnFloorTransitionSynced += HandleSyncedFloorTransition;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Hủy đăng ký sự kiện để tránh memory leak
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.OnFloorTransitionSynced -= HandleSyncedFloorTransition;
+        }
+    }
+
+    /// <summary>
+    /// Xử lý tín hiệu chuyển tầng đồng bộ từ mạng SignalR
+    /// </summary>
+    private void HandleSyncedFloorTransition(int targetFloor)
+    {
+        if (isTransitioning)
+        {
+            Debug.LogWarning($"[GameProgressionManager] Nhận lệnh chuyển Tầng {targetFloor} từ mạng nhưng đang transition, bỏ qua.");
+            return;
+        }
+
+        Debug.Log($"[GameProgressionManager] Co-op Mode: Nhận tín hiệu đồng bộ chuyển sang Tầng {targetFloor} từ mạng.");
+
+        int prevFloor = currentFloor;
+        // Kiểm tra xem tầng vừa hoàn thành (prevFloor) có cần hiện bảng chọn Buff trước khi sang tầng mới hay không
+        if ((prevFloor == 1 || prevFloor == 3) && UpgradeSelectionUI.Instance != null)
+        {
+            UpgradeSelectionUI.Instance.OpenUpgradeMenu(() =>
+            {
+                ExecuteFloorTransition(targetFloor);
+            });
+        }
+        else
+        {
+            ExecuteFloorTransition(targetFloor);
+        }
+    }
+
     /// <summary>
     /// Chuyển sang Tầng kế tiếp (Floor Transition)
     /// </summary>
     public void StartNextFloor()
+    {
+        ExecuteFloorTransition(currentFloor + 1);
+    }
+
+    /// <summary>
+    /// Thực thi chuyển tầng tới mục tiêu targetFloor
+    /// </summary>
+    public void ExecuteFloorTransition(int targetFloor)
     {
         if (isTransitioning)
         {
@@ -81,7 +135,7 @@ public class GameProgressionManager : MonoBehaviour
         }
 
         isTransitioning = true;
-        currentFloor++;
+        currentFloor = targetFloor;
         Debug.Log($"[GameProgressionManager] Đang chuyển sang Tầng {currentFloor}/{maxFloor}...");
 
         if (currentFloor > maxFloor)

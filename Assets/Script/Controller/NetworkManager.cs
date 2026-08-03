@@ -43,6 +43,12 @@ public class NetworkManager : MonoBehaviour
     public event Action<string> OnRoomClearedFromServer;          // roomId
     public event Action<string, float, float> OnReceiveEnemyPosition; // enemyId, x, y
 
+    // BỔ SUNG: Sự kiện đồng bộ chuyển tầng hầm ngục Co-op giữa các máy trong phòng
+    public event Action<int> OnFloorTransitionSynced;
+
+    // BỔ SUNG: Sự kiện đồng bộ loại súng Remote Player đang cầm qua mạng (connId, weaponName)
+    public event Action<string, string> OnRemoteWeaponChanged;
+
     public string MyConnectionId => hubConnection?.ConnectionId;
 
     // QUYỀN HẠN TRONG TRẬN: Sẽ được Server định đoạt khi tạo hoặc vào phòng thành công
@@ -144,6 +150,18 @@ public class NetworkManager : MonoBehaviour
         hubConnection.On<string>("OnRoomClearedFromServer", (roomId) =>
         {
             unityContext.Post(_ => OnRoomClearedFromServer?.Invoke(roomId), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện đồng bộ chuyển tầng từ Server phát xuống
+        hubConnection.On<int>("OnFloorTransitionSynced", (targetFloor) =>
+        {
+            unityContext.Post(_ => OnFloorTransitionSynced?.Invoke(targetFloor), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện đổi súng của đồng đội từ Server phát xuống
+        hubConnection.On<string, string>("OnRemoteWeaponChanged", (connId, weaponName) =>
+        {
+            unityContext.Post(_ => OnRemoteWeaponChanged?.Invoke(connId, weaponName), null);
         });
 
         // Gọi hàm đăng ký các sự kiện Combat mạng
@@ -297,6 +315,26 @@ public class NetworkManager : MonoBehaviour
         if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
         {
             await hubConnection.InvokeAsync("SyncEnemyPosition", CurrentRoomId, enemyId, x, y);
+        }
+    }
+
+    // BỔ SUNG: Gửi yêu cầu chuyển tầng đồng bộ tới toàn bộ người chơi trong phòng Co-op
+    public async void SendNextFloorRequest(int targetFloor)
+    {
+        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+        {
+            await hubConnection.InvokeAsync("RequestNextFloor", CurrentRoomId, targetFloor);
+            Debug.Log($"[NetworkManager] Đã gửi yêu cầu chuyển sang Tầng {targetFloor} lên Server.");
+        }
+    }
+
+    // BỔ SUNG: Gửi thông báo đổi súng hiển thị qua mạng tới các người chơi khác trong phòng
+    public async void SendEquippedWeapon(string weaponName)
+    {
+        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+        {
+            await hubConnection.InvokeAsync("SyncEquippedWeapon", CurrentRoomId, weaponName);
+            Debug.Log($"[NetworkManager] Đã gửi thông báo đổi súng '{weaponName}' lên Server.");
         }
     }
 

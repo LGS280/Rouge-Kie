@@ -56,12 +56,11 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnRemoteEnemyDamaged += HandleRemoteEnemyDamaged;
             NetworkManager.Instance.OnReceiveWeaponAngle += UpdateRemoteWeaponAngle;
 
-            // ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ PHÒNG
+            // ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ PHÒNG & SÚNG
             NetworkManager.Instance.OnRoomCombatStarted += HandleRoomCombatStarted;
             NetworkManager.Instance.OnRoomClearedFromServer += HandleRoomClearedFromServer;
-            
-            // ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ VỊ TRÍ QUÁI
             NetworkManager.Instance.OnReceiveEnemyPosition += HandleRemoteEnemyPosition;
+            NetworkManager.Instance.OnRemoteWeaponChanged += HandleRemoteWeaponChanged;
         }
     }
 
@@ -76,12 +75,11 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnRemoteEnemyDamaged -= HandleRemoteEnemyDamaged;
             NetworkManager.Instance.OnReceiveWeaponAngle -= UpdateRemoteWeaponAngle;
 
-            // HỦY ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ PHÒNG
+            // HỦY ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ PHÒNG & SÚNG
             NetworkManager.Instance.OnRoomCombatStarted -= HandleRoomCombatStarted;
             NetworkManager.Instance.OnRoomClearedFromServer -= HandleRoomClearedFromServer;
-            
-            // HỦY SỰ KIỆN ĐỒNG BỘ VỊ TRÍ QUÁI
             NetworkManager.Instance.OnReceiveEnemyPosition -= HandleRemoteEnemyPosition;
+            NetworkManager.Instance.OnRemoteWeaponChanged -= HandleRemoteWeaponChanged;
         }
     }
 
@@ -239,6 +237,12 @@ public class MultiplayerSyncManager : MonoBehaviour
             }
 
             remotePlayers.Add(connId, newRemote);
+
+            // BỔ SUNG: Phát tín hiệu súng của chính mình lên mạng ngay khi xuất hiện đồng đội mới
+            if (WeaponManager.Instance != null)
+            {
+                WeaponManager.Instance.SyncActiveWeaponToNetwork();
+            }
         }
         else
         {
@@ -279,47 +283,115 @@ public class MultiplayerSyncManager : MonoBehaviour
         return null;
     }
 
+    // BỔ SUNG: Xử lý đồng bộ loại súng hiển thị mà Remote Player (Player 2) đang cầm
+    private void HandleRemoteWeaponChanged(string connId, string weaponName)
+    {
+        GameObject remoteObj = GetRemotePlayerById(connId);
+        if (remoteObj == null || string.IsNullOrEmpty(weaponName)) return;
+
+        Debug.Log($"[MultiplayerSyncManager] Đang đồng bộ súng mới '{weaponName}' cho Remote Player {connId}");
+
+        // Tìm hoặc tự động tạo Hand_Position cho Remote Player
+        Transform handPos = remoteObj.transform.Find("Hand_Position");
+        if (handPos == null)
+        {
+            GameObject newHand = new GameObject("Hand_Position");
+            newHand.transform.SetParent(remoteObj.transform, false);
+            newHand.transform.localPosition = new Vector3(0.15f, -0.1f, 0f);
+            handPos = newHand.transform;
+        }
+
+        // Xóa tất cả các súng cũ dưới Hand_Position
+        foreach (Transform child in handPos)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // Dò tìm Prefab súng dựa vào tên qua WeaponManager hoặc Resources
+        GameObject weaponPrefab = null;
+        if (WeaponManager.Instance != null)
+        {
+            weaponPrefab = WeaponManager.Instance.FindWeaponPrefabByName(weaponName);
+        }
+
+        if (weaponPrefab == null)
+        {
+            string cleanName = weaponName.Replace("(Clone)", "").Trim();
+            weaponPrefab = Resources.Load<GameObject>($"Prefab/Weapons/{cleanName}");
+            if (weaponPrefab == null)
+            {
+                weaponPrefab = Resources.Load<GameObject>($"Weapons/{cleanName}");
+            }
+        }
+
+        if (weaponPrefab != null)
+        {
+            GameObject newWeapon = Instantiate(weaponPrefab, handPos);
+            newWeapon.transform.localPosition = Vector3.zero;
+            newWeapon.transform.localRotation = Quaternion.identity;
+            newWeapon.transform.localScale = Vector3.one;
+
+            // Xóa các script điều khiển local player (nếu có trên Prefab súng)
+            MonoBehaviour[] scripts = newWeapon.GetComponents<MonoBehaviour>();
+            foreach (var script in scripts)
+            {
+                if (script != null && (script.GetType().Name == "WeaponAim" || script.GetType().Name == "WeaponLaser"))
+                {
+                    script.enabled = false;
+                }
+            }
+
+            // Nạp thông số vị trí tay từ DB
+            WeaponInfo info = newWeapon.GetComponent<WeaponInfo>();
+            if (info != null)
+            {
+                info.ApplyConfigFromDb();
+                if (info.customHandPosition != Vector3.zero)
+                {
+                    newWeapon.transform.localPosition = info.customHandPosition;
+                }
+            }
+
+            Debug.Log($"[MultiplayerSyncManager] Đã gắn thành công súng '{weaponName}' cho Remote Player {connId}");
+        }
+        else
+        {
+            Debug.LogWarning($"[MultiplayerSyncManager] Không tìm thấy Prefab súng '{weaponName}' để gắn cho Remote Player!");
+        }
+    }
+
     // Cập nhật góc quay súng từ xa liên tục
     private void UpdateRemoteWeaponAngle(string connId, float angle, float px, float py)
     {
-        GameObject remote = GetRemotePlayerById(connId);
-        if (remote != null)
+        GameObject remoteObj = GetRemotePlayerById(connId);
+        if (remoteObj == null) return;
+
+        // Tìm hoặc tự động tạo Hand_Position độc lập cho Remote Player để xoay súng (Không làm xoay thân nhân vật)
+        Transform handPos = remoteObj.transform.Find("Hand_Position");
+        if (handPos == null)
         {
-            WeaponInfo remoteWeapon = remote.GetComponentInChildren<WeaponInfo>();
-            if (remoteWeapon != null)
-            {
-                if (angle > 180f) angle -= 360f;
-                if (angle < -180f) angle += 360f;
-
-                // Nạp customHandPosition nếu chưa có
-                if (remoteWeapon.customHandPosition != Vector3.zero)
-                {
-                    remoteWeapon.transform.localPosition = remoteWeapon.customHandPosition;
-                }
-
-                // Tìm Pivot tay (handPosition hoặc Transform cha của WeaponInfo)
-                Transform pivotTransform = (remoteWeapon.transform.parent != null && remoteWeapon.transform.parent != remote.transform)
-                    ? remoteWeapon.transform.parent
-                    : remoteWeapon.transform;
-
-                pivotTransform.rotation = Quaternion.Euler(0, 0, angle);
-
-                SpriteRenderer playerRenderer = remote.GetComponent<SpriteRenderer>();
-                if (playerRenderer != null)
-                {
-                    if (angle > 90f || angle < -90f)
-                    {
-                        playerRenderer.flipX = true;
-                        pivotTransform.localScale = new Vector3(1f, -1f, 1f);
-                    }
-                    else
-                    {
-                        playerRenderer.flipX = false;
-                        pivotTransform.localScale = new Vector3(1f, 1f, 1f);
-                    }
-                }
-            }
+            GameObject newHand = new GameObject("Hand_Position");
+            newHand.transform.SetParent(remoteObj.transform, false);
+            newHand.transform.localPosition = new Vector3(0.15f, -0.1f, 0f);
+            handPos = newHand.transform;
         }
+
+        if (angle > 180f) angle -= 360f;
+        if (angle < -180f) angle += 360f;
+
+        // Xoay duy nhất Hand_Position quanh tâm tay nhân vật (TUYỆT ĐỐI KHÔNG xoay remoteObj.transform)
+        handPos.rotation = Quaternion.Euler(0, 0, angle);
+
+        // Lật Sprite thân nhân vật và lật trục Y của súng khi ngắm sang bên trái
+        SpriteRenderer playerRenderer = remoteObj.GetComponent<SpriteRenderer>();
+        bool isFacingLeft = (angle > 90f || angle < -90f);
+        if (playerRenderer != null)
+        {
+            playerRenderer.flipX = isFacingLeft;
+        }
+
+        // Lật trục Y của Hand_Position để súng không bị ngửa bụng khi quay trái
+        handPos.localScale = new Vector3(1f, isFacingLeft ? -1f : 1f, 1f);
     }
 
     // Xử lý vẽ đạn của người chơi khác

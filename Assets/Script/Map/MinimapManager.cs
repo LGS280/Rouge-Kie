@@ -494,6 +494,15 @@ public class MinimapManager : MonoBehaviour
     {
         if (roomControllers.Count == 0) return;
 
+        // Nếu bất kỳ phòng nào đã được phân loại loại phòng (Start, Boss, Chest) từ trước, bảo vệ không ghi đè
+        foreach (var kvp in roomControllers)
+        {
+            if (kvp.Value != null && kvp.Value.roomType != RoomType.Normal)
+            {
+                return;
+            }
+        }
+
         // 1. Đặt tất cả các phòng về Normal mặc định
         foreach (var kvp in roomControllers)
         {
