@@ -49,6 +49,9 @@ public class NetworkManager : MonoBehaviour
     // BỔ SUNG: Sự kiện đồng bộ loại súng Remote Player đang cầm qua mạng (connId, weaponName)
     public event Action<string, string> OnRemoteWeaponChanged;
 
+    // BỔ SUNG: Sự kiện đồng bộ phòng đã mở trên Minimap cho đồng đội
+    public event Action<string> OnRemoteRoomVisited;
+
     public string MyConnectionId => hubConnection?.ConnectionId;
 
     // QUYỀN HẠN TRONG TRẬN: Sẽ được Server định đoạt khi tạo hoặc vào phòng thành công
@@ -162,6 +165,12 @@ public class NetworkManager : MonoBehaviour
         hubConnection.On<string, string>("OnRemoteWeaponChanged", (connId, weaponName) =>
         {
             unityContext.Post(_ => OnRemoteWeaponChanged?.Invoke(connId, weaponName), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện đồng bộ phòng mở trên Minimap từ đồng đội
+        hubConnection.On<string>("OnRemoteRoomVisited", (roomUniqueId) =>
+        {
+            unityContext.Post(_ => OnRemoteRoomVisited?.Invoke(roomUniqueId), null);
         });
 
         // Gọi hàm đăng ký các sự kiện Combat mạng
@@ -335,6 +344,15 @@ public class NetworkManager : MonoBehaviour
         {
             await hubConnection.InvokeAsync("SyncEquippedWeapon", CurrentRoomId, weaponName);
             Debug.Log($"[NetworkManager] Đã gửi thông báo đổi súng '{weaponName}' lên Server.");
+        }
+    }
+
+    // BỔ SUNG: Gửi thông báo đã mở phòng trên Minimap tới các người chơi khác
+    public async void SendRoomVisited(string roomUniqueId)
+    {
+        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+        {
+            await hubConnection.InvokeAsync("SyncRoomVisited", CurrentRoomId, roomUniqueId);
         }
     }
 

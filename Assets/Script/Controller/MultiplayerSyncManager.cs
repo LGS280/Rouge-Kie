@@ -159,40 +159,45 @@ public class MultiplayerSyncManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// BỔ SUNG: Làm mới Cache phòng và quái vật khi chuyển tầng hầm ngục mới
+    /// </summary>
+    public void RefreshRoomAndMobNetworkCache()
+    {
+        roomCache.Clear();
+        AssignDeterministicRoomAndMobIds();
+        CacheAllRooms();
+        Debug.Log("[MultiplayerSyncManager] Đã làm mới cache phòng và quái vật cho tầng mới!");
+    }
+
     // Khi Server báo một phòng đã bắt đầu đánh nhau
-    private void HandleRoomCombatStarted(string targetRoomId, float centerX, float centerY)
+    private void HandleRoomCombatStarted(string targetRoomId, float safeX, float safeY)
     {
         Debug.Log($"NHẬN LỆNH TỪ SERVER: Bắt đầu combat tại phòng {targetRoomId}");
 
-        // 1. Dịch chuyển Local Player vào tâm phòng
-        if (localPlayer != null)
-        {
-            // Tùy biến một chút khoảng cách để 2 người không bị dính chùm vào nhau (offset ngẫu nhiên)
-            Vector2 randomOffset = Random.insideUnitCircle * 1.5f;
-            localPlayer.position = new Vector3(centerX + randomOffset.x, centerY + randomOffset.y, 0);
-        }
+        Vector3 targetPos = new Vector3(safeX, safeY, 0);
 
-        // 2. Dịch chuyển ngay lập tức tất cả Remote Players (Đồng đội)
-        foreach (var remotePlayerKV in remotePlayers)
-        {
-            GameObject remoteObj = remotePlayerKV.Value;
-            if (remoteObj != null)
-            {
-                RemotePlayerController rpc = remoteObj.GetComponent<RemotePlayerController>();
-                Vector3 newPos = new Vector3(centerX, centerY, 0);
-
-                if (rpc != null)
-                {
-                    rpc.targetPosition = newPos; // Báo RPC di chuyển mượt về vị trí này
-                }
-
-                remoteObj.transform.position = newPos; // Teleport lập tức để khỏi kẹt tường
-            }
-        }
-
-        // 3. Tìm đúng căn phòng đó để ép cửa đóng lại + Kích hoạt quái (Logic nội bộ)
         if (roomCache.TryGetValue(targetRoomId, out RoomController room))
         {
+            // Chỉ dịch chuyển nếu player đang đứng NGOÀI phòng (tránh sập cửa nhốt ở hành lang)
+            if (localPlayer != null && room.RoomCollider != null && !room.RoomCollider.bounds.Contains(localPlayer.position))
+            {
+                Vector2 randomOffset = Random.insideUnitCircle * 0.5f;
+                localPlayer.position = targetPos + new Vector3(randomOffset.x, randomOffset.y, 0);
+            }
+
+            foreach (var remotePlayerKV in remotePlayers)
+            {
+                GameObject remoteObj = remotePlayerKV.Value;
+                if (remoteObj != null && room.RoomCollider != null && !room.RoomCollider.bounds.Contains(remoteObj.transform.position))
+                {
+                    RemotePlayerController rpc = remoteObj.GetComponent<RemotePlayerController>();
+                    if (rpc != null) rpc.targetPosition = targetPos;
+                    remoteObj.transform.position = targetPos;
+                }
+            }
+
+            // Ép cửa đóng lại + Kích hoạt quái (Logic nội bộ)
             room.ExecuteStartCombatLocal();
         }
     }
@@ -225,6 +230,23 @@ public class MultiplayerSyncManager : MonoBehaviour
             Destroy(newRemote.GetComponent<PlayerController>());
             Destroy(newRemote.GetComponent<PlayerMovement>());
             Destroy(newRemote.GetComponent<UnityEngine.InputSystem.PlayerInput>());
+
+            // BỔ SUNG: Xóa WeaponManager trên bản sao đồng đội để tránh chạy logic quản lý súng nội bộ
+            WeaponManager remoteWm = newRemote.GetComponent<WeaponManager>();
+            if (remoteWm != null)
+            {
+                Destroy(remoteWm);
+            }
+
+            // BỔ SUNG: Dọn dẹp sạch súng cũ nằm trên lưng Back_Position để không bị hiện súng nằm ngang thừa
+            Transform backPos = newRemote.transform.Find("Back_Position");
+            if (backPos != null)
+            {
+                foreach (Transform child in backPos)
+                {
+                    Destroy(child.gameObject);
+                }
+            }
 
             // Thêm script điều khiển từ xa
             newRemote.AddComponent<RemotePlayerController>();

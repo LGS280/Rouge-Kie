@@ -59,6 +59,19 @@ public class MinimapManager : MonoBehaviour
                 }
             }
         }
+
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.OnRemoteRoomVisited += HandleRemoteRoomVisited;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.OnRemoteRoomVisited -= HandleRemoteRoomVisited;
+        }
     }
 
     /// <summary>
@@ -289,9 +302,30 @@ public class MinimapManager : MonoBehaviour
     /// </summary>
     public void OnPlayerEnterRoom(RoomController room)
     {
+        if (room == null) return;
         currentRoom = room;
         room.isVisited = true;
         UpdateMinimap();
+
+        // BỔ SUNG: Phát sóng phòng đã ghé thăm sang máy đồng đội qua SignalR
+        if (NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId))
+        {
+            NetworkManager.Instance.SendRoomVisited(room.roomUniqueId);
+        }
+    }
+
+    // BỔ SUNG: Nhận thông báo phòng mở từ đồng đội để cập nhật icon Minimap
+    private void HandleRemoteRoomVisited(string roomUniqueId)
+    {
+        foreach (var kvp in roomControllers)
+        {
+            if (kvp.Value != null && kvp.Value.roomUniqueId == roomUniqueId)
+            {
+                kvp.Value.isVisited = true;
+                UpdateMinimap();
+                break;
+            }
+        }
     }
 
     /// <summary>

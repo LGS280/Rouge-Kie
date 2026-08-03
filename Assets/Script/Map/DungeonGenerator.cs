@@ -194,10 +194,20 @@ public class DungeonGenerator : MonoBehaviour
 
         SpawnAllRoomMobs();
 
-        // Khởi tạo và đảm bảo Minimap UI hiển thị
+        // Khởi tạo và đảm bảo Minimap UI hiển thị cho tầng mới
         MinimapManager.EnsureMinimapExists();
+        if (MinimapManager.Instance != null)
+        {
+            MinimapManager.Instance.InitializeWithRooms(GetRoomControllers());
+        }
 
-        Debug.Log("Đã generate map kiểu Soul Knight và cập nhật Minimap.");
+        // BỔ SUNG: Làm mới Cache phòng và quái vật cho MultiplayerSyncManager khi chuyển tầng hầm ngục mới
+        if (MultiplayerSyncManager.Instance != null)
+        {
+            MultiplayerSyncManager.Instance.RefreshRoomAndMobNetworkCache();
+        }
+
+        Debug.Log("Đã generate map kiểu Soul Knight và cập nhật Minimap & Cache mạng.");
     }
 
     private void GenerateLayout()
