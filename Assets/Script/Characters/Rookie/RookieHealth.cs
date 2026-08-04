@@ -178,6 +178,13 @@ public class RookieHealth : MonoBehaviour
     void Die()
     {
         isDead = true;
+
+        // BỔ SUNG: Gửi thông báo người chơi hy sinh qua SignalR khi chơi chế độ Co-op
+        if (NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId))
+        {
+            NetworkManager.Instance.SendPlayerDeath();
+        }
+
         if (animator != null) animator.SetTrigger("die");
         if (playerCollider != null) playerCollider.enabled = false;
         if (rb != null)

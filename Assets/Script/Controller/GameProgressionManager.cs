@@ -234,6 +234,13 @@ public class GameProgressionManager : MonoBehaviour
             movement.enabled = true;
         }
 
+        yield return new WaitForSeconds(0.4f); // Chờ hiệu ứng mượt trước khi làm mờ ẩn Loading Screen
+
+        if (LoadingScreenUI.Instance != null)
+        {
+            LoadingScreenUI.Instance.HideLoading();
+        }
+
         isTransitioning = false;
         Debug.Log($"[GameProgressionManager] Tải Tầng {currentFloor} thành công!");
     }

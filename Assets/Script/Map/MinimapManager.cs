@@ -200,6 +200,9 @@ public class MinimapManager : MonoBehaviour
                     case RoomType.Chest:
                         iconSprite = spriteChest;
                         break;
+                    case RoomType.Portal:
+                        iconSprite = spriteBoss; // Sử dụng icon làm nổi bật phòng Cổng dịch chuyển
+                        break;
                 }
 
                 // Cấu hình sprite nền và icon phòng
@@ -254,7 +257,11 @@ public class MinimapManager : MonoBehaviour
 
             if (ui == null) continue;
 
-            RoomController controller = roomControllers[gridPos];
+            if (!roomControllers.TryGetValue(gridPos, out RoomController controller) || controller == null)
+            {
+                continue;
+            }
+
             bool isCurrent = (controller == currentRoom);
             bool isVisited = controller.isVisited;
             bool isCleared = controller.roomCleared;

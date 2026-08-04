@@ -62,6 +62,7 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnReceiveEnemyPosition += HandleRemoteEnemyPosition;
             NetworkManager.Instance.OnRemoteWeaponChanged += HandleRemoteWeaponChanged;
             NetworkManager.Instance.OnPlayerDamaged += HandlePlayerDamaged;
+            NetworkManager.Instance.OnRemotePlayerDied += HandleRemotePlayerDied;
         }
     }
 
@@ -82,6 +83,7 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnReceiveEnemyPosition -= HandleRemoteEnemyPosition;
             NetworkManager.Instance.OnRemoteWeaponChanged -= HandleRemoteWeaponChanged;
             NetworkManager.Instance.OnPlayerDamaged -= HandlePlayerDamaged;
+            NetworkManager.Instance.OnRemotePlayerDied -= HandleRemotePlayerDied;
         }
     }
 
@@ -179,7 +181,7 @@ public class MultiplayerSyncManager : MonoBehaviour
 
         Vector3 targetPos = new Vector3(safeX, safeY, 0);
 
-        if (roomCache.TryGetValue(targetRoomId, out RoomController room))
+        if (roomCache.TryGetValue(targetRoomId, out RoomController room) && room != null)
         {
             // Chỉ dịch chuyển nếu player đang đứng NGOÀI phòng (tránh sập cửa nhốt ở hành lang)
             if (localPlayer != null && room.RoomCollider != null && !room.RoomCollider.bounds.Contains(localPlayer.position))
@@ -209,9 +211,27 @@ public class MultiplayerSyncManager : MonoBehaviour
     {
         Debug.Log($"NHẬN LỆNH TỪ SERVER: Phòng {targetRoomId} đã clear xong. Mở cửa!");
 
-        if (roomCache.TryGetValue(targetRoomId, out RoomController room))
+        if (roomCache.TryGetValue(targetRoomId, out RoomController room) && room != null)
         {
             room.ExecuteClearRoomLocal();
+        }
+    }
+
+    private void HandleRemotePlayerDied(string connId)
+    {
+        Debug.Log($"[MultiplayerSyncManager] Đồng đội {connId} đã hy sinh trong Co-op!");
+        if (remotePlayers.TryGetValue(connId, out GameObject remoteObj) && remoteObj != null)
+        {
+            Animator anim = remoteObj.GetComponent<Animator>();
+            if (anim != null) anim.SetTrigger("die");
+            SpriteRenderer sr = remoteObj.GetComponent<SpriteRenderer>();
+            if (sr != null) sr.color = new Color(0.3f, 0.3f, 0.3f, 1f);
+        }
+
+        // Trong chế độ Co-op, khi đồng đội hy sinh thì toàn bộ trận đấu sẽ kết thúc Thất bại (Defeat UI)
+        if (RunStatsTracker.Instance != null)
+        {
+            RunStatsTracker.Instance.EndRun(false);
         }
     }
     // ==========================================

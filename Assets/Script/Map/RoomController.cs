@@ -6,7 +6,8 @@ public enum RoomType
     Normal, // Phòng thường có quái
     Start,  // Phòng xuất phát (Home)
     Boss,   // Phòng Boss
-    Chest   // Phòng rương báu
+    Chest,  // Phòng rương báu
+    Portal  // Phòng Cổng Dịch Chuyển (phòng trống dành riêng cho Portal qua tầng)
 }
 
 public class RoomController : MonoBehaviour
@@ -193,26 +194,19 @@ public class RoomController : MonoBehaviour
             MinimapManager.Instance.OnRoomCleared(this);
         }
 
-        // Sinh rương thưởng khi dọn sạch phòng quái (Bỏ qua phòng xuất phát Start)
-        if (roomType != RoomType.Start && !chestSpawned)
+        // Sinh rương thưởng khi dọn sạch phòng quái (Bỏ qua phòng xuất phát Start và phòng Portal)
+        if (roomType != RoomType.Start && roomType != RoomType.Portal && !chestSpawned)
         {
             chestSpawned = true;
-            // Nếu là phòng Boss, dịch vị trí rương sang bên cạnh để nhường tâm phòng cho Portal
-            Vector3 chestPos = (roomType == RoomType.Boss) ? transform.position + Vector3.right * 2.0f : spawnPosition;
+            Vector3 chestPos = spawnPosition;
             SpawnRewardChest(chestPos);
-        }
-
-        // Sinh cổng dịch chuyển chuyển tầng (Portal) nếu đây là phòng Boss
-        if (roomType == RoomType.Boss)
-        {
-            SpawnTeleportPortal();
         }
     }
 
     /// <summary>
-    /// Sinh cổng dịch chuyển mượt mà tại tâm phòng Boss
+    /// Sinh cổng dịch chuyển mượt mà tại tâm phòng Portal
     /// </summary>
-    private void SpawnTeleportPortal()
+    public void SpawnTeleportPortal()
     {
         if (GameObject.Find("TeleportPortal") != null)
         {

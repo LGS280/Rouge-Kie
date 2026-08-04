@@ -55,6 +55,9 @@ public class NetworkManager : MonoBehaviour
     // BỔ SUNG: Sự kiện đồng bộ sát thương quái đánh trúng người chơi qua mạng (targetConnId, damage)
     public event Action<string, float> OnPlayerDamaged;
 
+    // BỔ SUNG: Sự kiện đồng bộ khi đồng đội hy sinh (connId)
+    public event Action<string> OnRemotePlayerDied;
+
     public string MyConnectionId => hubConnection?.ConnectionId;
 
     // QUYỀN HẠN TRONG TRẬN: Sẽ được Server định đoạt khi tạo hoặc vào phòng thành công
@@ -180,6 +183,12 @@ public class NetworkManager : MonoBehaviour
         hubConnection.On<string, float>("OnPlayerDamaged", (targetConnId, damage) =>
         {
             unityContext.Post(_ => OnPlayerDamaged?.Invoke(targetConnId, damage), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện đồng bộ người chơi hy sinh từ Server
+        hubConnection.On<string>("OnRemotePlayerDied", (connId) =>
+        {
+            unityContext.Post(_ => OnRemotePlayerDied?.Invoke(connId), null);
         });
 
         // Gọi hàm đăng ký các sự kiện Combat mạng
@@ -470,6 +479,23 @@ public class NetworkManager : MonoBehaviour
         catch (Exception ex)
         {
             Debug.LogWarning($"[NetworkManager] SendPlayerDamaged gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi thông báo người chơi hy sinh (Player Death) lên Server cho đồng đội
+    public async void SendPlayerDeath()
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncPlayerDeath", CurrentRoomId);
+                Debug.Log("[NetworkManager] Đã gửi thông báo Player Death lên Server.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendPlayerDeath gián đoạn: {ex.Message}");
         }
     }
 

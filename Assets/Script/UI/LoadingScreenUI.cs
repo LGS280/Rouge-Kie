@@ -9,7 +9,23 @@ using UnityEngine.UI;
 /// </summary>
 public class LoadingScreenUI : MonoBehaviour
 {
-    public static LoadingScreenUI Instance { get; private set; }
+    private static LoadingScreenUI _instance;
+    public static LoadingScreenUI Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindAnyObjectByType<LoadingScreenUI>();
+                if (_instance == null)
+                {
+                    GameObject obj = new GameObject("LoadingScreenUI");
+                    _instance = obj.AddComponent<LoadingScreenUI>();
+                }
+            }
+            return _instance;
+        }
+    }
 
     private Canvas loadingCanvas;
     private CanvasGroup canvasGroup;
@@ -31,13 +47,13 @@ public class LoadingScreenUI : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
+        if (_instance == null)
         {
-            Instance = this;
+            _instance = this;
             DontDestroyOnLoad(gameObject);
             BuildLoadingScreenCanvas();
         }
-        else if (Instance != this)
+        else if (_instance != this)
         {
             Destroy(gameObject);
         }
