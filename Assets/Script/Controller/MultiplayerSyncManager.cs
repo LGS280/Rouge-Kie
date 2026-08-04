@@ -227,12 +227,6 @@ public class MultiplayerSyncManager : MonoBehaviour
             SpriteRenderer sr = remoteObj.GetComponent<SpriteRenderer>();
             if (sr != null) sr.color = new Color(0.3f, 0.3f, 0.3f, 1f);
         }
-
-        // Trong chế độ Co-op, khi đồng đội hy sinh thì toàn bộ trận đấu sẽ kết thúc Thất bại (Defeat UI)
-        if (RunStatsTracker.Instance != null)
-        {
-            RunStatsTracker.Instance.EndRun(false);
-        }
     }
     // ==========================================
 
@@ -455,36 +449,26 @@ public class MultiplayerSyncManager : MonoBehaviour
 
         if (targetConnId == NetworkManager.Instance.MyConnectionId)
         {
-            // Nếu là chính mình nhận sát thương từ mạng (ví dụ do Host tính toán và gửi xuống)
-            GameObject localPlayerObj = GameObject.FindGameObjectWithTag("Player");
-            if (localPlayerObj != null)
-            {
-                RookieHealth health = localPlayerObj.GetComponent<RookieHealth>();
-                if (health != null && !health.isDead)
-                {
-                    health.TakeDamage(Mathf.RoundToInt(damage));
-                }
-            }
+            // Bỏ qua nếu gói tin sát thương của chính mình (đã được trừ máu cục bộ trong RookieHealth.TakeDamage)
+            return;
         }
-        else
+
+        // Nếu là đồng đội nhận sát thương, hiển thị chữ số sát thương và chớp đỏ trên nhân vật đồng đội
+        Debug.Log($"[MultiplayerSyncManager] Đồng đội {targetConnId} nhận sát thương: {damage} HP");
+        GameObject remoteObj = GetRemotePlayerById(targetConnId);
+        if (remoteObj != null)
         {
-            // Nếu là đồng đội nhận sát thương, hiển thị chữ số sát thương và chớp đỏ trên nhân vật đồng đội
-            Debug.Log($"[MultiplayerSyncManager] Đồng đội {targetConnId} nhận sát thương: {damage} HP");
-            GameObject remoteObj = GetRemotePlayerById(targetConnId);
-            if (remoteObj != null)
+            int dmgInt = Mathf.RoundToInt(damage);
+            if (DamageNumberSpawner.Instance != null && dmgInt > 0)
             {
-                int dmgInt = Mathf.RoundToInt(damage);
-                if (DamageNumberSpawner.Instance != null && dmgInt > 0)
+                DamageNumber dn = DamageNumberSpawner.Instance.Spawn(remoteObj.transform.position, dmgInt, false);
+                if (dn != null)
                 {
-                    DamageNumber dn = DamageNumberSpawner.Instance.Spawn(remoteObj.transform.position, dmgInt, false);
-                    if (dn != null)
-                    {
-                        dn.SetColor(new Color(1f, 0.4f, 0f));
-                        dn.SetText("-" + dmgInt);
-                    }
+                    dn.SetColor(new Color(1f, 0.4f, 0f));
+                    dn.SetText("-" + dmgInt);
                 }
-                StartCoroutine(RemoteHurtFlashRoutine(remoteObj));
             }
+            StartCoroutine(RemoteHurtFlashRoutine(remoteObj));
         }
     }
 

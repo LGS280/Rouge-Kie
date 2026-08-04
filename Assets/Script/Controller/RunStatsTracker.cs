@@ -15,6 +15,7 @@ public class RunStatsTracker : MonoBehaviour
     [SerializeField] private TMP_Text resultTitleText;       // Chữ tiêu đề: "CHIẾN THẮNG!" hoặc "THẤT BẠI!"
     [SerializeField] private TMP_Text statsText;             // Thông tin thống kê chi tiết trận đấu
     [SerializeField] private Button returnButton;            // Nút bấm quay trở lại Sảnh chính
+    [SerializeField] private Button closeButton;             // Nút bấm đóng/tắt bảng kết quả
 
     // Các thông số thống kê trận đấu
     public int WavesSurvived { get; private set; } = 1;     // Số Wave sống sót mặc định
@@ -278,6 +279,75 @@ public class RunStatsTracker : MonoBehaviour
                              $"Enemies Killed: {EnemiesKilled}\n" +
                              $"Damage Dealt: {(int)DamageDealt}\n" +
                              $"Coins Earned: +{CurrencyEarned} Coins";
+        }
+
+        EnsureCloseButtonExists();
+    }
+
+    public void CloseResultPanel()
+    {
+        if (resultPanel != null)
+        {
+            resultPanel.SetActive(false);
+        }
+    }
+
+    private void EnsureCloseButtonExists()
+    {
+        if (resultPanel == null) return;
+
+        Button btn = closeButton;
+        if (btn == null)
+        {
+            Button[] buttons = resultPanel.GetComponentsInChildren<Button>(true);
+            foreach (var b in buttons)
+            {
+                if (b != returnButton && (b.name.ToLower().Contains("close") || b.name.ToLower().Contains("exit")))
+                {
+                    btn = b;
+                    break;
+                }
+            }
+        }
+
+        if (btn == null)
+        {
+            // Tự động sinh Nút Đóng (X) ở góc trên bên phải của Panel Kết quả
+            GameObject closeObj = new GameObject("CloseButton", typeof(RectTransform), typeof(Image), typeof(Button));
+            closeObj.transform.SetParent(resultPanel.transform, false);
+
+            RectTransform rect = closeObj.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(1f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(1f, 1f);
+            rect.sizeDelta = new Vector2(36f, 36f);
+            rect.anchoredPosition = new Vector2(-12f, -12f);
+
+            Image img = closeObj.GetComponent<Image>();
+            img.color = new Color(0.85f, 0.2f, 0.2f, 0.95f);
+
+            GameObject textObj = new GameObject("Text", typeof(RectTransform), typeof(Text));
+            textObj.transform.SetParent(closeObj.transform, false);
+            RectTransform textRect = textObj.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.sizeDelta = Vector2.zero;
+
+            Text txt = textObj.GetComponent<Text>();
+            txt.text = "X";
+            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.fontSize = 22;
+            txt.fontStyle = FontStyle.Bold;
+            txt.alignment = TextAnchor.MiddleCenter;
+            txt.color = Color.white;
+
+            btn = closeObj.GetComponent<Button>();
+        }
+
+        if (btn != null)
+        {
+            btn.onClick.RemoveListener(CloseResultPanel);
+            btn.onClick.AddListener(CloseResultPanel);
         }
     }
 
