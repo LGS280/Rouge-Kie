@@ -207,8 +207,8 @@ public class WeaponAim : MonoBehaviour
             {
                 nextFireTime = Time.time + currentFireRate;
 
-                // Kiểm tra xem vũ khí hiện tại có phải là cận chiến không
-                bool isCurrentWeaponMelee = currentWeapon != null && currentWeapon.bulletPrefab != null && currentWeapon.bulletPrefab.GetComponent<MeleeSlash>() != null;
+                // Kiểm tra xem vũ khí hiện tại có phải là cận chiến không (kiểm tra từ DB weaponType = Sword / Melee)
+                bool isCurrentWeaponMelee = currentWeapon != null && currentWeapon.IsMeleeWeapon();
 
                 // Chỉ kích hoạt chém tay khi đang cầm SÚNG và quái lại quá gần
                 if (playerMelee != null && !isCurrentWeaponMelee)

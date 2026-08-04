@@ -99,15 +99,15 @@ public class GroundWeapon : MonoBehaviour
         // Triệt tiêu ảnh hưởng của scale cha lên TextMesh để chữ không bị phóng to quá đà
         Vector3 parentScale = transform.localScale;
         textObj.transform.localScale = new Vector3(1f / parentScale.x, 1f / parentScale.y, 1f);
-        textObj.transform.localPosition = new Vector3(0f, 0.22f, 0f); // Sát súng hơn khi bình thường
+        textObj.transform.localPosition = new Vector3(0f, 0.42f, 0f);
 
         TextMesh textMesh = textObj.AddComponent<TextMesh>();
-        textMesh.text = weaponPrefab.name.Replace("(Clone)", "").Replace("_", " ");
+        textMesh.text = ""; // Mặc định ẩn hoàn toàn tên súng khi ở xa
         textMesh.fontSize = 32;
         textMesh.characterSize = 0.07f;
         textMesh.anchor = TextAnchor.MiddleCenter;
         textMesh.alignment = TextAlignment.Center;
-        textMesh.color = Color.white;
+        textMesh.color = Color.green;
 
         MeshRenderer mr = textObj.GetComponent<MeshRenderer>();
         if (mr != null)
@@ -144,7 +144,7 @@ public class GroundWeapon : MonoBehaviour
 
             if (nameTagTrans != null)
             {
-                nameTagTrans.localPosition = new Vector3(0f, 0.42f, 0f); // Nhích lên cao để nhường chỗ cho dòng chữ hướng dẫn
+                nameTagTrans.localPosition = new Vector3(0f, 0.42f, 0f);
             }
         }
     }
@@ -176,18 +176,11 @@ public class GroundWeapon : MonoBehaviour
                 wm.nearbyWeapons.Remove(this);
                 isPlayerInside = false;
                 
-                if (nameTagTrans != null)
-                {
-                    nameTagTrans.localPosition = new Vector3(0f, 0.22f, 0f); // Hạ xuống sát súng khi đi ra xa
-                }
-
-                // Trả về màu trắng bình thường khi người chơi đi xa
+                // Ẩn tên súng hoàn toàn khi người chơi đi xa
                 TextMesh tm = GetComponentInChildren<TextMesh>();
                 if (tm != null)
                 {
-                    tm.color = Color.white;
-                    string sName = (weaponPrefab != null) ? weaponPrefab.name : "Vũ Khí";
-                    tm.text = sName.Replace("(Clone)", "").Replace("_", " ");
+                    tm.text = "";
                 }
             }
         }
