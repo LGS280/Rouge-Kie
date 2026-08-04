@@ -372,18 +372,19 @@ public class WeaponManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Phát sóng loại súng đang cầm hiện tại lên Server SignalR
+    /// Phát sóng loại súng chính và súng phụ đang cầm hiện tại lên Server SignalR
     /// </summary>
     public void SyncActiveWeaponToNetwork()
     {
         if (NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId))
         {
             GameObject activeWeapon = isUsingSlot1 ? weaponSlot1 : weaponSlot2;
-            if (activeWeapon != null)
-            {
-                string cleanName = activeWeapon.name.Replace("(Clone)", "").Trim();
-                NetworkManager.Instance.SendEquippedWeapon(cleanName);
-            }
+            GameObject secondaryWeapon = isUsingSlot1 ? weaponSlot2 : weaponSlot1;
+
+            string activeName = activeWeapon != null ? activeWeapon.name.Replace("(Clone)", "").Trim() : "";
+            string secondaryName = secondaryWeapon != null ? secondaryWeapon.name.Replace("(Clone)", "").Trim() : "";
+
+            NetworkManager.Instance.SendEquippedWeapon(activeName, secondaryName);
         }
     }
 

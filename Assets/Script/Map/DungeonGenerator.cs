@@ -207,6 +207,12 @@ public class DungeonGenerator : MonoBehaviour
             MultiplayerSyncManager.Instance.RefreshRoomAndMobNetworkCache();
         }
 
+        // Tự động mờ và ẩn Màn hình Chờ Tải Màn khi bản đồ đã sinh xong 100%
+        if (LoadingScreenUI.Instance != null)
+        {
+            LoadingScreenUI.Instance.HideLoading();
+        }
+
         Debug.Log("Đã generate map kiểu Soul Knight và cập nhật Minimap & Cache mạng.");
     }
 

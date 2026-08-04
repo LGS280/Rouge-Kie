@@ -177,17 +177,33 @@ public class MobAI : MonoBehaviour
 
     void FindNearestPlayer()
     {
-        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
         float shortestDistance = Mathf.Infinity;
         Transform nearestPlayer = null;
 
-        foreach (GameObject player in players)
+        // 1. Dò tìm Local Player (người chơi chính trên máy hiện tại)
+        GameObject localPlayerObj = GameObject.FindGameObjectWithTag("Player");
+        if (localPlayerObj != null)
         {
-            float distanceToPlayer = Vector2.Distance(transform.position, player.transform.position);
-            if (distanceToPlayer < shortestDistance)
+            float dist = Vector2.Distance(transform.position, localPlayerObj.transform.position);
+            if (dist < shortestDistance)
             {
-                shortestDistance = distanceToPlayer;
-                nearestPlayer = player.transform;
+                shortestDistance = dist;
+                nearestPlayer = localPlayerObj.transform;
+            }
+        }
+
+        // 2. Dò tìm tất cả Remote Player (người chơi đồng đội qua mạng trong Co-op)
+        RemotePlayerController[] remotePlayers = FindObjectsOfType<RemotePlayerController>();
+        foreach (var rpc in remotePlayers)
+        {
+            if (rpc != null && rpc.gameObject != null)
+            {
+                float dist = Vector2.Distance(transform.position, rpc.transform.position);
+                if (dist < shortestDistance)
+                {
+                    shortestDistance = dist;
+                    nearestPlayer = rpc.transform;
+                }
             }
         }
 
@@ -286,7 +302,16 @@ public class MobAI : MonoBehaviour
                 if (playerHealth != null)
                 {
                     playerHealth.TakeDamage(attackDamage);
-                    Debug.Log($"[MobAI] {gameObject.name} đã tấn công gây {attackDamage} sát thương cho Player.");
+                    Debug.Log($"[MobAI] {gameObject.name} đã tấn công gây {attackDamage} sát thương cho Local Player.");
+                }
+                else
+                {
+                    RemotePlayerController rpc = targetPlayer.GetComponent<RemotePlayerController>();
+                    if (rpc != null && NetworkManager.Instance != null)
+                    {
+                        NetworkManager.Instance.SendPlayerDamaged(rpc.connectionId, attackDamage);
+                        Debug.Log($"[MobAI] {gameObject.name} đã tấn công gây {attackDamage} sát thương cho Remote Player {rpc.connectionId}.");
+                    }
                 }
             }
         }

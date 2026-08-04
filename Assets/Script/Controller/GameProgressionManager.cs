@@ -138,11 +138,18 @@ public class GameProgressionManager : MonoBehaviour
         currentFloor = targetFloor;
         Debug.Log($"[GameProgressionManager] Đang chuyển sang Tầng {currentFloor}/{maxFloor}...");
 
+        // Hiển thị Màn hình Chờ Tải Tầng mới
+        if (LoadingScreenUI.Instance != null)
+        {
+            LoadingScreenUI.Instance.ShowLoading($"TẦNG {currentFloor} - 1", "Đang khởi tạo cấu trúc hầm ngục mới...");
+        }
+
         if (currentFloor > maxFloor)
         {
             // Nếu đã vượt qua tầng 5 -> Chiến thắng game!
             Debug.Log("[GameProgressionManager] Đã vượt qua tầng cuối cùng! Chiến thắng trận đấu!");
             isTransitioning = false;
+            if (LoadingScreenUI.Instance != null) LoadingScreenUI.Instance.HideLoading();
             if (RunStatsTracker.Instance != null)
             {
                 RunStatsTracker.Instance.EndRun(true);

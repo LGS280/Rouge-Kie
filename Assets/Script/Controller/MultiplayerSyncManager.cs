@@ -56,11 +56,12 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnRemoteEnemyDamaged += HandleRemoteEnemyDamaged;
             NetworkManager.Instance.OnReceiveWeaponAngle += UpdateRemoteWeaponAngle;
 
-            // ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ PHÒNG & SÚNG
+            // ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ PHÒNG & SÚNG & SÁT THƯƠNG
             NetworkManager.Instance.OnRoomCombatStarted += HandleRoomCombatStarted;
             NetworkManager.Instance.OnRoomClearedFromServer += HandleRoomClearedFromServer;
             NetworkManager.Instance.OnReceiveEnemyPosition += HandleRemoteEnemyPosition;
             NetworkManager.Instance.OnRemoteWeaponChanged += HandleRemoteWeaponChanged;
+            NetworkManager.Instance.OnPlayerDamaged += HandlePlayerDamaged;
         }
     }
 
@@ -75,11 +76,12 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnRemoteEnemyDamaged -= HandleRemoteEnemyDamaged;
             NetworkManager.Instance.OnReceiveWeaponAngle -= UpdateRemoteWeaponAngle;
 
-            // HỦY ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ PHÒNG & SÚNG
+            // HỦY ĐĂNG KÝ SỰ KIỆN ĐỒNG BỘ PHÒNG & SÚNG & SÁT THƯƠNG
             NetworkManager.Instance.OnRoomCombatStarted -= HandleRoomCombatStarted;
             NetworkManager.Instance.OnRoomClearedFromServer -= HandleRoomClearedFromServer;
             NetworkManager.Instance.OnReceiveEnemyPosition -= HandleRemoteEnemyPosition;
             NetworkManager.Instance.OnRemoteWeaponChanged -= HandleRemoteWeaponChanged;
+            NetworkManager.Instance.OnPlayerDamaged -= HandlePlayerDamaged;
         }
     }
 
@@ -249,7 +251,8 @@ public class MultiplayerSyncManager : MonoBehaviour
             }
 
             // Thêm script điều khiển từ xa
-            newRemote.AddComponent<RemotePlayerController>();
+            RemotePlayerController rpc = newRemote.AddComponent<RemotePlayerController>();
+            rpc.connectionId = connId;
 
             // Nạp cấu hình vị trí tay customHandPosition từ DB cho vũ khí Remote Player
             WeaponInfo remoteWeapon = newRemote.GetComponentInChildren<WeaponInfo>();
@@ -305,80 +308,141 @@ public class MultiplayerSyncManager : MonoBehaviour
         return null;
     }
 
-    // BỔ SUNG: Xử lý đồng bộ loại súng hiển thị mà Remote Player (Player 2) đang cầm
-    private void HandleRemoteWeaponChanged(string connId, string weaponName)
+    // BỔ SUNG: Xử lý đồng bộ loại súng chính và súng phụ hiển thị mà Remote Player (Player 2) đang cầm
+    private void HandleRemoteWeaponChanged(string connId, string activeWeaponName, string secondaryWeaponName)
     {
         GameObject remoteObj = GetRemotePlayerById(connId);
-        if (remoteObj == null || string.IsNullOrEmpty(weaponName)) return;
+        if (remoteObj == null) return;
 
-        Debug.Log($"[MultiplayerSyncManager] Đang đồng bộ súng mới '{weaponName}' cho Remote Player {connId}");
+        Debug.Log($"[MultiplayerSyncManager] Đang đồng bộ súng chính '{activeWeaponName}' & phụ '{secondaryWeaponName}' cho Remote Player {connId}");
 
-        // Tìm hoặc tự động tạo Hand_Position cho Remote Player
-        Transform handPos = remoteObj.transform.Find("Hand_Position");
-        if (handPos == null)
+        // 1. XỬ LÝ SÚNG CHÍNH TRÊN TAY (Hand_Position)
+        if (!string.IsNullOrEmpty(activeWeaponName))
         {
-            GameObject newHand = new GameObject("Hand_Position");
-            newHand.transform.SetParent(remoteObj.transform, false);
-            newHand.transform.localPosition = new Vector3(0.15f, -0.1f, 0f);
-            handPos = newHand.transform;
+            Transform handPos = remoteObj.transform.Find("Hand_Position");
+            if (handPos == null)
+            {
+                GameObject newHand = new GameObject("Hand_Position");
+                newHand.transform.SetParent(remoteObj.transform, false);
+                newHand.transform.localPosition = new Vector3(0.15f, -0.1f, 0f);
+                handPos = newHand.transform;
+            }
+
+            foreach (Transform child in handPos)
+            {
+                Destroy(child.gameObject);
+            }
+
+            GameObject activePrefab = FindWeaponPrefabByName(activeWeaponName);
+            if (activePrefab != null)
+            {
+                GameObject newActiveWeapon = Instantiate(activePrefab, handPos);
+                newActiveWeapon.transform.localPosition = Vector3.zero;
+                newActiveWeapon.transform.localRotation = Quaternion.identity;
+                newActiveWeapon.transform.localScale = Vector3.one;
+
+                MonoBehaviour[] scripts = newActiveWeapon.GetComponents<MonoBehaviour>();
+                foreach (var script in scripts)
+                {
+                    if (script != null && (script.GetType().Name == "WeaponAim" || script.GetType().Name == "WeaponLaser"))
+                    {
+                        script.enabled = false;
+                    }
+                }
+
+                WeaponInfo info = newActiveWeapon.GetComponent<WeaponInfo>();
+                if (info != null)
+                {
+                    info.ApplyConfigFromDb();
+                    if (info.customHandPosition != Vector3.zero)
+                    {
+                        newActiveWeapon.transform.localPosition = info.customHandPosition;
+                    }
+                }
+            }
         }
 
-        // Xóa tất cả các súng cũ dưới Hand_Position
-        foreach (Transform child in handPos)
+        // 2. XỬ LÝ SÚNG PHỤ ĐEO NGHIÊNG SAU LƯNG (Back_Position)
+        Transform backPos = remoteObj.transform.Find("Back_Position");
+        if (backPos == null)
+        {
+            GameObject newBack = new GameObject("Back_Position");
+            newBack.transform.SetParent(remoteObj.transform, false);
+            newBack.transform.localPosition = new Vector3(-0.15f, -0.05f, 0f);
+            backPos = newBack.transform;
+        }
+
+        foreach (Transform child in backPos)
         {
             Destroy(child.gameObject);
         }
 
-        // Dò tìm Prefab súng dựa vào tên qua WeaponManager hoặc Resources
+        if (!string.IsNullOrEmpty(secondaryWeaponName))
+        {
+            GameObject secondaryPrefab = FindWeaponPrefabByName(secondaryWeaponName);
+            if (secondaryPrefab != null)
+            {
+                GameObject newSecondaryWeapon = Instantiate(secondaryPrefab, backPos);
+                newSecondaryWeapon.transform.localPosition = Vector3.zero;
+                newSecondaryWeapon.transform.localRotation = Quaternion.Euler(0, 0, 45f); // Đeo nghiêng 45 độ sau lưng
+                newSecondaryWeapon.transform.localScale = Vector3.one;
+
+                MonoBehaviour[] scripts = newSecondaryWeapon.GetComponents<MonoBehaviour>();
+                foreach (var script in scripts)
+                {
+                    if (script != null && (script.GetType().Name == "WeaponAim" || script.GetType().Name == "WeaponLaser"))
+                    {
+                        script.enabled = false;
+                    }
+                }
+
+                SpriteRenderer secRenderer = newSecondaryWeapon.GetComponent<SpriteRenderer>();
+                SpriteRenderer playerRenderer = remoteObj.GetComponent<SpriteRenderer>();
+                if (secRenderer != null && playerRenderer != null)
+                {
+                    secRenderer.sortingOrder = playerRenderer.sortingOrder - 1; // Nằm sau thân nhân vật
+                }
+            }
+        }
+    }
+
+    private GameObject FindWeaponPrefabByName(string weaponName)
+    {
+        if (string.IsNullOrEmpty(weaponName)) return null;
+        string cleanName = weaponName.Replace("(Clone)", "").Trim();
+
         GameObject weaponPrefab = null;
         if (WeaponManager.Instance != null)
         {
-            weaponPrefab = WeaponManager.Instance.FindWeaponPrefabByName(weaponName);
+            weaponPrefab = WeaponManager.Instance.FindWeaponPrefabByName(cleanName);
         }
 
         if (weaponPrefab == null)
         {
-            string cleanName = weaponName.Replace("(Clone)", "").Trim();
             weaponPrefab = Resources.Load<GameObject>($"Prefab/Weapons/{cleanName}");
             if (weaponPrefab == null)
             {
                 weaponPrefab = Resources.Load<GameObject>($"Weapons/{cleanName}");
             }
         }
+        return weaponPrefab;
+    }
 
-        if (weaponPrefab != null)
+    // BỔ SUNG: Nhận đồng bộ sát thương quái đánh trúng người chơi qua mạng
+    private void HandlePlayerDamaged(string targetConnId, float damage)
+    {
+        if (NetworkManager.Instance != null && targetConnId == NetworkManager.Instance.MyConnectionId)
         {
-            GameObject newWeapon = Instantiate(weaponPrefab, handPos);
-            newWeapon.transform.localPosition = Vector3.zero;
-            newWeapon.transform.localRotation = Quaternion.identity;
-            newWeapon.transform.localScale = Vector3.one;
-
-            // Xóa các script điều khiển local player (nếu có trên Prefab súng)
-            MonoBehaviour[] scripts = newWeapon.GetComponents<MonoBehaviour>();
-            foreach (var script in scripts)
+            Debug.Log($"[MultiplayerSyncManager] Nhận sát thương từ mạng: {damage} HP");
+            GameObject localPlayerObj = GameObject.FindGameObjectWithTag("Player");
+            if (localPlayerObj != null)
             {
-                if (script != null && (script.GetType().Name == "WeaponAim" || script.GetType().Name == "WeaponLaser"))
+                RookieHealth health = localPlayerObj.GetComponent<RookieHealth>();
+                if (health != null)
                 {
-                    script.enabled = false;
+                    health.TakeDamage(Mathf.RoundToInt(damage));
                 }
             }
-
-            // Nạp thông số vị trí tay từ DB
-            WeaponInfo info = newWeapon.GetComponent<WeaponInfo>();
-            if (info != null)
-            {
-                info.ApplyConfigFromDb();
-                if (info.customHandPosition != Vector3.zero)
-                {
-                    newWeapon.transform.localPosition = info.customHandPosition;
-                }
-            }
-
-            Debug.Log($"[MultiplayerSyncManager] Đã gắn thành công súng '{weaponName}' cho Remote Player {connId}");
-        }
-        else
-        {
-            Debug.LogWarning($"[MultiplayerSyncManager] Không tìm thấy Prefab súng '{weaponName}' để gắn cho Remote Player!");
         }
     }
 
