@@ -168,6 +168,10 @@ public class LoadingScreenUI : MonoBehaviour
     /// </summary>
     public void ShowLoading(string title = "ĐANG TẢI DỮ LIỆU...", string subtitle = "", float duration = 0.3f)
     {
+        gameObject.SetActive(true);
+        if (loadingCanvas != null) loadingCanvas.gameObject.SetActive(true);
+        if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
+
         if (titleText != null) titleText.text = title;
         if (subText != null) subText.text = string.IsNullOrEmpty(subtitle) ? "Vui lòng chờ trong giây lát..." : subtitle;
         
@@ -177,7 +181,6 @@ public class LoadingScreenUI : MonoBehaviour
         }
 
         isShowing = true;
-        canvasGroup.blocksRaycasts = true;
 
         if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
         fadeCoroutine = StartCoroutine(FadeRoutine(1f, duration));
@@ -188,10 +191,14 @@ public class LoadingScreenUI : MonoBehaviour
     /// </summary>
     public void HideLoading(float duration = 0.4f)
     {
-        if (!isShowing) return;
-
         isShowing = false;
-        canvasGroup.blocksRaycasts = false;
+        if (canvasGroup != null) canvasGroup.blocksRaycasts = false;
+
+        if (!gameObject.activeInHierarchy)
+        {
+            if (canvasGroup != null) canvasGroup.alpha = 0f;
+            return;
+        }
 
         if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
         fadeCoroutine = StartCoroutine(FadeRoutine(0f, duration));
@@ -199,12 +206,15 @@ public class LoadingScreenUI : MonoBehaviour
 
     private IEnumerator FadeRoutine(float targetAlpha, float duration)
     {
+        if (canvasGroup == null) yield break;
+
         float startAlpha = canvasGroup.alpha;
         float elapsed = 0f;
 
         if (duration <= 0f)
         {
             canvasGroup.alpha = targetAlpha;
+            if (targetAlpha <= 0f && loadingCanvas != null) loadingCanvas.gameObject.SetActive(false);
             yield break;
         }
 
@@ -216,5 +226,9 @@ public class LoadingScreenUI : MonoBehaviour
         }
 
         canvasGroup.alpha = targetAlpha;
+        if (targetAlpha <= 0f && loadingCanvas != null)
+        {
+            loadingCanvas.gameObject.SetActive(false);
+        }
     }
 }

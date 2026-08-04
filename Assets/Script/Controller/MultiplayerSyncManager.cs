@@ -451,18 +451,53 @@ public class MultiplayerSyncManager : MonoBehaviour
     // BỔ SUNG: Nhận đồng bộ sát thương quái đánh trúng người chơi qua mạng
     private void HandlePlayerDamaged(string targetConnId, float damage)
     {
-        if (NetworkManager.Instance != null && targetConnId == NetworkManager.Instance.MyConnectionId)
+        if (NetworkManager.Instance == null) return;
+
+        if (targetConnId == NetworkManager.Instance.MyConnectionId)
         {
-            Debug.Log($"[MultiplayerSyncManager] Nhận sát thương từ mạng: {damage} HP");
+            // Nếu là chính mình nhận sát thương từ mạng (ví dụ do Host tính toán và gửi xuống)
             GameObject localPlayerObj = GameObject.FindGameObjectWithTag("Player");
             if (localPlayerObj != null)
             {
                 RookieHealth health = localPlayerObj.GetComponent<RookieHealth>();
-                if (health != null)
+                if (health != null && !health.isDead)
                 {
                     health.TakeDamage(Mathf.RoundToInt(damage));
                 }
             }
+        }
+        else
+        {
+            // Nếu là đồng đội nhận sát thương, hiển thị chữ số sát thương và chớp đỏ trên nhân vật đồng đội
+            Debug.Log($"[MultiplayerSyncManager] Đồng đội {targetConnId} nhận sát thương: {damage} HP");
+            GameObject remoteObj = GetRemotePlayerById(targetConnId);
+            if (remoteObj != null)
+            {
+                int dmgInt = Mathf.RoundToInt(damage);
+                if (DamageNumberSpawner.Instance != null && dmgInt > 0)
+                {
+                    DamageNumber dn = DamageNumberSpawner.Instance.Spawn(remoteObj.transform.position, dmgInt, false);
+                    if (dn != null)
+                    {
+                        dn.SetColor(new Color(1f, 0.4f, 0f));
+                        dn.SetText("-" + dmgInt);
+                    }
+                }
+                StartCoroutine(RemoteHurtFlashRoutine(remoteObj));
+            }
+        }
+    }
+
+    private System.Collections.IEnumerator RemoteHurtFlashRoutine(GameObject remoteObj)
+    {
+        if (remoteObj == null) yield break;
+        SpriteRenderer sr = remoteObj.GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            Color oldColor = sr.color;
+            sr.color = new Color(1f, 0.4f, 0.4f);
+            yield return new WaitForSeconds(0.15f);
+            if (sr != null) sr.color = oldColor;
         }
     }
 

@@ -79,6 +79,8 @@ public class DungeonGenerator : MonoBehaviour
         public Vector2Int gridPos;
         public RectInt rect;
         public bool isStartRoom;
+        public bool isBossRoom;
+        public bool isPortalRoom;
         public RoomController controller;
         public List<BoundsInt> obstacleBoundsList = new List<BoundsInt>(); // Danh sách vùng giới hạn vật cản trong phòng
 
@@ -292,6 +294,8 @@ public class DungeonGenerator : MonoBehaviour
 
         if (bossRoom == null) return;
 
+        bossRoom.isBossRoom = true; // Đánh dấu chính xác phòng Boss
+
         Vector2Int[] directions = { Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left };
         foreach (Vector2Int dir in directions)
         {
@@ -299,9 +303,10 @@ public class DungeonGenerator : MonoBehaviour
             if (!roomsByGrid.ContainsKey(nextGrid))
             {
                 MapRoom portalRoom = CreateMapRoom(nextGrid, false);
+                portalRoom.isPortalRoom = true; // Đánh dấu chính xác phòng Portal nằm sau phòng Boss
                 roomsByGrid.Add(nextGrid, portalRoom);
                 connections.Add(new MapConnection(bossRoom, portalRoom, dir));
-                Debug.Log($"[DungeonGenerator] Đã tạo phòng Portal riêng biệt tại {nextGrid} nối tiếp phòng Boss tại {bossRoom.gridPos}");
+                Debug.Log($"[DungeonGenerator] Đã tạo phòng Portal riêng biệt tại {nextGrid} nối tiếp phía sau phòng Boss tại {bossRoom.gridPos}");
                 break;
             }
         }
@@ -1632,45 +1637,20 @@ public class DungeonGenerator : MonoBehaviour
             }
         }
 
-        // 3. Tìm phòng Boss và phòng Portal
+        // 3. Gán phòng Boss và phòng Portal dựa trên cờ đánh dấu chính xác
         MapRoom bossRoom = null;
         MapRoom portalRoom = null;
-        float maxDistance = -1f;
 
         foreach (var kvp in roomsByGrid)
         {
-            if (kvp.Value.isStartRoom) continue;
-
-            float dist = Vector2Int.Distance(kvp.Key, Vector2Int.zero);
-            if (dist > maxDistance)
-            {
-                maxDistance = dist;
-                bossRoom = kvp.Value;
-            }
+            if (kvp.Value.isBossRoom) bossRoom = kvp.Value;
+            if (kvp.Value.isPortalRoom) portalRoom = kvp.Value;
         }
 
-        if (bossRoom != null)
+        if (bossRoom != null && bossRoom.controller != null)
         {
-            // Phòng Portal là phòng nối với phòng Boss
-            Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
-            foreach (var dir in dirs)
-            {
-                Vector2Int nGrid = bossRoom.gridPos + dir;
-                if (roomsByGrid.TryGetValue(nGrid, out MapRoom candidateRoom))
-                {
-                    if (!candidateRoom.isStartRoom)
-                    {
-                        portalRoom = candidateRoom;
-                        break;
-                    }
-                }
-            }
-
-            if (bossRoom.controller != null)
-            {
-                bossRoom.controller.roomType = RoomType.Boss;
-                Debug.Log($"[DungeonGenerator] Đã gán phòng Boss tại tọa độ lưới: {bossRoom.gridPos}");
-            }
+            bossRoom.controller.roomType = RoomType.Boss;
+            Debug.Log($"[DungeonGenerator] Đã gán phòng Boss tại tọa độ lưới: {bossRoom.gridPos}");
         }
 
         if (portalRoom != null && portalRoom.controller != null)

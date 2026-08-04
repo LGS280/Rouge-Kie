@@ -94,6 +94,12 @@ public class RookieHealth : MonoBehaviour
         // Hiệu ứng chớp đỏ báo hiệu chịu sát thương
         StartCoroutine(HurtFlashRoutine());
 
+        // BỔ SUNG: Gửi thông báo chịu sát thương lên Server cho đồng đội hiển thị
+        if (NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId))
+        {
+            NetworkManager.Instance.SendPlayerDamaged(NetworkManager.Instance.MyConnectionId, originalDamage);
+        }
+
         // Hiển thị số sát thương màu cam nổi bật và có dấu trừ bay lên đầu nhân vật
         if (DamageNumberSpawner.Instance != null && originalDamage > 0)
         {
