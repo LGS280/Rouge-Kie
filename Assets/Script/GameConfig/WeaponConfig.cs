@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 [Serializable]
 public class WeaponConfig
@@ -20,6 +20,9 @@ public class WeaponConfig
     public float recoilDistance;
     public float recoilDuration;
     public float returnDuration;
+
+    public string weaponType;
+    public string rarity;
 }
 
 [Serializable]

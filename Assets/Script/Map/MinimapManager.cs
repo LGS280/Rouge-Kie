@@ -59,6 +59,19 @@ public class MinimapManager : MonoBehaviour
                 }
             }
         }
+
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.OnRemoteRoomVisited += HandleRemoteRoomVisited;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.OnRemoteRoomVisited -= HandleRemoteRoomVisited;
+        }
     }
 
     /// <summary>
@@ -131,14 +144,22 @@ public class MinimapManager : MonoBehaviour
         roomUiDict.Clear();
         currentRoom = null;
 
-        // Phân loại lại phòng tại runtime để đảm bảo các phòng lưu sẵn trong Scene có đầy đủ Loại phòng (Start, Boss, Chest)
-        RecategorizeRoomsRuntime();
+        // Chỉ phân loại lại phòng tại runtime nếu chưa được phân loại bởi DungeonGenerator
+        bool hasCategorizedRooms = false;
+        foreach (var kvp in roomControllers)
+        {
+            if (kvp.Value != null && kvp.Value.roomType != RoomType.Normal)
+            {
+                hasCategorizedRooms = true;
+                break;
+            }
+        }
+        if (!hasCategorizedRooms)
+        {
+            RecategorizeRoomsRuntime();
+        }
 
         Debug.Log($"[MinimapManager] InitializeWithRooms count: {rooms.Count}");
-        Debug.Log($"[MinimapManager] spriteRoom: {(spriteRoom != null ? spriteRoom.name : "null")}");
-        Debug.Log($"[MinimapManager] spriteHome: {(spriteHome != null ? spriteHome.name : "null")}");
-        Debug.Log($"[MinimapManager] spriteBoss: {(spriteBoss != null ? spriteBoss.name : "null")}");
-        Debug.Log($"[MinimapManager] spriteChest: {(spriteChest != null ? spriteChest.name : "null")}");
 
         // Tạo giao diện ô phòng cho từng phòng trong map
         foreach (var kvp in roomControllers)
@@ -186,13 +207,23 @@ public class MinimapManager : MonoBehaviour
                 roomUiDict.Add(gridPos, roomUI);
 
                 // Tìm phòng xuất phát để đặt người chơi ban đầu
-                if (controller.roomType == RoomType.Start)
+                if (controller.roomType == RoomType.Start || gridPos == Vector2Int.zero)
                 {
                     currentRoom = controller;
                     controller.isVisited = true;
                 }
             }
         }
+
+        // Tự động gán Start room nếu chưa tìm thấy
+        if (currentRoom == null && roomControllers.TryGetValue(Vector2Int.zero, out RoomController startRoom))
+        {
+            currentRoom = startRoom;
+            startRoom.isVisited = true;
+        }
+
+        // Căn giữa Minimap vào phòng xuất phát ban đầu
+        CenterMapOnCurrentRoom();
 
         // Cập nhật trạng thái hiển thị toàn bộ map
         UpdateMinimap();
@@ -271,9 +302,30 @@ public class MinimapManager : MonoBehaviour
     /// </summary>
     public void OnPlayerEnterRoom(RoomController room)
     {
+        if (room == null) return;
         currentRoom = room;
         room.isVisited = true;
         UpdateMinimap();
+
+        // BỔ SUNG: Phát sóng phòng đã ghé thăm sang máy đồng đội qua SignalR
+        if (NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId))
+        {
+            NetworkManager.Instance.SendRoomVisited(room.roomUniqueId);
+        }
+    }
+
+    // BỔ SUNG: Nhận thông báo phòng mở từ đồng đội để cập nhật icon Minimap
+    private void HandleRemoteRoomVisited(string roomUniqueId)
+    {
+        foreach (var kvp in roomControllers)
+        {
+            if (kvp.Value != null && kvp.Value.roomUniqueId == roomUniqueId)
+            {
+                kvp.Value.isVisited = true;
+                UpdateMinimap();
+                break;
+            }
+        }
     }
 
     /// <summary>
@@ -340,19 +392,36 @@ public class MinimapManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Tự động khởi tạo Minimap UI khi tải Scene SampleScene
+    /// Đảm bảo Minimap UI luôn được khởi tạo và hiển thị trong Scene
     /// </summary>
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void OnSceneLoaded()
+    public static void EnsureMinimapExists()
     {
-        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "SampleScene")
+        if (Instance == null)
         {
             CreateAutoMinimapUI();
         }
+        if (Instance != null)
+        {
+            Instance.InitializeMinimap();
+        }
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void RegisterSceneLoadCallback()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += (scene, mode) =>
+        {
+            if (scene.name == "SampleScene")
+            {
+                EnsureMinimapExists();
+            }
+        };
     }
 
     private static void CreateAutoMinimapUI()
     {
+        if (Instance != null) return;
+
         Canvas canvas = FindUICanvas();
         if (canvas == null)
         {
@@ -419,6 +488,7 @@ public class MinimapManager : MonoBehaviour
         manager.spritePlayer = LoadSpriteSafely("UI/Skin/Knob");
 
         Debug.Log("[MinimapManager] Đã tự động tạo và cấu hình Minimap UI.");
+        manager.InitializeMinimap();
     }
 
     private static Sprite LoadSpriteSafely(string path)
@@ -457,6 +527,15 @@ public class MinimapManager : MonoBehaviour
     private void RecategorizeRoomsRuntime()
     {
         if (roomControllers.Count == 0) return;
+
+        // Nếu bất kỳ phòng nào đã được phân loại loại phòng (Start, Boss, Chest) từ trước, bảo vệ không ghi đè
+        foreach (var kvp in roomControllers)
+        {
+            if (kvp.Value != null && kvp.Value.roomType != RoomType.Normal)
+            {
+                return;
+            }
+        }
 
         // 1. Đặt tất cả các phòng về Normal mặc định
         foreach (var kvp in roomControllers)

@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class RemotePlayerController : MonoBehaviour
 {
+    public string connectionId;
     public Vector3 targetPosition;
     private Animator animator;
 
