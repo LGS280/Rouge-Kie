@@ -159,32 +159,40 @@ public class RunStatsTracker : MonoBehaviour
             }
         }
 
-        // VÔ HIỆU HÓA DI CHUYỂN VÀ SÚNG CỦA PLAYER KHI KẾT THÚC RUN
-        GameObject player = GameObject.FindWithTag("Player");
-        if (player != null)
+        // VÔ HIỆU HÓA DI CHUYỂN VÀ SÚNG CỦA PLAYER KHI THẤT BẠI (Chỉ khi Defeat)
+        // Khi Hoàn thành game (Victory), giữ cho người chơi vẫn có thể tự do di chuyển và thao tác trong màn chơi.
+        if (!isVictory)
         {
-            PlayerMovement pm = player.GetComponent<PlayerMovement>();
-            if (pm != null)
+            GameObject player = GameObject.FindWithTag("Player");
+            if (player != null)
             {
-                pm.enabled = false;
-                // Dừng hoạt ảnh di chuyển
-                Animator anim = player.GetComponent<Animator>();
-                if (anim != null) anim.SetFloat("Speed", 0f);
-                // Dừng quán tính vật lý
-                Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
-                if (rb != null) rb.linearVelocity = Vector2.zero; // Hoặc velocity = Vector2.zero tùy phiên bản Unity
-            }
-
-            // Tìm và tắt các component điều khiển súng/nhắm bắn
-            MonoBehaviour[] allScripts = player.GetComponentsInChildren<MonoBehaviour>();
-            foreach (var script in allScripts)
-            {
-                if (script != null && (script.GetType().Name == "WeaponAim" || script.GetType().Name == "WeaponLaser"))
+                PlayerMovement pm = player.GetComponent<PlayerMovement>();
+                if (pm != null)
                 {
-                    script.enabled = false;
+                    pm.enabled = false;
+                    // Dừng hoạt ảnh di chuyển
+                    Animator anim = player.GetComponent<Animator>();
+                    if (anim != null) anim.SetFloat("Speed", 0f);
+                    // Dừng quán tính vật lý
+                    Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+                    if (rb != null) rb.linearVelocity = Vector2.zero;
                 }
+
+                // Tìm và tắt các component điều khiển súng/nhắm bắn khi nhân vật hy sinh
+                MonoBehaviour[] allScripts = player.GetComponentsInChildren<MonoBehaviour>();
+                foreach (var script in allScripts)
+                {
+                    if (script != null && (script.GetType().Name == "WeaponAim" || script.GetType().Name == "WeaponLaser"))
+                    {
+                        script.enabled = false;
+                    }
+                }
+                Debug.Log("[RunStatsTracker] Đã vô hiệu hoá di chuyển và ngắm bắn của Player do Thất bại.");
             }
-            Debug.Log("[RunStatsTracker] Đã vô hiệu hoá di chuyển và ngắm bắn của Player.");
+        }
+        else
+        {
+            Debug.Log("[RunStatsTracker] Hoàn thành game (Victory)! Giữ nguyên quyền di chuyển và điều khiển cho người chơi.");
         }
 
         Debug.Log($"[RunStatsTracker] Trận đấu kết thúc. Chiến thắng: {isVictory}. Đang gửi dữ liệu lên Backend...");

@@ -125,9 +125,56 @@ public class DungeonGenerator : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        // Tự động sinh bản đồ khi Scene SampleScene được nạp nếu bản đồ đang trống
+        if (roomsByGrid == null || roomsByGrid.Count == 0)
+        {
+            GenerateSoulKnightMap();
+        }
+    }
+
+    /// <summary>
+    /// Khởi tạo Hạt giống ngẫu nhiên (Map Seed) đồng bộ cho chế độ Co-op
+    /// </summary>
+    private void InitMapSeed()
+    {
+        int currentFloor = 1;
+        if (GameProgressionManager.Instance != null)
+        {
+            currentFloor = GameProgressionManager.Instance.currentFloor;
+        }
+
+        bool isMultiplayer = NetworkManager.Instance != null && 
+                             NetworkManager.Instance.IsLoggedIn && 
+                             !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+
+        int mapSeed;
+        if (isMultiplayer)
+        {
+            // Trong Co-op: Dùng Hash của mã phòng (RoomCode) kết hợp với Tầng hiện tại
+            // Đảm bảo cả Host và Guest tính ra đúng 1 con số mapSeed DUY NHẤT
+            string roomCode = NetworkManager.Instance.CurrentRoomId.ToUpper();
+            mapSeed = (roomCode.GetHashCode() ^ (currentFloor * 397)) & 0x7FFFFFFF;
+            Debug.Log($"[DungeonGenerator] [Co-op] Nạp Map Seed đồng bộ cho phòng '{roomCode}' (Tầng {currentFloor}): {mapSeed}");
+        }
+        else
+        {
+            // Trong Solo: Sinh Seed ngẫu nhiên theo thời gian
+            mapSeed = UnityEngine.Random.Range(100000, 999999);
+            Debug.Log($"[DungeonGenerator] [Solo] Nạp Map Seed ngẫu nhiên (Tầng {currentFloor}): {mapSeed}");
+        }
+
+        // Khởi tạo trạng thái ngẫu nhiên cho toàn bộ hàm UnityEngine.Random trong lần sinh map này
+        UnityEngine.Random.InitState(mapSeed);
+    }
+
     [ContextMenu("Generate Soul Knight Map")]
     public void GenerateSoulKnightMap()
     {
+        // 1. Nạp Hạt giống ngẫu nhiên đồng bộ cho Co-op
+        InitMapSeed();
+
         ClearMap();
 
         roomsByGrid.Clear();
@@ -147,13 +194,26 @@ public class DungeonGenerator : MonoBehaviour
 
         SpawnAllRoomMobs();
 
-        // Khởi tạo Minimap
+        // Khởi tạo và đảm bảo Minimap UI hiển thị cho tầng mới
+        MinimapManager.EnsureMinimapExists();
         if (MinimapManager.Instance != null)
         {
-            MinimapManager.Instance.InitializeMinimap();
+            MinimapManager.Instance.InitializeWithRooms(GetRoomControllers());
         }
 
-        Debug.Log("Đã generate map kiểu Soul Knight và cập nhật Minimap.");
+        // BỔ SUNG: Làm mới Cache phòng và quái vật cho MultiplayerSyncManager khi chuyển tầng hầm ngục mới
+        if (MultiplayerSyncManager.Instance != null)
+        {
+            MultiplayerSyncManager.Instance.RefreshRoomAndMobNetworkCache();
+        }
+
+        // Tự động mờ và ẩn Màn hình Chờ Tải Màn khi bản đồ đã sinh xong 100%
+        if (LoadingScreenUI.Instance != null)
+        {
+            LoadingScreenUI.Instance.HideLoading();
+        }
+
+        Debug.Log("Đã generate map kiểu Soul Knight và cập nhật Minimap & Cache mạng.");
     }
 
     private void GenerateLayout()

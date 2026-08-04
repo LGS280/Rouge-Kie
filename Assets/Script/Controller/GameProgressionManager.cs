@@ -34,6 +34,9 @@ public class GameProgressionManager : MonoBehaviour
     [Tooltip("Hệ số nhân máu quái vật tăng thêm mỗi tầng")]
     public float hpMultiplierPerFloor = 0.3f; // Tầng 1: 1.0x, Tầng 2: 1.3x, Tầng 3: 1.6x, Tầng 4: 1.9x, Tầng 5: 2.2x
 
+    [Header("Trạng Thái Transiton")]
+    public bool isTransitioning = false; // Cờ bảo vệ ngăn chặn gọi nhảy tầng trùng lặp
+
     private void Awake()
     {
         if (_instance == null)
@@ -53,6 +56,7 @@ public class GameProgressionManager : MonoBehaviour
     public void ResetProgression()
     {
         currentFloor = 1;
+        isTransitioning = false;
         Debug.Log("[GameProgressionManager] Đã khởi tạo lại tiến trình màn chơi về Tầng 1.");
     }
 
@@ -65,18 +69,87 @@ public class GameProgressionManager : MonoBehaviour
         return 1.0f + (currentFloor - 1) * hpMultiplierPerFloor;
     }
 
+    private void Start()
+    {
+        // BỔ SUNG: Đăng ký lắng nghe sự kiện chuyển tầng đồng bộ qua mạng từ NetworkManager
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.OnFloorTransitionSynced += HandleSyncedFloorTransition;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Hủy đăng ký sự kiện để tránh memory leak
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.OnFloorTransitionSynced -= HandleSyncedFloorTransition;
+        }
+    }
+
+    /// <summary>
+    /// Xử lý tín hiệu chuyển tầng đồng bộ từ mạng SignalR
+    /// </summary>
+    private void HandleSyncedFloorTransition(int targetFloor)
+    {
+        if (isTransitioning)
+        {
+            Debug.LogWarning($"[GameProgressionManager] Nhận lệnh chuyển Tầng {targetFloor} từ mạng nhưng đang transition, bỏ qua.");
+            return;
+        }
+
+        Debug.Log($"[GameProgressionManager] Co-op Mode: Nhận tín hiệu đồng bộ chuyển sang Tầng {targetFloor} từ mạng.");
+
+        int prevFloor = currentFloor;
+        // Kiểm tra xem tầng vừa hoàn thành (prevFloor) có cần hiện bảng chọn Buff trước khi sang tầng mới hay không
+        if ((prevFloor == 1 || prevFloor == 3) && UpgradeSelectionUI.Instance != null)
+        {
+            UpgradeSelectionUI.Instance.OpenUpgradeMenu(() =>
+            {
+                ExecuteFloorTransition(targetFloor);
+            });
+        }
+        else
+        {
+            ExecuteFloorTransition(targetFloor);
+        }
+    }
+
     /// <summary>
     /// Chuyển sang Tầng kế tiếp (Floor Transition)
     /// </summary>
     public void StartNextFloor()
     {
-        currentFloor++;
+        ExecuteFloorTransition(currentFloor + 1);
+    }
+
+    /// <summary>
+    /// Thực thi chuyển tầng tới mục tiêu targetFloor
+    /// </summary>
+    public void ExecuteFloorTransition(int targetFloor)
+    {
+        if (isTransitioning)
+        {
+            Debug.LogWarning("[GameProgressionManager] Đang trong quá trình chuyển tầng, bỏ qua yêu cầu gọi trùng lặp.");
+            return;
+        }
+
+        isTransitioning = true;
+        currentFloor = targetFloor;
         Debug.Log($"[GameProgressionManager] Đang chuyển sang Tầng {currentFloor}/{maxFloor}...");
+
+        // Hiển thị Màn hình Chờ Tải Tầng mới
+        if (LoadingScreenUI.Instance != null)
+        {
+            LoadingScreenUI.Instance.ShowLoading($"TẦNG {currentFloor} - 1", "Đang khởi tạo cấu trúc hầm ngục mới...");
+        }
 
         if (currentFloor > maxFloor)
         {
             // Nếu đã vượt qua tầng 5 -> Chiến thắng game!
             Debug.Log("[GameProgressionManager] Đã vượt qua tầng cuối cùng! Chiến thắng trận đấu!");
+            isTransitioning = false;
+            if (LoadingScreenUI.Instance != null) LoadingScreenUI.Instance.HideLoading();
             if (RunStatsTracker.Instance != null)
             {
                 RunStatsTracker.Instance.EndRun(true);
@@ -161,6 +234,7 @@ public class GameProgressionManager : MonoBehaviour
             movement.enabled = true;
         }
 
+        isTransitioning = false;
         Debug.Log($"[GameProgressionManager] Tải Tầng {currentFloor} thành công!");
     }
 }

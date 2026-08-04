@@ -221,6 +221,10 @@ public class LobbyUIController : MonoBehaviour
     private void HandleGameStarted()
     {
         Debug.Log("Trận đấu bắt đầu! Đang tải màn chơi...");
+        if (LoadingScreenUI.Instance != null)
+        {
+            LoadingScreenUI.Instance.ShowLoading("TẦNG 1 - 1", "Đang kết nối và khởi tạo phòng chơi Co-op...");
+        }
         // Tải Scene chơi game thực tế của bạn
         UnityEngine.SceneManagement.SceneManager.LoadScene("SampleScene");
     }
