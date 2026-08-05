@@ -63,6 +63,7 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnRemoteWeaponChanged += HandleRemoteWeaponChanged;
             NetworkManager.Instance.OnPlayerDamaged += HandlePlayerDamaged;
             NetworkManager.Instance.OnRemotePlayerDied += HandleRemotePlayerDied;
+            NetworkManager.Instance.OnTeamDefeat += HandleTeamDefeat;
         }
     }
 
@@ -84,6 +85,7 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnRemoteWeaponChanged -= HandleRemoteWeaponChanged;
             NetworkManager.Instance.OnPlayerDamaged -= HandlePlayerDamaged;
             NetworkManager.Instance.OnRemotePlayerDied -= HandleRemotePlayerDied;
+            NetworkManager.Instance.OnTeamDefeat -= HandleTeamDefeat;
         }
     }
 
@@ -225,7 +227,16 @@ public class MultiplayerSyncManager : MonoBehaviour
             Animator anim = remoteObj.GetComponent<Animator>();
             if (anim != null) anim.SetTrigger("die");
             SpriteRenderer sr = remoteObj.GetComponent<SpriteRenderer>();
-            if (sr != null) sr.color = new Color(0.3f, 0.3f, 0.3f, 1f);
+            if (sr != null) sr.color = new Color(0.35f, 0.35f, 0.35f, 1f);
+        }
+    }
+
+    private void HandleTeamDefeat()
+    {
+        Debug.Log("[MultiplayerSyncManager] Tất cả thành viên trong phòng Co-op đã hy sinh! Mở Bảng Defeat...");
+        if (RunStatsTracker.Instance != null)
+        {
+            RunStatsTracker.Instance.EndRun(false);
         }
     }
     // ==========================================
@@ -449,26 +460,36 @@ public class MultiplayerSyncManager : MonoBehaviour
 
         if (targetConnId == NetworkManager.Instance.MyConnectionId)
         {
-            // Bỏ qua nếu gói tin sát thương của chính mình (đã được trừ máu cục bộ trong RookieHealth.TakeDamage)
-            return;
-        }
-
-        // Nếu là đồng đội nhận sát thương, hiển thị chữ số sát thương và chớp đỏ trên nhân vật đồng đội
-        Debug.Log($"[MultiplayerSyncManager] Đồng đội {targetConnId} nhận sát thương: {damage} HP");
-        GameObject remoteObj = GetRemotePlayerById(targetConnId);
-        if (remoteObj != null)
-        {
-            int dmgInt = Mathf.RoundToInt(damage);
-            if (DamageNumberSpawner.Instance != null && dmgInt > 0)
+            // Nếu chính mình là mục tiêu chịu sát thương (Host gửi xuống cho Player 2), gọi TakeDamageFromNetwork
+            GameObject localPlayerObj = GameObject.FindGameObjectWithTag("Player");
+            if (localPlayerObj != null)
             {
-                DamageNumber dn = DamageNumberSpawner.Instance.Spawn(remoteObj.transform.position, dmgInt, false);
-                if (dn != null)
+                RookieHealth health = localPlayerObj.GetComponent<RookieHealth>();
+                if (health != null && !health.isDead)
                 {
-                    dn.SetColor(new Color(1f, 0.4f, 0f));
-                    dn.SetText("-" + dmgInt);
+                    health.TakeDamageFromNetwork(Mathf.RoundToInt(damage));
                 }
             }
-            StartCoroutine(RemoteHurtFlashRoutine(remoteObj));
+        }
+        else
+        {
+            // Nếu là đồng đội nhận sát thương, hiển thị chữ số sát thương và chớp đỏ trên nhân vật đồng đội
+            Debug.Log($"[MultiplayerSyncManager] Đồng đội {targetConnId} nhận sát thương: {damage} HP");
+            GameObject remoteObj = GetRemotePlayerById(targetConnId);
+            if (remoteObj != null)
+            {
+                int dmgInt = Mathf.RoundToInt(damage);
+                if (DamageNumberSpawner.Instance != null && dmgInt > 0)
+                {
+                    DamageNumber dn = DamageNumberSpawner.Instance.Spawn(remoteObj.transform.position, dmgInt, false);
+                    if (dn != null)
+                    {
+                        dn.SetColor(new Color(1f, 0.4f, 0f));
+                        dn.SetText("-" + dmgInt);
+                    }
+                }
+                StartCoroutine(RemoteHurtFlashRoutine(remoteObj));
+            }
         }
     }
 

@@ -209,7 +209,18 @@ public class DungeonGenerator : MonoBehaviour
             MultiplayerSyncManager.Instance.RefreshRoomAndMobNetworkCache();
         }
 
+        StartCoroutine(AutoHideLoadingRoutine());
+
         Debug.Log("Đã generate map kiểu Soul Knight và cập nhật Minimap & Cache mạng.");
+    }
+
+    private System.Collections.IEnumerator AutoHideLoadingRoutine()
+    {
+        yield return new WaitForSeconds(0.5f);
+        if (LoadingScreenUI.Instance != null)
+        {
+            LoadingScreenUI.Instance.HideLoading();
+        }
     }
 
     private void GenerateLayout()
@@ -277,38 +288,65 @@ public class DungeonGenerator : MonoBehaviour
 
     private void AttachPortalRoomToBossRoom()
     {
-        MapRoom bossRoom = null;
-        float maxDistance = -1f;
-
+        // 1. Sắp xếp danh sách ứng viên phòng Boss giảm dần theo khoảng cách đến Start (0,0)
+        List<MapRoom> candidateBossRooms = new List<MapRoom>();
         foreach (var kvp in roomsByGrid)
         {
-            if (kvp.Value.isStartRoom) continue;
-
-            float dist = Vector2Int.Distance(kvp.Key, Vector2Int.zero);
-            if (dist > maxDistance)
+            if (!kvp.Value.isStartRoom)
             {
-                maxDistance = dist;
-                bossRoom = kvp.Value;
+                candidateBossRooms.Add(kvp.Value);
             }
         }
 
-        if (bossRoom == null) return;
+        candidateBossRooms.Sort((a, b) =>
+        {
+            float distA = Vector2Int.Distance(a.gridPos, Vector2Int.zero);
+            float distB = Vector2Int.Distance(b.gridPos, Vector2Int.zero);
+            return distB.CompareTo(distA);
+        });
 
-        bossRoom.isBossRoom = true; // Đánh dấu chính xác phòng Boss
+        MapRoom bossRoom = null;
+        MapRoom portalRoom = null;
+        Vector2Int portalGridPos = Vector2Int.zero;
+        Vector2Int chosenDir = Vector2Int.zero;
 
         Vector2Int[] directions = { Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left };
-        foreach (Vector2Int dir in directions)
+
+        // 2. Duyệt tìm phòng xa nhất mà CÓ ÍT NHẤT 1 Ô TRỐNG bên cạnh để gắn phòng Portal
+        foreach (MapRoom candidate in candidateBossRooms)
         {
-            Vector2Int nextGrid = bossRoom.gridPos + dir;
-            if (!roomsByGrid.ContainsKey(nextGrid))
+            foreach (Vector2Int dir in directions)
             {
-                MapRoom portalRoom = CreateMapRoom(nextGrid, false);
-                portalRoom.isPortalRoom = true; // Đánh dấu chính xác phòng Portal nằm sau phòng Boss
-                roomsByGrid.Add(nextGrid, portalRoom);
-                connections.Add(new MapConnection(bossRoom, portalRoom, dir));
-                Debug.Log($"[DungeonGenerator] Đã tạo phòng Portal riêng biệt tại {nextGrid} nối tiếp phía sau phòng Boss tại {bossRoom.gridPos}");
-                break;
+                Vector2Int checkGrid = candidate.gridPos + dir;
+                if (!roomsByGrid.ContainsKey(checkGrid))
+                {
+                    bossRoom = candidate;
+                    portalGridPos = checkGrid;
+                    chosenDir = dir;
+                    break;
+                }
             }
+            if (bossRoom != null) break;
+        }
+
+        // 3. Khởi tạo phòng Portal nối tiếp sau phòng Boss
+        if (bossRoom != null)
+        {
+            bossRoom.isBossRoom = true; // Đánh dấu phòng Boss
+
+            portalRoom = CreateMapRoom(portalGridPos, false);
+            portalRoom.isPortalRoom = true; // Đánh dấu phòng Portal riêng biệt
+            roomsByGrid.Add(portalGridPos, portalRoom);
+            connections.Add(new MapConnection(bossRoom, portalRoom, chosenDir));
+            Debug.Log($"[DungeonGenerator] Đã tạo phòng Portal riêng tại {portalGridPos} nối tiếp sau phòng Boss tại {bossRoom.gridPos}");
+        }
+        else if (candidateBossRooms.Count > 0)
+        {
+            // Fallback: Nếu tất cả phòng xa đều bị kẹt cạnh, dùng phòng xa nhất làm phòng Boss kiêm Portal
+            bossRoom = candidateBossRooms[0];
+            bossRoom.isBossRoom = true;
+            bossRoom.isPortalRoom = true;
+            Debug.LogWarning($"[DungeonGenerator] Không tìm thấy ô trống cạnh phòng Boss, gán Portal xuất hiện trực tiếp tại phòng Boss {bossRoom.gridPos}");
         }
     }
 

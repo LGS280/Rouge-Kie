@@ -115,6 +115,46 @@ public class RookieHealth : MonoBehaviour
         if (currentHealth <= 0) Die();
     }
 
+    /// <summary>
+    /// Nhận sát thương đồng bộ từ mạng (do Host/Server gửi về cho Player 2).
+    /// Trừ máu/giáp cục bộ nhưng KHÔNG phát tín hiệu SendPlayerDamaged ngược lại SignalR.
+    /// </summary>
+    public void TakeDamageFromNetwork(int damage)
+    {
+        if (isDead) return;
+
+        int originalDamage = damage;
+
+        if (currentArmor > 0)
+        {
+            int absorbed = Mathf.Min(currentArmor, damage);
+            currentArmor -= absorbed;
+            damage -= absorbed;
+        }
+
+        armorRegenDelayTimer = armorRegenDelay;
+        armorRegenStarted = false;
+
+        currentHealth -= damage;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+        onHealthChanged?.Invoke();
+
+        StartCoroutine(HurtFlashRoutine());
+
+        if (DamageNumberSpawner.Instance != null && originalDamage > 0)
+        {
+            DamageNumber dn = DamageNumberSpawner.Instance.Spawn(transform.position, originalDamage, false);
+            if (dn != null)
+            {
+                dn.SetColor(new Color(1f, 0.4f, 0f));
+                dn.SetText("-" + originalDamage);
+            }
+        }
+
+        if (animator != null && HasParameter("hurt", animator)) animator.SetTrigger("hurt");
+        if (currentHealth <= 0) Die();
+    }
+
     private bool HasParameter(string paramName, Animator anim)
     {
         if (anim == null) return false;
@@ -183,34 +223,58 @@ public class RookieHealth : MonoBehaviour
 
     void Die()
     {
+        if (isDead) return;
         isDead = true;
 
-        // BỔ SUNG: Gửi thông báo người chơi hy sinh qua SignalR khi chơi chế độ Co-op
-        if (NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId))
-        {
-            NetworkManager.Instance.SendPlayerDeath();
-        }
+        // 1. Tắt di chuyển và điều khiển
+        PlayerMovement pm = GetComponent<PlayerMovement>();
+        if (pm != null) pm.enabled = false;
 
-        if (animator != null) animator.SetTrigger("die");
-        if (playerCollider != null) playerCollider.enabled = false;
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector2.zero;
-            rb.bodyType = RigidbodyType2D.Static;
-        }
         PlayerController controller = GetComponent<PlayerController>();
         if (controller != null) controller.enabled = false;
 
+        MonoBehaviour[] scripts = GetComponentsInChildren<MonoBehaviour>();
+        foreach (var script in scripts)
+        {
+            if (script != null && (script.GetType().Name == "WeaponAim" || script.GetType().Name == "WeaponLaser"))
+            {
+                script.enabled = false;
+            }
+        }
+
+        // 2. Tắt súng hiển thị trên tay và lưng
         Transform handPos = transform.Find("Hand_Position");
         Transform backPos = transform.Find("Back_Position");
         if (handPos != null) handPos.gameObject.SetActive(false);
         if (backPos != null) backPos.gameObject.SetActive(false);
 
-        WeaponAim weapon = GetComponentInChildren<WeaponAim>();
-        if (weapon != null) weapon.enabled = false;
+        // 3. Khóa vật lý để nằm yên cố định tại chỗ, không bị đẩy trượt
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.bodyType = RigidbodyType2D.Kinematic;
+        }
 
-        transform.position += new Vector3(0, -0.3f, 0);
+        // 4. Vô hiệu hóa Collider để không nhặt được Buff/Rương khi hy sinh
+        if (playerCollider != null) playerCollider.enabled = false;
+
+        // 5. Phát hoạt ảnh nằm xuống và chớp xám
+        if (animator != null && HasParameter("die", animator)) animator.SetTrigger("die");
         StartCoroutine(FadeToGray());
+
+        // 6. Gửi thông báo hy sinh lên Server nếu đang trong chế độ Co-op
+        if (NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId))
+        {
+            NetworkManager.Instance.SendPlayerDeath();
+        }
+        else
+        {
+            // Trong chế độ Solo -> Kết thúc Thất bại
+            if (RunStatsTracker.Instance != null)
+            {
+                RunStatsTracker.Instance.EndRun(false);
+            }
+        }
     }
 
     System.Collections.IEnumerator FadeToGray()

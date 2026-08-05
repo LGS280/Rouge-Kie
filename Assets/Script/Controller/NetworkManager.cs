@@ -58,6 +58,9 @@ public class NetworkManager : MonoBehaviour
     // BỔ SUNG: Sự kiện đồng bộ khi đồng đội hy sinh (connId)
     public event Action<string> OnRemotePlayerDied;
 
+    // BỔ SUNG: Sự kiện đồng bộ khi tất cả thành viên trong phòng Co-op đều đã hy sinh
+    public event Action OnTeamDefeat;
+
     public string MyConnectionId => hubConnection?.ConnectionId;
 
     // QUYỀN HẠN TRONG TRẬN: Sẽ được Server định đoạt khi tạo hoặc vào phòng thành công
@@ -189,6 +192,11 @@ public class NetworkManager : MonoBehaviour
         hubConnection.On<string>("OnRemotePlayerDied", (connId) =>
         {
             unityContext.Post(_ => OnRemotePlayerDied?.Invoke(connId), null);
+        });
+
+        hubConnection.On("OnTeamDefeat", () =>
+        {
+            unityContext.Post(_ => OnTeamDefeat?.Invoke(), null);
         });
 
         // Gọi hàm đăng ký các sự kiện Combat mạng

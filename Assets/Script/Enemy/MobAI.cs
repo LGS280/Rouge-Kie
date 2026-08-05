@@ -128,9 +128,22 @@ public class MobAI : MonoBehaviour
         }
     }
 
+    void FixedUpdate()
+    {
+        if (mobHealth != null && mobHealth.isDead) return;
+
+        if (isHost && isRoomActivated)
+        {
+            if (currentState == EnemyState.Idle || currentState == EnemyState.Attack)
+            {
+                if (rb != null) rb.linearVelocity = Vector2.zero;
+            }
+        }
+    }
+
     void LateUpdate()
     {
-        if (mobHealth.isDead) return;
+        if (mobHealth != null && mobHealth.isDead) return;
         ClampPositionToRoom();
     }
 
@@ -156,23 +169,32 @@ public class MobAI : MonoBehaviour
         }
     }
 
-    // Chặn không cho quái vật đi ra khỏi ranh giới phòng
+    // Chặn không cho quái vật đi ra khỏi ranh giới phòng (chỉ can thiệp khi bị vượt ranh giới)
     void ClampPositionToRoom()
     {
         if (myRoom == null || myRoom.RoomCollider == null) return;
 
         Bounds bounds = myRoom.RoomCollider.bounds;
 
-        // Khống chế tọa độ của quái vật nằm gọn trong bounds của RoomCollider
         float minX = bounds.min.x + wallPadding;
         float maxX = bounds.max.x - wallPadding;
         float minY = bounds.min.y + wallPadding;
         float maxY = bounds.max.y - wallPadding;
 
-        float clampedX = Mathf.Clamp(transform.position.x, minX, maxX);
-        float clampedY = Mathf.Clamp(transform.position.y, minY, maxY);
-
-        transform.position = new Vector3(clampedX, clampedY, transform.position.z);
+        Vector3 pos = transform.position;
+        if (pos.x < minX || pos.x > maxX || pos.y < minY || pos.y > maxY)
+        {
+            float clampedX = Mathf.Clamp(pos.x, minX, maxX);
+            float clampedY = Mathf.Clamp(pos.y, minY, maxY);
+            if (rb != null)
+            {
+                rb.position = new Vector2(clampedX, clampedY);
+            }
+            else
+            {
+                transform.position = new Vector3(clampedX, clampedY, pos.z);
+            }
+        }
     }
 
     void FindNearestPlayer()

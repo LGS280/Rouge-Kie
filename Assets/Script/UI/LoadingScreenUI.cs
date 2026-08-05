@@ -35,6 +35,7 @@ public class LoadingScreenUI : MonoBehaviour
     private RectTransform spinnerTransform;
     private bool isShowing = false;
     private Coroutine fadeCoroutine;
+    private Coroutine safetyTimeoutCoroutine;
 
     private readonly string[] gameTips = new string[]
     {
@@ -184,6 +185,20 @@ public class LoadingScreenUI : MonoBehaviour
 
         if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
         fadeCoroutine = StartCoroutine(FadeRoutine(1f, duration));
+
+        // BỔ SUNG: Bộ đếm thời gian an toàn (Safety Timeout 5s) tự động ẩn Loading Screen đề phòng bị kẹt
+        if (safetyTimeoutCoroutine != null) StopCoroutine(safetyTimeoutCoroutine);
+        safetyTimeoutCoroutine = StartCoroutine(SafetyTimeoutRoutine(5f));
+    }
+
+    private IEnumerator SafetyTimeoutRoutine(float timeoutSeconds)
+    {
+        yield return new WaitForSecondsRealtime(timeoutSeconds);
+        if (isShowing)
+        {
+            Debug.LogWarning("[LoadingScreenUI] Kích hoạt Safety Timeout tự động ẩn Loading Screen!");
+            HideLoading();
+        }
     }
 
     /// <summary>
@@ -193,6 +208,7 @@ public class LoadingScreenUI : MonoBehaviour
     {
         isShowing = false;
         if (canvasGroup != null) canvasGroup.blocksRaycasts = false;
+        if (safetyTimeoutCoroutine != null) StopCoroutine(safetyTimeoutCoroutine);
 
         if (!gameObject.activeInHierarchy)
         {

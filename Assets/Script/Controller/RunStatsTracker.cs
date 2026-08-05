@@ -50,6 +50,29 @@ public class RunStatsTracker : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        // BỔ SUNG: Bấm phím Tab để Đóng / Mở (Toggle) Bảng Kết Quả / Thống Kê Trận Đấu bất cứ lúc nào
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            ToggleResultPanel();
+        }
+    }
+
+    public void ToggleResultPanel()
+    {
+        if (resultPanel != null)
+        {
+            bool nextState = !resultPanel.activeSelf;
+            resultPanel.SetActive(nextState);
+            if (nextState)
+            {
+                EnsureCloseButtonExists();
+            }
+            Debug.Log($"[RunStatsTracker] Bấm phím Tab thay đổi trạng thái Bảng Thống Kê: {(nextState ? "MỞ" : "ĐÓNG")}");
+        }
+    }
+
     /// <summary>
     /// Khởi tạo lại toàn bộ chỉ số khi bắt đầu màn chơi mới
     /// </summary>

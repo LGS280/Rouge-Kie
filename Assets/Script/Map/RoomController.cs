@@ -201,10 +201,44 @@ public class RoomController : MonoBehaviour
             Vector3 chestPos = spawnPosition;
             SpawnRewardChest(chestPos);
         }
+
+        // BỔ SUNG: Nếu đây là phòng Boss hoặc phòng Portal, tự động đảm bảo Cổng Dịch Chuyển xuất hiện
+        if (roomType == RoomType.Boss || roomType == RoomType.Portal)
+        {
+            EnsureTeleportPortalExists();
+        }
     }
 
     /// <summary>
-    /// Sinh cổng dịch chuyển mượt mà tại tâm phòng Portal
+    /// Tự động đảm bảo Cổng Dịch Chuyển tồn tại tại tâm phòng Portal (hoặc phòng Boss) khi hạ gục Miniboss
+    /// </summary>
+    public void EnsureTeleportPortalExists()
+    {
+        if (GameObject.Find("TeleportPortal") != null) return;
+
+        RoomController[] allRooms = FindObjectsByType<RoomController>(FindObjectsSortMode.None);
+        RoomController portalRoom = null;
+        foreach (var r in allRooms)
+        {
+            if (r.roomType == RoomType.Portal)
+            {
+                portalRoom = r;
+                break;
+            }
+        }
+
+        if (portalRoom != null)
+        {
+            portalRoom.SpawnTeleportPortal();
+        }
+        else
+        {
+            SpawnTeleportPortal();
+        }
+    }
+
+    /// <summary>
+    /// Sinh cổng dịch chuyển mượt mà tại tâm phòng
     /// </summary>
     public void SpawnTeleportPortal()
     {
@@ -214,11 +248,11 @@ public class RoomController : MonoBehaviour
             return;
         }
 
-        Debug.Log($"[RoomController] Đang khởi tạo cổng dịch chuyển tại phòng Boss {gameObject.name}");
+        Debug.Log($"[RoomController] Đang khởi tạo cổng dịch chuyển tại phòng {gameObject.name}");
 
         // 1. Tạo GameObject Portal mới
         GameObject portalObj = new GameObject("TeleportPortal");
-        portalObj.transform.position = transform.position; // Đặt tại tâm phòng Boss
+        portalObj.transform.position = transform.position; // Đặt tại tâm phòng
 
         // 2. Thêm SpriteRenderer và thiết lập sprite
         SpriteRenderer renderer = portalObj.AddComponent<SpriteRenderer>();

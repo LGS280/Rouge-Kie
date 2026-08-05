@@ -38,25 +38,14 @@ public class MinimapManager : MonoBehaviour
 
     private void Start()
     {
-        // Tự động tìm và phục hồi các RoomController từ các GameObject trong Scene
-        // (đề phòng trường hợp map đã được sinh từ trước trong Editor và lưu trong Scene,
-        // khiến trường dictionary private của DungeonGenerator bị reset trống khi bắt đầu chạy game)
-        var controllers = FindRoomsInScene();
-        if (controllers.Count > 0)
+        // Luôn nạp dữ liệu phòng thực tế từ DungeonGenerator (bỏ qua các room cũ còn lưu trong Scene Editor)
+        var generator = Object.FindAnyObjectByType<DungeonGenerator>();
+        if (generator != null)
         {
-            InitializeWithRooms(controllers);
-        }
-        else
-        {
-            // Nếu không tìm thấy các phòng lưu sẵn, thử lấy từ DungeonGenerator (cho trường hợp sinh tại Runtime)
-            var generator = Object.FindAnyObjectByType<DungeonGenerator>();
-            if (generator != null)
+            var dict = generator.GetRoomControllers();
+            if (dict != null && dict.Count > 0)
             {
-                var dict = generator.GetRoomControllers();
-                if (dict != null && dict.Count > 0)
-                {
-                    InitializeWithRooms(dict);
-                }
+                InitializeWithRooms(dict);
             }
         }
 
