@@ -52,8 +52,8 @@ public class RunStatsTracker : MonoBehaviour
 
     private void Update()
     {
-        // BỔ SUNG: Bấm phím Tab để Đóng / Mở (Toggle) Bảng Kết Quả / Thống Kê Trận Đấu bất cứ lúc nào
-        if (Input.GetKeyDown(KeyCode.Tab))
+        // Phím Tab bị vô hiệu hóa hoàn toàn khi đang chơi, chỉ hoạt động khi trận đấu kết thúc (Team chết hết hoặc thắng game)
+        if (runEnded && Input.GetKeyDown(KeyCode.Tab))
         {
             ToggleResultPanel();
         }
@@ -61,6 +61,9 @@ public class RunStatsTracker : MonoBehaviour
 
     public void ToggleResultPanel()
     {
+        // Vô hiệu hóa hoàn toàn khi trận đấu chưa kết thúc
+        if (!runEnded) return;
+
         if (resultPanel != null)
         {
             bool nextState = !resultPanel.activeSelf;

@@ -256,14 +256,22 @@ public class RoomController : MonoBehaviour
 
         // 2. Thêm SpriteRenderer và thiết lập sprite
         SpriteRenderer renderer = portalObj.AddComponent<SpriteRenderer>();
-        Sprite portalSprite = Resources.Load<Sprite>("Minimap/Room"); // Nền ô phòng hình vuông
+        Sprite portalSprite = Resources.Load<Sprite>("Minimap/Room");
         if (portalSprite != null)
         {
             renderer.sprite = portalSprite;
         }
-        renderer.color = new Color(0f, 0.8f, 1f, 0.8f); // Màu xanh cyan phát sáng mờ ảo
-        portalObj.transform.localScale = new Vector3(2.0f, 2.0f, 1f); // Tỷ lệ cổng
-        renderer.sortingOrder = 5; // Hiển thị trên mặt đất
+        else
+        {
+            // Fallback nếu không có sprite hình vuông
+            Texture2D tex = Texture2D.whiteTexture;
+            renderer.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
+        }
+
+        renderer.color = new Color(0f, 0.9f, 1f, 0.95f); // Màu xanh cyan phát sáng rực rỡ
+        renderer.sortingLayerName = "Default";
+        renderer.sortingOrder = 20; // Nổi hoàn toàn trên gạch sàn Tilemap
+        portalObj.transform.localScale = new Vector3(2.5f, 2.5f, 1f);
 
         // 3. Thêm Collider 2D làm vùng va chạm Trigger
         CircleCollider2D col = portalObj.AddComponent<CircleCollider2D>();

@@ -91,6 +91,13 @@ public class MultiplayerSyncManager : MonoBehaviour
 
     private void Update()
     {
+        // Nếu bản thân đang bị ngã/chết, ngưng gửi tọa độ di chuyển hay góc quay súng lên mạng
+        if (localPlayer != null)
+        {
+            RookieHealth health = localPlayer.GetComponent<RookieHealth>();
+            if (health != null && health.isDead) return;
+        }
+
         // Định kỳ gửi tọa độ của chính mình lên Server
         if (localPlayer != null && NetworkManager.Instance != null && Time.time - lastSyncTime >= syncInterval)
         {
