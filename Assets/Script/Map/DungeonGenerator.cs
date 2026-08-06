@@ -1177,6 +1177,15 @@ public class DungeonGenerator : MonoBehaviour
 
         floorPositions.Clear();
 
+        // Xóa tất cả các cổng dịch chuyển cũ (TeleportPortal) còn tồn tại trong Scene
+        TeleportPortal[] oldPortals = Object.FindObjectsByType<TeleportPortal>(FindObjectsSortMode.None);
+        foreach (var p in oldPortals)
+        {
+            if (p != null) Destroy(p.gameObject);
+        }
+        GameObject oldPortalObj = GameObject.Find("TeleportPortal");
+        if (oldPortalObj != null) Destroy(oldPortalObj);
+
         for (int i = transform.childCount - 1; i >= 0; i--)
         {
             GameObject child = transform.GetChild(i).gameObject;

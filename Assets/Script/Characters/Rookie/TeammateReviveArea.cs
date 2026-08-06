@@ -14,7 +14,7 @@ namespace Assets.Script.Characters.Rookie
 
         [Header("Cấu hình Hồi Sinh")]
         public float reviveHoldDuration = 2.5f; // Thời gian giữ phím E
-        public float reviveRadius = 2.5f;       // Khoảng cách hồi sinh tối đa
+        public float reviveRadius = 3.5f;       // Khoảng cách hồi sinh tối đa (bán kính 3.5m)
 
         private float currentReviveProgress = 0f;
         private bool isReviving = false;

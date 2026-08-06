@@ -41,6 +41,12 @@ public class MultiplayerSyncManager : MonoBehaviour
             if (playerObj != null) localPlayer = playerObj.transform;
         }
 
+        // Tự động gắn TeammateReviveArea để quản lý giữ phím [E] 2.5s hồi sinh đồng đội
+        if (GetComponent<Assets.Script.Characters.Rookie.TeammateReviveArea>() == null)
+        {
+            gameObject.AddComponent<Assets.Script.Characters.Rookie.TeammateReviveArea>();
+        }
+
         // BỔ SUNG: Gán ID đồng bộ cho Phòng và Quái vật trước khi Cache
         AssignDeterministicRoomAndMobIds();
 
@@ -251,6 +257,15 @@ public class MultiplayerSyncManager : MonoBehaviour
             if (anim != null) anim.SetTrigger("die");
             SpriteRenderer sr = remoteObj.GetComponent<SpriteRenderer>();
             if (sr != null) sr.color = new Color(0.35f, 0.35f, 0.35f, 1f);
+
+            // Ẩn bóng Shadow và vòng xanh Player_Ring của đồng đội khi hy sinh
+            Transform shadowPos = remoteObj.transform.Find("Shadow");
+            if (shadowPos != null) shadowPos.gameObject.SetActive(false);
+
+            Transform ringPos = remoteObj.transform.Find("Player_Ring");
+            if (ringPos == null) ringPos = remoteObj.transform.Find("Ring");
+            if (ringPos == null) ringPos = remoteObj.transform.Find("PlayerRing");
+            if (ringPos != null) ringPos.gameObject.SetActive(false);
         }
     }
 
@@ -273,6 +288,15 @@ public class MultiplayerSyncManager : MonoBehaviour
             if (anim != null) anim.SetTrigger("idle");
             SpriteRenderer sr = remoteObj.GetComponent<SpriteRenderer>();
             if (sr != null) sr.color = Color.white;
+
+            // Bật lại bóng Shadow và vòng xanh Player_Ring của đồng đội khi được hồi sinh
+            Transform shadowPos = remoteObj.transform.Find("Shadow");
+            if (shadowPos != null) shadowPos.gameObject.SetActive(true);
+
+            Transform ringPos = remoteObj.transform.Find("Player_Ring");
+            if (ringPos == null) ringPos = remoteObj.transform.Find("Ring");
+            if (ringPos == null) ringPos = remoteObj.transform.Find("PlayerRing");
+            if (ringPos != null) ringPos.gameObject.SetActive(true);
         }
     }
 

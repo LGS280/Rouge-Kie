@@ -242,13 +242,14 @@ public class RoomController : MonoBehaviour
     /// </summary>
     public void SpawnTeleportPortal()
     {
-        if (GameObject.Find("TeleportPortal") != null)
+        // 0. Hủy bỏ tất cả các cổng cũ trong Scene trước khi tạo cổng mới tại tầng hiện tại
+        TeleportPortal[] oldPortals = Object.FindObjectsByType<TeleportPortal>(FindObjectsSortMode.None);
+        foreach (var p in oldPortals)
         {
-            Debug.Log("[RoomController] Cổng dịch chuyển đã tồn tại trong Scene. Bỏ qua khởi tạo trùng.");
-            return;
+            if (p != null && p.gameObject != null) Destroy(p.gameObject);
         }
 
-        Debug.Log($"[RoomController] Đang khởi tạo cổng dịch chuyển tại phòng {gameObject.name}");
+        Debug.Log($"[RoomController] Đang khởi tạo cổng dịch chuyển mới tại phòng {gameObject.name}");
 
         // 1. Tạo GameObject Portal mới
         GameObject portalObj = new GameObject("TeleportPortal");
