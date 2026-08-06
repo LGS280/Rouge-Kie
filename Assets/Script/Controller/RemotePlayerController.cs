@@ -17,12 +17,30 @@ public class RemotePlayerController : MonoBehaviour
         animator = GetComponent<Animator>();
     }
 
+    public bool isDead = false;
+
+    public void DieRemotePlayer()
+    {
+        isDead = true;
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr != null) sr.color = new Color(0.3f, 0.3f, 0.3f, 1f);
+    }
+
+    public void ReviveRemotePlayer()
+    {
+        isDead = false;
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr != null) sr.color = Color.white;
+    }
+
     void Update()
     {
+        if (isDead) return;
+
         // Tính khoảng cách thay đổi
         float dist = Vector3.Distance(transform.position, targetPosition);
         
-        // Lerp mượt mà tới vị trí mục tiêu (Tốc độ nội suy 10f để đuổi kịp trong 0.1s)
+        // Lerp mượt mà tới vị trí mục tiêu (Tốc độ nội suy 15f để đuổi kịp)
         transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * 15f);
         
         // Nếu khoảng cách còn xa hơn ngưỡng nhỏ, coi như đang di chuyển

@@ -296,10 +296,62 @@ public class RookieHealth : MonoBehaviour
 
         sr.color = targetColor;
 
-        // Báo cho RunStatsTracker kết thúc trận với kết quả Thất bại
-        if (RunStatsTracker.Instance != null)
+        bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+        // Trong chế độ Solo -> Kết thúc trận với kết quả Thất bại (Trong Co-op chỉ kết thúc khi cả 2 cùng chết)
+        if (!isMultiplayer && RunStatsTracker.Instance != null)
         {
             RunStatsTracker.Instance.EndRun(false);
         }
+    }
+
+    /// <summary>
+    /// Hồi sinh người chơi khi được đồng đội giữ [E] 2.5s trong Co-op
+    /// </summary>
+    public void Revive(int healthAmount)
+    {
+        if (!isDead) return;
+        isDead = false;
+
+        currentHealth = Mathf.Clamp(healthAmount, 1, maxHealth);
+        currentArmor = maxArmor / 2; // Phục hồi 50% Giáp
+        onHealthChanged?.Invoke();
+
+        // 1. Kích hoạt lại di chuyển và điều khiển
+        PlayerMovement pm = GetComponent<PlayerMovement>();
+        if (pm != null) pm.enabled = true;
+
+        PlayerController controller = GetComponent<PlayerController>();
+        if (controller != null) controller.enabled = true;
+
+        MonoBehaviour[] scripts = GetComponentsInChildren<MonoBehaviour>();
+        foreach (var script in scripts)
+        {
+            if (script != null && (script.GetType().Name == "WeaponAim" || script.GetType().Name == "WeaponLaser"))
+            {
+                script.enabled = true;
+            }
+        }
+
+        // 2. Kích hoạt lại súng hiển thị trên tay và lưng
+        Transform handPos = transform.Find("Hand_Position");
+        Transform backPos = transform.Find("Back_Position");
+        if (handPos != null) handPos.gameObject.SetActive(true);
+        if (backPos != null) backPos.gameObject.SetActive(true);
+
+        // 3. Khôi phục Rigidbody2D vật lý động
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.linearVelocity = Vector2.zero;
+        }
+
+        // 4. Kích hoạt lại Collider2D
+        if (playerCollider != null) playerCollider.enabled = true;
+
+        // 5. Khôi phục màu sắc hiển thị
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr != null) sr.color = Color.white;
+
+        Debug.Log($"[RookieHealth] Người chơi đã được HỒI SINH với {currentHealth} Máu và {currentArmor} Giáp!");
     }
 }

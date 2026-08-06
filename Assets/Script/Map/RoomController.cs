@@ -254,23 +254,33 @@ public class RoomController : MonoBehaviour
         GameObject portalObj = new GameObject("TeleportPortal");
         portalObj.transform.position = transform.position; // Đặt tại tâm phòng
 
-        // 2. Thêm SpriteRenderer và thiết lập sprite
+        // 2. Thêm SpriteRenderer và tạo Texture Cổng Xanh Cyan phát sáng rực rỡ 64x64
         SpriteRenderer renderer = portalObj.AddComponent<SpriteRenderer>();
-        Sprite portalSprite = Resources.Load<Sprite>("Minimap/Room");
-        if (portalSprite != null)
-        {
-            renderer.sprite = portalSprite;
-        }
-        else
-        {
-            // Fallback nếu không có sprite hình vuông
-            Texture2D tex = Texture2D.whiteTexture;
-            renderer.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
-        }
 
-        renderer.color = new Color(0f, 0.9f, 1f, 0.95f); // Màu xanh cyan phát sáng rực rỡ
+        Texture2D portalTex = new Texture2D(64, 64);
+        Color cyanCore = new Color(0f, 1f, 1f, 0.95f);
+        Color cyanEdge = new Color(0f, 0.5f, 0.9f, 0.3f);
+        for (int y = 0; y < 64; y++)
+        {
+            for (int x = 0; x < 64; x++)
+            {
+                float dist = Vector2.Distance(new Vector2(x, y), new Vector2(31.5f, 31.5f));
+                if (dist <= 30f)
+                {
+                    float alpha = Mathf.Clamp01(1f - (dist / 30f));
+                    portalTex.SetPixel(x, y, Color.Lerp(cyanCore, cyanEdge, dist / 30f) * alpha);
+                }
+                else
+                {
+                    portalTex.SetPixel(x, y, Color.clear);
+                }
+            }
+        }
+        portalTex.Apply();
+
+        renderer.sprite = Sprite.Create(portalTex, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f), 32f);
         renderer.sortingLayerName = "Default";
-        renderer.sortingOrder = 20; // Nổi hoàn toàn trên gạch sàn Tilemap
+        renderer.sortingOrder = 25; // Nổi hoàn toàn trên tất cả gạch sàn Tilemap
         portalObj.transform.localScale = new Vector3(2.5f, 2.5f, 1f);
 
         // 3. Thêm Collider 2D làm vùng va chạm Trigger

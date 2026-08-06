@@ -61,6 +61,12 @@ public class NetworkManager : MonoBehaviour
     // BỔ SUNG: Sự kiện đồng bộ khi tất cả thành viên trong phòng Co-op đều đã hy sinh
     public event Action OnTeamDefeat;
 
+    // BỔ SUNG: Sự kiện đồng bộ khi người chơi được hồi sinh (targetConnId, reviveHp)
+    public event Action<string, int> OnPlayerRevived;
+
+    // BỔ SUNG: Sự kiện đồng bộ khi Host ngắt kết nối/out game (hostName)
+    public event Action<string> OnHostDisconnectedEndGame;
+
     public string MyConnectionId => hubConnection?.ConnectionId;
 
     // QUYỀN HẠN TRONG TRẬN: Sẽ được Server định đoạt khi tạo hoặc vào phòng thành công
@@ -197,6 +203,18 @@ public class NetworkManager : MonoBehaviour
         hubConnection.On("OnTeamDefeat", () =>
         {
             unityContext.Post(_ => OnTeamDefeat?.Invoke(), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện đồng bộ người chơi được hồi sinh từ đồng đội
+        hubConnection.On<string, int>("OnPlayerRevived", (connId, reviveHp) =>
+        {
+            unityContext.Post(_ => OnPlayerRevived?.Invoke(connId, reviveHp), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện Host ngắt kết nối/out game
+        hubConnection.On<string>("OnHostDisconnectedEndGame", (hostName) =>
+        {
+            unityContext.Post(_ => OnHostDisconnectedEndGame?.Invoke(hostName), null);
         });
 
         // Gọi hàm đăng ký các sự kiện Combat mạng
@@ -525,6 +543,23 @@ public class NetworkManager : MonoBehaviour
             {
                 Debug.LogError($"[NetworkManager] Lỗi khi reconnect SignalR: {ex.Message}");
             }
+        }
+    }
+
+    // BỔ SUNG: Gửi lệnh Hồi Sinh đồng đội (SendPlayerRevive) qua SignalR
+    public async void SendPlayerRevive(string targetConnId, int reviveHp)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncPlayerRevive", CurrentRoomId, targetConnId, reviveHp);
+                Debug.Log($"[NetworkManager] Đã gửi thông báo Hồi Sinh cho player: {targetConnId}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendPlayerRevive gián đoạn: {ex.Message}");
         }
     }
 }

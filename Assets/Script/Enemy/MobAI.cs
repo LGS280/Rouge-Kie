@@ -65,6 +65,12 @@ public class MobAI : MonoBehaviour
 
         if (!isHost)
         {
+            // Client: Khóa vật lý động để di chuyển theo vị trí mạng mượt mà 100%, không bị giật khựng
+            if (rb != null && rb.bodyType != RigidbodyType2D.Kinematic)
+            {
+                rb.bodyType = RigidbodyType2D.Kinematic;
+            }
+
             // Client: Di chuyển mượt (Lerp) tới tọa độ do Host gửi
             if (hasFirstNetworkPos)
             {
