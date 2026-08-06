@@ -2553,6 +2553,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameProgressionManager
   currentFloor: 1
   hpMultiplierPerFloor: 0.3
+  isTransitioning: 0
 --- !u!4 &330735140
 Transform:
   m_ObjectHideFlags: 0

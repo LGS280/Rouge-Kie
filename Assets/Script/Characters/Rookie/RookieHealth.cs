@@ -193,6 +193,15 @@ public class RookieHealth : MonoBehaviour
         if (handPos != null) handPos.gameObject.SetActive(false);
         if (backPos != null) backPos.gameObject.SetActive(false);
 
+        // Tắt bóng Shadow và vòng xanh Player_Ring để tạo cảm giác nhân vật nằm bệt xuống sàn
+        Transform shadowPos = transform.Find("Shadow");
+        if (shadowPos != null) shadowPos.gameObject.SetActive(false);
+
+        Transform ringPos = transform.Find("Player_Ring");
+        if (ringPos == null) ringPos = transform.Find("Ring");
+        if (ringPos == null) ringPos = transform.Find("PlayerRing");
+        if (ringPos != null) ringPos.gameObject.SetActive(false);
+
         WeaponAim weapon = GetComponentInChildren<WeaponAim>();
         if (weapon != null) weapon.enabled = false;
 

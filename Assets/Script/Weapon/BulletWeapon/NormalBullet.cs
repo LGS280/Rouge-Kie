@@ -15,6 +15,8 @@ public class NormalBullet : MonoBehaviour
     // Hàm nhận dữ liệu từ DB truyền qua
     public void InitFromDb(int bulletId)
     {
+        if (bulletId <= 0) return;
+
         if (GameConfigManager.Instance != null && GameConfigManager.Instance.BulletDb.TryGetValue(bulletId, out BulletConfig config))
         {
             speed = config.flightSpeed;
@@ -22,10 +24,6 @@ public class NormalBullet : MonoBehaviour
             critChance = config.critRate * 100f; // Đổi thập phân (0.2) thành phần trăm (20%)
             critMultiplier = config.critMultiplier;
             Debug.Log($"[NormalBullet] Nạp thành công bulletId={bulletId}: Speed={speed}, Damage={baseDamage}");
-        }
-        else
-        {
-            Debug.LogError($"[NormalBullet] ❌ KHÔNG TÌM THẤY bulletId={bulletId} trong GameConfigManager.Instance.BulletDb! (Speed hiện tại vẫn = 0)");
         }
     }
 
