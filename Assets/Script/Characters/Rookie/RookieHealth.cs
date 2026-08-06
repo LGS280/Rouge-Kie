@@ -255,6 +255,18 @@ public class RookieHealth : MonoBehaviour
             rb.bodyType = RigidbodyType2D.Kinematic;
         }
 
+        // Tắt bóng Shadow và vòng xanh Player_Ring để tạo cảm giác nhân vật nằm bệt xuống sàn
+        Transform shadowPos = transform.Find("Shadow");
+        if (shadowPos != null) shadowPos.gameObject.SetActive(false);
+
+        Transform ringPos = transform.Find("Player_Ring");
+        if (ringPos == null) ringPos = transform.Find("Ring");
+        if (ringPos == null) ringPos = transform.Find("PlayerRing");
+        if (ringPos != null) ringPos.gameObject.SetActive(false);
+
+        WeaponAim weapon = GetComponentInChildren<WeaponAim>();
+        if (weapon != null) weapon.enabled = false;
+
         // 4. Vô hiệu hóa Collider để không nhặt được Buff/Rương khi hy sinh
         if (playerCollider != null) playerCollider.enabled = false;
 
@@ -332,11 +344,19 @@ public class RookieHealth : MonoBehaviour
             }
         }
 
-        // 2. Kích hoạt lại súng hiển thị trên tay và lưng
+        // 2. Kích hoạt lại súng hiển thị trên tay, lưng, bóng và vòng chọn
         Transform handPos = transform.Find("Hand_Position");
         Transform backPos = transform.Find("Back_Position");
         if (handPos != null) handPos.gameObject.SetActive(true);
         if (backPos != null) backPos.gameObject.SetActive(true);
+
+        Transform shadowPos = transform.Find("Shadow");
+        if (shadowPos != null) shadowPos.gameObject.SetActive(true);
+
+        Transform ringPos = transform.Find("Player_Ring");
+        if (ringPos == null) ringPos = transform.Find("Ring");
+        if (ringPos == null) ringPos = transform.Find("PlayerRing");
+        if (ringPos != null) ringPos.gameObject.SetActive(true);
 
         // 3. Khôi phục Rigidbody2D vật lý động
         if (rb != null)
