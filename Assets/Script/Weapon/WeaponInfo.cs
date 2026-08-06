@@ -164,12 +164,14 @@ public class WeaponInfo : MonoBehaviour
                 Quaternion bulletRotation = Quaternion.Euler(0, 0, baseAngle + angleOffset);
                 GameObject spawnedBullet = Instantiate(bulletPrefab, firePoint.position, bulletRotation);
 
-                int targetBulletId = (wConfig != null) ? wConfig.bulletId : 13; // Fallback thử đạn nếu wConfig null
-                var bullet = spawnedBullet.GetComponent<NormalBullet>();
-                if (bullet != null) bullet.InitFromDb(targetBulletId);
+                if (wConfig != null && wConfig.bulletId > 0)
+                {
+                    var bullet = spawnedBullet.GetComponent<NormalBullet>();
+                    if (bullet != null) bullet.InitFromDb(wConfig.bulletId);
 
-                var bSlash = spawnedBullet.GetComponent<MeleeSlash>();
-                if (bSlash != null) bSlash.InitFromDb(targetBulletId);
+                    var bSlash = spawnedBullet.GetComponent<MeleeSlash>();
+                    if (bSlash != null) bSlash.InitFromDb(wConfig.bulletId);
+                }
             }
 
             PlayWeaponSound();

@@ -220,7 +220,10 @@ public class MultiplayerSyncManager : MonoBehaviour
     private void UpdateRemotePlayerPosition(string connId, float x, float y)
     {
         // Bỏ qua nếu gói tin tọa độ đó là của chính mình
-        if (NetworkManager.Instance != null && connId == NetworkManager.Instance.MyConnectionId) return;
+        if (NetworkManager.Instance != null && !string.IsNullOrEmpty(NetworkManager.Instance.MyConnectionId))
+        {
+            if (string.Equals(connId, NetworkManager.Instance.MyConnectionId, System.StringComparison.OrdinalIgnoreCase)) return;
+        }
 
         // Nếu ConnectionId này chưa có trong màn chơi -> Thực hiện sinh đồng đội động (Just-In-Time)
         if (!remotePlayers.ContainsKey(connId))
@@ -232,6 +235,13 @@ public class MultiplayerSyncManager : MonoBehaviour
             Destroy(newRemote.GetComponent<PlayerController>());
             Destroy(newRemote.GetComponent<PlayerMovement>());
             Destroy(newRemote.GetComponent<UnityEngine.InputSystem.PlayerInput>());
+
+            // Đảm bảo Collider của Remote Player không làm kẹt/chắn đường di chuyển của Local Player
+            Collider2D col = newRemote.GetComponent<Collider2D>();
+            if (col != null)
+            {
+                col.isTrigger = true;
+            }
 
             // BỔ SUNG: Xóa WeaponManager trên bản sao đồng đội để tránh chạy logic quản lý súng nội bộ
             WeaponManager remoteWm = newRemote.GetComponent<WeaponManager>();
@@ -324,9 +334,9 @@ public class MultiplayerSyncManager : MonoBehaviour
             {
                 GameObject newHand = new GameObject("Hand_Position");
                 newHand.transform.SetParent(remoteObj.transform, false);
-                newHand.transform.localPosition = new Vector3(0.15f, -0.1f, 0f);
                 handPos = newHand.transform;
             }
+            handPos.localPosition = new Vector3(0f, -0.29f, 0f); // Chuẩn Y = -0.29 khớp 100% với Rookie.prefab
 
             foreach (Transform child in handPos)
             {
@@ -368,9 +378,12 @@ public class MultiplayerSyncManager : MonoBehaviour
         {
             GameObject newBack = new GameObject("Back_Position");
             newBack.transform.SetParent(remoteObj.transform, false);
-            newBack.transform.localPosition = new Vector3(-0.15f, -0.05f, 0f);
             backPos = newBack.transform;
         }
+
+        // Ép vị trí (-0.2, 0, 0) và góc xoay (-45 độ) của Remote Player khớp 100% với Rookie.prefab
+        backPos.localPosition = new Vector3(-0.2f, 0f, 0f);
+        backPos.localRotation = Quaternion.Euler(0, 0, -45f);
 
         foreach (Transform child in backPos)
         {
@@ -384,7 +397,7 @@ public class MultiplayerSyncManager : MonoBehaviour
             {
                 GameObject newSecondaryWeapon = Instantiate(secondaryPrefab, backPos);
                 newSecondaryWeapon.transform.localPosition = Vector3.zero;
-                newSecondaryWeapon.transform.localRotation = Quaternion.Euler(0, 0, 45f); // Đeo nghiêng 45 độ sau lưng
+                newSecondaryWeapon.transform.localRotation = Quaternion.identity; // Đồng bộ 100% góc xoay chuẩn của Back_Position trên nhân vật
                 newSecondaryWeapon.transform.localScale = Vector3.one;
 
                 MonoBehaviour[] scripts = newSecondaryWeapon.GetComponents<MonoBehaviour>();
