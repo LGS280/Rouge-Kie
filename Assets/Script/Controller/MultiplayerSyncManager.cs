@@ -284,10 +284,6 @@ public class MultiplayerSyncManager : MonoBehaviour
         {
             RemotePlayerController rpc = remoteObj.GetComponent<RemotePlayerController>();
             if (rpc != null) rpc.ReviveRemotePlayer();
-            Animator anim = remoteObj.GetComponent<Animator>();
-            if (anim != null) anim.SetTrigger("idle");
-            SpriteRenderer sr = remoteObj.GetComponent<SpriteRenderer>();
-            if (sr != null) sr.color = Color.white;
 
             // Bật lại bóng Shadow và vòng xanh Player_Ring của đồng đội khi được hồi sinh
             Transform shadowPos = remoteObj.transform.Find("Shadow");

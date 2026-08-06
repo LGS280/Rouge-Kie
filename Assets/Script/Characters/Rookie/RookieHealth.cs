@@ -387,17 +387,21 @@ public class RookieHealth : MonoBehaviour
         // 4. Kích hoạt lại Collider2D
         if (playerCollider != null) playerCollider.enabled = true;
 
-        // 5. Reset Animator trạng thái nằm gục -> trở về Idle đứng thẳng
+        // 5. Reset Animator trạng thái nằm gục -> trở về Idle đứng thẳng bằng Rebind()
         if (animator != null)
         {
             animator.ResetTrigger("die");
-            if (HasParameter("idle", animator)) animator.SetTrigger("idle");
-            animator.Play("Idle", 0, 0f);
+            animator.Rebind();
+            animator.Update(0f);
+            if (HasParameter("Speed", animator)) animator.SetFloat("Speed", 0f);
         }
 
-        // 6. Khôi phục màu sắc hiển thị trắng sáng
-        SpriteRenderer sr = GetComponent<SpriteRenderer>();
-        if (sr != null) sr.color = Color.white;
+        // 6. Khôi phục màu sắc hiển thị trắng sáng cho tất cả các SpriteRenderer con
+        SpriteRenderer[] srs = GetComponentsInChildren<SpriteRenderer>(true);
+        foreach (var sr in srs)
+        {
+            if (sr != null) sr.color = Color.white;
+        }
 
         Debug.Log($"[RookieHealth] Người chơi đã được HỒI SINH hoàn toàn với {currentHealth} Máu và {currentArmor} Giáp!");
     }
