@@ -47,6 +47,12 @@ public class UpgradeSelectionUI : MonoBehaviour
             return;
         }
 
+        if (GameConfigManager.Instance != null && (GameConfigManager.Instance.BuffDb == null || GameConfigManager.Instance.BuffDb.Count == 0))
+        {
+            Debug.LogWarning("[UpgradeSelectionUI] BuffDb trống trên Client! Tự động nạp dữ liệu Buff dự phòng.");
+            GameConfigManager.Instance.PopulateDefaultBuffsFallback();
+        }
+
         if (GameConfigManager.Instance == null || GameConfigManager.Instance.BuffDb == null || GameConfigManager.Instance.BuffDb.Count == 0)
         {
             Debug.LogWarning("[UpgradeSelectionUI] BuffDb trống hoặc GameConfigManager chưa sẵn sàng. Chuyển tầng trực tiếp.");

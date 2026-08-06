@@ -79,6 +79,8 @@ public class DungeonGenerator : MonoBehaviour
         public Vector2Int gridPos;
         public RectInt rect;
         public bool isStartRoom;
+        public bool isBossRoom;
+        public bool isPortalRoom;
         public RoomController controller;
         public List<BoundsInt> obstacleBoundsList = new List<BoundsInt>(); // Danh sách vùng giới hạn vật cản trong phòng
 
@@ -207,13 +209,18 @@ public class DungeonGenerator : MonoBehaviour
             MultiplayerSyncManager.Instance.RefreshRoomAndMobNetworkCache();
         }
 
-        // Tự động mờ và ẩn Màn hình Chờ Tải Màn khi bản đồ đã sinh xong 100%
+        StartCoroutine(AutoHideLoadingRoutine());
+
+        Debug.Log("Đã generate map kiểu Soul Knight và cập nhật Minimap & Cache mạng.");
+    }
+
+    private System.Collections.IEnumerator AutoHideLoadingRoutine()
+    {
+        yield return new WaitForSeconds(0.5f);
         if (LoadingScreenUI.Instance != null)
         {
             LoadingScreenUI.Instance.HideLoading();
         }
-
-        Debug.Log("Đã generate map kiểu Soul Knight và cập nhật Minimap & Cache mạng.");
     }
 
     private void GenerateLayout()
@@ -273,6 +280,73 @@ public class DungeonGenerator : MonoBehaviour
             roomsByGrid.Add(newGrid, newRoom);
             expandableRooms.Add(newRoom);
             connections.Add(new MapConnection(anchor, newRoom, chosenDir));
+        }
+
+        // Tự động gắn 1 phòng Portal nối tiếp ngay sau phòng Boss
+        AttachPortalRoomToBossRoom();
+    }
+
+    private void AttachPortalRoomToBossRoom()
+    {
+        // 1. Sắp xếp danh sách ứng viên phòng Boss giảm dần theo khoảng cách đến Start (0,0)
+        List<MapRoom> candidateBossRooms = new List<MapRoom>();
+        foreach (var kvp in roomsByGrid)
+        {
+            if (!kvp.Value.isStartRoom)
+            {
+                candidateBossRooms.Add(kvp.Value);
+            }
+        }
+
+        candidateBossRooms.Sort((a, b) =>
+        {
+            float distA = Vector2Int.Distance(a.gridPos, Vector2Int.zero);
+            float distB = Vector2Int.Distance(b.gridPos, Vector2Int.zero);
+            return distB.CompareTo(distA);
+        });
+
+        MapRoom bossRoom = null;
+        MapRoom portalRoom = null;
+        Vector2Int portalGridPos = Vector2Int.zero;
+        Vector2Int chosenDir = Vector2Int.zero;
+
+        Vector2Int[] directions = { Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left };
+
+        // 2. Duyệt tìm phòng xa nhất mà CÓ ÍT NHẤT 1 Ô TRỐNG bên cạnh để gắn phòng Portal
+        foreach (MapRoom candidate in candidateBossRooms)
+        {
+            foreach (Vector2Int dir in directions)
+            {
+                Vector2Int checkGrid = candidate.gridPos + dir;
+                if (!roomsByGrid.ContainsKey(checkGrid))
+                {
+                    bossRoom = candidate;
+                    portalGridPos = checkGrid;
+                    chosenDir = dir;
+                    break;
+                }
+            }
+            if (bossRoom != null) break;
+        }
+
+        // 3. Khởi tạo phòng Portal nối tiếp sau phòng Boss
+        if (bossRoom != null)
+        {
+            bossRoom.isBossRoom = true; // Đánh dấu phòng Boss
+
+            portalRoom = CreateMapRoom(portalGridPos, false);
+            portalRoom.isPortalRoom = true; // Đánh dấu phòng Portal riêng biệt
+            roomsByGrid.Add(portalGridPos, portalRoom);
+            connections.Add(new MapConnection(bossRoom, portalRoom, chosenDir));
+            Debug.Log($"[DungeonGenerator] Đã tạo phòng Portal riêng tại {portalGridPos} nối tiếp sau phòng Boss tại {bossRoom.gridPos}");
+        }
+        else if (candidateBossRooms.Count > 0)
+        {
+            // Fallback: Nếu tất cả phòng xa đều bị kẹt cạnh, dùng phòng xa nhất làm phòng Boss kiêm Portal
+            bossRoom = candidateBossRooms[0];
+            bossRoom.isBossRoom = true;
+            bossRoom.isPortalRoom = true;
+            Debug.LogWarning($"[DungeonGenerator] Không tìm thấy ô trống cạnh phòng Boss, gán Portal xuất hiện trực tiếp tại phòng Boss {bossRoom.gridPos}");
         }
     }
 
@@ -730,8 +804,8 @@ public class DungeonGenerator : MonoBehaviour
     {
         foreach (MapRoom room in roomsByGrid.Values)
         {
-            // Bỏ qua không sinh vật cản ở phòng xuất phát (Start) và phòng Rương báu (Chest)
-            if (room.controller != null && (room.controller.roomType == RoomType.Chest || (room.isStartRoom && !spawnObstacleInStartRoom)))
+            // Bỏ qua không sinh vật cản ở phòng xuất phát (Start), phòng Rương báu (Chest) và phòng Portal
+            if (room.controller != null && (room.controller.roomType == RoomType.Chest || room.controller.roomType == RoomType.Portal || (room.isStartRoom && !spawnObstacleInStartRoom)))
             {
                 continue;
             }
@@ -1103,6 +1177,15 @@ public class DungeonGenerator : MonoBehaviour
 
         floorPositions.Clear();
 
+        // Xóa tất cả các cổng dịch chuyển cũ (TeleportPortal) còn tồn tại trong Scene
+        TeleportPortal[] oldPortals = Object.FindObjectsByType<TeleportPortal>(FindObjectsSortMode.None);
+        foreach (var p in oldPortals)
+        {
+            if (p != null) Destroy(p.gameObject);
+        }
+        GameObject oldPortalObj = GameObject.Find("TeleportPortal");
+        if (oldPortalObj != null) Destroy(oldPortalObj);
+
         for (int i = transform.childCount - 1; i >= 0; i--)
         {
             GameObject child = transform.GetChild(i).gameObject;
@@ -1268,6 +1351,16 @@ public class DungeonGenerator : MonoBehaviour
         {
             if (room.isStartRoom && !currentTheme.spawnMobInStartRoom)
                 continue;
+
+            // Nếu là phòng Portal (cổng qua tầng), không sinh quái mà khởi tạo cổng dịch chuyển ở tâm phòng
+            if (room.controller != null && room.controller.roomType == RoomType.Portal)
+            {
+                room.controller.roomCleared = true;
+                room.controller.chestSpawned = true;
+                room.controller.SpawnTeleportPortal();
+                Debug.Log($"[DungeonGenerator] Đã khởi tạo Cổng Dịch Chuyển tại tâm phòng Portal: {room.gridPos}");
+                continue;
+            }
 
             // Nếu là phòng Rương Báu, không sinh quái mà sinh rương thưởng trực tiếp
             if (room.controller != null && room.controller.roomType == RoomType.Chest)
@@ -1591,20 +1684,14 @@ public class DungeonGenerator : MonoBehaviour
             }
         }
 
-        // 3. Tìm phòng Boss (phòng có khoảng cách xa phòng Start (0,0) nhất theo tọa độ lưới)
+        // 3. Gán phòng Boss và phòng Portal dựa trên cờ đánh dấu chính xác
         MapRoom bossRoom = null;
-        float maxDistance = -1f;
+        MapRoom portalRoom = null;
 
         foreach (var kvp in roomsByGrid)
         {
-            if (kvp.Value.isStartRoom) continue;
-
-            float dist = Vector2Int.Distance(kvp.Key, Vector2Int.zero);
-            if (dist > maxDistance)
-            {
-                maxDistance = dist;
-                bossRoom = kvp.Value;
-            }
+            if (kvp.Value.isBossRoom) bossRoom = kvp.Value;
+            if (kvp.Value.isPortalRoom) portalRoom = kvp.Value;
         }
 
         if (bossRoom != null && bossRoom.controller != null)
@@ -1613,14 +1700,20 @@ public class DungeonGenerator : MonoBehaviour
             Debug.Log($"[DungeonGenerator] Đã gán phòng Boss tại tọa độ lưới: {bossRoom.gridPos}");
         }
 
-        // 4. Tìm các phòng cụt (chỉ có duy nhất 1 liên kết với các phòng khác) và không trùng Start/Boss
+        if (portalRoom != null && portalRoom.controller != null)
+        {
+            portalRoom.controller.roomType = RoomType.Portal;
+            Debug.Log($"[DungeonGenerator] Đã gán phòng Portal riêng biệt tại tọa độ lưới: {portalRoom.gridPos}");
+        }
+
+        // 4. Tìm các phòng cụt (chỉ có duy nhất 1 liên kết với các phòng khác) và không trùng Start/Boss/Portal
         List<MapRoom> deadEnds = new List<MapRoom>();
         List<MapRoom> otherCandidates = new List<MapRoom>();
 
         foreach (var kvp in roomsByGrid)
         {
             MapRoom room = kvp.Value;
-            if (room.isStartRoom || room == bossRoom) continue;
+            if (room.isStartRoom || room == bossRoom || room == portalRoom) continue;
 
             int neighbors = 0;
             Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
@@ -1645,12 +1738,10 @@ public class DungeonGenerator : MonoBehaviour
         MapRoom chestRoom = null;
         if (deadEnds.Count > 0)
         {
-            // Lấy ngẫu nhiên một phòng cụt
             chestRoom = deadEnds[UnityEngine.Random.Range(0, deadEnds.Count)];
         }
         else if (otherCandidates.Count > 0)
         {
-            // Nếu không có phòng cụt, lấy ngẫu nhiên một phòng thường bất kỳ làm phòng rương
             chestRoom = otherCandidates[UnityEngine.Random.Range(0, otherCandidates.Count)];
         }
 
