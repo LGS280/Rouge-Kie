@@ -328,27 +328,46 @@ public class RookieHealth : MonoBehaviour
         currentArmor = maxArmor / 2; // Phục hồi 50% Giáp
         onHealthChanged?.Invoke();
 
-        // 1. Kích hoạt lại di chuyển và điều khiển
+        // 1. Kích hoạt lại di chuyển, điều khiển và WeaponManager
         PlayerMovement pm = GetComponent<PlayerMovement>();
         if (pm != null) pm.enabled = true;
 
         PlayerController controller = GetComponent<PlayerController>();
         if (controller != null) controller.enabled = true;
 
-        MonoBehaviour[] scripts = GetComponentsInChildren<MonoBehaviour>();
+        WeaponManager wm = GetComponent<WeaponManager>();
+        if (wm != null)
+        {
+            wm.enabled = true;
+            wm.ResetWeaponsStatus();
+        }
+
+        MonoBehaviour[] scripts = GetComponentsInChildren<MonoBehaviour>(true);
         foreach (var script in scripts)
         {
-            if (script != null && (script.GetType().Name == "WeaponAim" || script.GetType().Name == "WeaponLaser"))
+            if (script != null)
             {
-                script.enabled = true;
+                string sName = script.GetType().Name;
+                if (sName == "WeaponAim" || sName == "WeaponLaser" || sName == "PlayerMeleeSlash" || sName == "WeaponInfo")
+                {
+                    script.enabled = true;
+                }
             }
         }
 
         // 2. Kích hoạt lại súng hiển thị trên tay, lưng, bóng và vòng chọn
         Transform handPos = transform.Find("Hand_Position");
         Transform backPos = transform.Find("Back_Position");
-        if (handPos != null) handPos.gameObject.SetActive(true);
-        if (backPos != null) backPos.gameObject.SetActive(true);
+        if (handPos != null)
+        {
+            handPos.gameObject.SetActive(true);
+            foreach (Transform child in handPos) child.gameObject.SetActive(true);
+        }
+        if (backPos != null)
+        {
+            backPos.gameObject.SetActive(true);
+            foreach (Transform child in backPos) child.gameObject.SetActive(true);
+        }
 
         Transform shadowPos = transform.Find("Shadow");
         if (shadowPos != null) shadowPos.gameObject.SetActive(true);
@@ -368,10 +387,18 @@ public class RookieHealth : MonoBehaviour
         // 4. Kích hoạt lại Collider2D
         if (playerCollider != null) playerCollider.enabled = true;
 
-        // 5. Khôi phục màu sắc hiển thị
+        // 5. Reset Animator trạng thái nằm gục -> trở về Idle đứng thẳng
+        if (animator != null)
+        {
+            animator.ResetTrigger("die");
+            if (HasParameter("idle", animator)) animator.SetTrigger("idle");
+            animator.Play("Idle", 0, 0f);
+        }
+
+        // 6. Khôi phục màu sắc hiển thị trắng sáng
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
         if (sr != null) sr.color = Color.white;
 
-        Debug.Log($"[RookieHealth] Người chơi đã được HỒI SINH với {currentHealth} Máu và {currentArmor} Giáp!");
+        Debug.Log($"[RookieHealth] Người chơi đã được HỒI SINH hoàn toàn với {currentHealth} Máu và {currentArmor} Giáp!");
     }
 }

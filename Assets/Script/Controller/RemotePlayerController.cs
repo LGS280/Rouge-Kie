@@ -24,6 +24,11 @@ public class RemotePlayerController : MonoBehaviour
         isDead = true;
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
         if (sr != null) sr.color = new Color(0.3f, 0.3f, 0.3f, 1f);
+
+        if (animator != null)
+        {
+            animator.SetTrigger("die");
+        }
     }
 
     public void ReviveRemotePlayer()
@@ -31,6 +36,12 @@ public class RemotePlayerController : MonoBehaviour
         isDead = false;
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
         if (sr != null) sr.color = Color.white;
+
+        if (animator != null)
+        {
+            animator.ResetTrigger("die");
+            animator.Play("Idle", 0, 0f);
+        }
     }
 
     void Update()

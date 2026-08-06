@@ -348,7 +348,7 @@ public class WeaponManager : MonoBehaviour
         }
     }
 
-    void ResetWeaponsStatus()
+    public void ResetWeaponsStatus()
     {
         if (weaponSlot1 == null && weaponSlot2 != null)
         {
