@@ -21,9 +21,10 @@ public class WeaponConfig
     public float recoilDuration;
     public float returnDuration;
 
-    // 2 Cột mới bổ sung từ Backend Database API
+    // Các cột mới bổ sung từ Backend Database API
     public string weaponType; // "Pistol", "Heavy Gun", "Sniper", "Rifle", "Laser Gun", "SMG", "Shotgun", "Sword"
     public string rarity;     // "Common", "Rare", "Epic", "Legendary"
+    public int secondBulletId; // ID đạn thứ 2 (Ví dụ: ID 16 cho nhát đâm lưỡi lê khi áp sát)
 }
 
 [Serializable]
