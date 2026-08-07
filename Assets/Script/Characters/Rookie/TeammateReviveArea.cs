@@ -39,7 +39,24 @@ namespace Assets.Script.Characters.Rookie
         {
             if (reviveCanvasObj == null)
             {
-                CreateFallbackReviveUI();
+                // Tự động tìm GameObject ReviveProgressCanvas sẵn có trong Hierarchy Scene
+                GameObject existingCanvas = GameObject.Find("ReviveProgressCanvas");
+                if (existingCanvas != null)
+                {
+                    reviveCanvasObj = existingCanvas;
+                    if (reviveSlider == null) reviveSlider = existingCanvas.GetComponentInChildren<Slider>(true);
+                    if (progressText == null) progressText = existingCanvas.GetComponentInChildren<Text>(true);
+                    if (progressBarFill == null && reviveSlider != null && reviveSlider.fillRect != null)
+                    {
+                        progressBarFill = reviveSlider.fillRect.GetComponent<Image>();
+                    }
+                    reviveCanvasObj.SetActive(false);
+                    Debug.Log("[TeammateReviveArea] Đã tự động tìm thấy và kết nối ReviveProgressCanvas từ Scene Hierarchy!");
+                }
+                else
+                {
+                    CreateFallbackReviveUI();
+                }
             }
             else
             {
