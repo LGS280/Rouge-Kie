@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,6 +8,7 @@ namespace Assets.Script.Characters.Rookie
     /// <summary>
     /// Xử lý vùng Hồi sinh Đồng đội [E] khi có một thành viên gục ngã trong Co-op.
     /// Giữ phím E trong 2.5s để hồi sinh đồng đội.
+    /// Gán trực tiếp ReviveCanvasObj, ReviveSlider và TextMeshProUGUI qua Inspector.
     /// </summary>
     public class TeammateReviveArea : MonoBehaviour
     {
@@ -20,11 +22,11 @@ namespace Assets.Script.Characters.Rookie
         private bool isReviving = false;
         private string targetReviveConnId = "";
 
-        [Header("Giao Diện UI Hồi Sinh (Gán từ Inspector)")]
-        public GameObject reviveCanvasObj; // Root Canvas / Panel chứa UI Hồi Sinh
-        public Slider reviveSlider;       // Component UI Slider Hồi sinh
-        public Image progressBarFill;     // Lớp Image Fill tiến trình
-        public Text progressText;         // Dòng chữ hướng dẫn "Giữ [E] 2.5s..."
+        [Header("Giao Diện UI Hồi Sinh (Kéo Thả Bằng Tay Trong Inspector)")]
+        public GameObject reviveCanvasObj;  // Root Canvas chứa UI Hồi Sinh
+        public Slider reviveSlider;        // Component UI Slider Hồi sinh
+        public Image progressBarFill;      // Lớp Image Fill tiến trình (tùy chọn)
+        public TextMeshProUGUI progressText;// Chữ hướng dẫn TextMeshProUGUI (TMPro)
 
         [Header("Tùy Chỉnh Sprites Slider (Tùy chọn)")]
         public Sprite sliderBackgroundSprite; // Sprite làm hình nền Slider Background
@@ -37,30 +39,15 @@ namespace Assets.Script.Characters.Rookie
 
         private void Start()
         {
-            if (reviveCanvasObj == null)
+            // Kiểm tra gán UI thủ công qua Inspector
+            if (reviveCanvasObj != null)
             {
-                // Tự động tìm GameObject ReviveProgressCanvas sẵn có trong Hierarchy Scene
-                GameObject existingCanvas = GameObject.Find("ReviveProgressCanvas");
-                if (existingCanvas != null)
-                {
-                    reviveCanvasObj = existingCanvas;
-                    if (reviveSlider == null) reviveSlider = existingCanvas.GetComponentInChildren<Slider>(true);
-                    if (progressText == null) progressText = existingCanvas.GetComponentInChildren<Text>(true);
-                    if (progressBarFill == null && reviveSlider != null && reviveSlider.fillRect != null)
-                    {
-                        progressBarFill = reviveSlider.fillRect.GetComponent<Image>();
-                    }
-                    reviveCanvasObj.SetActive(false);
-                    Debug.Log("[TeammateReviveArea] Đã tự động tìm thấy và kết nối ReviveProgressCanvas từ Scene Hierarchy!");
-                }
-                else
-                {
-                    CreateFallbackReviveUI();
-                }
+                reviveCanvasObj.SetActive(false);
             }
             else
             {
-                reviveCanvasObj.SetActive(false);
+                Debug.LogWarning("[TeammateReviveArea] Chưa gán ReviveCanvasObj qua Inspector! Đang khởi tạo Fallback UI...");
+                CreateFallbackReviveUI();
             }
         }
 
@@ -139,13 +126,12 @@ namespace Assets.Script.Characters.Rookie
             reviveSlider.targetGraphic = bgImg;
             reviveSlider.fillRect = fillRect;
 
-            // Chữ hướng dẫn
+            // Chữ hướng dẫn TextMeshProUGUI
             GameObject textObj = new GameObject("ReviveProgressText");
             textObj.transform.SetParent(sliderObj.transform, false);
-            progressText = textObj.AddComponent<Text>();
-            progressText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            progressText = textObj.AddComponent<TextMeshProUGUI>();
             progressText.fontSize = 22;
-            progressText.alignment = TextAnchor.MiddleCenter;
+            progressText.alignment = TextAlignmentOptions.Center;
             progressText.color = Color.white;
             progressText.text = "Giữ [E] 2.5s để Hồi Sinh Đồng Đội";
             RectTransform textRect = textObj.GetComponent<RectTransform>();
