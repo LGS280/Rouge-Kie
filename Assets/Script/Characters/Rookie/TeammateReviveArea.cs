@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,6 +8,7 @@ namespace Assets.Script.Characters.Rookie
     /// <summary>
     /// Xử lý vùng Hồi sinh Đồng đội [E] khi có một thành viên gục ngã trong Co-op.
     /// Giữ phím E trong 2.5s để hồi sinh đồng đội.
+    /// Gán trực tiếp ReviveCanvasObj, ReviveSlider và TextMeshProUGUI qua Inspector.
     /// </summary>
     public class TeammateReviveArea : MonoBehaviour
     {
@@ -20,10 +22,15 @@ namespace Assets.Script.Characters.Rookie
         private bool isReviving = false;
         private string targetReviveConnId = "";
 
-        // Component UI hiển thị Progress
-        private GameObject reviveCanvasObj;
-        private Image progressBarFill;
-        private Text progressText;
+        [Header("Giao Diện UI Hồi Sinh (Kéo Thả Bằng Tay Trong Inspector)")]
+        public GameObject reviveCanvasObj;  // Root Canvas chứa UI Hồi Sinh
+        public Slider reviveSlider;        // Component UI Slider Hồi sinh
+        public Image progressBarFill;      // Lớp Image Fill tiến trình (tùy chọn)
+        public TextMeshProUGUI progressText;// Chữ hướng dẫn TextMeshProUGUI (TMPro)
+
+        [Header("Tùy Chỉnh Sprites Slider (Tùy chọn)")]
+        public Sprite sliderBackgroundSprite; // Sprite làm hình nền Slider Background
+        public Sprite sliderFillSprite;       // Sprite làm hình thanh Fill Slider
 
         private void Awake()
         {
@@ -32,10 +39,19 @@ namespace Assets.Script.Characters.Rookie
 
         private void Start()
         {
-            CreateReviveUI();
+            // Kiểm tra gán UI thủ công qua Inspector
+            if (reviveCanvasObj != null)
+            {
+                reviveCanvasObj.SetActive(false);
+            }
+            else
+            {
+                Debug.LogWarning("[TeammateReviveArea] Chưa gán ReviveCanvasObj qua Inspector! Đang khởi tạo Fallback UI...");
+                CreateFallbackReviveUI();
+            }
         }
 
-        private void CreateReviveUI()
+        private void CreateFallbackReviveUI()
         {
             if (reviveCanvasObj != null) return;
 
@@ -50,37 +66,74 @@ namespace Assets.Script.Characters.Rookie
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);
 
-            // Nền thanh tiến trình
-            GameObject bgObj = new GameObject("ReviveProgressBG");
-            bgObj.transform.SetParent(reviveCanvasObj.transform, false);
-            Image bgImg = bgObj.AddComponent<Image>();
-            bgImg.color = new Color(0.1f, 0.1f, 0.1f, 0.85f);
-            RectTransform bgRect = bgObj.GetComponent<RectTransform>();
-            bgRect.sizeDelta = new Vector2(400, 50);
-            bgRect.anchoredPosition = new Vector2(0, -250);
+            // Nền & Component Slider
+            GameObject sliderObj = new GameObject("ReviveSlider");
+            sliderObj.transform.SetParent(reviveCanvasObj.transform, false);
+            RectTransform sliderRect = sliderObj.AddComponent<RectTransform>();
+            sliderRect.sizeDelta = new Vector2(400, 50);
+            sliderRect.anchoredPosition = new Vector2(0, -250);
 
-            // Thanh Fill chạy từ 0 đến 100%
-            GameObject fillObj = new GameObject("ReviveProgressFill");
-            fillObj.transform.SetParent(bgObj.transform, false);
+            reviveSlider = sliderObj.AddComponent<Slider>();
+            reviveSlider.interactable = false;
+            reviveSlider.transition = Selectable.Transition.None;
+            reviveSlider.minValue = 0f;
+            reviveSlider.maxValue = 1f;
+            reviveSlider.value = 0f;
+
+            // Background Image
+            GameObject bgObj = new GameObject("Background");
+            bgObj.transform.SetParent(sliderObj.transform, false);
+            Image bgImg = bgObj.AddComponent<Image>();
+            if (sliderBackgroundSprite != null)
+            {
+                bgImg.sprite = sliderBackgroundSprite;
+                bgImg.type = Image.Type.Sliced;
+            }
+            else
+            {
+                bgImg.color = new Color(0.1f, 0.1f, 0.1f, 0.85f);
+            }
+            RectTransform bgRect = bgObj.GetComponent<RectTransform>();
+            bgRect.anchorMin = Vector2.zero;
+            bgRect.anchorMax = Vector2.one;
+            bgRect.sizeDelta = Vector2.zero;
+
+            // Fill Area & Fill Image
+            GameObject fillArea = new GameObject("Fill Area");
+            fillArea.transform.SetParent(sliderObj.transform, false);
+            RectTransform fillAreaRect = fillArea.AddComponent<RectTransform>();
+            fillAreaRect.anchorMin = Vector2.zero;
+            fillAreaRect.anchorMax = Vector2.one;
+            fillAreaRect.sizeDelta = Vector2.zero;
+
+            GameObject fillObj = new GameObject("Fill");
+            fillObj.transform.SetParent(fillArea.transform, false);
             progressBarFill = fillObj.AddComponent<Image>();
-            progressBarFill.color = new Color(0f, 0.9f, 0.4f, 0.95f);
-            progressBarFill.type = Image.Type.Filled;
-            progressBarFill.fillMethod = Image.FillMethod.Horizontal;
-            progressBarFill.fillAmount = 0f;
+            if (sliderFillSprite != null)
+            {
+                progressBarFill.sprite = sliderFillSprite;
+                progressBarFill.type = Image.Type.Sliced;
+            }
+            else
+            {
+                progressBarFill.color = new Color(0f, 0.9f, 0.4f, 0.95f);
+            }
             RectTransform fillRect = fillObj.GetComponent<RectTransform>();
             fillRect.anchorMin = Vector2.zero;
             fillRect.anchorMax = Vector2.one;
             fillRect.sizeDelta = Vector2.zero;
 
-            // Chữ hướng dẫn
+            reviveSlider.targetGraphic = bgImg;
+            reviveSlider.fillRect = fillRect;
+
+            // Chữ hướng dẫn TextMeshProUGUI
             GameObject textObj = new GameObject("ReviveProgressText");
-            textObj.transform.SetParent(bgObj.transform, false);
-            progressText = textObj.AddComponent<Text>();
-            progressText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            textObj.transform.SetParent(sliderObj.transform, false);
+            progressText = textObj.AddComponent<TextMeshProUGUI>();
             progressText.fontSize = 22;
-            progressText.alignment = TextAnchor.MiddleCenter;
+            progressText.alignment = TextAlignmentOptions.Center;
             progressText.color = Color.white;
-            progressText.text = "Giữ [E] để Hồi Sinh Đồng Đội";
+            progressText.text = "Giữ [E] 2.5s để Hồi Sinh Đồng Đội";
             RectTransform textRect = textObj.GetComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;
             textRect.anchorMax = Vector2.one;
@@ -120,6 +173,7 @@ namespace Assets.Script.Characters.Rookie
                 {
                     reviveCanvasObj.SetActive(true);
                     if (progressText != null) progressText.text = "Giữ [E] 2.5s để Hồi Sinh Đồng Đội";
+                    if (reviveSlider != null) reviveSlider.value = 0f;
                     if (progressBarFill != null) progressBarFill.fillAmount = 0f;
                 }
 
@@ -130,6 +184,7 @@ namespace Assets.Script.Characters.Rookie
                     currentReviveProgress += Time.deltaTime;
                     float progressRatio = Mathf.Clamp01(currentReviveProgress / reviveHoldDuration);
 
+                    if (reviveSlider != null) reviveSlider.value = progressRatio;
                     if (progressBarFill != null) progressBarFill.fillAmount = progressRatio;
                     if (progressText != null) progressText.text = $"Đang Hồi Sinh Đồng Đội... ({progressRatio * 100f:F0}%)";
 
@@ -146,6 +201,7 @@ namespace Assets.Script.Characters.Rookie
                     {
                         currentReviveProgress = 0f;
                         isReviving = false;
+                        if (reviveSlider != null) reviveSlider.value = 0f;
                         if (progressBarFill != null) progressBarFill.fillAmount = 0f;
                         if (progressText != null) progressText.text = "Giữ [E] 2.5s để Hồi Sinh Đồng Đội";
                     }

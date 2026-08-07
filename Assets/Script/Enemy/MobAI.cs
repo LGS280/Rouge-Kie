@@ -212,19 +212,25 @@ public class MobAI : MonoBehaviour
         GameObject localPlayerObj = GameObject.FindGameObjectWithTag("Player");
         if (localPlayerObj != null)
         {
-            float dist = Vector2.Distance(transform.position, localPlayerObj.transform.position);
-            if (dist < shortestDistance)
+            RookieHealth localHealth = localPlayerObj.GetComponent<RookieHealth>();
+            // BỎ QUA LOCAL PLAYER ĐÃ CHẾT!
+            if (localHealth == null || !localHealth.isDead)
             {
-                shortestDistance = dist;
-                nearestPlayer = localPlayerObj.transform;
+                float dist = Vector2.Distance(transform.position, localPlayerObj.transform.position);
+                if (dist < shortestDistance)
+                {
+                    shortestDistance = dist;
+                    nearestPlayer = localPlayerObj.transform;
+                }
             }
         }
 
         // 2. Dò tìm tất cả Remote Player (người chơi đồng đội qua mạng trong Co-op)
-        RemotePlayerController[] remotePlayers = FindObjectsOfType<RemotePlayerController>();
+        RemotePlayerController[] remotePlayers = Object.FindObjectsByType<RemotePlayerController>(FindObjectsSortMode.None);
         foreach (var rpc in remotePlayers)
         {
-            if (rpc != null && rpc.gameObject != null)
+            // BỎ QUA REMOTE PLAYER ĐÃ CHẾT!
+            if (rpc != null && rpc.gameObject != null && !rpc.isDead)
             {
                 float dist = Vector2.Distance(transform.position, rpc.transform.position);
                 if (dist < shortestDistance)
@@ -322,24 +328,30 @@ public class MobAI : MonoBehaviour
 
         if (targetPlayer != null && mobHealth != null && !mobHealth.isDead)
         {
+            RookieHealth playerHealth = targetPlayer.GetComponent<RookieHealth>();
+            RemotePlayerController rpc = targetPlayer.GetComponent<RemotePlayerController>();
+
+            // BỎ QUA GÂY SÁT THƯƠNG NẾU MỤC TIÊU ĐÃ CHẾT!
+            if ((playerHealth != null && playerHealth.isDead) || (rpc != null && rpc.isDead))
+            {
+                targetPlayer = null;
+                currentState = EnemyState.Idle;
+                yield break;
+            }
+
             float distance = Vector2.Distance(transform.position, targetPlayer.position);
             // Nếu người chơi vẫn ở trong tầm đánh (nới rộng thêm 0.5 unit đề phòng người chơi di chuyển nhẹ)
             if (distance <= attackRange + 0.5f)
             {
-                RookieHealth playerHealth = targetPlayer.GetComponent<RookieHealth>();
                 if (playerHealth != null)
                 {
                     playerHealth.TakeDamage(attackDamage);
                     Debug.Log($"[MobAI] {gameObject.name} đã tấn công gây {attackDamage} sát thương cho Local Player.");
                 }
-                else
+                else if (rpc != null && NetworkManager.Instance != null)
                 {
-                    RemotePlayerController rpc = targetPlayer.GetComponent<RemotePlayerController>();
-                    if (rpc != null && NetworkManager.Instance != null)
-                    {
-                        NetworkManager.Instance.SendPlayerDamaged(rpc.connectionId, attackDamage);
-                        Debug.Log($"[MobAI] {gameObject.name} đã tấn công gây {attackDamage} sát thương cho Remote Player {rpc.connectionId}.");
-                    }
+                    NetworkManager.Instance.SendPlayerDamaged(rpc.connectionId, attackDamage);
+                    Debug.Log($"[MobAI] {gameObject.name} đã tấn công gây {attackDamage} sát thương cho Remote Player {rpc.connectionId}.");
                 }
             }
         }
