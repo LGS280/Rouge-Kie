@@ -9,7 +9,23 @@ using UnityEngine.UI;
 /// </summary>
 public class LoadingScreenUI : MonoBehaviour
 {
-    public static LoadingScreenUI Instance { get; private set; }
+    private static LoadingScreenUI _instance;
+    public static LoadingScreenUI Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindAnyObjectByType<LoadingScreenUI>();
+                if (_instance == null)
+                {
+                    GameObject obj = new GameObject("LoadingScreenUI");
+                    _instance = obj.AddComponent<LoadingScreenUI>();
+                }
+            }
+            return _instance;
+        }
+    }
 
     private Canvas loadingCanvas;
     private CanvasGroup canvasGroup;
@@ -19,6 +35,7 @@ public class LoadingScreenUI : MonoBehaviour
     private RectTransform spinnerTransform;
     private bool isShowing = false;
     private Coroutine fadeCoroutine;
+    private Coroutine safetyTimeoutCoroutine;
 
     private readonly string[] gameTips = new string[]
     {
@@ -31,13 +48,13 @@ public class LoadingScreenUI : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
+        if (_instance == null)
         {
-            Instance = this;
+            _instance = this;
             DontDestroyOnLoad(gameObject);
             BuildLoadingScreenCanvas();
         }
-        else if (Instance != this)
+        else if (_instance != this)
         {
             Destroy(gameObject);
         }
@@ -152,6 +169,10 @@ public class LoadingScreenUI : MonoBehaviour
     /// </summary>
     public void ShowLoading(string title = "ĐANG TẢI DỮ LIỆU...", string subtitle = "", float duration = 0.3f)
     {
+        gameObject.SetActive(true);
+        if (loadingCanvas != null) loadingCanvas.gameObject.SetActive(true);
+        if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
+
         if (titleText != null) titleText.text = title;
         if (subText != null) subText.text = string.IsNullOrEmpty(subtitle) ? "Vui lòng chờ trong giây lát..." : subtitle;
         
@@ -161,10 +182,23 @@ public class LoadingScreenUI : MonoBehaviour
         }
 
         isShowing = true;
-        canvasGroup.blocksRaycasts = true;
 
         if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
         fadeCoroutine = StartCoroutine(FadeRoutine(1f, duration));
+
+        // BỔ SUNG: Bộ đếm thời gian an toàn (Safety Timeout 5s) tự động ẩn Loading Screen đề phòng bị kẹt
+        if (safetyTimeoutCoroutine != null) StopCoroutine(safetyTimeoutCoroutine);
+        safetyTimeoutCoroutine = StartCoroutine(SafetyTimeoutRoutine(5f));
+    }
+
+    private IEnumerator SafetyTimeoutRoutine(float timeoutSeconds)
+    {
+        yield return new WaitForSecondsRealtime(timeoutSeconds);
+        if (isShowing)
+        {
+            Debug.LogWarning("[LoadingScreenUI] Kích hoạt Safety Timeout tự động ẩn Loading Screen!");
+            HideLoading();
+        }
     }
 
     /// <summary>
@@ -172,10 +206,15 @@ public class LoadingScreenUI : MonoBehaviour
     /// </summary>
     public void HideLoading(float duration = 0.4f)
     {
-        if (!isShowing) return;
-
         isShowing = false;
-        canvasGroup.blocksRaycasts = false;
+        if (canvasGroup != null) canvasGroup.blocksRaycasts = false;
+        if (safetyTimeoutCoroutine != null) StopCoroutine(safetyTimeoutCoroutine);
+
+        if (!gameObject.activeInHierarchy)
+        {
+            if (canvasGroup != null) canvasGroup.alpha = 0f;
+            return;
+        }
 
         if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
         fadeCoroutine = StartCoroutine(FadeRoutine(0f, duration));
@@ -183,12 +222,15 @@ public class LoadingScreenUI : MonoBehaviour
 
     private IEnumerator FadeRoutine(float targetAlpha, float duration)
     {
+        if (canvasGroup == null) yield break;
+
         float startAlpha = canvasGroup.alpha;
         float elapsed = 0f;
 
         if (duration <= 0f)
         {
             canvasGroup.alpha = targetAlpha;
+            if (targetAlpha <= 0f && loadingCanvas != null) loadingCanvas.gameObject.SetActive(false);
             yield break;
         }
 
@@ -200,5 +242,9 @@ public class LoadingScreenUI : MonoBehaviour
         }
 
         canvasGroup.alpha = targetAlpha;
+        if (targetAlpha <= 0f && loadingCanvas != null)
+        {
+            loadingCanvas.gameObject.SetActive(false);
+        }
     }
 }

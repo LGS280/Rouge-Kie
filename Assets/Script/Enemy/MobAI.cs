@@ -65,6 +65,12 @@ public class MobAI : MonoBehaviour
 
         if (!isHost)
         {
+            // Client: Khóa vật lý động để di chuyển theo vị trí mạng mượt mà 100%, không bị giật khựng
+            if (rb != null && rb.bodyType != RigidbodyType2D.Kinematic)
+            {
+                rb.bodyType = RigidbodyType2D.Kinematic;
+            }
+
             // Client: Di chuyển mượt (Lerp) tới tọa độ do Host gửi
             if (hasFirstNetworkPos)
             {
@@ -128,9 +134,22 @@ public class MobAI : MonoBehaviour
         }
     }
 
+    void FixedUpdate()
+    {
+        if (mobHealth != null && mobHealth.isDead) return;
+
+        if (isHost && isRoomActivated)
+        {
+            if (currentState == EnemyState.Idle || currentState == EnemyState.Attack)
+            {
+                if (rb != null) rb.linearVelocity = Vector2.zero;
+            }
+        }
+    }
+
     void LateUpdate()
     {
-        if (mobHealth.isDead) return;
+        if (mobHealth != null && mobHealth.isDead) return;
         ClampPositionToRoom();
     }
 
@@ -156,23 +175,32 @@ public class MobAI : MonoBehaviour
         }
     }
 
-    // Chặn không cho quái vật đi ra khỏi ranh giới phòng
+    // Chặn không cho quái vật đi ra khỏi ranh giới phòng (chỉ can thiệp khi bị vượt ranh giới)
     void ClampPositionToRoom()
     {
         if (myRoom == null || myRoom.RoomCollider == null) return;
 
         Bounds bounds = myRoom.RoomCollider.bounds;
 
-        // Khống chế tọa độ của quái vật nằm gọn trong bounds của RoomCollider
         float minX = bounds.min.x + wallPadding;
         float maxX = bounds.max.x - wallPadding;
         float minY = bounds.min.y + wallPadding;
         float maxY = bounds.max.y - wallPadding;
 
-        float clampedX = Mathf.Clamp(transform.position.x, minX, maxX);
-        float clampedY = Mathf.Clamp(transform.position.y, minY, maxY);
-
-        transform.position = new Vector3(clampedX, clampedY, transform.position.z);
+        Vector3 pos = transform.position;
+        if (pos.x < minX || pos.x > maxX || pos.y < minY || pos.y > maxY)
+        {
+            float clampedX = Mathf.Clamp(pos.x, minX, maxX);
+            float clampedY = Mathf.Clamp(pos.y, minY, maxY);
+            if (rb != null)
+            {
+                rb.position = new Vector2(clampedX, clampedY);
+            }
+            else
+            {
+                transform.position = new Vector3(clampedX, clampedY, pos.z);
+            }
+        }
     }
 
     void FindNearestPlayer()
@@ -184,19 +212,25 @@ public class MobAI : MonoBehaviour
         GameObject localPlayerObj = GameObject.FindGameObjectWithTag("Player");
         if (localPlayerObj != null)
         {
-            float dist = Vector2.Distance(transform.position, localPlayerObj.transform.position);
-            if (dist < shortestDistance)
+            RookieHealth localHealth = localPlayerObj.GetComponent<RookieHealth>();
+            // BỎ QUA LOCAL PLAYER ĐÃ CHẾT!
+            if (localHealth == null || !localHealth.isDead)
             {
-                shortestDistance = dist;
-                nearestPlayer = localPlayerObj.transform;
+                float dist = Vector2.Distance(transform.position, localPlayerObj.transform.position);
+                if (dist < shortestDistance)
+                {
+                    shortestDistance = dist;
+                    nearestPlayer = localPlayerObj.transform;
+                }
             }
         }
 
         // 2. Dò tìm tất cả Remote Player (người chơi đồng đội qua mạng trong Co-op)
-        RemotePlayerController[] remotePlayers = FindObjectsOfType<RemotePlayerController>();
+        RemotePlayerController[] remotePlayers = Object.FindObjectsByType<RemotePlayerController>(FindObjectsSortMode.None);
         foreach (var rpc in remotePlayers)
         {
-            if (rpc != null && rpc.gameObject != null)
+            // BỎ QUA REMOTE PLAYER ĐÃ CHẾT!
+            if (rpc != null && rpc.gameObject != null && !rpc.isDead)
             {
                 float dist = Vector2.Distance(transform.position, rpc.transform.position);
                 if (dist < shortestDistance)
@@ -294,24 +328,30 @@ public class MobAI : MonoBehaviour
 
         if (targetPlayer != null && mobHealth != null && !mobHealth.isDead)
         {
+            RookieHealth playerHealth = targetPlayer.GetComponent<RookieHealth>();
+            RemotePlayerController rpc = targetPlayer.GetComponent<RemotePlayerController>();
+
+            // BỎ QUA GÂY SÁT THƯƠNG NẾU MỤC TIÊU ĐÃ CHẾT!
+            if ((playerHealth != null && playerHealth.isDead) || (rpc != null && rpc.isDead))
+            {
+                targetPlayer = null;
+                currentState = EnemyState.Idle;
+                yield break;
+            }
+
             float distance = Vector2.Distance(transform.position, targetPlayer.position);
             // Nếu người chơi vẫn ở trong tầm đánh (nới rộng thêm 0.5 unit đề phòng người chơi di chuyển nhẹ)
             if (distance <= attackRange + 0.5f)
             {
-                RookieHealth playerHealth = targetPlayer.GetComponent<RookieHealth>();
                 if (playerHealth != null)
                 {
                     playerHealth.TakeDamage(attackDamage);
                     Debug.Log($"[MobAI] {gameObject.name} đã tấn công gây {attackDamage} sát thương cho Local Player.");
                 }
-                else
+                else if (rpc != null && NetworkManager.Instance != null)
                 {
-                    RemotePlayerController rpc = targetPlayer.GetComponent<RemotePlayerController>();
-                    if (rpc != null && NetworkManager.Instance != null)
-                    {
-                        NetworkManager.Instance.SendPlayerDamaged(rpc.connectionId, attackDamage);
-                        Debug.Log($"[MobAI] {gameObject.name} đã tấn công gây {attackDamage} sát thương cho Remote Player {rpc.connectionId}.");
-                    }
+                    NetworkManager.Instance.SendPlayerDamaged(rpc.connectionId, attackDamage);
+                    Debug.Log($"[MobAI] {gameObject.name} đã tấn công gây {attackDamage} sát thương cho Remote Player {rpc.connectionId}.");
                 }
             }
         }

@@ -6,7 +6,8 @@ public enum RoomType
     Normal, // Phòng thường có quái
     Start,  // Phòng xuất phát (Home)
     Boss,   // Phòng Boss
-    Chest   // Phòng rương báu
+    Chest,  // Phòng rương báu
+    Portal  // Phòng Cổng Dịch Chuyển (phòng trống dành riêng cho Portal qua tầng)
 }
 
 public class RoomController : MonoBehaviour
@@ -193,49 +194,95 @@ public class RoomController : MonoBehaviour
             MinimapManager.Instance.OnRoomCleared(this);
         }
 
-        // Sinh rương thưởng khi dọn sạch phòng quái (Bỏ qua phòng xuất phát Start)
-        if (roomType != RoomType.Start && !chestSpawned)
+        // Sinh rương thưởng khi dọn sạch phòng quái (Bỏ qua phòng xuất phát Start và phòng Portal)
+        if (roomType != RoomType.Start && roomType != RoomType.Portal && !chestSpawned)
         {
             chestSpawned = true;
-            // Nếu là phòng Boss, dịch vị trí rương sang bên cạnh để nhường tâm phòng cho Portal
-            Vector3 chestPos = (roomType == RoomType.Boss) ? transform.position + Vector3.right * 2.0f : spawnPosition;
+            Vector3 chestPos = spawnPosition;
             SpawnRewardChest(chestPos);
         }
 
-        // Sinh cổng dịch chuyển chuyển tầng (Portal) nếu đây là phòng Boss
-        if (roomType == RoomType.Boss)
+        // BỔ SUNG: Nếu đây là phòng Boss hoặc phòng Portal, tự động đảm bảo Cổng Dịch Chuyển xuất hiện
+        if (roomType == RoomType.Boss || roomType == RoomType.Portal)
+        {
+            EnsureTeleportPortalExists();
+        }
+    }
+
+    /// <summary>
+    /// Tự động đảm bảo Cổng Dịch Chuyển tồn tại tại tâm phòng Portal (hoặc phòng Boss) khi hạ gục Miniboss
+    /// </summary>
+    public void EnsureTeleportPortalExists()
+    {
+        if (GameObject.Find("TeleportPortal") != null) return;
+
+        RoomController[] allRooms = FindObjectsByType<RoomController>(FindObjectsSortMode.None);
+        RoomController portalRoom = null;
+        foreach (var r in allRooms)
+        {
+            if (r.roomType == RoomType.Portal)
+            {
+                portalRoom = r;
+                break;
+            }
+        }
+
+        if (portalRoom != null)
+        {
+            portalRoom.SpawnTeleportPortal();
+        }
+        else
         {
             SpawnTeleportPortal();
         }
     }
 
     /// <summary>
-    /// Sinh cổng dịch chuyển mượt mà tại tâm phòng Boss
+    /// Sinh cổng dịch chuyển mượt mà tại tâm phòng
     /// </summary>
-    private void SpawnTeleportPortal()
+    public void SpawnTeleportPortal()
     {
-        if (GameObject.Find("TeleportPortal") != null)
+        // 0. Hủy bỏ tất cả các cổng cũ trong Scene trước khi tạo cổng mới tại tầng hiện tại
+        TeleportPortal[] oldPortals = Object.FindObjectsByType<TeleportPortal>(FindObjectsSortMode.None);
+        foreach (var p in oldPortals)
         {
-            Debug.Log("[RoomController] Cổng dịch chuyển đã tồn tại trong Scene. Bỏ qua khởi tạo trùng.");
-            return;
+            if (p != null && p.gameObject != null) Destroy(p.gameObject);
         }
 
-        Debug.Log($"[RoomController] Đang khởi tạo cổng dịch chuyển tại phòng Boss {gameObject.name}");
+        Debug.Log($"[RoomController] Đang khởi tạo cổng dịch chuyển mới tại phòng {gameObject.name}");
 
         // 1. Tạo GameObject Portal mới
         GameObject portalObj = new GameObject("TeleportPortal");
-        portalObj.transform.position = transform.position; // Đặt tại tâm phòng Boss
+        portalObj.transform.position = transform.position; // Đặt tại tâm phòng
 
-        // 2. Thêm SpriteRenderer và thiết lập sprite
+        // 2. Thêm SpriteRenderer và tạo Texture Cổng Xanh Cyan phát sáng rực rỡ 64x64
         SpriteRenderer renderer = portalObj.AddComponent<SpriteRenderer>();
-        Sprite portalSprite = Resources.Load<Sprite>("Minimap/Room"); // Nền ô phòng hình vuông
-        if (portalSprite != null)
+
+        Texture2D portalTex = new Texture2D(64, 64);
+        Color cyanCore = new Color(0f, 1f, 1f, 0.95f);
+        Color cyanEdge = new Color(0f, 0.5f, 0.9f, 0.3f);
+        for (int y = 0; y < 64; y++)
         {
-            renderer.sprite = portalSprite;
+            for (int x = 0; x < 64; x++)
+            {
+                float dist = Vector2.Distance(new Vector2(x, y), new Vector2(31.5f, 31.5f));
+                if (dist <= 30f)
+                {
+                    float alpha = Mathf.Clamp01(1f - (dist / 30f));
+                    portalTex.SetPixel(x, y, Color.Lerp(cyanCore, cyanEdge, dist / 30f) * alpha);
+                }
+                else
+                {
+                    portalTex.SetPixel(x, y, Color.clear);
+                }
+            }
         }
-        renderer.color = new Color(0f, 0.8f, 1f, 0.8f); // Màu xanh cyan phát sáng mờ ảo
-        portalObj.transform.localScale = new Vector3(2.0f, 2.0f, 1f); // Tỷ lệ cổng
-        renderer.sortingOrder = 5; // Hiển thị trên mặt đất
+        portalTex.Apply();
+
+        renderer.sprite = Sprite.Create(portalTex, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f), 32f);
+        renderer.sortingLayerName = "Default";
+        renderer.sortingOrder = 25; // Nổi hoàn toàn trên tất cả gạch sàn Tilemap
+        portalObj.transform.localScale = new Vector3(2.5f, 2.5f, 1f);
 
         // 3. Thêm Collider 2D làm vùng va chạm Trigger
         CircleCollider2D col = portalObj.AddComponent<CircleCollider2D>();

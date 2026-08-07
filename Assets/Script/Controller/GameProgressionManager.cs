@@ -100,9 +100,9 @@ public class GameProgressionManager : MonoBehaviour
 
         Debug.Log($"[GameProgressionManager] Co-op Mode: Nhận tín hiệu đồng bộ chuyển sang Tầng {targetFloor} từ mạng.");
 
-        int prevFloor = currentFloor;
-        // Kiểm tra xem tầng vừa hoàn thành (prevFloor) có cần hiện bảng chọn Buff trước khi sang tầng mới hay không
-        if ((prevFloor == 1 || prevFloor == 3) && UpgradeSelectionUI.Instance != null)
+        // BỔ SUNG: Kiểm tra theo tham số mạng targetFloor (targetFloor == 2 khi vừa xong Tầng 1, targetFloor == 4 khi vừa xong Tầng 3)
+        // Đảm bảo cả Host và Client 100% cùng hiển thị Bảng chọn Buff
+        if ((targetFloor == 2 || targetFloor == 4) && UpgradeSelectionUI.Instance != null)
         {
             UpgradeSelectionUI.Instance.OpenUpgradeMenu(() =>
             {
@@ -220,18 +220,42 @@ public class GameProgressionManager : MonoBehaviour
             }
         }
 
-        // 4. Kích hoạt lại di chuyển và toàn bộ collider của người chơi
-        if (playerColliders != null)
+        RookieHealth health = (player != null) ? player.GetComponent<RookieHealth>() : null;
+        bool isDeadPlayer = health != null && health.isDead;
+
+        // 4. Kích hoạt lại di chuyển và toàn bộ collider của người chơi (CHỈ KHI NGƯỜI CHƠI CÒN SỐNG)
+        if (!isDeadPlayer)
         {
-            foreach (var col in playerColliders)
+            if (playerColliders != null)
             {
-                if (col != null) col.enabled = true;
+                foreach (var col in playerColliders)
+                {
+                    if (col != null) col.enabled = true;
+                }
+                Debug.Log("[GameProgressionManager] Đã kích hoạt lại toàn bộ Collider của Player.");
             }
-            Debug.Log("[GameProgressionManager] Đã kích hoạt lại toàn bộ Collider của Player.");
+            if (movement != null)
+            {
+                movement.enabled = true;
+            }
         }
-        if (movement != null)
+        else
         {
-            movement.enabled = true;
+            // Nếu người chơi đang bị hy sinh: Khóa vận tốc, chuyển Kinematic để cố định xác tại phòng Start tầng mới
+            Rigidbody2D rb = player != null ? player.GetComponent<Rigidbody2D>() : null;
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector2.zero;
+                rb.bodyType = RigidbodyType2D.Kinematic;
+            }
+            Debug.Log("[GameProgressionManager] Player đang trong trạng thái hy sinh, giữ nguyên vô hiệu hóa điều khiển và collider.");
+        }
+
+        yield return new WaitForSeconds(0.4f); // Chờ hiệu ứng mượt trước khi làm mờ ẩn Loading Screen
+
+        if (LoadingScreenUI.Instance != null)
+        {
+            LoadingScreenUI.Instance.HideLoading();
         }
 
         isTransitioning = false;

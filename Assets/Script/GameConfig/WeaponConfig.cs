@@ -10,6 +10,7 @@ public class WeaponConfig
     public int bulletsPerShot;
     public float spreadAngle;
     public int bulletId;
+    public int? secondBulletId; // ID của đạn thứ hai / nhát đâm lưỡi lê cận chiến (cho phép null nếu súng đơn đạn)
 
     public string prefabName;
     public string shootSound;

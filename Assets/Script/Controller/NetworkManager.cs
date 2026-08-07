@@ -55,6 +55,18 @@ public class NetworkManager : MonoBehaviour
     // BỔ SUNG: Sự kiện đồng bộ sát thương quái đánh trúng người chơi qua mạng (targetConnId, damage)
     public event Action<string, float> OnPlayerDamaged;
 
+    // BỔ SUNG: Sự kiện đồng bộ khi đồng đội hy sinh (connId)
+    public event Action<string> OnRemotePlayerDied;
+
+    // BỔ SUNG: Sự kiện đồng bộ khi tất cả thành viên trong phòng Co-op đều đã hy sinh
+    public event Action OnTeamDefeat;
+
+    // BỔ SUNG: Sự kiện đồng bộ khi người chơi được hồi sinh (targetConnId, reviveHp)
+    public event Action<string, int> OnPlayerRevived;
+
+    // BỔ SUNG: Sự kiện đồng bộ khi Host ngắt kết nối/out game (hostName)
+    public event Action<string> OnHostDisconnectedEndGame;
+
     public string MyConnectionId => hubConnection?.ConnectionId;
 
     // QUYỀN HẠN TRONG TRẬN: Sẽ được Server định đoạt khi tạo hoặc vào phòng thành công
@@ -180,6 +192,29 @@ public class NetworkManager : MonoBehaviour
         hubConnection.On<string, float>("OnPlayerDamaged", (targetConnId, damage) =>
         {
             unityContext.Post(_ => OnPlayerDamaged?.Invoke(targetConnId, damage), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện đồng bộ người chơi hy sinh từ Server
+        hubConnection.On<string>("OnRemotePlayerDied", (connId) =>
+        {
+            unityContext.Post(_ => OnRemotePlayerDied?.Invoke(connId), null);
+        });
+
+        hubConnection.On("OnTeamDefeat", () =>
+        {
+            unityContext.Post(_ => OnTeamDefeat?.Invoke(), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện đồng bộ người chơi được hồi sinh từ đồng đội
+        hubConnection.On<string, int>("OnPlayerRevived", (connId, reviveHp) =>
+        {
+            unityContext.Post(_ => OnPlayerRevived?.Invoke(connId, reviveHp), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện Host ngắt kết nối/out game
+        hubConnection.On<string>("OnHostDisconnectedEndGame", (hostName) =>
+        {
+            unityContext.Post(_ => OnHostDisconnectedEndGame?.Invoke(hostName), null);
         });
 
         // Gọi hàm đăng ký các sự kiện Combat mạng
@@ -473,6 +508,23 @@ public class NetworkManager : MonoBehaviour
         }
     }
 
+    // BỔ SUNG: Gửi thông báo người chơi hy sinh (Player Death) lên Server cho đồng đội
+    public async void SendPlayerDeath()
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncPlayerDeath", CurrentRoomId);
+                Debug.Log("[NetworkManager] Đã gửi thông báo Player Death lên Server.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendPlayerDeath gián đoạn: {ex.Message}");
+        }
+    }
+
     // Thêm mới: Ngắt kết nối phòng chơi hiện tại và kết nối lại để reset trạng thái phòng nhưng giữ phiên đăng nhập
     public async System.Threading.Tasks.Task DisconnectAndReconnect()
     {
@@ -491,6 +543,23 @@ public class NetworkManager : MonoBehaviour
             {
                 Debug.LogError($"[NetworkManager] Lỗi khi reconnect SignalR: {ex.Message}");
             }
+        }
+    }
+
+    // BỔ SUNG: Gửi lệnh Hồi Sinh đồng đội (SendPlayerRevive) qua SignalR
+    public async void SendPlayerRevive(string targetConnId, int reviveHp)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncPlayerRevive", CurrentRoomId, targetConnId, reviveHp);
+                Debug.Log($"[NetworkManager] Đã gửi thông báo Hồi Sinh cho player: {targetConnId}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendPlayerRevive gián đoạn: {ex.Message}");
         }
     }
 }
