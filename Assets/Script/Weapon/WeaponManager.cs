@@ -18,8 +18,16 @@ public class WeaponManager : MonoBehaviour
     [Header("NHẶT VŨ KHÍ")]
     [HideInInspector] public List<GroundWeapon> nearbyWeapons = new List<GroundWeapon>();
 
+    public static WeaponManager Instance { get; private set; }
+
     private bool isUsingSlot1 = true;
     private WeaponAim handWeaponAim;
+    private float nextScrollSwapTime = 0f;
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+    }
 
     void Start()
     {
@@ -46,10 +54,10 @@ public class WeaponManager : MonoBehaviour
 
     void Update()
     {
-        // 1. Kiểm tra nhặt vũ khí (Chuột trái hoặc nút X tay cầm khi có súng gần đó)
+        // 1. Kiểm tra nhặt vũ khí (Phím E bàn phím hoặc Nút B tay cầm khi có súng gần đó)
         CheckWeaponPickup();
 
-        // 2. Logic đổi vũ khí (Swap) - Giữ nguyên hoàn toàn logic đổi súng hiện tại của bạn
+        // 2. Logic đổi vũ khí (Swap) - Thêm Delay 1s khi lăn chuột cuộn
         bool hasPressedSwapKey = false;
 
         if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
@@ -62,7 +70,11 @@ public class WeaponManager : MonoBehaviour
         }
         else if (Mouse.current != null && Mathf.Abs(Mouse.current.scroll.ReadValue().y) > 0.1f)
         {
-            hasPressedSwapKey = true;
+            if (Time.time >= nextScrollSwapTime)
+            {
+                hasPressedSwapKey = true;
+                nextScrollSwapTime = Time.time + 1.0f; // Delay 1s giữa các lần cuộn chuột đổi súng
+            }
         }
 
         if (hasPressedSwapKey)
@@ -77,13 +89,13 @@ public class WeaponManager : MonoBehaviour
 
         bool hasPressedPickupKey = false;
 
-        // Bàn phím bấm Chuột trái
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        // Bàn phím bấm E (vừa mở rương vừa nhặt súng)
+        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
         {
             hasPressedPickupKey = true;
         }
-        // Tay cầm bấm nút X
-        else if (Gamepad.current != null && Gamepad.current.xButton.wasPressedThisFrame)
+        // Tay cầm bấm Nút B (vừa mở rương vừa nhặt súng)
+        else if (Gamepad.current != null && Gamepad.current.bButton.wasPressedThisFrame)
         {
             hasPressedPickupKey = true;
         }
@@ -281,6 +293,9 @@ public class WeaponManager : MonoBehaviour
             UpdateWeaponParent(weaponSlot2, handPosition, true);
             UpdateWeaponParent(weaponSlot1, backPosition, false);
         }
+
+        // BỔ SUNG: Phát tín hiệu đổi súng lên mạng khi đổi vũ khí
+        SyncActiveWeaponToNetwork();
     }
 
     void UpdateWeaponParent(GameObject weapon, Transform newParent, bool isTargetHand)
@@ -333,7 +348,7 @@ public class WeaponManager : MonoBehaviour
         }
     }
 
-    void ResetWeaponsStatus()
+    public void ResetWeaponsStatus()
     {
         if (weaponSlot1 == null && weaponSlot2 != null)
         {
@@ -350,6 +365,26 @@ public class WeaponManager : MonoBehaviour
         if (weaponSlot2 != null)
         {
             UpdateWeaponParent(weaponSlot2, backPosition, false);
+        }
+
+        // BỔ SUNG: Đồng bộ loại súng đang cầm lên mạng cho các người chơi khác cùng thấy
+        SyncActiveWeaponToNetwork();
+    }
+
+    /// <summary>
+    /// Phát sóng loại súng chính và súng phụ đang cầm hiện tại lên Server SignalR
+    /// </summary>
+    public void SyncActiveWeaponToNetwork()
+    {
+        if (NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId))
+        {
+            GameObject activeWeapon = isUsingSlot1 ? weaponSlot1 : weaponSlot2;
+            GameObject secondaryWeapon = isUsingSlot1 ? weaponSlot2 : weaponSlot1;
+
+            string activeName = activeWeapon != null ? activeWeapon.name.Replace("(Clone)", "").Trim() : "";
+            string secondaryName = secondaryWeapon != null ? secondaryWeapon.name.Replace("(Clone)", "").Trim() : "";
+
+            NetworkManager.Instance.SendEquippedWeapon(activeName, secondaryName);
         }
     }
 

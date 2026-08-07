@@ -37,14 +37,30 @@ public class UpgradeSelectionUI : MonoBehaviour
         }
     }
 
+    private bool isMenuOpen = false;
+
     public void OpenUpgradeMenu(Action onComplete)
     {
+        if (isMenuOpen || GameObject.Find("UpgradeSelectionCanvas") != null)
+        {
+            Debug.LogWarning("[UpgradeSelectionUI] Bảng chọn Buff đã đang mở, bỏ qua yêu cầu mở trùng lặp.");
+            return;
+        }
+
+        if (GameConfigManager.Instance != null && (GameConfigManager.Instance.BuffDb == null || GameConfigManager.Instance.BuffDb.Count == 0))
+        {
+            Debug.LogWarning("[UpgradeSelectionUI] BuffDb trống trên Client! Tự động nạp dữ liệu Buff dự phòng.");
+            GameConfigManager.Instance.PopulateDefaultBuffsFallback();
+        }
+
         if (GameConfigManager.Instance == null || GameConfigManager.Instance.BuffDb == null || GameConfigManager.Instance.BuffDb.Count == 0)
         {
             Debug.LogWarning("[UpgradeSelectionUI] BuffDb trống hoặc GameConfigManager chưa sẵn sàng. Chuyển tầng trực tiếp.");
             onComplete?.Invoke();
             return;
         }
+
+        isMenuOpen = true;
 
         // Tạm dừng trò chơi
         Time.timeScale = 0f;
@@ -155,6 +171,7 @@ public class UpgradeSelectionUI : MonoBehaviour
                 }
 
                 // Hủy UI & Tiếp tục
+                isMenuOpen = false;
                 Destroy(canvasObj);
                 Time.timeScale = 1f;
                 onComplete?.Invoke();

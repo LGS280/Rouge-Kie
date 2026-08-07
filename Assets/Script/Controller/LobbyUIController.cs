@@ -20,6 +20,7 @@ public class LobbyUIController : MonoBehaviour
 
     [Header("Lobby Action Buttons")]
     [SerializeField] private Button startGameButton;
+    [SerializeField] private Button copyRoomCodeButton;
 
     private List<string> activePlayers = new List<string>();
 
@@ -34,7 +35,11 @@ public class LobbyUIController : MonoBehaviour
             NetworkManager.Instance.OnPlayerJoined += HandlePlayerJoined;
             NetworkManager.Instance.OnPlayerDisconnected += HandlePlayerDisconnected;
             NetworkManager.Instance.OnGameStarted += HandleGameStarted;
+        }
 
+        if (copyRoomCodeButton != null)
+        {
+            copyRoomCodeButton.onClick.AddListener(OnCopyRoomCodePressed);
         }
     }
 
@@ -130,6 +135,7 @@ public class LobbyUIController : MonoBehaviour
         lobbyMenuPanel.SetActive(true);
         playMenuPanel.SetActive(false);
         roomLobbyPanel.SetActive(false);
+        ResetCopyButtonText();
     }
 
     public void OnStartGamePressed()
@@ -149,6 +155,7 @@ public class LobbyUIController : MonoBehaviour
         roomLobbyPanel.SetActive(true);
 
         roomCodeText.text = $"ROOM CODE: {roomCode}";
+        ResetCopyButtonText();
 
         // Vì mình tạo phòng, mình là Host và là người chơi đầu tiên
         activePlayers.Clear();
@@ -166,6 +173,7 @@ public class LobbyUIController : MonoBehaviour
         roomLobbyPanel.SetActive(true);
 
         roomCodeText.text = $"ROOM CODE: {roomCode}";
+        ResetCopyButtonText();
 
         // Cập nhật danh sách người chơi hiện có
         activePlayers = new List<string>(playersInRoom);
@@ -221,7 +229,74 @@ public class LobbyUIController : MonoBehaviour
     private void HandleGameStarted()
     {
         Debug.Log("Trận đấu bắt đầu! Đang tải màn chơi...");
+        if (LoadingScreenUI.Instance != null)
+        {
+            LoadingScreenUI.Instance.ShowLoading("TẦNG 1 - 1", "Đang kết nối và khởi tạo phòng chơi Co-op...");
+        }
         // Tải Scene chơi game thực tế của bạn
         UnityEngine.SceneManagement.SceneManager.LoadScene("SampleScene");
+    }
+
+    private Coroutine copyFeedbackCoroutine;
+
+    public void ResetCopyButtonText()
+    {
+        if (copyFeedbackCoroutine != null)
+        {
+            StopCoroutine(copyFeedbackCoroutine);
+            copyFeedbackCoroutine = null;
+        }
+
+        if (copyRoomCodeButton != null)
+        {
+            Text btnText = copyRoomCodeButton.GetComponentInChildren<Text>();
+            TMP_Text tmpBtnText = copyRoomCodeButton.GetComponentInChildren<TMP_Text>();
+
+            if (btnText != null) btnText.text = "Copy";
+            if (tmpBtnText != null) tmpBtnText.text = "Copy";
+        }
+    }
+
+    public void OnCopyRoomCodePressed()
+    {
+        string roomCode = NetworkManager.Instance != null ? NetworkManager.Instance.CurrentRoomId : "";
+        if (string.IsNullOrEmpty(roomCode) && roomCodeText != null)
+        {
+            string fullText = roomCodeText.text;
+            if (fullText.Contains(":"))
+            {
+                roomCode = fullText.Split(':')[1].Trim();
+            }
+        }
+
+        if (!string.IsNullOrEmpty(roomCode))
+        {
+            GUIUtility.systemCopyBuffer = roomCode; // Lưu Mã Phòng vào Clipboard hệ thống
+            Debug.Log($"[LobbyUIController] Đã sao chép Mã Phòng '{roomCode}' vào Clipboard!");
+
+            if (copyFeedbackCoroutine != null)
+            {
+                StopCoroutine(copyFeedbackCoroutine);
+            }
+            copyFeedbackCoroutine = StartCoroutine(ShowCopyFeedbackRoutine());
+        }
+    }
+
+    private System.Collections.IEnumerator ShowCopyFeedbackRoutine()
+    {
+        if (copyRoomCodeButton != null)
+        {
+            Text btnText = copyRoomCodeButton.GetComponentInChildren<Text>();
+            TMP_Text tmpBtnText = copyRoomCodeButton.GetComponentInChildren<TMP_Text>();
+
+            if (btnText != null) btnText.text = "Copied";
+            if (tmpBtnText != null) tmpBtnText.text = "Copied";
+
+            yield return new WaitForSeconds(1.5f);
+
+            if (btnText != null) btnText.text = "Copy";
+            if (tmpBtnText != null) tmpBtnText.text = "Copy";
+        }
+        copyFeedbackCoroutine = null;
     }
 }

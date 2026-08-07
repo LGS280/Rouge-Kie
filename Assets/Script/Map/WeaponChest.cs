@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -132,7 +133,6 @@ public class WeaponChest : MonoBehaviour
 
         // 1. Cập nhật hiển thị rương mở
         if (body != null) body.SetActive(true);
-        if (top != null) top.SetActive(false);
         if (inside != null) inside.SetActive(true);
 
         // 2. Xóa chữ hướng dẫn
@@ -150,6 +150,43 @@ public class WeaponChest : MonoBehaviour
         {
             col.enabled = false;
         }
+
+        // 5. Chạy animation nắp rương di chuyển nhẹ về phía sau rồi biến mất
+        if (top != null)
+        {
+            StartCoroutine(AnimateTopChestOpen(top));
+        }
+    }
+
+    private IEnumerator AnimateTopChestOpen(GameObject topObj)
+    {
+        SpriteRenderer sr = topObj.GetComponent<SpriteRenderer>();
+        Vector3 startPos = topObj.transform.localPosition;
+        Vector3 targetPos = startPos + new Vector3(0f, 0.4f, 0f); // Di chuyển nhẹ về phía sau/trên
+
+        float duration = 0.55f; // Tăng từ 0.25s lên 0.55s để animation chậm lại mượt mà, dễ quan sát
+        float elapsed = 0f;
+
+        Color startColor = (sr != null) ? sr.color : Color.white;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+
+            topObj.transform.localPosition = Vector3.Lerp(startPos, targetPos, t);
+
+            if (sr != null)
+            {
+                Color c = startColor;
+                c.a = Mathf.Lerp(1f, 0f, t);
+                sr.color = c;
+            }
+
+            yield return null;
+        }
+
+        topObj.SetActive(false);
     }
 
     private void SpawnWeaponLoot()
@@ -180,14 +217,69 @@ public class WeaponChest : MonoBehaviour
             return;
         }
 
-        // Chọn súng ngẫu nhiên
-        GameObject randomWeaponPrefab = weaponPrefabs[Random.Range(0, weaponPrefabs.Length)];
+        // Chọn súng ngẫu nhiên theo Trọng số Phẩm chất (Common: 50%, Rare: 30%, Epic: 15%, Legendary: 5%)
+        GameObject randomWeaponPrefab = SelectWeaponByRarity(weaponPrefabs);
         
         // Sinh súng nằm yên trên sàn (không cần GroundWeapon prefab), lệch phải 0.8 unit để không đè lên rương
         Vector3 spawnPos = transform.position + new Vector3(0.8f, 0f, 0f);
         GroundWeapon.Create(randomWeaponPrefab, spawnPos);
 
-        Debug.Log($"[WeaponChest] Đã mở rương vũ khí! Sinh súng: {randomWeaponPrefab.name} tại {spawnPos}");
+        Debug.Log($"[WeaponChest] 🎉 Đã mở rương vũ khí! Sinh súng: {randomWeaponPrefab.name} tại {spawnPos}");
+    }
+
+    private GameObject SelectWeaponByRarity(GameObject[] prefabs)
+    {
+        float totalWeight = 0f;
+        float[] weights = new float[prefabs.Length];
+
+        for (int i = 0; i < prefabs.Length; i++)
+        {
+            float weight = 40f; // Trọng số mặc định nếu không có DB
+            GameObject p = prefabs[i];
+            
+            if (p != null)
+            {
+                string pName = p.name.Replace("(Clone)", "").Trim();
+                if (GameConfigManager.Instance != null && GameConfigManager.Instance.WeaponDbByName.TryGetValue(pName, out WeaponConfig config))
+                {
+                    if (!string.IsNullOrEmpty(config.rarity))
+                    {
+                        switch (config.rarity.Trim().ToLower())
+                        {
+                            case "common":
+                                weight = 50f; // Tỷ lệ phổ thông
+                                break;
+                            case "rare":
+                                weight = 30f; // Tỷ lệ súng hiếm (Shotgun, Laser, M249, Missile)
+                                break;
+                            case "epic":
+                                weight = 15f; // Tỷ lệ súng xịn (Snipe, Gold Katana)
+                                break;
+                            case "legendary":
+                                weight = 5f;  // Tỷ lệ súng siêu xịn huyền thoại
+                                break;
+                        }
+                    }
+                }
+            }
+
+            weights[i] = weight;
+            totalWeight += weight;
+        }
+
+        float randomRoll = Random.Range(0f, totalWeight);
+        float currentSum = 0f;
+
+        for (int i = 0; i < prefabs.Length; i++)
+        {
+            currentSum += weights[i];
+            if (randomRoll <= currentSum)
+            {
+                return prefabs[i];
+            }
+        }
+
+        return prefabs[Random.Range(0, prefabs.Length)];
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

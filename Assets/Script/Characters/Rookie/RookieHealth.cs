@@ -94,6 +94,12 @@ public class RookieHealth : MonoBehaviour
         // Hiệu ứng chớp đỏ báo hiệu chịu sát thương
         StartCoroutine(HurtFlashRoutine());
 
+        // BỔ SUNG: Gửi thông báo chịu sát thương lên Server cho đồng đội hiển thị
+        if (NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId))
+        {
+            NetworkManager.Instance.SendPlayerDamaged(NetworkManager.Instance.MyConnectionId, originalDamage);
+        }
+
         // Hiển thị số sát thương màu cam nổi bật và có dấu trừ bay lên đầu nhân vật
         if (DamageNumberSpawner.Instance != null && originalDamage > 0)
         {
@@ -102,6 +108,46 @@ public class RookieHealth : MonoBehaviour
             {
                 dn.SetColor(new Color(1f, 0.4f, 0f)); // Màu cam sáng nổi bật để phân biệt với sát thương quái
                 dn.SetText("-" + originalDamage);      // Thêm dấu trừ
+            }
+        }
+
+        if (animator != null && HasParameter("hurt", animator)) animator.SetTrigger("hurt");
+        if (currentHealth <= 0) Die();
+    }
+
+    /// <summary>
+    /// Nhận sát thương đồng bộ từ mạng (do Host/Server gửi về cho Player 2).
+    /// Trừ máu/giáp cục bộ nhưng KHÔNG phát tín hiệu SendPlayerDamaged ngược lại SignalR.
+    /// </summary>
+    public void TakeDamageFromNetwork(int damage)
+    {
+        if (isDead) return;
+
+        int originalDamage = damage;
+
+        if (currentArmor > 0)
+        {
+            int absorbed = Mathf.Min(currentArmor, damage);
+            currentArmor -= absorbed;
+            damage -= absorbed;
+        }
+
+        armorRegenDelayTimer = armorRegenDelay;
+        armorRegenStarted = false;
+
+        currentHealth -= damage;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+        onHealthChanged?.Invoke();
+
+        StartCoroutine(HurtFlashRoutine());
+
+        if (DamageNumberSpawner.Instance != null && originalDamage > 0)
+        {
+            DamageNumber dn = DamageNumberSpawner.Instance.Spawn(transform.position, originalDamage, false);
+            if (dn != null)
+            {
+                dn.SetColor(new Color(1f, 0.4f, 0f));
+                dn.SetText("-" + originalDamage);
             }
         }
 
@@ -177,27 +223,70 @@ public class RookieHealth : MonoBehaviour
 
     void Die()
     {
+        if (isDead) return;
         isDead = true;
-        if (animator != null) animator.SetTrigger("die");
-        if (playerCollider != null) playerCollider.enabled = false;
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector2.zero;
-            rb.bodyType = RigidbodyType2D.Static;
-        }
+
+        // 1. Tắt di chuyển và điều khiển
+        PlayerMovement pm = GetComponent<PlayerMovement>();
+        if (pm != null) pm.enabled = false;
+
         PlayerController controller = GetComponent<PlayerController>();
         if (controller != null) controller.enabled = false;
 
+        MonoBehaviour[] scripts = GetComponentsInChildren<MonoBehaviour>();
+        foreach (var script in scripts)
+        {
+            if (script != null && (script.GetType().Name == "WeaponAim" || script.GetType().Name == "WeaponLaser"))
+            {
+                script.enabled = false;
+            }
+        }
+
+        // 2. Tắt súng hiển thị trên tay và lưng
         Transform handPos = transform.Find("Hand_Position");
         Transform backPos = transform.Find("Back_Position");
         if (handPos != null) handPos.gameObject.SetActive(false);
         if (backPos != null) backPos.gameObject.SetActive(false);
 
+        // 3. Khóa vật lý để nằm yên cố định tại chỗ, không bị đẩy trượt
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.bodyType = RigidbodyType2D.Kinematic;
+        }
+
+        // Giữ nguyên bóng Shadow và vòng xanh Player_Ring khi gục ngã để hiển thị tự nhiên
+        Transform shadowPos = transform.Find("Shadow");
+        if (shadowPos != null) shadowPos.gameObject.SetActive(true);
+
+        Transform ringPos = transform.Find("Player_Ring");
+        if (ringPos == null) ringPos = transform.Find("Ring");
+        if (ringPos == null) ringPos = transform.Find("PlayerRing");
+        if (ringPos != null) ringPos.gameObject.SetActive(true);
+
         WeaponAim weapon = GetComponentInChildren<WeaponAim>();
         if (weapon != null) weapon.enabled = false;
 
-        transform.position += new Vector3(0, -0.3f, 0);
+        // 4. Vô hiệu hóa Collider để không nhặt được Buff/Rương khi hy sinh
+        if (playerCollider != null) playerCollider.enabled = false;
+
+        // 5. Phát hoạt ảnh nằm xuống và chớp xám
+        if (animator != null && HasParameter("die", animator)) animator.SetTrigger("die");
         StartCoroutine(FadeToGray());
+
+        // 6. Gửi thông báo hy sinh lên Server nếu đang trong chế độ Co-op
+        if (NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId))
+        {
+            NetworkManager.Instance.SendPlayerDeath();
+        }
+        else
+        {
+            // Trong chế độ Solo -> Kết thúc Thất bại
+            if (RunStatsTracker.Instance != null)
+            {
+                RunStatsTracker.Instance.EndRun(false);
+            }
+        }
     }
 
     System.Collections.IEnumerator FadeToGray()
@@ -219,10 +308,101 @@ public class RookieHealth : MonoBehaviour
 
         sr.color = targetColor;
 
-        // Báo cho RunStatsTracker kết thúc trận với kết quả Thất bại
-        if (RunStatsTracker.Instance != null)
+        bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+        // Trong chế độ Solo -> Kết thúc trận với kết quả Thất bại (Trong Co-op chỉ kết thúc khi cả 2 cùng chết)
+        if (!isMultiplayer && RunStatsTracker.Instance != null)
         {
             RunStatsTracker.Instance.EndRun(false);
         }
+    }
+
+    /// <summary>
+    /// Hồi sinh người chơi khi được đồng đội giữ [E] 2.5s trong Co-op
+    /// </summary>
+    public void Revive(int healthAmount)
+    {
+        if (!isDead) return;
+        isDead = false;
+
+        currentHealth = Mathf.Clamp(healthAmount, 1, maxHealth);
+        currentArmor = maxArmor / 2; // Phục hồi 50% Giáp
+        onHealthChanged?.Invoke();
+
+        // 1. Kích hoạt lại di chuyển, điều khiển và WeaponManager
+        PlayerMovement pm = GetComponent<PlayerMovement>();
+        if (pm != null) pm.enabled = true;
+
+        PlayerController controller = GetComponent<PlayerController>();
+        if (controller != null) controller.enabled = true;
+
+        WeaponManager wm = GetComponent<WeaponManager>();
+        if (wm != null)
+        {
+            wm.enabled = true;
+            wm.ResetWeaponsStatus();
+        }
+
+        MonoBehaviour[] scripts = GetComponentsInChildren<MonoBehaviour>(true);
+        foreach (var script in scripts)
+        {
+            if (script != null)
+            {
+                string sName = script.GetType().Name;
+                if (sName == "WeaponAim" || sName == "WeaponLaser" || sName == "PlayerMeleeSlash" || sName == "WeaponInfo")
+                {
+                    script.enabled = true;
+                }
+            }
+        }
+
+        // 2. Kích hoạt lại súng hiển thị trên tay, lưng, bóng và vòng chọn
+        Transform handPos = transform.Find("Hand_Position");
+        Transform backPos = transform.Find("Back_Position");
+        if (handPos != null)
+        {
+            handPos.gameObject.SetActive(true);
+            foreach (Transform child in handPos) child.gameObject.SetActive(true);
+        }
+        if (backPos != null)
+        {
+            backPos.gameObject.SetActive(true);
+            foreach (Transform child in backPos) child.gameObject.SetActive(true);
+        }
+
+        Transform shadowPos = transform.Find("Shadow");
+        if (shadowPos != null) shadowPos.gameObject.SetActive(true);
+
+        Transform ringPos = transform.Find("Player_Ring");
+        if (ringPos == null) ringPos = transform.Find("Ring");
+        if (ringPos == null) ringPos = transform.Find("PlayerRing");
+        if (ringPos != null) ringPos.gameObject.SetActive(true);
+
+        // 3. Khôi phục Rigidbody2D vật lý động
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.linearVelocity = Vector2.zero;
+        }
+
+        // 4. Kích hoạt lại Collider2D
+        if (playerCollider != null) playerCollider.enabled = true;
+
+        // 5. Reset Animator trạng thái nằm gục -> trở về Idle đứng thẳng bằng Rebind()
+        if (animator != null)
+        {
+            animator.ResetTrigger("die");
+            animator.Rebind();
+            animator.Update(0f);
+            if (HasParameter("Speed", animator)) animator.SetFloat("Speed", 0f);
+        }
+
+        // 6. Khôi phục màu sắc hiển thị trắng sáng cho tất cả các SpriteRenderer con
+        SpriteRenderer[] srs = GetComponentsInChildren<SpriteRenderer>(true);
+        foreach (var sr in srs)
+        {
+            if (sr != null) sr.color = Color.white;
+        }
+
+        Debug.Log($"[RookieHealth] Người chơi đã được HỒI SINH hoàn toàn với {currentHealth} Máu và {currentArmor} Giáp!");
     }
 }

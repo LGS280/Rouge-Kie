@@ -38,26 +38,28 @@ public class MinimapManager : MonoBehaviour
 
     private void Start()
     {
-        // Tự động tìm và phục hồi các RoomController từ các GameObject trong Scene
-        // (đề phòng trường hợp map đã được sinh từ trước trong Editor và lưu trong Scene,
-        // khiến trường dictionary private của DungeonGenerator bị reset trống khi bắt đầu chạy game)
-        var controllers = FindRoomsInScene();
-        if (controllers.Count > 0)
+        // Luôn nạp dữ liệu phòng thực tế từ DungeonGenerator (bỏ qua các room cũ còn lưu trong Scene Editor)
+        var generator = Object.FindAnyObjectByType<DungeonGenerator>();
+        if (generator != null)
         {
-            InitializeWithRooms(controllers);
-        }
-        else
-        {
-            // Nếu không tìm thấy các phòng lưu sẵn, thử lấy từ DungeonGenerator (cho trường hợp sinh tại Runtime)
-            var generator = Object.FindAnyObjectByType<DungeonGenerator>();
-            if (generator != null)
+            var dict = generator.GetRoomControllers();
+            if (dict != null && dict.Count > 0)
             {
-                var dict = generator.GetRoomControllers();
-                if (dict != null && dict.Count > 0)
-                {
-                    InitializeWithRooms(dict);
-                }
+                InitializeWithRooms(dict);
             }
+        }
+
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.OnRemoteRoomVisited += HandleRemoteRoomVisited;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.OnRemoteRoomVisited -= HandleRemoteRoomVisited;
         }
     }
 
@@ -131,14 +133,22 @@ public class MinimapManager : MonoBehaviour
         roomUiDict.Clear();
         currentRoom = null;
 
-        // Phân loại lại phòng tại runtime để đảm bảo các phòng lưu sẵn trong Scene có đầy đủ Loại phòng (Start, Boss, Chest)
-        RecategorizeRoomsRuntime();
+        // Chỉ phân loại lại phòng tại runtime nếu chưa được phân loại bởi DungeonGenerator
+        bool hasCategorizedRooms = false;
+        foreach (var kvp in roomControllers)
+        {
+            if (kvp.Value != null && kvp.Value.roomType != RoomType.Normal)
+            {
+                hasCategorizedRooms = true;
+                break;
+            }
+        }
+        if (!hasCategorizedRooms)
+        {
+            RecategorizeRoomsRuntime();
+        }
 
         Debug.Log($"[MinimapManager] InitializeWithRooms count: {rooms.Count}");
-        Debug.Log($"[MinimapManager] spriteRoom: {(spriteRoom != null ? spriteRoom.name : "null")}");
-        Debug.Log($"[MinimapManager] spriteHome: {(spriteHome != null ? spriteHome.name : "null")}");
-        Debug.Log($"[MinimapManager] spriteBoss: {(spriteBoss != null ? spriteBoss.name : "null")}");
-        Debug.Log($"[MinimapManager] spriteChest: {(spriteChest != null ? spriteChest.name : "null")}");
 
         // Tạo giao diện ô phòng cho từng phòng trong map
         foreach (var kvp in roomControllers)
@@ -179,6 +189,9 @@ public class MinimapManager : MonoBehaviour
                     case RoomType.Chest:
                         iconSprite = spriteChest;
                         break;
+                    case RoomType.Portal:
+                        iconSprite = spriteBoss; // Sử dụng icon làm nổi bật phòng Cổng dịch chuyển
+                        break;
                 }
 
                 // Cấu hình sprite nền và icon phòng
@@ -186,13 +199,23 @@ public class MinimapManager : MonoBehaviour
                 roomUiDict.Add(gridPos, roomUI);
 
                 // Tìm phòng xuất phát để đặt người chơi ban đầu
-                if (controller.roomType == RoomType.Start)
+                if (controller.roomType == RoomType.Start || gridPos == Vector2Int.zero)
                 {
                     currentRoom = controller;
                     controller.isVisited = true;
                 }
             }
         }
+
+        // Tự động gán Start room nếu chưa tìm thấy
+        if (currentRoom == null && roomControllers.TryGetValue(Vector2Int.zero, out RoomController startRoom))
+        {
+            currentRoom = startRoom;
+            startRoom.isVisited = true;
+        }
+
+        // Căn giữa Minimap vào phòng xuất phát ban đầu
+        CenterMapOnCurrentRoom();
 
         // Cập nhật trạng thái hiển thị toàn bộ map
         UpdateMinimap();
@@ -223,7 +246,11 @@ public class MinimapManager : MonoBehaviour
 
             if (ui == null) continue;
 
-            RoomController controller = roomControllers[gridPos];
+            if (!roomControllers.TryGetValue(gridPos, out RoomController controller) || controller == null)
+            {
+                continue;
+            }
+
             bool isCurrent = (controller == currentRoom);
             bool isVisited = controller.isVisited;
             bool isCleared = controller.roomCleared;
@@ -271,9 +298,30 @@ public class MinimapManager : MonoBehaviour
     /// </summary>
     public void OnPlayerEnterRoom(RoomController room)
     {
+        if (room == null) return;
         currentRoom = room;
         room.isVisited = true;
         UpdateMinimap();
+
+        // BỔ SUNG: Phát sóng phòng đã ghé thăm sang máy đồng đội qua SignalR
+        if (NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId))
+        {
+            NetworkManager.Instance.SendRoomVisited(room.roomUniqueId);
+        }
+    }
+
+    // BỔ SUNG: Nhận thông báo phòng mở từ đồng đội để cập nhật icon Minimap
+    private void HandleRemoteRoomVisited(string roomUniqueId)
+    {
+        foreach (var kvp in roomControllers)
+        {
+            if (kvp.Value != null && kvp.Value.roomUniqueId == roomUniqueId)
+            {
+                kvp.Value.isVisited = true;
+                UpdateMinimap();
+                break;
+            }
+        }
     }
 
     /// <summary>
@@ -340,19 +388,36 @@ public class MinimapManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Tự động khởi tạo Minimap UI khi tải Scene SampleScene
+    /// Đảm bảo Minimap UI luôn được khởi tạo và hiển thị trong Scene
     /// </summary>
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void OnSceneLoaded()
+    public static void EnsureMinimapExists()
     {
-        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "SampleScene")
+        if (Instance == null)
         {
             CreateAutoMinimapUI();
         }
+        if (Instance != null)
+        {
+            Instance.InitializeMinimap();
+        }
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void RegisterSceneLoadCallback()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += (scene, mode) =>
+        {
+            if (scene.name == "SampleScene")
+            {
+                EnsureMinimapExists();
+            }
+        };
     }
 
     private static void CreateAutoMinimapUI()
     {
+        if (Instance != null) return;
+
         Canvas canvas = FindUICanvas();
         if (canvas == null)
         {
@@ -419,6 +484,7 @@ public class MinimapManager : MonoBehaviour
         manager.spritePlayer = LoadSpriteSafely("UI/Skin/Knob");
 
         Debug.Log("[MinimapManager] Đã tự động tạo và cấu hình Minimap UI.");
+        manager.InitializeMinimap();
     }
 
     private static Sprite LoadSpriteSafely(string path)
@@ -457,6 +523,15 @@ public class MinimapManager : MonoBehaviour
     private void RecategorizeRoomsRuntime()
     {
         if (roomControllers.Count == 0) return;
+
+        // Nếu bất kỳ phòng nào đã được phân loại loại phòng (Start, Boss, Chest) từ trước, bảo vệ không ghi đè
+        foreach (var kvp in roomControllers)
+        {
+            if (kvp.Value != null && kvp.Value.roomType != RoomType.Normal)
+            {
+                return;
+            }
+        }
 
         // 1. Đặt tất cả các phòng về Normal mặc định
         foreach (var kvp in roomControllers)

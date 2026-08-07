@@ -207,8 +207,11 @@ public class WeaponAim : MonoBehaviour
             {
                 nextFireTime = Time.time + currentFireRate;
 
-                //if (playerMelee != null && isNewClick)
-                if (playerMelee != null)
+                // Kiểm tra xem vũ khí hiện tại có phải là cận chiến không (kiểm tra từ DB weaponType = Sword / Melee)
+                bool isCurrentWeaponMelee = currentWeapon != null && currentWeapon.IsMeleeWeapon();
+
+                // Chỉ kích hoạt chém tay khi đang cầm SÚNG và quái lại quá gần
+                if (playerMelee != null && !isCurrentWeaponMelee)
                 {
                     if (playerMelee.TryMeleeAttack(currentWeapon.firePoint))
                     {

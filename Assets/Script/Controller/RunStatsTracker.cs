@@ -15,6 +15,7 @@ public class RunStatsTracker : MonoBehaviour
     [SerializeField] private TMP_Text resultTitleText;       // Chữ tiêu đề: "CHIẾN THẮNG!" hoặc "THẤT BẠI!"
     [SerializeField] private TMP_Text statsText;             // Thông tin thống kê chi tiết trận đấu
     [SerializeField] private Button returnButton;            // Nút bấm quay trở lại Sảnh chính
+    [SerializeField] private Button closeButton;             // Nút bấm đóng/tắt bảng kết quả
 
     // Các thông số thống kê trận đấu
     public int WavesSurvived { get; private set; } = 1;     // Số Wave sống sót mặc định
@@ -46,6 +47,32 @@ public class RunStatsTracker : MonoBehaviour
         if (returnButton != null)
         {
             returnButton.onClick.AddListener(OnReturnToMenuClicked);
+        }
+    }
+
+    private void Update()
+    {
+        // Phím Tab bị vô hiệu hóa hoàn toàn khi đang chơi, chỉ hoạt động khi trận đấu kết thúc (Team chết hết hoặc thắng game)
+        if (runEnded && Input.GetKeyDown(KeyCode.Tab))
+        {
+            ToggleResultPanel();
+        }
+    }
+
+    public void ToggleResultPanel()
+    {
+        // Vô hiệu hóa hoàn toàn khi trận đấu chưa kết thúc
+        if (!runEnded) return;
+
+        if (resultPanel != null)
+        {
+            bool nextState = !resultPanel.activeSelf;
+            resultPanel.SetActive(nextState);
+            if (nextState)
+            {
+                EnsureCloseButtonExists();
+            }
+            Debug.Log($"[RunStatsTracker] Bấm phím Tab thay đổi trạng thái Bảng Thống Kê: {(nextState ? "MỞ" : "ĐÓNG")}");
         }
     }
 
@@ -159,32 +186,40 @@ public class RunStatsTracker : MonoBehaviour
             }
         }
 
-        // VÔ HIỆU HÓA DI CHUYỂN VÀ SÚNG CỦA PLAYER KHI KẾT THÚC RUN
-        GameObject player = GameObject.FindWithTag("Player");
-        if (player != null)
+        // VÔ HIỆU HÓA DI CHUYỂN VÀ SÚNG CỦA PLAYER KHI THẤT BẠI (Chỉ khi Defeat)
+        // Khi Hoàn thành game (Victory), giữ cho người chơi vẫn có thể tự do di chuyển và thao tác trong màn chơi.
+        if (!isVictory)
         {
-            PlayerMovement pm = player.GetComponent<PlayerMovement>();
-            if (pm != null)
+            GameObject player = GameObject.FindWithTag("Player");
+            if (player != null)
             {
-                pm.enabled = false;
-                // Dừng hoạt ảnh di chuyển
-                Animator anim = player.GetComponent<Animator>();
-                if (anim != null) anim.SetFloat("Speed", 0f);
-                // Dừng quán tính vật lý
-                Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
-                if (rb != null) rb.linearVelocity = Vector2.zero; // Hoặc velocity = Vector2.zero tùy phiên bản Unity
-            }
-
-            // Tìm và tắt các component điều khiển súng/nhắm bắn
-            MonoBehaviour[] allScripts = player.GetComponentsInChildren<MonoBehaviour>();
-            foreach (var script in allScripts)
-            {
-                if (script != null && (script.GetType().Name == "WeaponAim" || script.GetType().Name == "WeaponLaser"))
+                PlayerMovement pm = player.GetComponent<PlayerMovement>();
+                if (pm != null)
                 {
-                    script.enabled = false;
+                    pm.enabled = false;
+                    // Dừng hoạt ảnh di chuyển
+                    Animator anim = player.GetComponent<Animator>();
+                    if (anim != null) anim.SetFloat("Speed", 0f);
+                    // Dừng quán tính vật lý
+                    Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+                    if (rb != null) rb.linearVelocity = Vector2.zero;
                 }
+
+                // Tìm và tắt các component điều khiển súng/nhắm bắn khi nhân vật hy sinh
+                MonoBehaviour[] allScripts = player.GetComponentsInChildren<MonoBehaviour>();
+                foreach (var script in allScripts)
+                {
+                    if (script != null && (script.GetType().Name == "WeaponAim" || script.GetType().Name == "WeaponLaser"))
+                    {
+                        script.enabled = false;
+                    }
+                }
+                Debug.Log("[RunStatsTracker] Đã vô hiệu hoá di chuyển và ngắm bắn của Player do Thất bại.");
             }
-            Debug.Log("[RunStatsTracker] Đã vô hiệu hoá di chuyển và ngắm bắn của Player.");
+        }
+        else
+        {
+            Debug.Log("[RunStatsTracker] Hoàn thành game (Victory)! Giữ nguyên quyền di chuyển và điều khiển cho người chơi.");
         }
 
         Debug.Log($"[RunStatsTracker] Trận đấu kết thúc. Chiến thắng: {isVictory}. Đang gửi dữ liệu lên Backend...");
@@ -270,6 +305,75 @@ public class RunStatsTracker : MonoBehaviour
                              $"Enemies Killed: {EnemiesKilled}\n" +
                              $"Damage Dealt: {(int)DamageDealt}\n" +
                              $"Coins Earned: +{CurrencyEarned} Coins";
+        }
+
+        EnsureCloseButtonExists();
+    }
+
+    public void CloseResultPanel()
+    {
+        if (resultPanel != null)
+        {
+            resultPanel.SetActive(false);
+        }
+    }
+
+    private void EnsureCloseButtonExists()
+    {
+        if (resultPanel == null) return;
+
+        Button btn = closeButton;
+        if (btn == null)
+        {
+            Button[] buttons = resultPanel.GetComponentsInChildren<Button>(true);
+            foreach (var b in buttons)
+            {
+                if (b != returnButton && (b.name.ToLower().Contains("close") || b.name.ToLower().Contains("exit")))
+                {
+                    btn = b;
+                    break;
+                }
+            }
+        }
+
+        if (btn == null)
+        {
+            // Tự động sinh Nút Đóng (X) ở góc trên bên phải của Panel Kết quả
+            GameObject closeObj = new GameObject("CloseButton", typeof(RectTransform), typeof(Image), typeof(Button));
+            closeObj.transform.SetParent(resultPanel.transform, false);
+
+            RectTransform rect = closeObj.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(1f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(1f, 1f);
+            rect.sizeDelta = new Vector2(36f, 36f);
+            rect.anchoredPosition = new Vector2(-12f, -12f);
+
+            Image img = closeObj.GetComponent<Image>();
+            img.color = new Color(0.85f, 0.2f, 0.2f, 0.95f);
+
+            GameObject textObj = new GameObject("Text", typeof(RectTransform), typeof(Text));
+            textObj.transform.SetParent(closeObj.transform, false);
+            RectTransform textRect = textObj.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.sizeDelta = Vector2.zero;
+
+            Text txt = textObj.GetComponent<Text>();
+            txt.text = "X";
+            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.fontSize = 22;
+            txt.fontStyle = FontStyle.Bold;
+            txt.alignment = TextAnchor.MiddleCenter;
+            txt.color = Color.white;
+
+            btn = closeObj.GetComponent<Button>();
+        }
+
+        if (btn != null)
+        {
+            btn.onClick.RemoveListener(CloseResultPanel);
+            btn.onClick.AddListener(CloseResultPanel);
         }
     }
 

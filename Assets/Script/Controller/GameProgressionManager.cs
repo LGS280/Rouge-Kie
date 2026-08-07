@@ -34,6 +34,9 @@ public class GameProgressionManager : MonoBehaviour
     [Tooltip("Hệ số nhân máu quái vật tăng thêm mỗi tầng")]
     public float hpMultiplierPerFloor = 0.3f; // Tầng 1: 1.0x, Tầng 2: 1.3x, Tầng 3: 1.6x, Tầng 4: 1.9x, Tầng 5: 2.2x
 
+    [Header("Trạng Thái Transiton")]
+    public bool isTransitioning = false; // Cờ bảo vệ ngăn chặn gọi nhảy tầng trùng lặp
+
     private void Awake()
     {
         if (_instance == null)
@@ -53,6 +56,7 @@ public class GameProgressionManager : MonoBehaviour
     public void ResetProgression()
     {
         currentFloor = 1;
+        isTransitioning = false;
         Debug.Log("[GameProgressionManager] Đã khởi tạo lại tiến trình màn chơi về Tầng 1.");
     }
 
@@ -65,18 +69,87 @@ public class GameProgressionManager : MonoBehaviour
         return 1.0f + (currentFloor - 1) * hpMultiplierPerFloor;
     }
 
+    private void Start()
+    {
+        // BỔ SUNG: Đăng ký lắng nghe sự kiện chuyển tầng đồng bộ qua mạng từ NetworkManager
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.OnFloorTransitionSynced += HandleSyncedFloorTransition;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Hủy đăng ký sự kiện để tránh memory leak
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.OnFloorTransitionSynced -= HandleSyncedFloorTransition;
+        }
+    }
+
+    /// <summary>
+    /// Xử lý tín hiệu chuyển tầng đồng bộ từ mạng SignalR
+    /// </summary>
+    private void HandleSyncedFloorTransition(int targetFloor)
+    {
+        if (isTransitioning)
+        {
+            Debug.LogWarning($"[GameProgressionManager] Nhận lệnh chuyển Tầng {targetFloor} từ mạng nhưng đang transition, bỏ qua.");
+            return;
+        }
+
+        Debug.Log($"[GameProgressionManager] Co-op Mode: Nhận tín hiệu đồng bộ chuyển sang Tầng {targetFloor} từ mạng.");
+
+        // BỔ SUNG: Kiểm tra theo tham số mạng targetFloor (targetFloor == 2 khi vừa xong Tầng 1, targetFloor == 4 khi vừa xong Tầng 3)
+        // Đảm bảo cả Host và Client 100% cùng hiển thị Bảng chọn Buff
+        if ((targetFloor == 2 || targetFloor == 4) && UpgradeSelectionUI.Instance != null)
+        {
+            UpgradeSelectionUI.Instance.OpenUpgradeMenu(() =>
+            {
+                ExecuteFloorTransition(targetFloor);
+            });
+        }
+        else
+        {
+            ExecuteFloorTransition(targetFloor);
+        }
+    }
+
     /// <summary>
     /// Chuyển sang Tầng kế tiếp (Floor Transition)
     /// </summary>
     public void StartNextFloor()
     {
-        currentFloor++;
+        ExecuteFloorTransition(currentFloor + 1);
+    }
+
+    /// <summary>
+    /// Thực thi chuyển tầng tới mục tiêu targetFloor
+    /// </summary>
+    public void ExecuteFloorTransition(int targetFloor)
+    {
+        if (isTransitioning)
+        {
+            Debug.LogWarning("[GameProgressionManager] Đang trong quá trình chuyển tầng, bỏ qua yêu cầu gọi trùng lặp.");
+            return;
+        }
+
+        isTransitioning = true;
+        currentFloor = targetFloor;
         Debug.Log($"[GameProgressionManager] Đang chuyển sang Tầng {currentFloor}/{maxFloor}...");
+
+        // Hiển thị Màn hình Chờ Tải Tầng mới
+        if (LoadingScreenUI.Instance != null)
+        {
+            LoadingScreenUI.Instance.ShowLoading($"TẦNG {currentFloor} - 1", "Đang khởi tạo cấu trúc hầm ngục mới...");
+        }
 
         if (currentFloor > maxFloor)
         {
             // Nếu đã vượt qua tầng 5 -> Chiến thắng game!
             Debug.Log("[GameProgressionManager] Đã vượt qua tầng cuối cùng! Chiến thắng trận đấu!");
+            isTransitioning = false;
+            if (LoadingScreenUI.Instance != null) LoadingScreenUI.Instance.HideLoading();
             if (RunStatsTracker.Instance != null)
             {
                 RunStatsTracker.Instance.EndRun(true);
@@ -147,20 +220,45 @@ public class GameProgressionManager : MonoBehaviour
             }
         }
 
-        // 4. Kích hoạt lại di chuyển và toàn bộ collider của người chơi
-        if (playerColliders != null)
+        RookieHealth health = (player != null) ? player.GetComponent<RookieHealth>() : null;
+        bool isDeadPlayer = health != null && health.isDead;
+
+        // 4. Kích hoạt lại di chuyển và toàn bộ collider của người chơi (CHỈ KHI NGƯỜI CHƠI CÒN SỐNG)
+        if (!isDeadPlayer)
         {
-            foreach (var col in playerColliders)
+            if (playerColliders != null)
             {
-                if (col != null) col.enabled = true;
+                foreach (var col in playerColliders)
+                {
+                    if (col != null) col.enabled = true;
+                }
+                Debug.Log("[GameProgressionManager] Đã kích hoạt lại toàn bộ Collider của Player.");
             }
-            Debug.Log("[GameProgressionManager] Đã kích hoạt lại toàn bộ Collider của Player.");
+            if (movement != null)
+            {
+                movement.enabled = true;
+            }
         }
-        if (movement != null)
+        else
         {
-            movement.enabled = true;
+            // Nếu người chơi đang bị hy sinh: Khóa vận tốc, chuyển Kinematic để cố định xác tại phòng Start tầng mới
+            Rigidbody2D rb = player != null ? player.GetComponent<Rigidbody2D>() : null;
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector2.zero;
+                rb.bodyType = RigidbodyType2D.Kinematic;
+            }
+            Debug.Log("[GameProgressionManager] Player đang trong trạng thái hy sinh, giữ nguyên vô hiệu hóa điều khiển và collider.");
         }
 
+        yield return new WaitForSeconds(0.4f); // Chờ hiệu ứng mượt trước khi làm mờ ẩn Loading Screen
+
+        if (LoadingScreenUI.Instance != null)
+        {
+            LoadingScreenUI.Instance.HideLoading();
+        }
+
+        isTransitioning = false;
         Debug.Log($"[GameProgressionManager] Tải Tầng {currentFloor} thành công!");
     }
 }

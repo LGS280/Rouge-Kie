@@ -76,9 +76,13 @@ public class MainMenuController : MonoBehaviour
     {
         Debug.Log("Chạy chế độ chơi đơn...");
 
+        if (LoadingScreenUI.Instance != null)
+        {
+            LoadingScreenUI.Instance.ShowLoading("TẦNG 1 - 1", "Đang khởi tạo tài nguyên hầm ngục...");
+        }
+
         // Lệnh chuyển sang màn chơi chính
         SceneManager.LoadScene("SampleScene");
-        //SceneManager.LoadScene(1);
     }
 
 

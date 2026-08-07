@@ -176,6 +176,19 @@ public class GameConfigManager : MonoBehaviour
                 Debug.LogError($"[API Error] Lỗi kết nối đến {url}: {webRequest.error}");
         }
     }
+
+    public void PopulateDefaultBuffsFallback()
+    {
+        if (BuffDb == null) BuffDb = new List<BuffConfig>();
+        if (BuffDb.Count > 0) return;
+
+        BuffDb.Add(new BuffConfig { id = 1, buffName = "Tăng Máu Tối Đa", description = "+20 Máu tối đa", buffType = "HP", value = 20, rarity = "Common" });
+        BuffDb.Add(new BuffConfig { id = 2, buffName = "Tăng Giáp Tối Đa", description = "+2 Giáp tối đa", buffType = "Armor", value = 2, rarity = "Common" });
+        BuffDb.Add(new BuffConfig { id = 3, buffName = "Tăng Năng Lượng Tối Đa", description = "+30 Năng lượng tối đa", buffType = "Mana", value = 30, rarity = "Common" });
+        BuffDb.Add(new BuffConfig { id = 4, buffName = "Sức Mạnh Toàn Diện", description = "+10 Máu tối đa", buffType = "HP", value = 10, rarity = "Rare" });
+
+        Debug.Log($"[GameConfigManager] Đã khởi tạo thành công {BuffDb.Count} Buff mặc định dự phòng.");
+    }
 }
 
 // Class bổ trợ để map dữ liệu từ file appsettings.json
