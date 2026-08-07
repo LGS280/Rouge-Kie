@@ -255,14 +255,14 @@ public class RookieHealth : MonoBehaviour
             rb.bodyType = RigidbodyType2D.Kinematic;
         }
 
-        // Tắt bóng Shadow và vòng xanh Player_Ring để tạo cảm giác nhân vật nằm bệt xuống sàn
+        // Giữ nguyên bóng Shadow và vòng xanh Player_Ring khi gục ngã để hiển thị tự nhiên
         Transform shadowPos = transform.Find("Shadow");
-        if (shadowPos != null) shadowPos.gameObject.SetActive(false);
+        if (shadowPos != null) shadowPos.gameObject.SetActive(true);
 
         Transform ringPos = transform.Find("Player_Ring");
         if (ringPos == null) ringPos = transform.Find("Ring");
         if (ringPos == null) ringPos = transform.Find("PlayerRing");
-        if (ringPos != null) ringPos.gameObject.SetActive(false);
+        if (ringPos != null) ringPos.gameObject.SetActive(true);
 
         WeaponAim weapon = GetComponentInChildren<WeaponAim>();
         if (weapon != null) weapon.enabled = false;

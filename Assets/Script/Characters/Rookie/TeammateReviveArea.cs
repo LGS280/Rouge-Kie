@@ -20,10 +20,10 @@ namespace Assets.Script.Characters.Rookie
         private bool isReviving = false;
         private string targetReviveConnId = "";
 
-        // Component UI hiển thị Progress
-        private GameObject reviveCanvasObj;
-        private Image progressBarFill;
-        private Text progressText;
+        [Header("Giao Diện UI Hồi Sinh (Gán từ Inspector)")]
+        public GameObject reviveCanvasObj; // Root Canvas / Panel chứa UI Hồi Sinh
+        public Image progressBarFill;     // Lớp Image Fill tiến trình
+        public Text progressText;         // Dòng chữ hướng dẫn "Giữ [E] 2.5s..."
 
         private void Awake()
         {
@@ -32,10 +32,17 @@ namespace Assets.Script.Characters.Rookie
 
         private void Start()
         {
-            CreateReviveUI();
+            if (reviveCanvasObj == null)
+            {
+                CreateFallbackReviveUI();
+            }
+            else
+            {
+                reviveCanvasObj.SetActive(false);
+            }
         }
 
-        private void CreateReviveUI()
+        private void CreateFallbackReviveUI()
         {
             if (reviveCanvasObj != null) return;
 

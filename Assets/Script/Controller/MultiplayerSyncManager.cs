@@ -258,14 +258,14 @@ public class MultiplayerSyncManager : MonoBehaviour
             SpriteRenderer sr = remoteObj.GetComponent<SpriteRenderer>();
             if (sr != null) sr.color = new Color(0.35f, 0.35f, 0.35f, 1f);
 
-            // Ẩn bóng Shadow và vòng xanh Player_Ring của đồng đội khi hy sinh
+            // Giữ nguyên bóng Shadow và vòng xanh Player_Ring của đồng đội khi hy sinh
             Transform shadowPos = remoteObj.transform.Find("Shadow");
-            if (shadowPos != null) shadowPos.gameObject.SetActive(false);
+            if (shadowPos != null) shadowPos.gameObject.SetActive(true);
 
             Transform ringPos = remoteObj.transform.Find("Player_Ring");
             if (ringPos == null) ringPos = remoteObj.transform.Find("Ring");
             if (ringPos == null) ringPos = remoteObj.transform.Find("PlayerRing");
-            if (ringPos != null) ringPos.gameObject.SetActive(false);
+            if (ringPos != null) ringPos.gameObject.SetActive(true);
         }
     }
 
