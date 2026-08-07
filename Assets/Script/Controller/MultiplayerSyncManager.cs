@@ -535,6 +535,11 @@ public class MultiplayerSyncManager : MonoBehaviour
 
         if (weaponPrefab == null)
         {
+#if UNITY_EDITOR
+            string editorPath = $"Assets/Prefab/Weapons/{cleanName}.prefab";
+            weaponPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(editorPath);
+            if (weaponPrefab != null) return weaponPrefab;
+#endif
             weaponPrefab = Resources.Load<GameObject>($"Prefab/Weapons/{cleanName}");
             if (weaponPrefab == null)
             {
