@@ -109,8 +109,9 @@ MonoBehaviour:
   weaponPrefab: {fileID: 2255413539830745082}
   shootSoundClip: {fileID: 8300000, guid: 3a9216e6ea581644680105b46e65da28, type: 3}
   customHandPosition: {x: -0.025, y: 0.11, z: 0}
-  bulletPrefab: {fileID: 5457056256669451622, guid: 0e52bb5860cc0514ba306fb6ba029223, type: 3}
   firePoint: {fileID: 506378208799977367}
+  secondFirePoint: {fileID: 0}
+  bulletPrefab: {fileID: 5457056256669451622, guid: 0e52bb5860cc0514ba306fb6ba029223, type: 3}
   fireRate: 0.5
   manaCostPerShot: 0
 --- !u!1 &4922904427848891422

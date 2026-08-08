@@ -3,6 +3,7 @@ using UnityEngine;
 public class MissileBullet : NormalBullet
 {
     [Header("Missile Homing Configuration")]
+    public bool isHoming = true;          // Cờ bật/tắt bẻ lái đuổi quái (Missile = true, Rocket = false)
     public float detectRadius = 5.0f;     // Bán kính dò tìm kẻ địch
     public float turnSpeed = 260.0f;      // Tốc độ xoay lượn cong mềm mại (độ/giây)
     public float initialDirectTime = 0.05f; // Bắt đầu lượn bẻ lái cực nhanh sau 0.05s
@@ -46,8 +47,8 @@ public class MissileBullet : NormalBullet
             fireTailObject.transform.localScale = new Vector3(scaleX, scaleY, 1f);
         }
 
-        // 2. Dò tìm và xoay hướng bay theo đuổi quái
-        if (Time.time - spawnTimestamp >= initialDirectTime)
+        // 2. Dò tìm và xoay hướng bay theo đuổi quái (nếu cờ isHoming = true)
+        if (isHoming && Time.time - spawnTimestamp >= initialDirectTime)
         {
             FindTargetEnemy();
 
