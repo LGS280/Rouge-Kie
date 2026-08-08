@@ -7,7 +7,7 @@ public class SpeedSkill : MonoBehaviour
     [SerializeField] float buffMultiplier = 2f;  // 200% tăng = x3 tốc độ
     [SerializeField] float buffDuration = 5f;    // buff kéo dài 5 giây
     [SerializeField] float cooldown = 15f;       // chờ 15 giây để dùng lại
-    [SerializeField] KeyCode skillKey = KeyCode.Q;
+    [SerializeField] KeyCode skillKey = KeyCode.F;
 
     float cooldownTimer = 0f;
     bool isReady => cooldownTimer <= 0f;
@@ -34,7 +34,8 @@ public class SpeedSkill : MonoBehaviour
         }
         else
         {
-            if (Input.GetKeyDown(skillKey))
+            KeyCode activeKey = GetSkillKeyCode();
+            if (Input.GetKeyDown(activeKey))
             {
                 isSkillKeyPressed = true;
             }
@@ -45,6 +46,16 @@ public class SpeedSkill : MonoBehaviour
         {
             ActivateSkill();
         }
+    }
+
+    private KeyCode GetSkillKeyCode()
+    {
+        string keyName = InputDeviceHelper.GetSkillKeyDisplayString();
+        if (System.Enum.TryParse<KeyCode>(keyName, true, out KeyCode parsedKey))
+        {
+            return parsedKey;
+        }
+        return skillKey;
     }
 
     void ActivateSkill()

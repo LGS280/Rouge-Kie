@@ -172,13 +172,17 @@ namespace Assets.Script.Characters.Rookie
                 if (reviveCanvasObj != null && !reviveCanvasObj.activeSelf && !isReviving)
                 {
                     reviveCanvasObj.SetActive(true);
-                    if (progressText != null) progressText.text = "Giữ [E] 2.5s để Hồi Sinh Đồng Đội";
+                    string keyName = InputDeviceHelper.GetInteractKeyDisplayString();
+                    if (progressText != null) progressText.text = $"Hold [{keyName}] 2.5s to Revive Teammate";
                     if (reviveSlider != null) reviveSlider.value = 0f;
                     if (progressBarFill != null) progressBarFill.fillAmount = 0f;
                 }
 
-                // Người chơi giữ phím [E]
-                if (Input.GetKey(KeyCode.E))
+                KeyCode interactKey = GetInteractKeyCode();
+                bool isHoldingInteract = Input.GetKey(interactKey) || (Gamepad.current != null && Gamepad.current.bButton.isPressed);
+
+                // Người chơi giữ phím Hồi Sinh (Mặc định phím E / phím đã cài đặt)
+                if (isHoldingInteract)
                 {
                     isReviving = true;
                     currentReviveProgress += Time.deltaTime;
@@ -186,7 +190,7 @@ namespace Assets.Script.Characters.Rookie
 
                     if (reviveSlider != null) reviveSlider.value = progressRatio;
                     if (progressBarFill != null) progressBarFill.fillAmount = progressRatio;
-                    if (progressText != null) progressText.text = $"Đang Hồi Sinh Đồng Đội... ({progressRatio * 100f:F0}%)";
+                    if (progressText != null) progressText.text = $"Reviving Teammate... ({progressRatio * 100f:F0}%)";
 
                     if (currentReviveProgress >= reviveHoldDuration)
                     {
@@ -196,14 +200,15 @@ namespace Assets.Script.Characters.Rookie
                 }
                 else
                 {
-                    // Thả phím E -> Reset tiến trình
+                    // Thả phím Hồi Sinh -> Reset tiến trình
                     if (isReviving)
                     {
                         currentReviveProgress = 0f;
                         isReviving = false;
                         if (reviveSlider != null) reviveSlider.value = 0f;
                         if (progressBarFill != null) progressBarFill.fillAmount = 0f;
-                        if (progressText != null) progressText.text = "Giữ [E] 2.5s để Hồi Sinh Đồng Đội";
+                        string keyName = InputDeviceHelper.GetInteractKeyDisplayString();
+                        if (progressText != null) progressText.text = $"Hold [{keyName}] 2.5s to Revive Teammate";
                     }
                 }
             }
@@ -211,6 +216,16 @@ namespace Assets.Script.Characters.Rookie
             {
                 CancelRevive();
             }
+        }
+
+        private KeyCode GetInteractKeyCode()
+        {
+            string keyName = InputDeviceHelper.GetInteractKeyDisplayString();
+            if (System.Enum.TryParse<KeyCode>(keyName, true, out KeyCode parsedKey))
+            {
+                return parsedKey;
+            }
+            return KeyCode.E;
         }
 
         private GameObject FindNearestDeadRemotePlayer(Vector3 localPos)

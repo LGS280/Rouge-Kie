@@ -54,4 +54,18 @@ public static class InputDeviceHelper
 
         return lastUsedGamepad;
     }
+
+    public static string GetInteractKeyDisplayString()
+    {
+        if (IsGamepadActive()) return "B";
+        string saved = PlayerPrefs.GetString("RogueKie_InteractKey", "E");
+        return string.IsNullOrEmpty(saved) ? "E" : saved.ToUpper();
+    }
+
+    public static string GetSkillKeyDisplayString()
+    {
+        if (IsGamepadActive()) return "Y";
+        string saved = PlayerPrefs.GetString("RogueKie_SkillKey", "F");
+        return string.IsNullOrEmpty(saved) ? "F" : saved.ToUpper();
+    }
 }
