@@ -29,6 +29,14 @@ public class RemotePlayerController : MonoBehaviour
             if (sr != null) sr.color = new Color(0.3f, 0.3f, 0.3f, 1f);
         }
 
+        Transform shadowPos = transform.Find("Shadow");
+        if (shadowPos != null) shadowPos.gameObject.SetActive(false);
+
+        Transform ringPos = transform.Find("Player_Ring");
+        if (ringPos == null) ringPos = transform.Find("Ring");
+        if (ringPos == null) ringPos = transform.Find("PlayerRing");
+        if (ringPos != null) ringPos.gameObject.SetActive(false);
+
         if (animator != null)
         {
             animator.SetTrigger("die");
@@ -43,6 +51,19 @@ public class RemotePlayerController : MonoBehaviour
         foreach (var sr in srs)
         {
             if (sr != null) sr.color = Color.white;
+        }
+
+        Transform shadowPos = transform.Find("Shadow");
+        if (shadowPos != null) shadowPos.gameObject.SetActive(true);
+
+        Transform ringPos = transform.Find("Player_Ring");
+        if (ringPos == null) ringPos = transform.Find("Ring");
+        if (ringPos == null) ringPos = transform.Find("PlayerRing");
+        if (ringPos != null)
+        {
+            ringPos.gameObject.SetActive(true);
+            SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
+            if (ringSr != null) ringSr.color = Color.green;
         }
 
         if (animator != null)

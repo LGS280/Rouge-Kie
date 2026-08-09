@@ -57,10 +57,15 @@ public class WeaponManager : MonoBehaviour
         // 1. Kiểm tra nhặt vũ khí (Phím E bàn phím hoặc Nút B tay cầm khi có súng gần đó)
         CheckWeaponPickup();
 
-        // 2. Logic đổi vũ khí (Swap) - Thêm Delay 1s khi lăn chuột cuộn
+        // 2. Logic đổi vũ khí (Swap) - Hỗ trợ Rebind phím động từ Settings
         bool hasPressedSwapKey = false;
 
-        if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
+        InputAction switchAction = (InputLoader.Instance != null) ? InputLoader.Instance.GetAction("SwitchWeapon") : null;
+        if (switchAction != null && (switchAction.triggered || switchAction.WasPressedThisFrame()))
+        {
+            hasPressedSwapKey = true;
+        }
+        else if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
         {
             hasPressedSwapKey = true;
         }
@@ -89,8 +94,13 @@ public class WeaponManager : MonoBehaviour
 
         bool hasPressedPickupKey = false;
 
-        // Bàn phím bấm E (vừa mở rương vừa nhặt súng)
-        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+        InputAction interactAction = (InputLoader.Instance != null) ? InputLoader.Instance.GetAction("Interact") : null;
+        if (interactAction != null && (interactAction.triggered || interactAction.WasPressedThisFrame()))
+        {
+            hasPressedPickupKey = true;
+        }
+        // Bàn phím bấm phím mặc định E (vừa mở rương vừa nhặt súng)
+        else if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
         {
             hasPressedPickupKey = true;
         }

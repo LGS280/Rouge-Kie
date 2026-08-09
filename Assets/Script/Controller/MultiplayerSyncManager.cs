@@ -258,14 +258,14 @@ public class MultiplayerSyncManager : MonoBehaviour
             SpriteRenderer sr = remoteObj.GetComponent<SpriteRenderer>();
             if (sr != null) sr.color = new Color(0.35f, 0.35f, 0.35f, 1f);
 
-            // Giữ nguyên bóng Shadow và vòng xanh Player_Ring của đồng đội khi hy sinh
+            // Ẩn bóng Shadow và vòng xanh Player_Ring của đồng đội khi hy sinh
             Transform shadowPos = remoteObj.transform.Find("Shadow");
-            if (shadowPos != null) shadowPos.gameObject.SetActive(true);
+            if (shadowPos != null) shadowPos.gameObject.SetActive(false);
 
             Transform ringPos = remoteObj.transform.Find("Player_Ring");
             if (ringPos == null) ringPos = remoteObj.transform.Find("Ring");
             if (ringPos == null) ringPos = remoteObj.transform.Find("PlayerRing");
-            if (ringPos != null) ringPos.gameObject.SetActive(true);
+            if (ringPos != null) ringPos.gameObject.SetActive(false);
         }
     }
 
@@ -292,7 +292,12 @@ public class MultiplayerSyncManager : MonoBehaviour
             Transform ringPos = remoteObj.transform.Find("Player_Ring");
             if (ringPos == null) ringPos = remoteObj.transform.Find("Ring");
             if (ringPos == null) ringPos = remoteObj.transform.Find("PlayerRing");
-            if (ringPos != null) ringPos.gameObject.SetActive(true);
+            if (ringPos != null)
+            {
+                ringPos.gameObject.SetActive(true);
+                SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
+                if (ringSr != null) ringSr.color = Color.green;
+            }
         }
     }
 
