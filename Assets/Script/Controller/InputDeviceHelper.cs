@@ -55,17 +55,48 @@ public static class InputDeviceHelper
         return lastUsedGamepad;
     }
 
+    public static string GetBindingDisplayString(string actionName, string defaultFallback = "E")
+    {
+        if (IsGamepadActive())
+        {
+            if (actionName == "Interact") return "B";
+            if (actionName == "Skill") return "Y";
+            if (actionName == "SwitchWeapon") return "A";
+        }
+
+        if (InputLoader.Instance != null && InputLoader.Instance.inputActions != null)
+        {
+            InputAction action = InputLoader.Instance.GetAction(actionName);
+            if (action != null)
+            {
+                for (int i = 0; i < action.bindings.Count; i++)
+                {
+                    if (!action.bindings[i].isPartOfComposite &&
+                        (string.IsNullOrEmpty(action.bindings[i].groups) ||
+                         action.bindings[i].groups.Contains("Keyboard&Mouse") ||
+                         action.bindings[i].groups.Contains("Keyboard")))
+                    {
+                        string displayStr = action.GetBindingDisplayString(i);
+                        if (!string.IsNullOrEmpty(displayStr)) return displayStr.ToUpper();
+                    }
+                }
+            }
+        }
+        return defaultFallback;
+    }
+
     public static string GetInteractKeyDisplayString()
     {
-        if (IsGamepadActive()) return "B";
-        string saved = PlayerPrefs.GetString("RogueKie_InteractKey", "E");
-        return string.IsNullOrEmpty(saved) ? "E" : saved.ToUpper();
+        return GetBindingDisplayString("Interact", "E");
     }
 
     public static string GetSkillKeyDisplayString()
     {
-        if (IsGamepadActive()) return "Y";
-        string saved = PlayerPrefs.GetString("RogueKie_SkillKey", "F");
-        return string.IsNullOrEmpty(saved) ? "F" : saved.ToUpper();
+        return GetBindingDisplayString("Skill", "F");
+    }
+
+    public static string GetSwitchWeaponKeyDisplayString()
+    {
+        return GetBindingDisplayString("SwitchWeapon", "SCROLLWHEEL");
     }
 }

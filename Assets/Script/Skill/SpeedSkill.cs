@@ -25,7 +25,12 @@ public class SpeedSkill : MonoBehaviour
 
         bool isSkillKeyPressed = false;
 
-        if (playerController != null && playerController.currentMode == PlayerController.InputMode.Gamepad)
+        InputAction skillAction = (InputLoader.Instance != null) ? InputLoader.Instance.GetAction("Skill") : null;
+        if (skillAction != null && (skillAction.triggered || skillAction.WasPressedThisFrame()))
+        {
+            isSkillKeyPressed = true;
+        }
+        else if (playerController != null && playerController.currentMode == PlayerController.InputMode.Gamepad)
         {
             if (Gamepad.current != null && Gamepad.current.yButton.wasPressedThisFrame)
             {
