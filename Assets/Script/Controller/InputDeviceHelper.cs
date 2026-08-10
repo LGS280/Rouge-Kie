@@ -54,4 +54,49 @@ public static class InputDeviceHelper
 
         return lastUsedGamepad;
     }
+
+    public static string GetBindingDisplayString(string actionName, string defaultFallback = "E")
+    {
+        if (IsGamepadActive())
+        {
+            if (actionName == "Interact") return "B";
+            if (actionName == "Skill") return "Y";
+            if (actionName == "SwitchWeapon") return "A";
+        }
+
+        if (InputLoader.Instance != null && InputLoader.Instance.inputActions != null)
+        {
+            InputAction action = InputLoader.Instance.GetAction(actionName);
+            if (action != null)
+            {
+                for (int i = 0; i < action.bindings.Count; i++)
+                {
+                    if (!action.bindings[i].isPartOfComposite &&
+                        (string.IsNullOrEmpty(action.bindings[i].groups) ||
+                         action.bindings[i].groups.Contains("Keyboard&Mouse") ||
+                         action.bindings[i].groups.Contains("Keyboard")))
+                    {
+                        string displayStr = action.GetBindingDisplayString(i);
+                        if (!string.IsNullOrEmpty(displayStr)) return displayStr.ToUpper();
+                    }
+                }
+            }
+        }
+        return defaultFallback;
+    }
+
+    public static string GetInteractKeyDisplayString()
+    {
+        return GetBindingDisplayString("Interact", "E");
+    }
+
+    public static string GetSkillKeyDisplayString()
+    {
+        return GetBindingDisplayString("Skill", "F");
+    }
+
+    public static string GetSwitchWeaponKeyDisplayString()
+    {
+        return GetBindingDisplayString("SwitchWeapon", "SCROLLWHEEL");
+    }
 }

@@ -95,13 +95,14 @@ public class WeaponChest : MonoBehaviour
             // Cập nhật text động tùy theo thiết bị đang sử dụng
             if (promptText != null)
             {
+                string keyName = InputDeviceHelper.GetInteractKeyDisplayString();
                 if (InputDeviceHelper.IsGamepadActive())
                 {
-                    promptText.text = "Nút B";
+                    promptText.text = "Press B";
                 }
                 else
                 {
-                    promptText.text = "Bấm E";
+                    promptText.text = "Press " + keyName;
                 }
                 promptText.color = Color.green;
             }
