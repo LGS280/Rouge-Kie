@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: a4a0d7f54ed1a9444b4fbb212e2fede0
+guid: afc98cbbe447e3344b39b48ad6dce48d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6810948524472131043
-    second: Stabbing_Effect_2_0
+      213: -3104944149020814507
+    second: Brog's_Spear_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,7 +51,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 26
+  spritePixelsToUnits: 32
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -100,23 +100,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Stabbing_Effect_2_0
+      name: Brog's_Spear_0
       rect:
         serializedVersion: 2
-        x: 15
-        y: 3
+        x: 0
+        y: 0
         width: 32
-        height: 13
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+        height: 8
+      alignment: 9
+      pivot: {x: 0.2967593, y: 0.3018518}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: d122e572766aa71a0800000000000000
-      internalID: -6810948524472131043
+      spriteID: 553df264fb509e4d0800000000000000
+      internalID: -3104944149020814507
       vertices: []
       indices: 
       edges: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 0ccdfd11af4e41d4389857faf56095a0
+    spriteID: 8eba300794dde744ab447170341a3014
     internalID: 0
     vertices: []
     indices: 
@@ -133,11 +133,9 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries:
-      - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+      entries: []
     nameFileIdTable:
-      Stabbing_Effect_2_0: -6810948524472131043
+      Brog's_Spear_0: -3104944149020814507
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

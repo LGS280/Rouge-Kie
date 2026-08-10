@@ -12,6 +12,9 @@ public class MissileBullet : NormalBullet
     public bool hasFireTail = true;      // Cờ bật/tắt đuôi lửa (ví dụ: Tên lửa = true, Mũi tên phép = false)
     public GameObject fireTailObject;   // Reference tới GameObject đuôi lửa
 
+    [Header("Impact Effect")]
+    public GameObject explosionEffectPrefab; // Prefab hiệu ứng vụ nổ cho Missile/Rocket
+
     private Transform targetEnemy;
     private float spawnTimestamp;
 
@@ -35,6 +38,19 @@ public class MissileBullet : NormalBullet
         {
             fireTailObject.SetActive(hasFireTail);
         }
+    }
+
+    protected override void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Obstacle") || collision.CompareTag("Enemy") || collision.CompareTag("Door"))
+        {
+            if (explosionEffectPrefab != null)
+            {
+                Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
+            }
+        }
+
+        base.OnTriggerEnter2D(collision);
     }
 
     protected override void Update()

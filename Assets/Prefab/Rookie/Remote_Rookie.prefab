@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 12616528524299117}
   - component: {fileID: 6063275971273655234}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Hand_Position
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -63,7 +63,7 @@ GameObject:
   - component: {fileID: 3090423080499815593}
   - component: {fileID: 968341340445653306}
   - component: {fileID: 3410201476915872192}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Remote_Rookie
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -253,7 +253,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4890290368747184084}
   - component: {fileID: 9103448861209045215}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Shadow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -343,7 +343,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5289129472824092616}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Back_Position
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -376,7 +376,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2178307950358474434}
   - component: {fileID: 8924362479858011390}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Player_Ring
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -509,6 +509,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: AK47
       objectReference: {fileID: 0}
+    - target: {fileID: 4136628244467973380, guid: 7ac88ad6a102d7d41ab1ff7cd22148cf, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7720013465286283729, guid: 7ac88ad6a102d7d41ab1ff7cd22148cf, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -530,6 +538,14 @@ PrefabInstance:
     - target: {fileID: 2255413539830745082, guid: 4208f3b8848eb1e44b5e5ce624af72cc, type: 3}
       propertyPath: m_Name
       value: Desert_Eagle
+      objectReference: {fileID: 0}
+    - target: {fileID: 2255413539830745082, guid: 4208f3b8848eb1e44b5e5ce624af72cc, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4922904427848891422, guid: 4208f3b8848eb1e44b5e5ce624af72cc, type: 3}
+      propertyPath: m_Layer
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 9162536917882675573, guid: 4208f3b8848eb1e44b5e5ce624af72cc, type: 3}
       propertyPath: m_LocalPosition.x
