@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 2968969337830132195}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.799, y: -0.043, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -41,7 +41,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3468889392129360953}
   - component: {fileID: 8272578696212702601}
-  - component: {fileID: 3130215437853005568}
+  - component: {fileID: 5141277526041537485}
   m_Layer: 0
   m_Name: Brog's_Spear
   m_TagString: Untagged
@@ -58,7 +58,7 @@ Transform:
   m_GameObject: {fileID: 9100733008214628815}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 7.471, y: 4.165, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -124,7 +124,7 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!114 &3130215437853005568
+--- !u!114 &5141277526041537485
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -133,15 +133,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 9100733008214628815}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: df397456b8e4f78429e2e244b759fab4, type: 3}
+  m_Script: {fileID: 11500000, guid: 52314a4d7a53014408ddc3eaa869c58d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeaponInfo
-  weaponDbId: 0
-  weaponPrefab: {fileID: 0}
-  shootSoundClip: {fileID: 0}
-  customHandPosition: {x: 0, y: 0, z: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::MobWeaponInfo
   firePoint: {fileID: 5164270798641571596}
-  secondFirePoint: {fileID: 0}
-  bulletPrefab: {fileID: 0}
-  fireRate: 0
-  manaCostPerShot: 0
+  shootSoundClip: {fileID: 0}
+  weaponNameOverride: 
+  bulletId: 0
+  fireRate: 1
+  baseDamage: 10
+  bulletSpeed: 10
+  cachedBulletPrefab: {fileID: 0}
+  isMelee: 1
+  customHandPosition: {x: 0, y: 0, z: 0}
+  soundFileName: 

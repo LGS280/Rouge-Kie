@@ -175,7 +175,62 @@ public class MobHealth : MonoBehaviour
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
         if (sr != null) sr.sortingOrder = 2;
 
+        MobWeaponAim weaponAim = GetComponentInChildren<MobWeaponAim>();
+        if (weaponAim != null) weaponAim.DestroyWeaponOnDeath();
+
         OnDeath?.Invoke(this);
+        SpawnLootOnDeath();
+    }
+
+    [Header("Cấu hình Rớt Loot Khi Chết")]
+    public GameObject coinPrefabOverride;
+    public GameObject manaPrefabOverride;
+
+    private void SpawnLootOnDeath()
+    {
+        // 1. Tìm Prefab Vàng & Mana
+        GameObject coinPrefab = coinPrefabOverride;
+        if (coinPrefab == null) coinPrefab = Resources.Load<GameObject>("Prefab/Item/Coin/Coin");
+        if (coinPrefab == null) coinPrefab = Resources.Load<GameObject>("Coin");
+
+        GameObject manaPrefab = manaPrefabOverride;
+        if (manaPrefab == null) manaPrefab = Resources.Load<GameObject>("Prefab/Item/Mana");
+        if (manaPrefab == null) manaPrefab = Resources.Load<GameObject>("Mana");
+
+        // 2. CHỈ CHỌN NGẪU NHIÊN 1 LOẠI (Vàng HOẶC Mana)
+        bool dropCoin = Random.value > 0.5f;
+        GameObject targetLootPrefab = (dropCoin && coinPrefab != null) ? coinPrefab : ((manaPrefab != null) ? manaPrefab : coinPrefab);
+
+        if (targetLootPrefab == null) return;
+
+        // 3. CHỈ RỚT SỐ LƯỢNG 1 HOẶC 2 VIÊN
+        int dropAmount = Random.Range(1, 3); // Random.Range(1, 3) cho ra 1 hoặc 2
+
+        MobAI mobAI = GetComponent<MobAI>();
+        Bounds roomBounds = (mobAI != null && mobAI.myRoom != null && mobAI.myRoom.RoomCollider != null) ? mobAI.myRoom.RoomCollider.bounds : default;
+
+        for (int i = 0; i < dropAmount; i++)
+        {
+            Vector3 spawnPos = transform.position;
+            Vector2 randomDir = Random.insideUnitCircle.normalized * Random.Range(0.3f, 0.7f);
+            Vector3 finalPos = spawnPos + (Vector3)randomDir;
+
+            // 4. ĐẢM BẢO KHÔNG BỊ VĂNG RA KHỎI MAP (Clamp theo ranh giới phòng nếu có)
+            if (roomBounds.size != Vector3.zero)
+            {
+                finalPos.x = Mathf.Clamp(finalPos.x, roomBounds.min.x + 0.5f, roomBounds.max.x - 0.5f);
+                finalPos.y = Mathf.Clamp(finalPos.y, roomBounds.min.y + 0.5f, roomBounds.max.y - 0.5f);
+            }
+
+            GameObject lootObj = Instantiate(targetLootPrefab, finalPos, Quaternion.identity);
+
+            // Thêm lực văng nhẹ
+            Rigidbody2D lootRb = lootObj.GetComponent<Rigidbody2D>();
+            if (lootRb != null)
+            {
+                lootRb.AddForce(randomDir * 1.5f, ForceMode2D.Impulse);
+            }
+        }
     }
 
     void RecycleMob()

@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5839136519115437887}
   - component: {fileID: 4267423341687746975}
-  - component: {fileID: 8367722479259244022}
+  - component: {fileID: 7053059745324720290}
   m_Layer: 0
   m_Name: Old_Pistol
   m_TagString: Untagged
@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 3793715975383638713}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 7.49066, y: 2.35931, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -93,7 +93,7 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!114 &8367722479259244022
+--- !u!114 &7053059745324720290
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -102,18 +102,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 3793715975383638713}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: df397456b8e4f78429e2e244b759fab4, type: 3}
+  m_Script: {fileID: 11500000, guid: 52314a4d7a53014408ddc3eaa869c58d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeaponInfo
-  weaponDbId: 0
-  weaponPrefab: {fileID: 0}
-  shootSoundClip: {fileID: 0}
-  customHandPosition: {x: 0, y: 0, z: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::MobWeaponInfo
+  weaponNameOverride: 
   firePoint: {fileID: 4120134598869887392}
-  secondFirePoint: {fileID: 0}
-  bulletPrefab: {fileID: 0}
-  fireRate: 0
-  manaCostPerShot: 0
+  bulletId: 0
+  fireRate: 1
+  baseDamage: 10
+  bulletSpeed: 10
+  cachedBulletPrefab: {fileID: 0}
+  isMelee: 0
 --- !u!1 &4575574495187919995
 GameObject:
   m_ObjectHideFlags: 0
@@ -139,7 +138,7 @@ Transform:
   m_GameObject: {fileID: 4575574495187919995}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.306, y: 0.018, z: 0}
+  m_LocalPosition: {x: 0.306, y: 0.033, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

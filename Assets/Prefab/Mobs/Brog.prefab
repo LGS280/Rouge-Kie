@@ -16,7 +16,6 @@ GameObject:
   - component: {fileID: 3296887713486776554}
   - component: {fileID: 7981424314593033643}
   - component: {fileID: 6502909763795613612}
-  - component: {fileID: 6973684458154750377}
   m_Layer: 6
   m_Name: Brog
   m_TagString: Enemy
@@ -141,12 +140,10 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   attackDamage: 10
-  preferredRangedDistance: 4.5
-  strafeSpeed: 1.8
-  isHost: 1
   wallPadding: 0
-  myRoom: {fileID: 0}
+  isHost: 1
   targetPlayer: {fileID: 0}
+  myRoom: {fileID: 0}
 --- !u!114 &4397270787726877154
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -175,6 +172,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MobHealth
   maxHealth: 100
   isDead: 0
+  coinPrefabOverride: {fileID: 0}
+  manaPrefabOverride: {fileID: 0}
 --- !u!50 &7981424314593033643
 Rigidbody2D:
   serializedVersion: 5
@@ -239,23 +238,6 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0}
   m_Size: {x: 0.75, y: 1}
   m_Direction: 0
---- !u!114 &6973684458154750377
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5514756235691171080}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2dcbc39550671e54c836a6522a132de7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyWeaponManager
-  handPosition: {fileID: 3274005920562199835}
-  mobWeaponPrefabs:
-  - {fileID: 9100733008214628815, guid: 48ee5083945d2004292eeeda9aae22a6, type: 3}
-  - {fileID: 3793715975383638713, guid: 6c7724726f9279b4e8820228442c832e, type: 3}
-  autoLoadFromFolder: 1
 --- !u!1 &5975511628072991313
 GameObject:
   m_ObjectHideFlags: 0
@@ -356,7 +338,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3274005920562199835}
-  - component: {fileID: 7835601856266307049}
+  - component: {fileID: 1990315503604431701}
   m_Layer: 6
   m_Name: Hand_Position
   m_TagString: Untagged
@@ -373,13 +355,13 @@ Transform:
   m_GameObject: {fileID: 7831054859407800594}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.29, z: 0}
+  m_LocalPosition: {x: 0, y: -0.3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 351577314419221494}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7835601856266307049
+--- !u!114 &1990315503604431701
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -388,17 +370,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 7831054859407800594}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6d2ce001f69300846802894f60b2f1ee, type: 3}
+  m_Script: {fileID: 11500000, guid: eec3a6ded85db764990bea2faa510d35, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyWeaponAim
-  playerLayer:
-    serializedVersion: 2
-    m_Bits: 0
-  playerTag: Player
-  obstacleTag: Obstacle
-  doorTag: Door
-  detectionRadius: 3
-  fireRate: 1
+  m_EditorClassIdentifier: Assembly-CSharp::MobWeaponAim
+  currentWeaponObject: {fileID: 0}
+  currentWeaponInfo: {fileID: 0}
 --- !u!1 &9012517047312577492
 GameObject:
   m_ObjectHideFlags: 0
