@@ -2094,10 +2094,10 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   attackDamage: 10
-  isHost: 1
   wallPadding: 0
-  myRoom: {fileID: 404931710}
+  isHost: 1
   targetPlayer: {fileID: 0}
+  myRoom: {fileID: 404931710}
 --- !u!95 &219374842
 Animator:
   serializedVersion: 7
@@ -6295,10 +6295,10 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   attackDamage: 10
-  isHost: 1
   wallPadding: 0
-  myRoom: {fileID: 404931710}
+  isHost: 1
   targetPlayer: {fileID: 0}
+  myRoom: {fileID: 404931710}
 --- !u!95 &620976651
 Animator:
   serializedVersion: 7
@@ -22778,10 +22778,10 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   attackDamage: 10
-  isHost: 1
   wallPadding: 0
-  myRoom: {fileID: 404931710}
+  isHost: 1
   targetPlayer: {fileID: 0}
+  myRoom: {fileID: 404931710}
 --- !u!95 &1301626648
 Animator:
   serializedVersion: 7
@@ -28443,9 +28443,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0
+    y: 0.014814815
     width: 1
-    height: 1
+    height: 0.96969694
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -30309,10 +30309,10 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   attackDamage: 10
-  isHost: 1
   wallPadding: 0
-  myRoom: {fileID: 165486622}
+  isHost: 1
   targetPlayer: {fileID: 0}
+  myRoom: {fileID: 165486622}
 --- !u!95 &1557864381
 Animator:
   serializedVersion: 7
@@ -31761,10 +31761,10 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   attackDamage: 10
-  isHost: 1
   wallPadding: 0
-  myRoom: {fileID: 404931710}
+  isHost: 1
   targetPlayer: {fileID: 0}
+  myRoom: {fileID: 404931710}
 --- !u!95 &1844932400
 Animator:
   serializedVersion: 7
@@ -32484,10 +32484,10 @@ MonoBehaviour:
   attackRange: 1.5
   attackCooldown: 1.5
   attackDamage: 10
-  isHost: 1
   wallPadding: 0
-  myRoom: {fileID: 404931710}
+  isHost: 1
   targetPlayer: {fileID: 0}
+  myRoom: {fileID: 404931710}
 --- !u!95 &2023743170
 Animator:
   serializedVersion: 7
