@@ -145,17 +145,14 @@ public class MobWeaponAim : MonoBehaviour
             transform.parent.localRotation = Quaternion.identity;
         }
 
-        Transform target = (mobAI != null) ? mobAI.targetPlayer : null;
+        Transform target = (mobAI != null && mobAI.targetPlayer != null) ? mobAI.targetPlayer : FindNearestPlayerFallback();
 
-        // 🎯 KIỂM TRA ĐỦ 2 ĐIỀU KIỆN ĐỂ AIM:
-        // 1. Cửa phòng đã đóng và combat kích hoạt (IsCombatActivated == true)
-        // 2. Player bước vào bán kính tầm quét (detectRange) HOẶC Quái đang ở trạng thái Chase/Attack
-        if (mobAI != null && mobAI.IsCombatActivated() && target != null)
+        if (target != null)
         {
-            bool isChasingOrAttacking = mobAI.currentState == MobAI.EnemyState.Chase || mobAI.currentState == MobAI.EnemyState.Attack;
             float distanceToPlayer = Vector2.Distance(handTransform.position, target.position);
+            float maxDetect = (mobAI != null) ? mobAI.detectRange : 7.0f;
 
-            if (isChasingOrAttacking || distanceToPlayer <= mobAI.detectRange)
+            if (distanceToPlayer <= maxDetect + 3.0f)
             {
                 // 🎯 CHỈ XOAY ĐÚNG VŨ KHÍ TRÊN HAND_POSITION!
                 Vector2 aimDirection = target.position - handTransform.position;
@@ -214,5 +211,38 @@ public class MobWeaponAim : MonoBehaviour
         {
             Destroy(currentWeaponObject);
         }
+    }
+
+    private Transform FindNearestPlayerFallback()
+    {
+        float shortest = Mathf.Infinity;
+        Transform nearest = null;
+
+        GameObject localPlayerObj = GameObject.FindGameObjectWithTag("Player");
+        if (localPlayerObj != null)
+        {
+            RookieHealth health = localPlayerObj.GetComponent<RookieHealth>();
+            if (health == null || !health.isDead)
+            {
+                shortest = Vector2.Distance(transform.position, localPlayerObj.transform.position);
+                nearest = localPlayerObj.transform;
+            }
+        }
+
+        RemotePlayerController[] remotes = Object.FindObjectsByType<RemotePlayerController>(FindObjectsSortMode.None);
+        foreach (var rpc in remotes)
+        {
+            if (rpc != null && !rpc.isDead)
+            {
+                float d = Vector2.Distance(transform.position, rpc.transform.position);
+                if (d < shortest)
+                {
+                    shortest = d;
+                    nearest = rpc.transform;
+                }
+            }
+        }
+
+        return nearest;
     }
 }

@@ -144,6 +144,9 @@ public class MobAI : MonoBehaviour
         }
         else
         {
+            // Client: Dò tìm người chơi gần nhất để xoay súng/giáo ngắm bắn hiển thị trên màn hình Player 2
+            FindNearestPlayer();
+
             // Client: Nhận vị trí nội suy từ Host
             if (hasFirstNetworkPos)
             {
