@@ -176,7 +176,11 @@ public class MobHealth : MonoBehaviour
         if (sr != null) sr.sortingOrder = 2;
 
         MobWeaponAim weaponAim = GetComponentInChildren<MobWeaponAim>();
-        if (weaponAim != null) weaponAim.DestroyWeaponOnDeath();
+        if (weaponAim != null)
+        {
+            weaponAim.DestroyWeaponOnDeath();
+            weaponAim.enabled = false;
+        }
 
         OnDeath?.Invoke(this);
         SpawnLootOnDeath();

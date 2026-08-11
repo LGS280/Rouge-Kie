@@ -127,6 +127,14 @@ public class MobWeaponAim : MonoBehaviour
     {
         if (handTransform == null) handTransform = transform;
 
+        // 🎯 NẾU QUÁI ĐÃ CHẾT: KHÓA NGUYÊN HƯỚNG QUAY, 100% KHÔNG LẬT MẶT XOAY ĐẦU THEO PLAYER
+        MobHealth mobHealth = GetComponentInParent<MobHealth>();
+        if (mobHealth != null && mobHealth.isDead)
+        {
+            enabled = false;
+            return;
+        }
+
         // 🔒 BẢO VỆ TUYỆT ĐỐI: Khóa thân người con Quái Root luôn đứng thẳng (Quaternion.identity), 100% KHÔNG BAO GIỜ nghiêng 45 độ!
         if (transform != handTransform)
         {
