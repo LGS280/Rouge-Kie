@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6435724847846222540}
   - component: {fileID: 2861672664986213999}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Shadow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -100,7 +100,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 968925550791136654}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: FirePoint
   m_TagString: Untagged
   m_Icon: {fileID: 5721338939258241955, guid: 0000000000000000d000000000000000, type: 0}
@@ -133,7 +133,7 @@ GameObject:
   - component: {fileID: 5448056644706977304}
   - component: {fileID: 4465216855491424760}
   - component: {fileID: 1493494757018285720}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Desert_Eagle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -148,14 +148,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1153554913365081128}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: -0.92387956, w: 0.38268343}
-  m_LocalPosition: {x: -0.025, y: 0.11, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.025, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8633364000925346246}
   m_Father: {fileID: 5471620589988347385}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -135}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &4465216855491424760
 SpriteRenderer:
   serializedVersion: 2
@@ -203,7 +203,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 11
+  m_SortingOrder: 9
   m_MaskInteraction: 0
   m_Sprite: {fileID: 1782558958363294090, guid: 853899c3cf32a5e4b928b6ef54534b70, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -231,8 +231,9 @@ MonoBehaviour:
   weaponPrefab: {fileID: 1153554913365081128}
   shootSoundClip: {fileID: 8300000, guid: 3a9216e6ea581644680105b46e65da28, type: 3}
   customHandPosition: {x: -0.025, y: 0.11, z: 0}
-  bulletPrefab: {fileID: 5457056256669451622, guid: 0e52bb5860cc0514ba306fb6ba029223, type: 3}
   firePoint: {fileID: 8633364000925346246}
+  secondFirePoint: {fileID: 0}
+  bulletPrefab: {fileID: 5457056256669451622, guid: 0e52bb5860cc0514ba306fb6ba029223, type: 3}
   fireRate: 0.5
   manaCostPerShot: 0
 --- !u!1 &1266769915004691389
@@ -244,7 +245,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8633364000925346246}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: FirePoint
   m_TagString: Untagged
   m_Icon: {fileID: 5721338939258241955, guid: 0000000000000000d000000000000000, type: 0}
@@ -276,7 +277,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1304361107792063388}
   - component: {fileID: 8171555964606371032}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Hand_Position
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -327,7 +328,7 @@ GameObject:
   - component: {fileID: 1853185865230148035}
   - component: {fileID: 8888072469266326853}
   - component: {fileID: 8910761586997779388}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: AK47
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -425,8 +426,9 @@ MonoBehaviour:
   weaponPrefab: {fileID: 2765874187402661808}
   shootSoundClip: {fileID: 8300000, guid: 4ae2095f19431574292a3de087a0bfab, type: 3}
   customHandPosition: {x: 0.04, y: 0.12, z: 0}
-  bulletPrefab: {fileID: 5457056256669451622, guid: b151046f8c1e0f844b3f31b266ffbb4a, type: 3}
   firePoint: {fileID: 968925550791136654}
+  secondFirePoint: {fileID: 0}
+  bulletPrefab: {fileID: 5457056256669451622, guid: b151046f8c1e0f844b3f31b266ffbb4a, type: 3}
   fireRate: 0.2
   manaCostPerShot: 0
 --- !u!1 &2971885482809990304
@@ -438,7 +440,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5471620589988347385}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Back_Position
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -453,14 +455,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2971885482809990304}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0.92387956, w: 0.38268343}
+  m_LocalRotation: {x: 0, y: 0, z: -0.38268343, w: 0.92387956}
   m_LocalPosition: {x: -0.2, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5448056644706977304}
   m_Father: {fileID: 8922214988382480157}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 135}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -45}
 --- !u!1 &3292902489147678423
 GameObject:
   m_ObjectHideFlags: 0
@@ -481,7 +483,7 @@ GameObject:
   - component: {fileID: 2946071390104774221}
   - component: {fileID: 7389646103451600840}
   - component: {fileID: 1777108777693872850}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Zero
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -776,11 +778,16 @@ MonoBehaviour:
   weaponSlot2: {fileID: 1153554913365081128}
   allWeaponPrefabs:
   - {fileID: 4136628244467973380, guid: 7ac88ad6a102d7d41ab1ff7cd22148cf, type: 3}
+  - {fileID: 4136628244467973380, guid: 3ec6a54be3df1d74792a692a5f982e65, type: 3}
   - {fileID: 4424471354267104048, guid: 62ef3a633e308f54886381dd3544c7c4, type: 3}
   - {fileID: 2255413539830745082, guid: 4208f3b8848eb1e44b5e5ce624af72cc, type: 3}
   - {fileID: 1300466152470820163, guid: 14aa536d406343343a1646e286f7cb18, type: 3}
   - {fileID: 5681139341880372300, guid: b8b6a4057ad786949a8c72836fb4e6ef, type: 3}
   - {fileID: 2029244562639368729, guid: 3aeb6bb4e6e240744ae1c83a7092d600, type: 3}
+  - {fileID: 4136628244467973380, guid: 916ff9d0cbd49ef4e8afc230b9cc4cea, type: 3}
+  - {fileID: 7865478772308217404, guid: 17673be8bf2be624ea5c890d3af1165c, type: 3}
+  - {fileID: 2029244562639368729, guid: cc6f16c972bf12c4589b8462e5dafcf2, type: 3}
+  - {fileID: 7865478772308217404, guid: 3bcebcef2bfd74649a4c8b2708619667, type: 3}
   - {fileID: 4136628244467973380, guid: cf230ddf7040b34489b82a3e47148a70, type: 3}
   - {fileID: 4136628244467973380, guid: b5cd2fe56fb99a649908888812eb2b49, type: 3}
   - {fileID: 4136628244467973380, guid: 5847631c04dc23e4395c142e878e76d5, type: 3}
@@ -812,7 +819,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5039320621217741843}
   - component: {fileID: 3270842689467116336}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Player_Ring
   m_TagString: Untagged
   m_Icon: {fileID: 0}

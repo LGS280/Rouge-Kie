@@ -322,6 +322,10 @@ public class RookieHealth : MonoBehaviour
     public void Revive(int healthAmount)
     {
         if (!isDead) return;
+
+        // DỪNG LẬP TỨC COROUTINE LÀM TỐI MÀU (FadeToGray) NẾU ĐANG CHẠY DỞ!
+        StopAllCoroutines();
+
         isDead = false;
 
         currentHealth = Mathf.Clamp(healthAmount, 1, maxHealth);
