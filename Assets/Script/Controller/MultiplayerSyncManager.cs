@@ -10,7 +10,7 @@ public class MultiplayerSyncManager : MonoBehaviour
 
     [Header("Local Player reference")]
     [SerializeField] private Transform localPlayer;
-    [SerializeField] private float syncInterval = 0.05f; // Gửi tọa độ mỗi 50ms (Tần số 20Hz)
+    [SerializeField] private float syncInterval = 0.033f; // Gửi tọa độ mỗi 33ms (Tần số 30Hz mượt mà)
     private float lastSyncTime = 0f;
 
     // Quản lý danh sách các đồng đội đang có trong trận qua ConnectionId

@@ -76,21 +76,26 @@ public class RemotePlayerController : MonoBehaviour
         }
     }
 
+    private Vector3 currentVelocity;
+    private float smoothTime = 0.05f; // 50ms smooth damp bọc lót thời gian giữa các gói tin SignalR
+
     void Update()
     {
         if (isDead) return;
 
-        // Tính khoảng cách thay đổi
-        float dist = Vector3.Distance(transform.position, targetPosition);
-        
-        // Lerp mượt mà tới vị trí mục tiêu (Tốc độ nội suy 15f để đuổi kịp)
-        transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * 15f);
-        
-        // Nếu khoảng cách còn xa hơn ngưỡng nhỏ, coi như đang di chuyển
+        // Nội suy mượt mà 60 FPS bằng SmoothDamp không bị khựng giữa các gói tin mạng
+        transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref currentVelocity, smoothTime);
+
+        // Teleport tức thì nếu khoảng cách bị đứt đoạn quá xa (> 4.0m)
+        if (Vector3.Distance(transform.position, targetPosition) > 4.0f)
+        {
+            transform.position = targetPosition;
+            currentVelocity = Vector3.zero;
+        }
+
         if (animator != null)
         {
-            // SetFloat "Speed" vì Animator sử dụng Speed > 0.01f để chuyển từ Idle sang Run
-            float speedParam = dist > 0.02f ? 1f : 0f;
+            float speedParam = currentVelocity.sqrMagnitude > 0.01f ? 1f : 0f;
             animator.SetFloat("Speed", speedParam);
         }
     }

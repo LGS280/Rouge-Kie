@@ -31,7 +31,8 @@ public class MobAI : MonoBehaviour
     // Lerp Variables cho Client
     private Vector2 networkTargetPos;
     private bool hasFirstNetworkPos = false;
-    private float syncSmoothing = 15f;
+    private Vector3 mobNetworkVelocity;
+    private float mobSmoothTime = 0.05f;
 
     [HideInInspector] public Transform targetPlayer;
     [HideInInspector] public RoomController myRoom;
@@ -159,18 +160,21 @@ public class MobAI : MonoBehaviour
                 }
             }
 
-            // Client: Nhận vị trí nội suy từ Host
+            // Client: Nhận vị trí nội suy từ Host mượt mà 60 FPS bằng Vector3.SmoothDamp
             if (hasFirstNetworkPos)
             {
-                transform.position = Vector2.Lerp(transform.position, networkTargetPos, Time.deltaTime * syncSmoothing);
-                Vector2 moveDelta = (Vector2)transform.position - lastPos;
-                if (animator != null) animator.SetBool("isMoving", moveDelta.sqrMagnitude > 0.001f);
+                transform.position = Vector3.SmoothDamp(transform.position, networkTargetPos, ref mobNetworkVelocity, mobSmoothTime);
 
-                // 🎯 GIỮ NGUYÊN 100% LOGIC FLIPX CHO CLIENT MULTIPLAYER
-                if (moveDelta.x > 0.01f) spriteRenderer.flipX = false;
-                else if (moveDelta.x < -0.01f) spriteRenderer.flipX = true;
+                if (Vector3.Distance(transform.position, networkTargetPos) > 3.5f)
+                {
+                    transform.position = networkTargetPos;
+                    mobNetworkVelocity = Vector3.zero;
+                }
 
-                lastPos = transform.position;
+                if (animator != null) animator.SetBool("isMoving", mobNetworkVelocity.sqrMagnitude > 0.01f);
+
+                if (mobNetworkVelocity.x > 0.05f) spriteRenderer.flipX = false;
+                else if (mobNetworkVelocity.x < -0.05f) spriteRenderer.flipX = true;
             }
         }
     }
