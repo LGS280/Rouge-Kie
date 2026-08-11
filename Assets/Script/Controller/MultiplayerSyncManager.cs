@@ -431,7 +431,7 @@ public class MultiplayerSyncManager : MonoBehaviour
                 RemotePlayerController rpc = remote.GetComponent<RemotePlayerController>();
                 if (rpc != null)
                 {
-                    rpc.targetPosition = new Vector3(x, y, 0);
+                    rpc.SetNewTargetPosition(new Vector3(x, y, 0));
                 }
                 else
                 {
@@ -648,32 +648,17 @@ public class MultiplayerSyncManager : MonoBehaviour
         GameObject remoteObj = GetRemotePlayerById(connId);
         if (remoteObj == null) return;
 
-        // Tìm hoặc tự động tạo Hand_Position độc lập cho Remote Player để xoay súng (Không làm xoay thân nhân vật)
-        Transform handPos = remoteObj.transform.Find("Hand_Position");
-        if (handPos == null)
+        RemotePlayerController rpc = remoteObj.GetComponent<RemotePlayerController>();
+        if (rpc != null)
         {
-            GameObject newHand = new GameObject("Hand_Position");
-            newHand.transform.SetParent(remoteObj.transform, false);
-            newHand.transform.localPosition = new Vector3(0.15f, -0.1f, 0f);
-            handPos = newHand.transform;
+            rpc.targetWeaponAngle = angle;
+
+            // Bọc lót cập nhật vị trí nếu nhận được cùng gói tin
+            if (Vector3.Distance(remoteObj.transform.position, new Vector3(px, py, 0)) > 2.5f)
+            {
+                rpc.SetNewTargetPosition(new Vector3(px, py, 0));
+            }
         }
-
-        if (angle > 180f) angle -= 360f;
-        if (angle < -180f) angle += 360f;
-
-        // Xoay duy nhất Hand_Position quanh tâm tay nhân vật (TUYỆT ĐỐI KHÔNG xoay remoteObj.transform)
-        handPos.rotation = Quaternion.Euler(0, 0, angle);
-
-        // Lật Sprite thân nhân vật và lật trục Y của súng khi ngắm sang bên trái
-        SpriteRenderer playerRenderer = remoteObj.GetComponent<SpriteRenderer>();
-        bool isFacingLeft = (angle > 90f || angle < -90f);
-        if (playerRenderer != null)
-        {
-            playerRenderer.flipX = isFacingLeft;
-        }
-
-        // Lật trục Y của Hand_Position để súng không bị ngửa bụng khi quay trái
-        handPos.localScale = new Vector3(1f, isFacingLeft ? -1f : 1f, 1f);
     }
 
     // Xử lý vẽ đạn của người chơi khác

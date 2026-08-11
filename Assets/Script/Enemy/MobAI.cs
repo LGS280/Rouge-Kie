@@ -32,7 +32,9 @@ public class MobAI : MonoBehaviour
     private Vector2 networkTargetPos;
     private bool hasFirstNetworkPos = false;
     private Vector3 mobNetworkVelocity;
-    private float mobSmoothTime = 0.05f;
+    private Vector2 lastNetworkTargetPos;
+    private float lastMobPacketTime;
+    private Vector2 estimatedMobVelocity;
 
     [HideInInspector] public Transform targetPlayer;
     [HideInInspector] public RoomController myRoom;
@@ -160,21 +162,25 @@ public class MobAI : MonoBehaviour
                 }
             }
 
-            // Client: Nhận vị trí nội suy từ Host mượt mà 60 FPS bằng Vector3.SmoothDamp
+            // Client: Nhận vị trí nội suy mượt mà 60 FPS từ Host (Extrapolation + SmoothDamp)
             if (hasFirstNetworkPos)
             {
-                transform.position = Vector3.SmoothDamp(transform.position, networkTargetPos, ref mobNetworkVelocity, mobSmoothTime);
+                Vector3 predictedMobPos = (Vector3)networkTargetPos + ((Vector3)estimatedMobVelocity * 0.033f);
+                transform.position = Vector3.SmoothDamp(transform.position, predictedMobPos, ref mobNetworkVelocity, 0.04f);
 
                 if (Vector3.Distance(transform.position, networkTargetPos) > 3.5f)
                 {
                     transform.position = networkTargetPos;
                     mobNetworkVelocity = Vector3.zero;
+                    estimatedMobVelocity = Vector2.zero;
                 }
 
-                if (animator != null) animator.SetBool("isMoving", mobNetworkVelocity.sqrMagnitude > 0.01f);
+                bool isMoving = mobNetworkVelocity.sqrMagnitude > 0.01f || estimatedMobVelocity.sqrMagnitude > 0.01f;
+                if (animator != null) animator.SetBool("isMoving", isMoving);
 
-                if (mobNetworkVelocity.x > 0.05f) spriteRenderer.flipX = false;
-                else if (mobNetworkVelocity.x < -0.05f) spriteRenderer.flipX = true;
+                float moveX = (mobNetworkVelocity.sqrMagnitude > 0.01f) ? mobNetworkVelocity.x : estimatedMobVelocity.x;
+                if (moveX > 0.05f) spriteRenderer.flipX = false;
+                else if (moveX < -0.05f) spriteRenderer.flipX = true;
             }
         }
     }
@@ -221,7 +227,24 @@ public class MobAI : MonoBehaviour
         if (!hasFirstNetworkPos)
         {
             transform.position = newPos;
+            lastNetworkTargetPos = newPos;
             hasFirstNetworkPos = true;
+            lastMobPacketTime = Time.time;
+        }
+        else
+        {
+            float dt = Time.time - lastMobPacketTime;
+            if (dt > 0.001f && dt < 0.3f)
+            {
+                estimatedMobVelocity = (newPos - lastNetworkTargetPos) / dt;
+            }
+            else
+            {
+                estimatedMobVelocity = Vector2.zero;
+            }
+
+            lastNetworkTargetPos = newPos;
+            lastMobPacketTime = Time.time;
         }
         networkTargetPos = newPos;
     }
