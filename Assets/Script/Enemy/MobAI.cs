@@ -51,12 +51,17 @@ public class MobAI : MonoBehaviour
 
     private MobWeaponAim mobWeaponAim;
 
+    private MobNetworkIdentity mobNetworkIdentity;
+    private float lastNetworkSyncTime = 0f;
+    private float networkSyncInterval = 0.05f; // Gửi tọa độ quái mỗi 50ms (20Hz)
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         mobHealth = GetComponent<MobHealth>();
+        mobNetworkIdentity = GetComponent<MobNetworkIdentity>();
         originalScale = transform.localScale;
 
         mobWeaponAim = GetComponentInChildren<MobWeaponAim>();
@@ -96,6 +101,17 @@ public class MobAI : MonoBehaviour
 
         if (isHost)
         {
+            // BỔ SUNG: Gửi đồng bộ tọa độ quái từ Host sang Client (Player 2)
+            bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+            if (isMultiplayer && isRoomActivated && mobNetworkIdentity != null && !string.IsNullOrEmpty(mobNetworkIdentity.networkId))
+            {
+                if (Time.time - lastNetworkSyncTime >= networkSyncInterval)
+                {
+                    NetworkManager.Instance.SendEnemyPosition(mobNetworkIdentity.networkId, transform.position.x, transform.position.y);
+                    lastNetworkSyncTime = Time.time;
+                }
+            }
+
             if (!isRoomActivated)
             {
                 targetPlayer = null;

@@ -194,13 +194,47 @@ public class MultiplayerSyncManager : MonoBehaviour
     }
 
     // Khi Server báo một phòng đã bắt đầu đánh nhau
+    private RoomController FindRoomById(string targetRoomId)
+    {
+        if (string.IsNullOrEmpty(targetRoomId)) return null;
+
+        if (roomCache.TryGetValue(targetRoomId, out RoomController room) && room != null)
+        {
+            return room;
+        }
+
+        // Fallback 1: Quét lại tất cả RoomController trong Scene xem có roomUniqueId trùng khớp không
+        RoomController[] allRooms = Object.FindObjectsByType<RoomController>(FindObjectsSortMode.None);
+        foreach (var r in allRooms)
+        {
+            if (r != null && r.roomUniqueId == targetRoomId)
+            {
+                if (!roomCache.ContainsKey(targetRoomId)) roomCache[targetRoomId] = r;
+                return r;
+            }
+        }
+
+        // Fallback 2: Lấy phòng duy nhất đang bị khóa cửa đánh quái (roomStarted == true)
+        foreach (var r in allRooms)
+        {
+            if (r != null && r.roomStarted && !r.roomCleared)
+            {
+                return r;
+            }
+        }
+
+        return null;
+    }
+
+    // Khi Server báo một phòng đã bắt đầu đánh nhau
     private void HandleRoomCombatStarted(string targetRoomId, float safeX, float safeY)
     {
         Debug.Log($"NHẬN LỆNH TỪ SERVER: Bắt đầu combat tại phòng {targetRoomId}");
 
         Vector3 targetPos = new Vector3(safeX, safeY, 0);
+        RoomController room = FindRoomById(targetRoomId);
 
-        if (roomCache.TryGetValue(targetRoomId, out RoomController room) && room != null)
+        if (room != null)
         {
             // 1. Chỉ dịch chuyển localPlayer nếu còn sống và đang ở NGOÀI phòng
             if (localPlayer != null)
@@ -240,7 +274,8 @@ public class MultiplayerSyncManager : MonoBehaviour
     {
         Debug.Log($"NHẬN LỆNH TỪ SERVER: Phòng {targetRoomId} đã clear xong. Mở cửa!");
 
-        if (roomCache.TryGetValue(targetRoomId, out RoomController room) && room != null)
+        RoomController room = FindRoomById(targetRoomId);
+        if (room != null)
         {
             room.ExecuteClearRoomLocal();
         }

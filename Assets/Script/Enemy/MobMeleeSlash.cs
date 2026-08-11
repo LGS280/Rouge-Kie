@@ -49,16 +49,27 @@ public class MobMeleeSlash : MonoBehaviour
             return;
         }
 
-        // 🎯 GÂY SÁT THƯƠNG NẾU ĐÂM TRÚNG PLAYER
-        if (!hasHitPlayer && (collision.CompareTag("Player") || collision.gameObject.layer == LayerMask.NameToLayer("Player")))
+        // 🎯 GÂY SÁT THƯƠNG NẾU ĐÂM TRÚNG LOCAL PLAYER HOẶC REMOTE PLAYER
+        if (!hasHitPlayer)
         {
-            hasHitPlayer = true;
             RookieHealth playerHealth = collision.GetComponent<RookieHealth>();
             if (playerHealth == null) playerHealth = collision.GetComponentInParent<RookieHealth>();
 
-            if (playerHealth != null && !playerHealth.isDead)
+            RemotePlayerController rpc = collision.GetComponent<RemotePlayerController>();
+            if (rpc == null) rpc = collision.GetComponentInParent<RemotePlayerController>();
+
+            if (playerHealth != null || rpc != null)
             {
-                playerHealth.TakeDamage(damage);
+                hasHitPlayer = true;
+                if (playerHealth != null && !playerHealth.isDead)
+                {
+                    playerHealth.TakeDamage(damage);
+                }
+                else if (rpc != null && NetworkManager.Instance != null)
+                {
+                    NetworkManager.Instance.SendPlayerDamaged(rpc.connectionId, damage);
+                    Debug.Log($"[MobMeleeSlash] Đâm trúng Remote Player {rpc.connectionId}, gửi {damage} sát thương qua mạng.");
+                }
             }
         }
     }

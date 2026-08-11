@@ -56,16 +56,24 @@ public class MobBullet : MonoBehaviour
             return; // Không nổ, không gây sát thương cho quái đồng đội
         }
 
-        // 🎯 GÂY SÁT THƯƠNG NẾU BẮN TRÚNG PLAYER (Tag "Player" hoặc Layer "Player")
-        if (collision.CompareTag("Player") || collision.gameObject.layer == LayerMask.NameToLayer("Player"))
+        // 🎯 GÂY SÁT THƯƠNG NẾU BẮN TRÚNG LOCAL PLAYER HOẶC REMOTE PLAYER
+        RookieHealth playerHealth = collision.GetComponent<RookieHealth>();
+        if (playerHealth == null) playerHealth = collision.GetComponentInParent<RookieHealth>();
+
+        RemotePlayerController rpc = collision.GetComponent<RemotePlayerController>();
+        if (rpc == null) rpc = collision.GetComponentInParent<RemotePlayerController>();
+
+        if (playerHealth != null || rpc != null)
         {
             hasHit = true;
-            RookieHealth playerHealth = collision.GetComponent<RookieHealth>();
-            if (playerHealth == null) playerHealth = collision.GetComponentInParent<RookieHealth>();
-
             if (playerHealth != null && !playerHealth.isDead)
             {
                 playerHealth.TakeDamage(damage);
+            }
+            else if (rpc != null && NetworkManager.Instance != null)
+            {
+                NetworkManager.Instance.SendPlayerDamaged(rpc.connectionId, damage);
+                Debug.Log($"[MobBullet] Bắn trúng Remote Player {rpc.connectionId}, gửi {damage} sát thương qua mạng.");
             }
 
             Destroy(gameObject);

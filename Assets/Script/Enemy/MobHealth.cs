@@ -94,28 +94,23 @@ public class MobHealth : MonoBehaviour
         }
     }
 
-    // Hàm MỚI: Chỉ dành cho việc đồng bộ từ máy khác gửi sang
     public void SyncHealthFromNetwork(int networkHealth)
     {
         if (isDead)
         {
-            Debug.Log($"[MobHealth] {gameObject.name} (networkId={networkIdentity?.networkId}) received SyncHealthFromNetwork={networkHealth} but is already dead.");
+            Debug.Log($"[MobHealth] {gameObject.name} (networkId={networkIdentity?.networkId}) received SyncHealthFromNetwork={networkHealth} nhưng đã chết.");
             return;
         }
 
         Debug.Log($"[MobHealth] {gameObject.name} (networkId={networkIdentity?.networkId}) SyncHealthFromNetwork: networkHealth={networkHealth}, currentHealth={currentHealth}");
 
-        // CHỐNG TIẾNG VỌNG: Nếu máu mạng gửi về >= máu hiện tại -> Đây là gói tin cũ hoặc của chính mình dội lại -> BỎ QUA!
-        if (networkHealth >= currentHealth)
-        {
-            Debug.Log($"[MobHealth] {gameObject.name} (networkId={networkIdentity?.networkId}) ignored sync: networkHealth={networkHealth} >= currentHealth={currentHealth}");
-            return;
-        }
-
         int damageTaken = currentHealth - networkHealth;
         currentHealth = networkHealth;
 
-        ShowDamageUI(damageTaken, false);
+        if (damageTaken > 0)
+        {
+            ShowDamageUI(damageTaken, false);
+        }
 
         if (currentHealth <= 0)
         {
