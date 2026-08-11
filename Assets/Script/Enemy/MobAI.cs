@@ -147,6 +147,18 @@ public class MobAI : MonoBehaviour
             // Client: Dò tìm người chơi gần nhất để xoay súng/giáo ngắm bắn hiển thị trên màn hình Player 2
             FindNearestPlayer();
 
+            // Client: Kích hoạt hiển thị hoạt ảnh tấn công & đạn/vệt chém khi quái áp sát Player 2
+            if (targetPlayer != null && mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null)
+            {
+                float dist = Vector2.Distance(transform.position, targetPlayer.position);
+                if (dist <= attackRange && Time.time >= nextAttackTime)
+                {
+                    if (animator != null) animator.SetTrigger("attack");
+                    mobWeaponAim.Fire(targetPlayer.position, attackDamage);
+                    nextAttackTime = Time.time + attackCooldown;
+                }
+            }
+
             // Client: Nhận vị trí nội suy từ Host
             if (hasFirstNetworkPos)
             {
