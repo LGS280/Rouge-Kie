@@ -46,6 +46,7 @@ public class RemotePlayerController : MonoBehaviour
     public void ReviveRemotePlayer()
     {
         isDead = false;
+        StopAllCoroutines();
 
         SpriteRenderer[] srs = GetComponentsInChildren<SpriteRenderer>(true);
         foreach (var sr in srs)

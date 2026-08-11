@@ -81,9 +81,10 @@ public class MobAI : MonoBehaviour
         {
             isHost = (NetworkManager.Instance.UserRole == "Host");
         }
-        else
+        if (!isHost && rb != null)
         {
-            isHost = true; // Chơi đơn (Solo) thì luôn chạy AI cục bộ
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.linearVelocity = Vector2.zero;
         }
 
         lastPos = transform.position;
@@ -463,13 +464,10 @@ public class MobAI : MonoBehaviour
         UpdateSpriteFacing(targetPlayer.position - transform.position);
     }
 
-    /// <summary>
-    /// Tính toán lực đẩy nhẹ giữa các Quái đồng đội để chống đè hình
-    /// </summary>
     private Vector2 GetSeparationForce()
     {
         Vector2 force = Vector2.zero;
-        Collider2D[] nearbyMobs = Physics2D.OverlapCircleAll(transform.position, 1.2f, LayerMask.GetMask("Enemy"));
+        Collider2D[] nearbyMobs = Physics2D.OverlapCircleAll(transform.position, 0.8f, LayerMask.GetMask("Enemy"));
         int count = 0;
 
         foreach (var col in nearbyMobs)
@@ -478,9 +476,9 @@ public class MobAI : MonoBehaviour
             {
                 Vector2 pushDir = (transform.position - col.transform.position);
                 float dist = pushDir.magnitude;
-                if (dist > 0.01f && dist < 1.2f)
+                if (dist > 0.05f && dist < 0.8f)
                 {
-                    force += pushDir.normalized / dist;
+                    force += pushDir.normalized * ((0.8f - dist) / 0.8f);
                     count++;
                 }
             }
@@ -489,9 +487,10 @@ public class MobAI : MonoBehaviour
         if (count > 0)
         {
             force /= count;
+            return force.normalized * 0.2f;
         }
 
-        return force.normalized * 0.6f;
+        return Vector2.zero;
     }
 
     /// <summary>
