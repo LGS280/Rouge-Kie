@@ -17,6 +17,14 @@ public class MobWeaponInfo : MonoBehaviour
 
     [HideInInspector] public GameObject cachedBulletPrefab;
     [HideInInspector] public bool isMelee = false;
+    public bool IsMelee
+    {
+        get
+        {
+            GetWeaponConfig();
+            return isMelee;
+        }
+    }
 
     private void Awake()
     {
@@ -226,10 +234,10 @@ public class MobWeaponInfo : MonoBehaviour
         }
 
         Vector3 originalLocalPos = transform.localPosition;
-        Vector3 thrustPos = originalLocalPos + Vector3.right * 0.4f;
+        Vector3 thrustPos = originalLocalPos + Vector3.right * 0.2f; // 🗡️ Đâm thương vươn xa 0.8m cắm sâu vào ngực Player
 
         float elapsed = 0f;
-        float thrustTime = 0.15f;
+        float thrustTime = 0.08f;
 
         // Đâm ra
         while (elapsed < thrustTime)

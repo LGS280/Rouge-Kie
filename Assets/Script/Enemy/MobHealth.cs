@@ -184,9 +184,13 @@ public class MobHealth : MonoBehaviour
     [Header("Cấu hình Rớt Loot Khi Chết")]
     public GameObject coinPrefabOverride;
     public GameObject manaPrefabOverride;
+    [Range(0f, 1f)] public float lootDropChance = 0.2f; // 🎯 20% tỷ lệ rớt đồ, 80% rớt tay không
 
     private void SpawnLootOnDeath()
     {
+        // 🎯 TỶ LỆ RỚT ĐỒ: Nếu không trúng tỷ lệ -> Không rớt đồ (tay không)
+        if (Random.value > lootDropChance) return;
+
         // 1. Tìm Prefab Vàng & Mana
         GameObject coinPrefab = coinPrefabOverride;
         if (coinPrefab == null) coinPrefab = Resources.Load<GameObject>("Prefab/Item/Coin/Coin");
@@ -196,25 +200,26 @@ public class MobHealth : MonoBehaviour
         if (manaPrefab == null) manaPrefab = Resources.Load<GameObject>("Prefab/Item/Mana");
         if (manaPrefab == null) manaPrefab = Resources.Load<GameObject>("Mana");
 
-        // 2. CHỈ CHỌN NGẪU NHIÊN 1 LOẠI (Vàng HOẶC Mana)
+        // 2. CHỌN NGẪU NHIÊN 1 LOẠI (Vàng HOẶC Mana)
         bool dropCoin = Random.value > 0.5f;
         GameObject targetLootPrefab = (dropCoin && coinPrefab != null) ? coinPrefab : ((manaPrefab != null) ? manaPrefab : coinPrefab);
 
         if (targetLootPrefab == null) return;
 
         // 3. CHỈ RỚT SỐ LƯỢNG 1 HOẶC 2 VIÊN
-        int dropAmount = Random.Range(1, 3); // Random.Range(1, 3) cho ra 1 hoặc 2
+        int dropAmount = Random.Range(1, 3);
 
         MobAI mobAI = GetComponent<MobAI>();
         Bounds roomBounds = (mobAI != null && mobAI.myRoom != null && mobAI.myRoom.RoomCollider != null) ? mobAI.myRoom.RoomCollider.bounds : default;
 
         for (int i = 0; i < dropAmount; i++)
         {
+            // 🎯 RỚT TẠI CHỖ VỊ TRÍ QUÁI GỤC NGÃ (Nhích nhẹ 0.15m để không đè hình)
             Vector3 spawnPos = transform.position;
-            Vector2 randomDir = Random.insideUnitCircle.normalized * Random.Range(0.3f, 0.7f);
-            Vector3 finalPos = spawnPos + (Vector3)randomDir;
+            Vector2 smallOffset = Random.insideUnitCircle * 0.15f;
+            Vector3 finalPos = spawnPos + (Vector3)smallOffset;
 
-            // 4. ĐẢM BẢO KHÔNG BỊ VĂNG RA KHỎI MAP (Clamp theo ranh giới phòng nếu có)
+            // Đảm bảo rớt trong ranh giới phòng
             if (roomBounds.size != Vector3.zero)
             {
                 finalPos.x = Mathf.Clamp(finalPos.x, roomBounds.min.x + 0.5f, roomBounds.max.x - 0.5f);
@@ -223,11 +228,12 @@ public class MobHealth : MonoBehaviour
 
             GameObject lootObj = Instantiate(targetLootPrefab, finalPos, Quaternion.identity);
 
-            // Thêm lực văng nhẹ
+            // 🎯 KHÓA LỰC VĂNG: Giữ item đứng yên 100% tại chỗ không bị trượt bay ra ngoài map
             Rigidbody2D lootRb = lootObj.GetComponent<Rigidbody2D>();
             if (lootRb != null)
             {
-                lootRb.AddForce(randomDir * 1.5f, ForceMode2D.Impulse);
+                lootRb.linearVelocity = Vector2.zero;
+                lootRb.linearDamping = 10f;
             }
         }
     }

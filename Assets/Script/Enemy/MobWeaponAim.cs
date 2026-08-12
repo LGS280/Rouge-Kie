@@ -47,75 +47,30 @@ public class MobWeaponAim : MonoBehaviour
     }
 
     /// <summary>
-    /// Khởi tạo vũ khí ngẫu nhiên từ thư mục Assets/Prefab/Mobs_Weapons (Tự động nhận diện khi thêm prefab mới)
+    /// Tự động nhận diện vũ khí được cắm sẵn dưới Hand_Position trong Prefab Quái (Giống WeaponAim của Player)
     /// </summary>
     public void InitializeMobWeapon()
     {
         Transform spawnParent = (handTransform != null) ? handTransform : transform;
 
-        // 🛡️ DỌN DẸP TUYỆT ĐỐI: Xóa tất cả GameObject con cũ dưới Hand_Position để đảm bảo CHỈ CÓ NGUYÊN 1 CÂY VŨ KHÍ
-        foreach (Transform child in spawnParent)
+        // 🎯 TỰ ĐỘNG NHẬN DIỆN VŨ KHÍ CẮM SẴN TRONG PREFAB QUÁI (GIỐNG WEAPONAIM CỦA PLAYER)
+        currentWeaponInfo = spawnParent.GetComponentInChildren<MobWeaponInfo>(true);
+        if (currentWeaponInfo != null)
         {
-            if (child != null)
-            {
-                Destroy(child.gameObject);
-            }
-        }
-        currentWeaponObject = null;
-        currentWeaponInfo = null;
-
-        GameObject weaponPrefabToSpawn = null;
-        List<GameObject> validWeapons = new List<GameObject>();
-
-#if UNITY_EDITOR
-        // 1. Quét tự động thư mục Assets/Prefab/Mobs_Weapons trong Editor khi bạn thêm vũ khí mới
-        string[] guids = UnityEditor.AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Prefab/Mobs_Weapons" });
-        foreach (var guid in guids)
-        {
-            string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
-            if (!path.ToLower().Contains("/bullets/"))
-            {
-                GameObject prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(path);
-                if (prefab != null)
-                {
-                    validWeapons.Add(prefab);
-                }
-            }
-        }
-#endif
-
-        // 2. Dự phòng nạp từ Resources/Prefab/Mobs_Weapons cho môi trường Build
-        if (validWeapons.Count == 0)
-        {
-            GameObject[] loadedList = Resources.LoadAll<GameObject>("Prefab/Mobs_Weapons");
-            if (loadedList != null && loadedList.Length > 0)
-            {
-                foreach (var w in loadedList)
-                {
-                    if (w != null && !w.name.ToLower().Contains("bullet")) validWeapons.Add(w);
-                }
-            }
-        }
-
-        // Bốc ngẫu nhiên 1 vũ khí từ danh sách tự động tìm thấy
-        if (validWeapons.Count > 0)
-        {
-            weaponPrefabToSpawn = validWeapons[Random.Range(0, validWeapons.Count)];
-        }
-
-        if (weaponPrefabToSpawn != null)
-        {
-            currentWeaponObject = Instantiate(weaponPrefabToSpawn, spawnParent);
+            currentWeaponObject = currentWeaponInfo.gameObject;
             currentWeaponObject.transform.localPosition = Vector3.zero;
             currentWeaponObject.transform.localRotation = Quaternion.identity;
-
+            currentWeaponInfo.ApplyMobWeaponConfig();
+        }
+        else if (spawnParent.childCount > 0)
+        {
+            // Dự phòng: Tìm bất kỳ GameObject con nào nằm dưới Hand_Position
+            currentWeaponObject = spawnParent.GetChild(0).gameObject;
             currentWeaponInfo = currentWeaponObject.GetComponent<MobWeaponInfo>();
             if (currentWeaponInfo == null)
             {
                 currentWeaponInfo = currentWeaponObject.AddComponent<MobWeaponInfo>();
             }
-
-            // 🎯 Áp dụng tọa độ tay cầm từ DB (customHandPosition) để súng xoay mượt đúng khớp tay
             if (currentWeaponInfo != null)
             {
                 currentWeaponInfo.ApplyMobWeaponConfig();
@@ -145,33 +100,37 @@ public class MobWeaponAim : MonoBehaviour
             transform.parent.localRotation = Quaternion.identity;
         }
 
-        Transform target = (mobAI != null && mobAI.targetPlayer != null) ? mobAI.targetPlayer : FindNearestPlayerFallback();
-
-        if (target != null)
+        // 🎯 CHỈ XOAY NGẮM SÚNG KHI PLAYER ĐÃ BƯỚC VÀO PHÒNG CHIẾN ĐẤU (IsCombatActivated == true)
+        if (mobAI != null && mobAI.IsCombatActivated())
         {
-            float distanceToPlayer = Vector2.Distance(handTransform.position, target.position);
-            float maxDetect = (mobAI != null) ? mobAI.detectRange : 7.0f;
+            Transform target = (mobAI.targetPlayer != null) ? mobAI.targetPlayer : FindNearestPlayerFallback();
 
-            if (distanceToPlayer <= maxDetect + 3.0f)
+            if (target != null)
             {
-                // 🎯 CHỈ XOAY ĐÚNG VŨ KHÍ TRÊN HAND_POSITION!
-                Vector2 aimDirection = target.position - handTransform.position;
-                float angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
+                float distanceToPlayer = Vector2.Distance(handTransform.position, target.position);
+                float maxDetect = mobAI.detectRange;
 
-                handTransform.rotation = Quaternion.Euler(0, 0, angle);
+                if (distanceToPlayer <= maxDetect)
+                {
+                    // 🎯 CHỈ XOAY ĐÚNG VŨ KHÍ TRÊN HAND_POSITION!
+                    Vector2 aimDirection = target.position - handTransform.position;
+                    float angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
 
-                // Smart Scale Y Flip trực tiếp trên Hand_Position (Giữ nguyên tỉ lệ gốc)
-                if (angle > 90f || angle < -90f)
-                {
-                    handTransform.localScale = new Vector3(initialScale.x, -Mathf.Abs(initialScale.y), initialScale.z);
-                    if (mobSpriteRenderer != null) mobSpriteRenderer.flipX = true;
+                    handTransform.rotation = Quaternion.Euler(0, 0, angle);
+
+                    // Smart Scale Y Flip trực tiếp trên Hand_Position (Giữ nguyên tỉ lệ gốc)
+                    if (angle > 90f || angle < -90f)
+                    {
+                        handTransform.localScale = new Vector3(initialScale.x, -Mathf.Abs(initialScale.y), initialScale.z);
+                        if (mobSpriteRenderer != null) mobSpriteRenderer.flipX = true;
+                    }
+                    else
+                    {
+                        handTransform.localScale = new Vector3(initialScale.x, Mathf.Abs(initialScale.y), initialScale.z);
+                        if (mobSpriteRenderer != null) mobSpriteRenderer.flipX = false;
+                    }
+                    return;
                 }
-                else
-                {
-                    handTransform.localScale = new Vector3(initialScale.x, Mathf.Abs(initialScale.y), initialScale.z);
-                    if (mobSpriteRenderer != null) mobSpriteRenderer.flipX = false;
-                }
-                return;
             }
         }
 

@@ -15,6 +15,8 @@ MonoBehaviour:
   mobs:
   - mobPrefab: {fileID: 5514756235691171080, guid: 2350648142145864b99ebe99622f3847, type: 3}
     weight: 100
+  - mobPrefab: {fileID: 5514756235691171080, guid: 323a6900ea8794545902e97e346008bc, type: 3}
+    weight: 100
   minMobPerRoom: 4
   maxMobPerRoom: 7
   spawnMobInStartRoom: 0

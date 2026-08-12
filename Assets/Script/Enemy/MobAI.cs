@@ -6,9 +6,9 @@ using UnityEngine;
 /// Script quản lý AI Quái (FSM State Machine) - Nâng cấp 5 Trạng Thái Hoàn Hảo:
 /// 1. Quái đi dạo tuần tra (Wander/Patrol) thong thả trong phòng khi chưa thấy Player.
 /// 2. Quái bắn xa Kiting (Tự động đi lùi giữ cự cự 4.5m).
-/// 3. Quái cận chiến Retreat (Đâm thương xong giật lùi 1.2m né đòn).
-/// 4. Flocking Avoidance (Tự động đẩy nhau giàn hàng bao vây, không đè hình).
-/// 5. Giữ nguyên 100% logic lật mặt flipX theo hướng nhìn.
+/// 3. Flocking Avoidance (Tự động đẩy nhau giàn hàng bao vây, không đè hình).
+/// 4. Giữ nguyên 100% logic lật mặt flipX theo hướng nhìn.
+/// 5. BẢO TOÀN 100% ĐỒNG BỘ MULTIPLAYER.
 /// </summary>
 public class MobAI : MonoBehaviour
 {
@@ -69,14 +69,23 @@ public class MobAI : MonoBehaviour
 
         mobWeaponAim = GetComponentInChildren<MobWeaponAim>();
 
-        // Tự động điều chỉnh cự cự an toàn giữ khoảng cách cho Quái
+        // 🎯 TỰ ĐỘNG ĐIỀU CHỈNH TẦM NHÌN, TẦM ĐÁNH VÀ ĐỌC FIRERATE TỪ DB WEAPONCONFIGS
         if (mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null)
         {
-            attackRange = mobWeaponAim.currentWeaponInfo.isMelee ? 2.2f : 4.5f;
+            bool isMelee = mobWeaponAim.currentWeaponInfo.IsMelee;
+            detectRange = isMelee ? 5.0f : 7.0f;
+            attackRange = isMelee ? 0.9f : 4.0f; // 🗡️ Cận chiến đo từ mũi giáo tới Player (0.9m)
+
+            WeaponConfig wConfig = mobWeaponAim.currentWeaponInfo.GetWeaponConfig();
+            if (wConfig != null && wConfig.fireRate > 0)
+            {
+                attackCooldown = wConfig.fireRate;
+            }
         }
         else
         {
-            attackRange = 4.0f; // Mặc định dừng từ xa xả đạn
+            detectRange = 7.0f;
+            attackRange = 4.0f;
         }
 
         bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
@@ -153,7 +162,9 @@ public class MobAI : MonoBehaviour
             // Client: Kích hoạt hiển thị hoạt ảnh tấn công & đạn/vệt chém khi quái áp sát Player 2
             if (targetPlayer != null && mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null)
             {
-                float dist = Vector2.Distance(transform.position, targetPlayer.position);
+                Vector3 clientAttackOrigin = (mobWeaponAim.currentWeaponInfo.firePoint != null) ? mobWeaponAim.currentWeaponInfo.firePoint.position : transform.position;
+                float dist = Vector2.Distance(clientAttackOrigin, targetPlayer.position);
+
                 if (dist <= attackRange && Time.time >= nextAttackTime)
                 {
                     if (animator != null) animator.SetTrigger("attack");
@@ -204,7 +215,6 @@ public class MobAI : MonoBehaviour
         ClampPositionToRoom();
     }
 
-    // Được gọi trực tiếp bởi RoomController khi bắt đầu TryStartRoomCombat()
     public void ActivateMob()
     {
         isRoomActivated = true;
@@ -220,7 +230,6 @@ public class MobAI : MonoBehaviour
         return targetPlayer;
     }
 
-    // Client nhận tọa độ từ mạng
     public void UpdateNetworkPosition(float x, float y)
     {
         Vector2 newPos = new Vector2(x, y);
@@ -281,10 +290,8 @@ public class MobAI : MonoBehaviour
         float shortestDistance = Mathf.Infinity;
         Transform nearestPlayer = null;
 
-        // 1. Dò tìm Local Player bằng Tag "Player"
         GameObject localPlayerObj = GameObject.FindGameObjectWithTag("Player");
 
-        // 2. Dự phòng: Dò tìm Player bằng Layer "Player" nếu Tag chưa tìm thấy
         if (localPlayerObj == null)
         {
             int playerLayer = LayerMask.NameToLayer("Player");
@@ -303,7 +310,6 @@ public class MobAI : MonoBehaviour
             RookieHealth localHealth = localPlayerObj.GetComponent<RookieHealth>();
             if (localHealth == null) localHealth = localPlayerObj.GetComponentInParent<RookieHealth>();
 
-            // BỎ QUA LOCAL PLAYER ĐÃ CHẾT!
             if (localHealth == null || !localHealth.isDead)
             {
                 float dist = Vector2.Distance(transform.position, localPlayerObj.transform.position);
@@ -315,7 +321,6 @@ public class MobAI : MonoBehaviour
             }
         }
 
-        // 3. Dò tìm tất cả Remote Player (Co-op Multiplayer)
         RemotePlayerController[] remotePlayers = Object.FindObjectsByType<RemotePlayerController>(FindObjectsSortMode.None);
         foreach (var rpc in remotePlayers)
         {
@@ -346,25 +351,19 @@ public class MobAI : MonoBehaviour
             }
             else
             {
-                // Khi chưa phát hiện Player: Chuyển sang trạng thái Wander đi dạo tuần tra trong phòng
                 currentState = EnemyState.Wander;
             }
         }
     }
 
-    /// <summary>
-    /// 🚶 XỬ LÝ TRẠNG THÁI ĐI DẠO TUẦN TRA (Wander State)
-    /// </summary>
     void MonitorWanderState()
     {
-        // 🎯 NẾU PLAYER BƯỚC VÀO TẦM QUÉT: LẬP TỨC CHUYỂN SANG CHASE ĐUỔI ĐÁNH
         if (targetPlayer != null && Vector2.Distance(transform.position, targetPlayer.position) <= detectRange)
         {
             currentState = EnemyState.Chase;
             return;
         }
 
-        // Mỗi 2.5s - 4.0s: Chọn 1 vị trí ngẫu nhiên để thong thả đi dạo
         if (Time.time >= nextWanderTimer)
         {
             PickRandomWanderTarget();
@@ -378,7 +377,7 @@ public class MobAI : MonoBehaviour
             Vector2 separateForce = GetSeparationForce();
             Vector2 finalMoveDir = (moveDir + separateForce).normalized;
 
-            rb.linearVelocity = finalMoveDir * (chaseSpeed * 0.35f); // Đi bộ thong thả
+            rb.linearVelocity = finalMoveDir * (chaseSpeed * 0.35f);
             if (animator != null) animator.SetBool("isMoving", true);
 
             UpdateSpriteFacing(moveDir);
@@ -390,9 +389,6 @@ public class MobAI : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Chọn điểm đi dạo tuần tra ngẫu nhiên nằm gọn trong phòng
-    /// </summary>
     private void PickRandomWanderTarget()
     {
         Vector2 randomOffset = Random.insideUnitCircle * 2.5f;
@@ -419,46 +415,89 @@ public class MobAI : MonoBehaviour
             return;
         }
 
-        float distance = Vector2.Distance(transform.position, targetPlayer.position);
+        // 🎯 ĐO KHOẢNG CÁCH TỪ MŨI GIÁO/SÚNG TỚI PLAYER
+        Vector3 attackOrigin = (mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null && mobWeaponAim.currentWeaponInfo.firePoint != null)
+            ? mobWeaponAim.currentWeaponInfo.firePoint.position
+            : transform.position;
 
-        if (distance > detectRange + 1.5f)
+        float distanceToPlayer = Vector2.Distance(attackOrigin, targetPlayer.position);
+
+        // 🎯 NẾU PLAYER DI CHUYỂN RA XA NGOÀI TẦM NHÌN: QUÁI BỎ CUỘC VÀ QUAY VỀ ĐI DẠO TUẦN TRA (Wander)
+        if (distanceToPlayer > detectRange)
         {
             currentState = EnemyState.Wander;
             return;
         }
 
-        bool isMelee = (mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null && mobWeaponAim.currentWeaponInfo.isMelee);
+        bool isMelee = (mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null && mobWeaponAim.currentWeaponInfo.IsMelee);
 
-        // 🏹 1. QUÁI BẮN XA KITING: Nếu Player lại quá gần (< 3.2m), Quái tự động ĐI LÙI giữ khoảng cách
-        Vector2 targetDir = (targetPlayer.position - transform.position).normalized;
-        if (!isMelee && distance < 3.2f)
-        {
-            targetDir = -targetDir; // Đảo ngược hướng để đi lùi
-        }
+        float targetAttackDistance = isMelee ? 0.9f : 4.0f; // Mũi giáo cách Player 0.9m
 
-        // 🎯 ĐIỀU KIỆN TẤN CÔNG
-        if (distance <= attackRange)
+        // NẾU ĐÃ HẾT COOLDOWN BẮN/ĐÂM:
+        if (Time.time >= nextAttackTime)
         {
-            currentState = EnemyState.Attack;
+            if (distanceToPlayer <= targetAttackDistance)
+            {
+                currentState = EnemyState.Attack;
+                return;
+            }
+
+            // Tiếp tục di chuyển tiến lại gần nếu chưa tới cự ly
+            Vector2 targetDir = (targetPlayer.position - transform.position).normalized;
+            Vector2 separateForce = GetSeparationForce();
+            Vector2 finalMoveDir = (targetDir + separateForce).normalized;
+
+            rb.linearVelocity = finalMoveDir * chaseSpeed;
+            if (animator != null) animator.SetBool("isMoving", true);
+            UpdateSpriteFacing(targetPlayer.position - transform.position);
             return;
         }
 
-        // 🛡️ 3. FLOCKING AVOIDANCE: Đẩy nhẹ các Quái đồng đội ra xa để giàn hàng bao vây, không chồng hình
-        Vector2 separateForce = GetSeparationForce();
-        Vector2 finalMoveDir = (targetDir + separateForce).normalized;
+        // NẾU ĐANG TRONG THỜI GIAN CHỜ COOLDOWN:
+        if (isMelee)
+        {
+            // Tiến sát kè kè bên người Player (cách 1.1m) chờ cooldown
+            if (distanceToPlayer > 1.1f)
+            {
+                Vector2 targetDir = (targetPlayer.position - transform.position).normalized;
+                Vector2 separateForce = GetSeparationForce();
+                Vector2 finalMoveDir = (targetDir + separateForce).normalized;
 
-        rb.linearVelocity = finalMoveDir * chaseSpeed;
-        if (animator != null) animator.SetBool("isMoving", true);
+                rb.linearVelocity = finalMoveDir * chaseSpeed;
+                if (animator != null) animator.SetBool("isMoving", true);
+            }
+            else
+            {
+                rb.linearVelocity = Vector2.zero;
+                if (animator != null) animator.SetBool("isMoving", false);
+            }
+        }
+        else
+        {
+            // Tầm xa: Dạt lùi ngắm bắn
+            if (distanceToPlayer < 5.0f)
+            {
+                Vector2 targetDir = (targetPlayer.position - transform.position).normalized;
+                Vector2 retreatDir = -targetDir;
+                Vector2 orbitDir = new Vector2(-targetDir.y, targetDir.x);
+                Vector2 separateForce = GetSeparationForce();
+                Vector2 finalMoveDir = (retreatDir * 0.5f + orbitDir * 0.5f + separateForce).normalized;
 
-        // 🎯 GIỮ NGUYÊN 100% LOGIC FLIPX CHO QUÁI
+                rb.linearVelocity = finalMoveDir * (chaseSpeed * 0.6f);
+                if (animator != null) animator.SetBool("isMoving", true);
+            }
+            else
+            {
+                rb.linearVelocity = Vector2.zero;
+                if (animator != null) animator.SetBool("isMoving", false);
+            }
+        }
+
         UpdateSpriteFacing(targetPlayer.position - transform.position);
     }
 
     void MonitorAttackState()
     {
-        rb.linearVelocity = Vector2.zero;
-        if (animator != null) animator.SetBool("isMoving", false);
-
         if (targetPlayer == null)
         {
             currentState = EnemyState.Wander;
@@ -467,24 +506,13 @@ public class MobAI : MonoBehaviour
 
         UpdateSpriteFacing(targetPlayer.position - transform.position);
 
-        float distance = Vector2.Distance(transform.position, targetPlayer.position);
-        if (distance > attackRange + 1.0f)
-        {
-            currentState = EnemyState.Chase;
-        }
-        else if (Time.time >= nextAttackTime)
-        {
-            AttackTarget();
-            nextAttackTime = Time.time + attackCooldown;
+        rb.linearVelocity = Vector2.zero;
+        if (animator != null) animator.SetBool("isMoving", false);
 
-            // 🗡️ 2. QUÁI CẬN CHIẾN RETREAT: Đâm thương xong chuyển trạng thái giật lùi 0.8s né đòn
-            bool isMelee = (mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null && mobWeaponAim.currentWeaponInfo.isMelee);
-            if (isMelee)
-            {
-                currentState = EnemyState.Retreat;
-                retreatEndTime = Time.time + 0.8f;
-            }
-        }
+        AttackTarget();
+        nextAttackTime = Time.time + attackCooldown;
+
+        currentState = EnemyState.Chase;
     }
 
     void MonitorRetreatState()
@@ -495,7 +523,6 @@ public class MobAI : MonoBehaviour
             return;
         }
 
-        // Đi lùi xa khỏi Player 1.2m
         Vector2 retreatDir = (transform.position - targetPlayer.position).normalized;
         Vector2 separateForce = GetSeparationForce();
         Vector2 finalMoveDir = (retreatDir + separateForce).normalized;
@@ -535,9 +562,6 @@ public class MobAI : MonoBehaviour
         return Vector2.zero;
     }
 
-    /// <summary>
-    /// 🎯 GIỮ NGUYÊN 100% LOGIC FLIPX CHO QUÁI
-    /// </summary>
     private void UpdateSpriteFacing(Vector2 directionToPlayer)
     {
         if (spriteRenderer != null)
@@ -557,21 +581,18 @@ public class MobAI : MonoBehaviour
     {
         if (animator != null) animator.SetTrigger("attack");
 
-        // Nếu Quái có vũ khí -> Bắn đạn từ vũ khí (Sát thương do đạn bay va chạm gây ra)
         if (mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null && targetPlayer != null)
         {
             mobWeaponAim.Fire(targetPlayer.position, attackDamage);
         }
         else
         {
-            // Chỉ chạy gây sát thương trực tiếp nếu Quái KHÔNG có vũ khí (Đánh tay không mặc định)
             StartCoroutine(DealDamageWithDelay());
         }
     }
 
     private System.Collections.IEnumerator DealDamageWithDelay()
     {
-        // Đợi 0.35 giây để hoạt ảnh chém/vung tay của quái trùng khớp với thời điểm gây dame
         yield return new WaitForSeconds(0.35f);
 
         if (targetPlayer != null && mobHealth != null && !mobHealth.isDead)
@@ -579,7 +600,6 @@ public class MobAI : MonoBehaviour
             RookieHealth playerHealth = targetPlayer.GetComponent<RookieHealth>();
             RemotePlayerController rpc = targetPlayer.GetComponent<RemotePlayerController>();
 
-            // BỎ QUA GÂY SÁT THƯƠNG NẾU MỤC TIÊU ĐÃ CHẾT!
             if ((playerHealth != null && playerHealth.isDead) || (rpc != null && rpc.isDead))
             {
                 targetPlayer = null;

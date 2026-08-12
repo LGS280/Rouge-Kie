@@ -2062,6 +2062,7 @@ MonoBehaviour:
   isDead: 0
   coinPrefabOverride: {fileID: 0}
   manaPrefabOverride: {fileID: 0}
+  lootDropChance: 0.2
 --- !u!114 &219374840
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6263,6 +6264,7 @@ MonoBehaviour:
   isDead: 0
   coinPrefabOverride: {fileID: 0}
   manaPrefabOverride: {fileID: 0}
+  lootDropChance: 0.2
 --- !u!114 &620976649
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22746,6 +22748,7 @@ MonoBehaviour:
   isDead: 0
   coinPrefabOverride: {fileID: 0}
   manaPrefabOverride: {fileID: 0}
+  lootDropChance: 0.2
 --- !u!114 &1301626646
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30277,6 +30280,7 @@ MonoBehaviour:
   isDead: 0
   coinPrefabOverride: {fileID: 0}
   manaPrefabOverride: {fileID: 0}
+  lootDropChance: 0.2
 --- !u!114 &1557864379
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31729,6 +31733,7 @@ MonoBehaviour:
   isDead: 0
   coinPrefabOverride: {fileID: 0}
   manaPrefabOverride: {fileID: 0}
+  lootDropChance: 0.2
 --- !u!114 &1844932398
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -32452,6 +32457,7 @@ MonoBehaviour:
   isDead: 0
   coinPrefabOverride: {fileID: 0}
   manaPrefabOverride: {fileID: 0}
+  lootDropChance: 0.2
 --- !u!114 &2023743168
 MonoBehaviour:
   m_ObjectHideFlags: 0
