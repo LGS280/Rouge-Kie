@@ -1,19 +1,25 @@
 fileFormatVersion: 2
-guid: 78018800a2594514c867f1c406f7e6c2
+guid: abd5a05d752e470428e8dcce638b46ed
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 5029497643302000955
-    second: Melog_Idle_0
+      213: -44887210612133648
+    second: Melog_Walk_0
   - first:
-      213: -8192949351474532740
-    second: Melog_Idle_1
+      213: -5803344857012979801
+    second: Melog_Walk_1
   - first:
-      213: 7099462927349553579
-    second: Melog_Idle_2
+      213: -8971348557608430563
+    second: Melog_Walk_2
   - first:
-      213: 2192832500372733947
-    second: Melog_Idle_3
+      213: 1658541779453902032
+    second: Melog_Walk_3
+  - first:
+      213: 6641862588525996138
+    second: Melog_Walk_4
+  - first:
+      213: 6715562457520941084
+    second: Melog_Walk_5
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -109,10 +115,32 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Melog_Idle_0
+      name: Melog_Walk_0
       rect:
         serializedVersion: 2
         x: 1
+        y: 2
+        width: 28
+        height: 21
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0f0718cd157806ff0800000000000000
+      internalID: -44887210612133648
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Melog_Walk_1
+      rect:
+        serializedVersion: 2
+        x: 33
         y: 2
         width: 28
         height: 22
@@ -124,20 +152,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b391eab857d5cc540800000000000000
-      internalID: 5029497643302000955
+      spriteID: 7a7b6a89990667fa0800000000000000
+      internalID: -5803344857012979801
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Melog_Idle_1
+      name: Melog_Walk_2
       rect:
         serializedVersion: 2
-        x: 33
+        x: 66
         y: 2
-        width: 28
-        height: 21
+        width: 27
+        height: 22
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -146,20 +174,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: c7ee79219fbcc4e80800000000000000
-      internalID: -8192949351474532740
+      spriteID: d145983e40e5f7380800000000000000
+      internalID: -8971348557608430563
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Melog_Idle_2
+      name: Melog_Walk_3
       rect:
         serializedVersion: 2
-        x: 65
+        x: 98
         y: 2
         width: 28
-        height: 20
+        height: 22
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -168,20 +196,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: ba999b8faeb568260800000000000000
-      internalID: 7099462927349553579
+      spriteID: 0dc7e7906f2540710800000000000000
+      internalID: 1658541779453902032
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Melog_Idle_3
+      name: Melog_Walk_4
       rect:
         serializedVersion: 2
-        x: 97
+        x: 129
         y: 2
-        width: 28
-        height: 21
+        width: 29
+        height: 23
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -190,8 +218,30 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: bfff5ac7a818e6e10800000000000000
-      internalID: 2192832500372733947
+      spriteID: a686c0c85d2ac2c50800000000000000
+      internalID: 6641862588525996138
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Melog_Walk_5
+      rect:
+        serializedVersion: 2
+        x: 161
+        y: 2
+        width: 28
+        height: 22
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c182c7b7978723d50800000000000000
+      internalID: 6715562457520941084
       vertices: []
       indices: 
       edges: []
@@ -200,7 +250,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 909af0e1c07a2ba47a86b477ff7afe57
+    spriteID: cb1f1076ac704314da42f5939599bf54
     internalID: 0
     vertices: []
     indices: 
@@ -212,10 +262,12 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      Melog_Idle_0: 5029497643302000955
-      Melog_Idle_1: -8192949351474532740
-      Melog_Idle_2: 7099462927349553579
-      Melog_Idle_3: 2192832500372733947
+      Melog_Walk_0: -44887210612133648
+      Melog_Walk_1: -5803344857012979801
+      Melog_Walk_2: -8971348557608430563
+      Melog_Walk_3: 1658541779453902032
+      Melog_Walk_4: 6641862588525996138
+      Melog_Walk_5: 6715562457520941084
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
