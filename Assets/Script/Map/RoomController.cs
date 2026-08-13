@@ -23,7 +23,6 @@ public class RoomController : MonoBehaviour
     public bool roomStarted = false;
     private Transform currentPlayer;
     [HideInInspector] public bool chestSpawned = false;
-    [HideInInspector] public Vector3 lastMobDiePosition = Vector3.zero;
     
     [Header("Reward Chest Prefab")]
     public GameObject chestPrefab;
@@ -175,8 +174,7 @@ public class RoomController : MonoBehaviour
 
     public void ExecuteClearRoomLocal()
     {
-        Vector3 targetSpawnPos = (lastMobDiePosition != Vector3.zero) ? lastMobDiePosition : transform.position;
-        ExecuteClearRoomLocal(targetSpawnPos);
+        ExecuteClearRoomLocal(transform.position); // Mặc định sinh rương ở tâm phòng
     }
 
     public void ExecuteClearRoomLocal(Vector3 spawnPosition)
@@ -514,11 +512,6 @@ public class RoomController : MonoBehaviour
 
     private void CheckRoomCleared(Vector3 spawnPosition)
     {
-        if (spawnPosition != Vector3.zero)
-        {
-            lastMobDiePosition = spawnPosition;
-        }
-
         if (GetAliveMobCount() <= 0)
         {
             bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
