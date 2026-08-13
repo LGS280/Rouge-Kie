@@ -97,6 +97,9 @@ public class MelogBossAI : MonoBehaviour
             return;
         }
 
+        // Quét tìm Player gần nhất cho cả Host và Client
+        FindNearestPlayer();
+
         if (isHost)
         {
             // Host: Đồng bộ vị trí cho Client 20 FPS
@@ -108,8 +111,6 @@ public class MelogBossAI : MonoBehaviour
                     lastNetworkSyncTime = Time.time;
                 }
             }
-
-            FindNearestPlayer();
 
             if (isRoomActivated && targetPlayer != null)
             {
