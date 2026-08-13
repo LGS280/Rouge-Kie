@@ -105,16 +105,16 @@ public class MelogBossAI : MonoBehaviour
 
             FindNearestPlayer();
 
-            if (targetPlayer != null)
+            if (isRoomActivated && targetPlayer != null)
             {
-                // 🎯 LUÔN TỰ ĐỘNG QUAY MẶT THÂN (Rotation Y = 0 / 180) VỀ PHÍA PLAYER
+                // 🎯 CHỈ QUAY MẶT THÂN VỀ PHÍA PLAYER KHI ĐÃ KÍCH HOẠT CHIẾN ĐẤU TRONG PHÒNG
                 UpdateBossFacing(targetPlayer.position.x - transform.position.x);
             }
 
             if (!isRoomActivated)
             {
-                // 🎯 TỰ ĐỘNG MỞ KHÓA KHI PLAYER LẠI GẦN: Hỗ trợ kéo Melog thủ công vào Scene test độc lập
-                if (targetPlayer != null && Vector2.Distance(transform.position, targetPlayer.position) <= detectRange)
+                // Chỉ tự động mở khóa khi kéo Melog vào Scene test độc lập (không có phòng myRoom)
+                if (myRoom == null && targetPlayer != null && Vector2.Distance(transform.position, targetPlayer.position) <= detectRange)
                 {
                     isRoomActivated = true;
                 }

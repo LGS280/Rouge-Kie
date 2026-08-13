@@ -1186,6 +1186,31 @@ public class DungeonGenerator : MonoBehaviour
         GameObject oldPortalObj = GameObject.Find("TeleportPortal");
         if (oldPortalObj != null) Destroy(oldPortalObj);
 
+        // 🧹 DỌN DẸP SẠCH SẼ TẤT CẢ VẬT PHẨM VÀ VŨ KHÍ RƠI VÃI TẦNG CŨ KHI QUA TẦNG MỚI (CẢ SINGLEPLAYER & MULTIPLAYER)
+        LootItem[] remainingLoot = Object.FindObjectsByType<LootItem>(FindObjectsSortMode.None);
+        foreach (var loot in remainingLoot)
+        {
+            if (loot != null && loot.gameObject != null) Destroy(loot.gameObject);
+        }
+
+        GroundWeapon[] remainingWeapons = Object.FindObjectsByType<GroundWeapon>(FindObjectsSortMode.None);
+        foreach (var weapon in remainingWeapons)
+        {
+            if (weapon != null && weapon.gameObject != null && !weapon.isEquipped) Destroy(weapon.gameObject);
+        }
+
+        RewardChest[] remainingRewardChests = Object.FindObjectsByType<RewardChest>(FindObjectsSortMode.None);
+        foreach (var chest in remainingRewardChests)
+        {
+            if (chest != null && chest.gameObject != null) Destroy(chest.gameObject);
+        }
+
+        WeaponChest[] remainingWeaponChests = Object.FindObjectsByType<WeaponChest>(FindObjectsSortMode.None);
+        foreach (var chest in remainingWeaponChests)
+        {
+            if (chest != null && chest.gameObject != null) Destroy(chest.gameObject);
+        }
+
         for (int i = transform.childCount - 1; i >= 0; i--)
         {
             GameObject child = transform.GetChild(i).gameObject;
