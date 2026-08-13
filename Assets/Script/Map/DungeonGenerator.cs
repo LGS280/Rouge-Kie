@@ -1196,7 +1196,7 @@ public class DungeonGenerator : MonoBehaviour
         GroundWeapon[] remainingWeapons = Object.FindObjectsByType<GroundWeapon>(FindObjectsSortMode.None);
         foreach (var weapon in remainingWeapons)
         {
-            if (weapon != null && weapon.gameObject != null && !weapon.isEquipped) Destroy(weapon.gameObject);
+            if (weapon != null && weapon.gameObject != null) Destroy(weapon.gameObject);
         }
 
         RewardChest[] remainingRewardChests = Object.FindObjectsByType<RewardChest>(FindObjectsSortMode.None);

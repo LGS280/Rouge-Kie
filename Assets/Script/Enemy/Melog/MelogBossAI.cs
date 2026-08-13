@@ -35,6 +35,12 @@ public class MelogBossAI : MonoBehaviour
 
     private bool isRoomActivated = false;
     private bool isHost = true;
+    [HideInInspector] public RoomController myRoom;
+
+    public void SetRoom(RoomController room)
+    {
+        myRoom = room;
+    }
 
     // Multiplayer smoothing variables
     private Vector2 networkTargetPos;
