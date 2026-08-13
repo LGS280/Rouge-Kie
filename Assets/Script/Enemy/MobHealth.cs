@@ -177,6 +177,13 @@ public class MobHealth : MonoBehaviour
             weaponAim.enabled = false;
         }
 
+        MelogWeaponAim melogWeaponAim = GetComponent<MelogWeaponAim>();
+        if (melogWeaponAim != null)
+        {
+            melogWeaponAim.DestroyWeaponsOnDeath();
+            melogWeaponAim.enabled = false;
+        }
+
         OnDeath?.Invoke(this);
         SpawnLootOnDeath();
     }

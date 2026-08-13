@@ -72,6 +72,11 @@ public class MelogBossAI : MonoBehaviour
             isHost = true;
         }
 
+        if (!isHost && rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Kinematic;
+        }
+
         FindNearestPlayer();
         GetNewWanderTarget();
     }
@@ -82,6 +87,7 @@ public class MelogBossAI : MonoBehaviour
         {
             if (rb != null) rb.linearVelocity = Vector2.zero;
             if (animator != null) animator.SetBool("isMoving", false);
+            if (melogWeaponAim != null) melogWeaponAim.DestroyWeaponsOnDeath();
             return;
         }
 
@@ -140,6 +146,20 @@ public class MelogBossAI : MonoBehaviour
         {
             // Client: Tìm Player để ngắm bắn hiển thị mượt 60 FPS
             FindNearestPlayer();
+
+            // Client: Kích hoạt hiển thị hoạt ảnh tấn công & bão đạn 2 súng khi áp sát Player 2
+            if (targetPlayer != null && melogWeaponAim != null)
+            {
+                float dist = Vector2.Distance(transform.position, targetPlayer.position);
+                if (dist <= attackRange && Time.time >= nextAttackTime)
+                {
+                    if (animator != null) animator.SetTrigger("attack");
+                    melogWeaponAim.FireBothGuns(targetPlayer.position, 0);
+
+                    float dbFireRate = GetWeaponFireRateFromDb();
+                    nextAttackTime = Time.time + dbFireRate;
+                }
+            }
 
             // Client: Nhận vị trí nội suy mượt mà SmoothDamp từ Host
             if (hasFirstNetworkPos)

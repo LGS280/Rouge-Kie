@@ -726,7 +726,15 @@ public class MultiplayerSyncManager : MonoBehaviour
             }
             else
             {
-                enemy.transform.position = new Vector3(x, y, enemy.transform.position.z);
+                MelogBossAI melogBossAI = enemy.GetComponent<MelogBossAI>();
+                if (melogBossAI != null)
+                {
+                    melogBossAI.UpdateNetworkPosition(new Vector2(x, y));
+                }
+                else
+                {
+                    enemy.transform.position = new Vector3(x, y, enemy.transform.position.z);
+                }
             }
         }
     }

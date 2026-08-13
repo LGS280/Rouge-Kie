@@ -147,10 +147,12 @@ public class MelogWeaponAim : MonoBehaviour
     {
         if (leftHandTransform != null)
         {
+            leftHandTransform.gameObject.SetActive(false);
             foreach (Transform child in leftHandTransform) Destroy(child.gameObject);
         }
         if (rightHandTransform != null)
         {
+            rightHandTransform.gameObject.SetActive(false);
             foreach (Transform child in rightHandTransform) Destroy(child.gameObject);
         }
         enabled = false;
