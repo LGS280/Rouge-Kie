@@ -177,8 +177,15 @@ public class MelogBossAI : MonoBehaviour
                 bool isMoving = mobNetworkVelocity.sqrMagnitude > 0.01f || estimatedMobVelocity.sqrMagnitude > 0.01f;
                 if (animator != null) animator.SetBool("isMoving", isMoving);
 
-                float moveX = (mobNetworkVelocity.sqrMagnitude > 0.01f) ? mobNetworkVelocity.x : estimatedMobVelocity.x;
-                UpdateBossFacing(moveX);
+                if (isMoving)
+                {
+                    float moveX = (mobNetworkVelocity.sqrMagnitude > 0.01f) ? mobNetworkVelocity.x : estimatedMobVelocity.x;
+                    UpdateBossFacing(moveX);
+                }
+                else if (targetPlayer != null)
+                {
+                    UpdateBossFacing(targetPlayer.position.x - transform.position.x);
+                }
             }
         }
     }
