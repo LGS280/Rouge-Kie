@@ -181,6 +181,7 @@ public class RoomController : MonoBehaviour
     {
         roomCleared = true;
         roomStarted = false;
+        CollectDoorsNearRoom();
         OpenDoors();
 
         if (RunStatsTracker.Instance != null)

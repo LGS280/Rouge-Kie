@@ -3,6 +3,7 @@ using UnityEngine;
 public class MissileBullet : NormalBullet
 {
     [Header("Missile Homing Configuration")]
+    public bool isHoming = true;          // Cờ bật/tắt bẻ lái đuổi quái (Missile = true, Rocket = false)
     public float detectRadius = 5.0f;     // Bán kính dò tìm kẻ địch
     public float turnSpeed = 260.0f;      // Tốc độ xoay lượn cong mềm mại (độ/giây)
     public float initialDirectTime = 0.05f; // Bắt đầu lượn bẻ lái cực nhanh sau 0.05s
@@ -10,6 +11,9 @@ public class MissileBullet : NormalBullet
     [Header("Visual Tail Effect")]
     public bool hasFireTail = true;      // Cờ bật/tắt đuôi lửa (ví dụ: Tên lửa = true, Mũi tên phép = false)
     public GameObject fireTailObject;   // Reference tới GameObject đuôi lửa
+
+    [Header("Impact Effect")]
+    public GameObject explosionEffectPrefab; // Prefab hiệu ứng vụ nổ cho Missile/Rocket
 
     private Transform targetEnemy;
     private float spawnTimestamp;
@@ -36,6 +40,19 @@ public class MissileBullet : NormalBullet
         }
     }
 
+    protected override void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Obstacle") || collision.CompareTag("Enemy") || collision.CompareTag("Door"))
+        {
+            if (explosionEffectPrefab != null)
+            {
+                Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
+            }
+        }
+
+        base.OnTriggerEnter2D(collision);
+    }
+
     protected override void Update()
     {
         // 1. Hiệu ứng bùng nhấp nháy loa lửa ngay đít tên lửa (Nozzle Flame Cone)
@@ -46,8 +63,8 @@ public class MissileBullet : NormalBullet
             fireTailObject.transform.localScale = new Vector3(scaleX, scaleY, 1f);
         }
 
-        // 2. Dò tìm và xoay hướng bay theo đuổi quái
-        if (Time.time - spawnTimestamp >= initialDirectTime)
+        // 2. Dò tìm và xoay hướng bay theo đuổi quái (nếu cờ isHoming = true)
+        if (isHoming && Time.time - spawnTimestamp >= initialDirectTime)
         {
             FindTargetEnemy();
 

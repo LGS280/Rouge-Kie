@@ -93,6 +93,10 @@ public class WeaponInfo : MonoBehaviour
             fireRate = config.fireRate;
             manaCostPerShot = config.manaCost;
 
+            // Nạp vị trí tay từ DB và cập nhật trực tiếp vị trí của súng
+            customHandPosition = new Vector3(config.handPositionX, config.handPositionY, config.handPositionZ);
+            transform.localPosition = customHandPosition;
+
             soundFileName = config.shootSound;
             soundVolume = config.shootVolume;
 
