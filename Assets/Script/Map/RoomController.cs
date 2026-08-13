@@ -450,6 +450,12 @@ public class RoomController : MonoBehaviour
                 {
                     mobAI.ActivateMob();
                 }
+
+                MelogBossAI melogBossAI = mob.GetComponent<MelogBossAI>();
+                if (melogBossAI != null)
+                {
+                    melogBossAI.ActivateMob();
+                }
             }
         }
     }

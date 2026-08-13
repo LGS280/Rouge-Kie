@@ -1413,7 +1413,22 @@ public class DungeonGenerator : MonoBehaviour
 
         for (int i = 0; i < mobCount; i++)
         {
-            GameObject mobPrefab = GetRandomMobPrefabFromTheme();
+            GameObject mobPrefab = null;
+
+            if (isBossRoom)
+            {
+                // 👑 PHÒNG BOSS / MINI-BOSS: Ưu tiên nạp Melog.prefab làm Mini Boss 2 tay 2 súng!
+#if UNITY_EDITOR
+                mobPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/Mobs/Melog.prefab");
+#endif
+                if (mobPrefab == null) mobPrefab = Resources.Load<GameObject>("Prefab/Mobs/Melog");
+                if (mobPrefab == null) mobPrefab = Resources.Load<GameObject>("Mobs/Melog");
+                if (mobPrefab == null) mobPrefab = GetRandomMobPrefabFromTheme();
+            }
+            else
+            {
+                mobPrefab = GetRandomMobPrefabFromTheme();
+            }
 
             if (mobPrefab == null)
                 continue;
