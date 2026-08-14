@@ -1,0 +1,1781 @@
+fileFormatVersion: 2
+guid: 48861cb9e6b6fb644b6a11c7bcbe2843
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 5103954567816172694
+    second: Shelter_Exterior_32x32_0
+  - first:
+      213: 3823212592808213302
+    second: Shelter_Exterior_32x32_1
+  - first:
+      213: -3065576436395342930
+    second: Shelter_Exterior_32x32_2
+  - first:
+      213: -1714754234634756818
+    second: Shelter_Exterior_32x32_3
+  - first:
+      213: 3957547440925544736
+    second: Shelter_Exterior_32x32_4
+  - first:
+      213: -3077266086910044138
+    second: Shelter_Exterior_32x32_5
+  - first:
+      213: 1674733479592732353
+    second: Shelter_Exterior_32x32_6
+  - first:
+      213: -2916043593492357359
+    second: Shelter_Exterior_32x32_7
+  - first:
+      213: -203793017270145156
+    second: Shelter_Exterior_32x32_8
+  - first:
+      213: 8540597592071324755
+    second: Shelter_Exterior_32x32_9
+  - first:
+      213: -5402649743001785451
+    second: Shelter_Exterior_32x32_10
+  - first:
+      213: 7600031810922641475
+    second: Shelter_Exterior_32x32_11
+  - first:
+      213: 6993279120104196023
+    second: Shelter_Exterior_32x32_12
+  - first:
+      213: -7901637221344435576
+    second: Shelter_Exterior_32x32_13
+  - first:
+      213: 2934174996615697952
+    second: Shelter_Exterior_32x32_14
+  - first:
+      213: -864667437574702724
+    second: Shelter_Exterior_32x32_15
+  - first:
+      213: -5035151628876780312
+    second: Shelter_Exterior_32x32_16
+  - first:
+      213: 7971447605864919726
+    second: Shelter_Exterior_32x32_17
+  - first:
+      213: -457015464156895740
+    second: Shelter_Exterior_32x32_18
+  - first:
+      213: -1544219009154729281
+    second: Shelter_Exterior_32x32_19
+  - first:
+      213: -3053587864379520052
+    second: Shelter_Exterior_32x32_20
+  - first:
+      213: -4807345222798756721
+    second: Shelter_Exterior_32x32_21
+  - first:
+      213: 3843414317105191605
+    second: Shelter_Exterior_32x32_22
+  - first:
+      213: -8438555685388771365
+    second: Shelter_Exterior_32x32_23
+  - first:
+      213: -4771594761122621048
+    second: Shelter_Exterior_32x32_24
+  - first:
+      213: 373090426322208594
+    second: Shelter_Exterior_32x32_25
+  - first:
+      213: 8842122454874137531
+    second: Shelter_Exterior_32x32_26
+  - first:
+      213: -5340561694335328835
+    second: Shelter_Exterior_32x32_27
+  - first:
+      213: -2614375219643448132
+    second: Shelter_Exterior_32x32_28
+  - first:
+      213: 1484463142085188522
+    second: Shelter_Exterior_32x32_29
+  - first:
+      213: 4648811442573978781
+    second: Shelter_Exterior_32x32_30
+  - first:
+      213: -1769246475763932956
+    second: Shelter_Exterior_32x32_31
+  - first:
+      213: 3255317233540244756
+    second: Shelter_Exterior_32x32_32
+  - first:
+      213: 7513889362262668175
+    second: Shelter_Exterior_32x32_33
+  - first:
+      213: -169352462322547084
+    second: Shelter_Exterior_32x32_34
+  - first:
+      213: 7256864044354353662
+    second: Shelter_Exterior_32x32_35
+  - first:
+      213: -8711904438277133277
+    second: Shelter_Exterior_32x32_36
+  - first:
+      213: -8200718703677222166
+    second: Shelter_Exterior_32x32_37
+  - first:
+      213: -8803765286650602450
+    second: Shelter_Exterior_32x32_38
+  - first:
+      213: -3809338148363377541
+    second: Shelter_Exterior_32x32_39
+  - first:
+      213: 1397715153131632645
+    second: Shelter_Exterior_32x32_40
+  - first:
+      213: 2807943000845346360
+    second: Shelter_Exterior_32x32_41
+  - first:
+      213: 6781013951239811493
+    second: Shelter_Exterior_32x32_42
+  - first:
+      213: 7669588773643284466
+    second: Shelter_Exterior_32x32_43
+  - first:
+      213: 9184445136720173533
+    second: Shelter_Exterior_32x32_44
+  - first:
+      213: 6739829433212915763
+    second: Shelter_Exterior_32x32_45
+  - first:
+      213: 2818859215772027825
+    second: Shelter_Exterior_32x32_46
+  - first:
+      213: -4311739733607075798
+    second: Shelter_Exterior_32x32_47
+  - first:
+      213: 5525073733494223105
+    second: Shelter_Exterior_32x32_48
+  - first:
+      213: 8788062549679265150
+    second: Shelter_Exterior_32x32_49
+  - first:
+      213: 2032141198894417180
+    second: Shelter_Exterior_32x32_50
+  - first:
+      213: 5889939291125369024
+    second: Shelter_Exterior_32x32_51
+  - first:
+      213: -463210857822010378
+    second: Shelter_Exterior_32x32_52
+  - first:
+      213: -7199840594620221317
+    second: Shelter_Exterior_32x32_53
+  - first:
+      213: 5553858755508633941
+    second: Shelter_Exterior_32x32_54
+  - first:
+      213: 189012940673075615
+    second: Shelter_Exterior_32x32_55
+  - first:
+      213: 6104273438720256967
+    second: Shelter_Exterior_32x32_56
+  - first:
+      213: 9114842956117347245
+    second: Shelter_Exterior_32x32_57
+  - first:
+      213: -3745369083328337861
+    second: Shelter_Exterior_32x32_58
+  - first:
+      213: 8341560978481388057
+    second: Shelter_Exterior_32x32_59
+  - first:
+      213: -6510184813826654551
+    second: Shelter_Exterior_32x32_60
+  - first:
+      213: -8444881940839289470
+    second: Shelter_Exterior_32x32_61
+  - first:
+      213: -4214634602122304616
+    second: Shelter_Exterior_32x32_62
+  - first:
+      213: 9066151527520094887
+    second: Shelter_Exterior_32x32_63
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_0
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 479
+        width: 128
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6945a6433a3e4d640800000000000000
+      internalID: 5103954567816172694
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_1
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 479
+        width: 128
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 63b322fc897ce0530800000000000000
+      internalID: 3823212592808213302
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_2
+      rect:
+        serializedVersion: 2
+        x: 325
+        y: 447
+        width: 139
+        height: 97
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ea309d42972e475d0800000000000000
+      internalID: -3065576436395342930
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_3
+      rect:
+        serializedVersion: 2
+        x: 482
+        y: 485
+        width: 30
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e2d9f77db18f338e0800000000000000
+      internalID: -1714754234634756818
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_4
+      rect:
+        serializedVersion: 2
+        x: 483
+        y: 481
+        width: 11
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0219f16fd680ce630800000000000000
+      internalID: 3957547440925544736
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_5
+      rect:
+        serializedVersion: 2
+        x: 8
+        y: 449
+        width: 47
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 618de5a4cca5b45d0800000000000000
+      internalID: -3077266086910044138
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_6
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 449
+        width: 47
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c624900a39dd3710800000000000000
+      internalID: 1674733479592732353
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_7
+      rect:
+        serializedVersion: 2
+        x: 130
+        y: 452
+        width: 25
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 11f95543dc12887d0800000000000000
+      internalID: -2916043593492357359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_8
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 465
+        width: 16
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c7f68ed945bfb2df0800000000000000
+      internalID: -203793017270145156
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_9
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 453
+        width: 27
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 354c7fc824c468670800000000000000
+      internalID: 8540597592071324755
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_10
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 385
+        width: 66
+        height: 80
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 59be586eeaee505b0800000000000000
+      internalID: -5402649743001785451
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_11
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 385
+        width: 65
+        height: 80
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 34876b35aacb87960800000000000000
+      internalID: 7600031810922641475
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_12
+      rect:
+        serializedVersion: 2
+        x: 163
+        y: 450
+        width: 21
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b787f8ce4e1d0160800000000000000
+      internalID: 6993279120104196023
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_13
+      rect:
+        serializedVersion: 2
+        x: 226
+        y: 450
+        width: 11
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 882a2c5dfceb75290800000000000000
+      internalID: -7901637221344435576
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_14
+      rect:
+        serializedVersion: 2
+        x: 233
+        y: 456
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0269c1e0d9848b820800000000000000
+      internalID: 2934174996615697952
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_15
+      rect:
+        serializedVersion: 2
+        x: 243
+        y: 453
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c793386fb851004f0800000000000000
+      internalID: -864667437574702724
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_16
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 387
+        width: 24
+        height: 54
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ece19a554c8f1ab0800000000000000
+      internalID: -5035151628876780312
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_17
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 389
+        width: 24
+        height: 54
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ea2773dec5540ae60800000000000000
+      internalID: 7971447605864919726
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_18
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 387
+        width: 22
+        height: 53
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 40661125bda58a9f0800000000000000
+      internalID: -457015464156895740
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_19
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 389
+        width: 25
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fba3de72ef4d19ae0800000000000000
+      internalID: -1544219009154729281
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_20
+      rect:
+        serializedVersion: 2
+        x: 129
+        y: 385
+        width: 62
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ccb0735140a7f95d0800000000000000
+      internalID: -3053587864379520052
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_21
+      rect:
+        serializedVersion: 2
+        x: 193
+        y: 385
+        width: 62
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f84b8628df0e84db0800000000000000
+      internalID: -4807345222798756721
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_22
+      rect:
+        serializedVersion: 2
+        x: 321
+        y: 385
+        width: 62
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5ba94b745fc865530800000000000000
+      internalID: 3843414317105191605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_23
+      rect:
+        serializedVersion: 2
+        x: 385
+        y: 385
+        width: 62
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bdf9c03405a34ea80800000000000000
+      internalID: -8438555685388771365
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_24
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 255
+        width: 294
+        height: 130
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 889db2388d3e7cdb0800000000000000
+      internalID: -4771594761122621048
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_25
+      rect:
+        serializedVersion: 2
+        x: 314
+        y: 288
+        width: 7
+        height: 96
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 257c80a14cb7d2500800000000000000
+      internalID: 373090426322208594
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_26
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 358
+        width: 33
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb3274f668785ba70800000000000000
+      internalID: 8842122454874137531
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_27
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 353
+        width: 18
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dbd951c3f6382e5b0800000000000000
+      internalID: -5340561694335328835
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_28
+      rect:
+        serializedVersion: 2
+        x: 392
+        y: 356
+        width: 18
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb4819bd69fd7bbd0800000000000000
+      internalID: -2614375219643448132
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_29
+      rect:
+        serializedVersion: 2
+        x: 416
+        y: 359
+        width: 33
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aabd52adc5fd99410800000000000000
+      internalID: 1484463142085188522
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_30
+      rect:
+        serializedVersion: 2
+        x: 460
+        y: 333
+        width: 40
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d9ca4666065e38040800000000000000
+      internalID: 4648811442573978781
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_31
+      rect:
+        serializedVersion: 2
+        x: 325
+        y: 320
+        width: 49
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e0aaf344bf5277e0800000000000000
+      internalID: -1769246475763932956
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_32
+      rect:
+        serializedVersion: 2
+        x: 339
+        y: 288
+        width: 89
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 415af58c6c53d2d20800000000000000
+      internalID: 3255317233540244756
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_33
+      rect:
+        serializedVersion: 2
+        x: 395
+        y: 320
+        width: 49
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f83b04f8092b64860800000000000000
+      internalID: 7513889362262668175
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_34
+      rect:
+        serializedVersion: 2
+        x: 314
+        y: 256
+        width: 7
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4764d6135d656adf0800000000000000
+      internalID: -169352462322547084
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_35
+      rect:
+        serializedVersion: 2
+        x: 322
+        y: 260
+        width: 28
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef9bb0b566f85b460800000000000000
+      internalID: 7256864044354353662
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_36
+      rect:
+        serializedVersion: 2
+        x: 354
+        y: 258
+        width: 28
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 32ca75f2219191780800000000000000
+      internalID: -8711904438277133277
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_37
+      rect:
+        serializedVersion: 2
+        x: 386
+        y: 260
+        width: 28
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae2da6cc9c1313e80800000000000000
+      internalID: -8200718703677222166
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_38
+      rect:
+        serializedVersion: 2
+        x: 418
+        y: 258
+        width: 28
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e2c964bbd1eb2d580800000000000000
+      internalID: -8803765286650602450
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_39
+      rect:
+        serializedVersion: 2
+        x: 460
+        y: 269
+        width: 40
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b74e4750323822bc0800000000000000
+      internalID: -3809338148363377541
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_40
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 160
+        width: 289
+        height: 96
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 508779fb68ea56310800000000000000
+      internalID: 1397715153131632645
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_41
+      rect:
+        serializedVersion: 2
+        x: 299
+        y: 201
+        width: 41
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8366eea3841d7f620800000000000000
+      internalID: 2807943000845346360
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_42
+      rect:
+        serializedVersion: 2
+        x: 363
+        y: 201
+        width: 41
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a1fd94e2400b1e50800000000000000
+      internalID: 6781013951239811493
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_43
+      rect:
+        serializedVersion: 2
+        x: 428
+        y: 224
+        width: 39
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ffe45aba5adf6a60800000000000000
+      internalID: 7669588773643284466
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_44
+      rect:
+        serializedVersion: 2
+        x: 428
+        y: 192
+        width: 39
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dd91549c034b57f70800000000000000
+      internalID: 9184445136720173533
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_45
+      rect:
+        serializedVersion: 2
+        x: 481
+        y: 225
+        width: 30
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 330d06d092fa88d50800000000000000
+      internalID: 6739829433212915763
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_46
+      rect:
+        serializedVersion: 2
+        x: 481
+        y: 194
+        width: 28
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1bb8de395899e1720800000000000000
+      internalID: 2818859215772027825
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_47
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 128
+        width: 289
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a20b96e8e8f9924c0800000000000000
+      internalID: -4311739733607075798
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_48
+      rect:
+        serializedVersion: 2
+        x: 300
+        y: 160
+        width: 39
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 101b3ca99410dac40800000000000000
+      internalID: 5525073733494223105
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_49
+      rect:
+        serializedVersion: 2
+        x: 364
+        y: 160
+        width: 39
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e75db89e35875f970800000000000000
+      internalID: 8788062549679265150
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_50
+      rect:
+        serializedVersion: 2
+        x: 383
+        y: 0
+        width: 129
+        height: 161
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c15c98557ad933c10800000000000000
+      internalID: 2032141198894417180
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_51
+      rect:
+        serializedVersion: 2
+        x: 417
+        y: 160
+        width: 30
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0c8c42c34944db150800000000000000
+      internalID: 5889939291125369024
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_52
+      rect:
+        serializedVersion: 2
+        x: 449
+        y: 160
+        width: 30
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6f34a63dd285299f0800000000000000
+      internalID: -463210857822010378
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_53
+      rect:
+        serializedVersion: 2
+        x: 481
+        y: 160
+        width: 30
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7879362027051c90800000000000000
+      internalID: -7199840594620221317
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_54
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 32
+        width: 262
+        height: 97
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 55109cecc15431d40800000000000000
+      internalID: 5553858755508633941
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_55
+      rect:
+        serializedVersion: 2
+        x: 314
+        y: 32
+        width: 7
+        height: 96
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9945c2a4428f9200800000000000000
+      internalID: 189012940673075615
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_56
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 96
+        width: 32
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7cbe5c6c95cb6b450800000000000000
+      internalID: 6104273438720256967
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_57
+      rect:
+        serializedVersion: 2
+        x: 352
+        y: 96
+        width: 32
+        height: 55
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dab88d6406d6e7e70800000000000000
+      internalID: 9114842956117347245
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_58
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 262
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b38eb7b99a6c50cc0800000000000000
+      internalID: -3745369083328337861
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_59
+      rect:
+        serializedVersion: 2
+        x: 314
+        y: 0
+        width: 7
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 91a94a2b38d23c370800000000000000
+      internalID: 8341560978481388057
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_60
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 32
+        width: 32
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ae38bd776d27a5a0800000000000000
+      internalID: -6510184813826654551
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_61
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 0
+        width: 32
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28da9222e90cdca80800000000000000
+      internalID: -8444881940839289470
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_62
+      rect:
+        serializedVersion: 2
+        x: 352
+        y: 32
+        width: 32
+        height: 55
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8932e62d82c9285c0800000000000000
+      internalID: -4214634602122304616
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Exterior_32x32_63
+      rect:
+        serializedVersion: 2
+        x: 352
+        y: 0
+        width: 32
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7aa43bd97c071dd70800000000000000
+      internalID: 9066151527520094887
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Shelter_Exterior_32x32_0: 5103954567816172694
+      Shelter_Exterior_32x32_1: 3823212592808213302
+      Shelter_Exterior_32x32_10: -5402649743001785451
+      Shelter_Exterior_32x32_11: 7600031810922641475
+      Shelter_Exterior_32x32_12: 6993279120104196023
+      Shelter_Exterior_32x32_13: -7901637221344435576
+      Shelter_Exterior_32x32_14: 2934174996615697952
+      Shelter_Exterior_32x32_15: -864667437574702724
+      Shelter_Exterior_32x32_16: -5035151628876780312
+      Shelter_Exterior_32x32_17: 7971447605864919726
+      Shelter_Exterior_32x32_18: -457015464156895740
+      Shelter_Exterior_32x32_19: -1544219009154729281
+      Shelter_Exterior_32x32_2: -3065576436395342930
+      Shelter_Exterior_32x32_20: -3053587864379520052
+      Shelter_Exterior_32x32_21: -4807345222798756721
+      Shelter_Exterior_32x32_22: 3843414317105191605
+      Shelter_Exterior_32x32_23: -8438555685388771365
+      Shelter_Exterior_32x32_24: -4771594761122621048
+      Shelter_Exterior_32x32_25: 373090426322208594
+      Shelter_Exterior_32x32_26: 8842122454874137531
+      Shelter_Exterior_32x32_27: -5340561694335328835
+      Shelter_Exterior_32x32_28: -2614375219643448132
+      Shelter_Exterior_32x32_29: 1484463142085188522
+      Shelter_Exterior_32x32_3: -1714754234634756818
+      Shelter_Exterior_32x32_30: 4648811442573978781
+      Shelter_Exterior_32x32_31: -1769246475763932956
+      Shelter_Exterior_32x32_32: 3255317233540244756
+      Shelter_Exterior_32x32_33: 7513889362262668175
+      Shelter_Exterior_32x32_34: -169352462322547084
+      Shelter_Exterior_32x32_35: 7256864044354353662
+      Shelter_Exterior_32x32_36: -8711904438277133277
+      Shelter_Exterior_32x32_37: -8200718703677222166
+      Shelter_Exterior_32x32_38: -8803765286650602450
+      Shelter_Exterior_32x32_39: -3809338148363377541
+      Shelter_Exterior_32x32_4: 3957547440925544736
+      Shelter_Exterior_32x32_40: 1397715153131632645
+      Shelter_Exterior_32x32_41: 2807943000845346360
+      Shelter_Exterior_32x32_42: 6781013951239811493
+      Shelter_Exterior_32x32_43: 7669588773643284466
+      Shelter_Exterior_32x32_44: 9184445136720173533
+      Shelter_Exterior_32x32_45: 6739829433212915763
+      Shelter_Exterior_32x32_46: 2818859215772027825
+      Shelter_Exterior_32x32_47: -4311739733607075798
+      Shelter_Exterior_32x32_48: 5525073733494223105
+      Shelter_Exterior_32x32_49: 8788062549679265150
+      Shelter_Exterior_32x32_5: -3077266086910044138
+      Shelter_Exterior_32x32_50: 2032141198894417180
+      Shelter_Exterior_32x32_51: 5889939291125369024
+      Shelter_Exterior_32x32_52: -463210857822010378
+      Shelter_Exterior_32x32_53: -7199840594620221317
+      Shelter_Exterior_32x32_54: 5553858755508633941
+      Shelter_Exterior_32x32_55: 189012940673075615
+      Shelter_Exterior_32x32_56: 6104273438720256967
+      Shelter_Exterior_32x32_57: 9114842956117347245
+      Shelter_Exterior_32x32_58: -3745369083328337861
+      Shelter_Exterior_32x32_59: 8341560978481388057
+      Shelter_Exterior_32x32_6: 1674733479592732353
+      Shelter_Exterior_32x32_60: -6510184813826654551
+      Shelter_Exterior_32x32_61: -8444881940839289470
+      Shelter_Exterior_32x32_62: -4214634602122304616
+      Shelter_Exterior_32x32_63: 9066151527520094887
+      Shelter_Exterior_32x32_7: -2916043593492357359
+      Shelter_Exterior_32x32_8: -203793017270145156
+      Shelter_Exterior_32x32_9: 8540597592071324755
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

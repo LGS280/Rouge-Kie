@@ -112,6 +112,20 @@ public class MinimapManager : MonoBehaviour
         }
     }
 
+    private HashSet<KeyValuePair<Vector2Int, Vector2Int>> validConnections = new HashSet<KeyValuePair<Vector2Int, Vector2Int>>();
+    private Dictionary<string, MinimapCorridorUI> corridorUiDict = new Dictionary<string, MinimapCorridorUI>();
+
+    public bool IsConnected(Vector2Int a, Vector2Int b)
+    {
+        if (validConnections != null && validConnections.Count > 0)
+        {
+            return validConnections.Contains(new KeyValuePair<Vector2Int, Vector2Int>(a, b)) ||
+                   validConnections.Contains(new KeyValuePair<Vector2Int, Vector2Int>(b, a));
+        }
+
+        return roomControllers.ContainsKey(a) && roomControllers.ContainsKey(b);
+    }
+
     /// <summary>
     /// Khởi tạo lưới phòng Minimap dựa trên danh sách RoomController
     /// </summary>
@@ -123,6 +137,36 @@ public class MinimapManager : MonoBehaviour
             return;
         }
 
+        // Ép màu nền MinimapWindow về màu xanh mờ trong suốt nhẹ nhàng (Alpha = 0.22f)
+        if (container.parent != null)
+        {
+            Image parentBg = container.parent.GetComponent<Image>();
+            if (parentBg != null)
+            {
+                parentBg.color = new Color(0.05f, 0.08f, 0.15f, 0.22f);
+            }
+        }
+        GameObject winObj = GameObject.Find("MinimapWindow");
+        if (winObj != null)
+        {
+            Mask oldMask = winObj.GetComponent<Mask>();
+            if (oldMask != null)
+            {
+                if (Application.isPlaying) Destroy(oldMask);
+                else DestroyImmediate(oldMask);
+            }
+            if (winObj.GetComponent<RectMask2D>() == null)
+            {
+                winObj.AddComponent<RectMask2D>();
+            }
+
+            Image winBg = winObj.GetComponent<Image>();
+            if (winBg != null)
+            {
+                winBg.color = new Color(0.05f, 0.08f, 0.15f, 0.22f);
+            }
+        }
+
         // Xoá sạch các ô Minimap cũ
         foreach (Transform child in container)
         {
@@ -131,7 +175,19 @@ public class MinimapManager : MonoBehaviour
 
         roomControllers = new Dictionary<Vector2Int, RoomController>(rooms);
         roomUiDict.Clear();
+        corridorUiDict.Clear();
         currentRoom = null;
+
+        // Tải danh sách kết nối hành lang thực tế từ DungeonGenerator
+        var generator = Object.FindAnyObjectByType<DungeonGenerator>();
+        if (generator != null)
+        {
+            validConnections = generator.GetRoomConnections();
+        }
+        else
+        {
+            validConnections = BuildFallbackConnections();
+        }
 
         // Chỉ phân loại lại phòng tại runtime nếu chưa được phân loại bởi DungeonGenerator
         bool hasCategorizedRooms = false;
@@ -148,7 +204,28 @@ public class MinimapManager : MonoBehaviour
             RecategorizeRoomsRuntime();
         }
 
-        Debug.Log($"[MinimapManager] InitializeWithRooms count: {rooms.Count}");
+        Debug.Log($"[MinimapManager] InitializeWithRooms count: {rooms.Count}, connections: {validConnections.Count}");
+
+        // Tạo các thanh hành lang UI nối giữa các phòng kết nối với nhau
+        HashSet<string> createdCorridorKeys = new HashSet<string>();
+        foreach (var conn in validConnections)
+        {
+            Vector2Int posA = conn.Key;
+            Vector2Int posB = conn.Value;
+
+            string key = GetCorridorKey(posA, posB);
+            if (createdCorridorKeys.Contains(key)) continue;
+            createdCorridorKeys.Add(key);
+
+            if (roomControllers.ContainsKey(posA) && roomControllers.ContainsKey(posB))
+            {
+                MinimapCorridorUI corridorUI = CreateDynamicCorridorUI(posA, posB);
+                if (corridorUI != null)
+                {
+                    corridorUiDict.Add(key, corridorUI);
+                }
+            }
+        }
 
         // Tạo giao diện ô phòng cho từng phòng trong map
         foreach (var kvp in roomControllers)
@@ -160,23 +237,19 @@ public class MinimapManager : MonoBehaviour
 
             if (roomUiPrefab != null)
             {
-                // Tạo từ Prefab nếu được gán
                 GameObject obj = Instantiate(roomUiPrefab, container);
                 roomUI = obj.GetComponent<MinimapRoomUI>();
             }
             else
             {
-                // Tự động khởi tạo động (Self-healing fallback)
                 roomUI = CreateDynamicRoomUI(gridPos);
             }
 
             if (roomUI != null)
             {
-                // Thiết lập vị trí trên lưới UI
                 RectTransform rectTrans = roomUI.GetComponent<RectTransform>();
                 rectTrans.anchoredPosition = new Vector2(gridPos.x * roomSpacing, gridPos.y * roomSpacing);
 
-                // Lấy icon tương ứng với loại phòng
                 Sprite iconSprite = null;
                 switch (controller.roomType)
                 {
@@ -190,15 +263,13 @@ public class MinimapManager : MonoBehaviour
                         iconSprite = spriteChest;
                         break;
                     case RoomType.Portal:
-                        iconSprite = spriteBoss; // Sử dụng icon làm nổi bật phòng Cổng dịch chuyển
+                        iconSprite = spriteBoss;
                         break;
                 }
 
-                // Cấu hình sprite nền và icon phòng
                 roomUI.Setup(spriteRoom, iconSprite);
                 roomUiDict.Add(gridPos, roomUI);
 
-                // Tìm phòng xuất phát để đặt người chơi ban đầu
                 if (controller.roomType == RoomType.Start || gridPos == Vector2Int.zero)
                 {
                     currentRoom = controller;
@@ -207,28 +278,23 @@ public class MinimapManager : MonoBehaviour
             }
         }
 
-        // Tự động gán Start room nếu chưa tìm thấy
         if (currentRoom == null && roomControllers.TryGetValue(Vector2Int.zero, out RoomController startRoom))
         {
             currentRoom = startRoom;
             startRoom.isVisited = true;
         }
 
-        // Căn giữa Minimap vào phòng xuất phát ban đầu
         CenterMapOnCurrentRoom();
-
-        // Cập nhật trạng thái hiển thị toàn bộ map
         UpdateMinimap();
     }
 
     /// <summary>
-    /// Cập nhật hiển thị màu sắc, trạng thái các phòng và căn giữa người chơi
+    /// Cập nhật hiển thị màu sắc, trạng thái các phòng và hành lang nối
     /// </summary>
     public void UpdateMinimap()
     {
         if (roomControllers.Count == 0) return;
 
-        // Tập hợp các vị trí phòng đã đi qua
         HashSet<Vector2Int> visitedCoords = new HashSet<Vector2Int>();
         foreach (var kvp in roomControllers)
         {
@@ -238,7 +304,7 @@ public class MinimapManager : MonoBehaviour
             }
         }
 
-        // Cập nhật từng ô phòng
+        // Cập nhật từng ô phòng UI
         foreach (var kvp in roomUiDict)
         {
             Vector2Int gridPos = kvp.Key;
@@ -255,24 +321,119 @@ public class MinimapManager : MonoBehaviour
             bool isVisited = controller.isVisited;
             bool isCleared = controller.roomCleared;
 
-            // Xác định xem phòng này có kề cạnh phòng nào đã đi qua không
+            // CHỈ hiển thị ô kề cạnh nếu thực sự CÓ HÀNH LANG KẾT NỐI từ 1 phòng đã đi qua!
             bool isAdjacentToVisited = false;
             Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
             foreach (var dir in directions)
             {
-                if (visitedCoords.Contains(gridPos + dir))
+                Vector2Int vPos = gridPos + dir;
+                if (visitedCoords.Contains(vPos) && IsConnected(gridPos, vPos))
                 {
                     isAdjacentToVisited = true;
                     break;
                 }
             }
 
-            // Gọi logic hiển thị của phòng
             ui.SetState(isCurrent, isVisited, isCleared, isAdjacentToVisited);
         }
 
-        // Căn giữa Minimap vào vị trí người chơi hiện tại
-        CenterMapOnCurrentRoom();
+        // Cập nhật hiển thị từng thanh hành lang nối trên UI
+        foreach (var kvp in corridorUiDict)
+        {
+            string key = kvp.Key;
+            MinimapCorridorUI corridorUI = kvp.Value;
+            if (corridorUI == null) continue;
+
+            string[] parts = key.Split('_');
+            if (parts.Length == 2)
+            {
+                Vector2Int posA = ParseVector2Int(parts[0]);
+                Vector2Int posB = ParseVector2Int(parts[1]);
+
+                bool isAVisited = visitedCoords.Contains(posA);
+                bool isBVisited = visitedCoords.Contains(posB);
+
+                bool isVisible = isAVisited || isBVisited;
+                bool isBothVisited = isAVisited && isBVisited;
+
+                corridorUI.SetState(isVisible, isBothVisited);
+            }
+        }
+    }
+
+    private string GetCorridorKey(Vector2Int a, Vector2Int b)
+    {
+        if (a.x < b.x || (a.x == b.x && a.y < b.y))
+        {
+            return $"{a.x},{a.y}_{b.x},{b.y}";
+        }
+        return $"{b.x},{b.y}_{a.x},{a.y}";
+    }
+
+    private Vector2Int ParseVector2Int(string s)
+    {
+        string[] split = s.Split(',');
+        if (split.Length == 2 && int.TryParse(split[0], out int x) && int.TryParse(split[1], out int y))
+        {
+            return new Vector2Int(x, y);
+        }
+        return Vector2Int.zero;
+    }
+
+    private MinimapCorridorUI CreateDynamicCorridorUI(Vector2Int posA, Vector2Int posB)
+    {
+        string name = $"Corridor_{posA}_{posB}";
+        GameObject corridorObj = new GameObject(name, typeof(RectTransform));
+        corridorObj.transform.SetParent(container, false);
+        corridorObj.transform.SetAsFirstSibling(); // Đưa hành lang xuống lớp nền phía dưới (Render phía sau các ô phòng)
+
+        RectTransform rectTrans = corridorObj.GetComponent<RectTransform>();
+
+        Vector2 centerPos = new Vector2(
+            (posA.x + posB.x) * 0.5f * roomSpacing,
+            (posA.y + posB.y) * 0.5f * roomSpacing
+        );
+        rectTrans.anchoredPosition = centerPos;
+
+        bool isHorizontal = posA.y == posB.y;
+        float corridorLengthUI = roomSpacing * 0.40f; // Chiều dài vừa vặn ẩn bên dưới viền phòng
+        float corridorThicknessUI = 12f;              // Độ dày vừa vặn đẹp mắt (12px)
+
+        if (isHorizontal)
+        {
+            rectTrans.sizeDelta = new Vector2(corridorLengthUI, corridorThicknessUI);
+        }
+        else
+        {
+            rectTrans.sizeDelta = new Vector2(corridorThicknessUI, corridorLengthUI);
+        }
+
+        Image img = corridorObj.AddComponent<Image>();
+        img.type = Image.Type.Simple;
+        img.color = new Color(0.35f, 0.4f, 0.5f, 0.65f);
+
+        MinimapCorridorUI ui = corridorObj.AddComponent<MinimapCorridorUI>();
+        ui.corridorImage = img;
+
+        return ui;
+    }
+
+    private HashSet<KeyValuePair<Vector2Int, Vector2Int>> BuildFallbackConnections()
+    {
+        var result = new HashSet<KeyValuePair<Vector2Int, Vector2Int>>();
+        Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+        foreach (var pos in roomControllers.Keys)
+        {
+            foreach (var dir in dirs)
+            {
+                Vector2Int nPos = pos + dir;
+                if (roomControllers.ContainsKey(nPos))
+                {
+                    result.Add(new KeyValuePair<Vector2Int, Vector2Int>(pos, nPos));
+                }
+            }
+        }
+        return result;
     }
 
     /// <summary>
@@ -396,6 +557,17 @@ public class MinimapManager : MonoBehaviour
         {
             CreateAutoMinimapUI();
         }
+
+        GameObject windowObj = GameObject.Find("MinimapWindow");
+        if (windowObj != null)
+        {
+            Image bg = windowObj.GetComponent<Image>();
+            if (bg != null)
+            {
+                bg.color = new Color(0.05f, 0.08f, 0.15f, 0.22f);
+            }
+        }
+
         if (Instance != null)
         {
             Instance.InitializeMinimap();
@@ -451,13 +623,13 @@ public class MinimapManager : MonoBehaviour
         windowRect.sizeDelta = new Vector2(240, 240);
         windowRect.anchoredPosition = new Vector2(-20, -20); // Góc trên bên phải tuyệt đối
 
-        // Thêm nền đen mờ
+        // Thêm nền xanh mờ nhẹ nhàng và trong suốt (Alpha = 0.22f) để xuyên thấu sàn nhà
         Image windowBg = windowObj.AddComponent<Image>();
-        windowBg.color = new Color(0f, 0f, 0f, 0.4f);
+        windowBg.color = new Color(0.05f, 0.08f, 0.15f, 0.22f);
+        windowBg.raycastTarget = false;
 
-        // Thêm Mask để bo góc/cắt các phòng ngoài tầm nhìn
-        Mask mask = windowObj.AddComponent<Mask>();
-        mask.showMaskGraphic = true;
+        // Thêm RectMask2D để cắt các ô phòng tràn khung mượt mà không bị lỗi màu Stencil Shader của Mask cũ
+        windowObj.AddComponent<RectMask2D>();
 
         // 2. Tạo MinimapContainer
         GameObject containerObj = new GameObject("MinimapContainer", typeof(RectTransform));

@@ -1,0 +1,5455 @@
+fileFormatVersion: 2
+guid: b2633499be78c9248b449c0184227e33
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -8723141629375699566
+    second: Shelter_Furniture_32x32_Shadow_0
+  - first:
+      213: -5881473661458484859
+    second: Shelter_Furniture_32x32_Shadow_1
+  - first:
+      213: 2357934639222295017
+    second: Shelter_Furniture_32x32_Shadow_2
+  - first:
+      213: 7798581499852892940
+    second: Shelter_Furniture_32x32_Shadow_3
+  - first:
+      213: 2321337264734907086
+    second: Shelter_Furniture_32x32_Shadow_4
+  - first:
+      213: -714723205679303920
+    second: Shelter_Furniture_32x32_Shadow_5
+  - first:
+      213: 8994197691716374329
+    second: Shelter_Furniture_32x32_Shadow_6
+  - first:
+      213: 7915342284060706274
+    second: Shelter_Furniture_32x32_Shadow_7
+  - first:
+      213: -2864925268533433930
+    second: Shelter_Furniture_32x32_Shadow_8
+  - first:
+      213: -204992892107104915
+    second: Shelter_Furniture_32x32_Shadow_9
+  - first:
+      213: -5623412120481953366
+    second: Shelter_Furniture_32x32_Shadow_10
+  - first:
+      213: -6340921580591295507
+    second: Shelter_Furniture_32x32_Shadow_11
+  - first:
+      213: 2439975962779618384
+    second: Shelter_Furniture_32x32_Shadow_12
+  - first:
+      213: 287845729117809963
+    second: Shelter_Furniture_32x32_Shadow_13
+  - first:
+      213: 1923242503030326453
+    second: Shelter_Furniture_32x32_Shadow_14
+  - first:
+      213: -2613558681073793279
+    second: Shelter_Furniture_32x32_Shadow_15
+  - first:
+      213: 371259672239381414
+    second: Shelter_Furniture_32x32_Shadow_16
+  - first:
+      213: -3808888536704653373
+    second: Shelter_Furniture_32x32_Shadow_17
+  - first:
+      213: -4606911812169831332
+    second: Shelter_Furniture_32x32_Shadow_18
+  - first:
+      213: -5363202050751281153
+    second: Shelter_Furniture_32x32_Shadow_19
+  - first:
+      213: 9031998431326519948
+    second: Shelter_Furniture_32x32_Shadow_20
+  - first:
+      213: 1264391194666016274
+    second: Shelter_Furniture_32x32_Shadow_21
+  - first:
+      213: 8024723697375421376
+    second: Shelter_Furniture_32x32_Shadow_22
+  - first:
+      213: 3220473132843384626
+    second: Shelter_Furniture_32x32_Shadow_23
+  - first:
+      213: -4492324517589794532
+    second: Shelter_Furniture_32x32_Shadow_24
+  - first:
+      213: 7502209766874071892
+    second: Shelter_Furniture_32x32_Shadow_25
+  - first:
+      213: 3687235714317525927
+    second: Shelter_Furniture_32x32_Shadow_26
+  - first:
+      213: -8307599755720627622
+    second: Shelter_Furniture_32x32_Shadow_27
+  - first:
+      213: -5766583855092948195
+    second: Shelter_Furniture_32x32_Shadow_28
+  - first:
+      213: -3088516572038442548
+    second: Shelter_Furniture_32x32_Shadow_29
+  - first:
+      213: 5535951757070230047
+    second: Shelter_Furniture_32x32_Shadow_30
+  - first:
+      213: 6208006828612782916
+    second: Shelter_Furniture_32x32_Shadow_31
+  - first:
+      213: 6786445701172466161
+    second: Shelter_Furniture_32x32_Shadow_32
+  - first:
+      213: 824009031757325126
+    second: Shelter_Furniture_32x32_Shadow_33
+  - first:
+      213: -282101252901264621
+    second: Shelter_Furniture_32x32_Shadow_34
+  - first:
+      213: -3277003661732179029
+    second: Shelter_Furniture_32x32_Shadow_35
+  - first:
+      213: 785399791098341347
+    second: Shelter_Furniture_32x32_Shadow_36
+  - first:
+      213: -1531300449625254895
+    second: Shelter_Furniture_32x32_Shadow_37
+  - first:
+      213: -7997467581220765290
+    second: Shelter_Furniture_32x32_Shadow_38
+  - first:
+      213: -6452108182422890364
+    second: Shelter_Furniture_32x32_Shadow_39
+  - first:
+      213: 5002888491291462951
+    second: Shelter_Furniture_32x32_Shadow_40
+  - first:
+      213: 4067285311542074333
+    second: Shelter_Furniture_32x32_Shadow_41
+  - first:
+      213: 3078109801102094168
+    second: Shelter_Furniture_32x32_Shadow_42
+  - first:
+      213: 1976255261009266023
+    second: Shelter_Furniture_32x32_Shadow_43
+  - first:
+      213: 8801520697966399042
+    second: Shelter_Furniture_32x32_Shadow_44
+  - first:
+      213: -6614059405057071122
+    second: Shelter_Furniture_32x32_Shadow_45
+  - first:
+      213: 49591938686251428
+    second: Shelter_Furniture_32x32_Shadow_46
+  - first:
+      213: 3154582901551347831
+    second: Shelter_Furniture_32x32_Shadow_47
+  - first:
+      213: -8309640277962832971
+    second: Shelter_Furniture_32x32_Shadow_48
+  - first:
+      213: -4434181486590639670
+    second: Shelter_Furniture_32x32_Shadow_49
+  - first:
+      213: 6834300470287621617
+    second: Shelter_Furniture_32x32_Shadow_50
+  - first:
+      213: -5954881225790705493
+    second: Shelter_Furniture_32x32_Shadow_51
+  - first:
+      213: -29190966149360288
+    second: Shelter_Furniture_32x32_Shadow_52
+  - first:
+      213: 864321086922649830
+    second: Shelter_Furniture_32x32_Shadow_53
+  - first:
+      213: 5419516101486802345
+    second: Shelter_Furniture_32x32_Shadow_54
+  - first:
+      213: 705696635839840832
+    second: Shelter_Furniture_32x32_Shadow_55
+  - first:
+      213: 6121055167217533693
+    second: Shelter_Furniture_32x32_Shadow_56
+  - first:
+      213: 8109209374944531300
+    second: Shelter_Furniture_32x32_Shadow_57
+  - first:
+      213: 4118571923557862483
+    second: Shelter_Furniture_32x32_Shadow_58
+  - first:
+      213: 5591283514308124955
+    second: Shelter_Furniture_32x32_Shadow_59
+  - first:
+      213: 8641379408498769339
+    second: Shelter_Furniture_32x32_Shadow_60
+  - first:
+      213: -4701090082547497224
+    second: Shelter_Furniture_32x32_Shadow_61
+  - first:
+      213: -6917625740064427865
+    second: Shelter_Furniture_32x32_Shadow_62
+  - first:
+      213: 2490328564537601853
+    second: Shelter_Furniture_32x32_Shadow_63
+  - first:
+      213: 8494882326240985002
+    second: Shelter_Furniture_32x32_Shadow_64
+  - first:
+      213: -1909122499597302320
+    second: Shelter_Furniture_32x32_Shadow_65
+  - first:
+      213: -3143434655422540396
+    second: Shelter_Furniture_32x32_Shadow_66
+  - first:
+      213: -3014471928325253338
+    second: Shelter_Furniture_32x32_Shadow_67
+  - first:
+      213: 1812130384589895185
+    second: Shelter_Furniture_32x32_Shadow_68
+  - first:
+      213: -1598945135085387224
+    second: Shelter_Furniture_32x32_Shadow_69
+  - first:
+      213: -6719423981497921620
+    second: Shelter_Furniture_32x32_Shadow_70
+  - first:
+      213: -8928810599569903210
+    second: Shelter_Furniture_32x32_Shadow_71
+  - first:
+      213: -118644417936267311
+    second: Shelter_Furniture_32x32_Shadow_72
+  - first:
+      213: 3832851783124382851
+    second: Shelter_Furniture_32x32_Shadow_73
+  - first:
+      213: 4995937902947791663
+    second: Shelter_Furniture_32x32_Shadow_74
+  - first:
+      213: 8619795459197446001
+    second: Shelter_Furniture_32x32_Shadow_75
+  - first:
+      213: -5907527417627234722
+    second: Shelter_Furniture_32x32_Shadow_76
+  - first:
+      213: 3981969777227406537
+    second: Shelter_Furniture_32x32_Shadow_77
+  - first:
+      213: 1932850692428424680
+    second: Shelter_Furniture_32x32_Shadow_78
+  - first:
+      213: -93854279897256524
+    second: Shelter_Furniture_32x32_Shadow_79
+  - first:
+      213: -3870093156608403493
+    second: Shelter_Furniture_32x32_Shadow_80
+  - first:
+      213: -6511233315312829057
+    second: Shelter_Furniture_32x32_Shadow_81
+  - first:
+      213: -3637768028541655825
+    second: Shelter_Furniture_32x32_Shadow_82
+  - first:
+      213: 2639449967018453177
+    second: Shelter_Furniture_32x32_Shadow_83
+  - first:
+      213: -2034754659619442148
+    second: Shelter_Furniture_32x32_Shadow_84
+  - first:
+      213: 5743444965019160401
+    second: Shelter_Furniture_32x32_Shadow_85
+  - first:
+      213: -1007846980943715252
+    second: Shelter_Furniture_32x32_Shadow_86
+  - first:
+      213: 5586079324591805604
+    second: Shelter_Furniture_32x32_Shadow_87
+  - first:
+      213: -926942608793324796
+    second: Shelter_Furniture_32x32_Shadow_88
+  - first:
+      213: 79951825817311516
+    second: Shelter_Furniture_32x32_Shadow_89
+  - first:
+      213: 4891906742467184150
+    second: Shelter_Furniture_32x32_Shadow_90
+  - first:
+      213: 5710142371439138810
+    second: Shelter_Furniture_32x32_Shadow_91
+  - first:
+      213: -4867195617348019913
+    second: Shelter_Furniture_32x32_Shadow_92
+  - first:
+      213: 6605125269145284597
+    second: Shelter_Furniture_32x32_Shadow_93
+  - first:
+      213: 8222648731732530635
+    second: Shelter_Furniture_32x32_Shadow_94
+  - first:
+      213: 7679708824666478928
+    second: Shelter_Furniture_32x32_Shadow_95
+  - first:
+      213: -5595570022729111942
+    second: Shelter_Furniture_32x32_Shadow_96
+  - first:
+      213: -8008943611244870551
+    second: Shelter_Furniture_32x32_Shadow_97
+  - first:
+      213: -7747597778724987268
+    second: Shelter_Furniture_32x32_Shadow_98
+  - first:
+      213: -1327744014056643975
+    second: Shelter_Furniture_32x32_Shadow_99
+  - first:
+      213: 6085135832617006605
+    second: Shelter_Furniture_32x32_Shadow_100
+  - first:
+      213: -2356883457445297422
+    second: Shelter_Furniture_32x32_Shadow_101
+  - first:
+      213: -8393566583042318394
+    second: Shelter_Furniture_32x32_Shadow_102
+  - first:
+      213: 7432558178518531983
+    second: Shelter_Furniture_32x32_Shadow_103
+  - first:
+      213: -5313172708236451492
+    second: Shelter_Furniture_32x32_Shadow_104
+  - first:
+      213: -8080627431508390096
+    second: Shelter_Furniture_32x32_Shadow_105
+  - first:
+      213: -7143480700351588636
+    second: Shelter_Furniture_32x32_Shadow_106
+  - first:
+      213: 553328078688446060
+    second: Shelter_Furniture_32x32_Shadow_107
+  - first:
+      213: -1190082458417302071
+    second: Shelter_Furniture_32x32_Shadow_108
+  - first:
+      213: 7599459495816678960
+    second: Shelter_Furniture_32x32_Shadow_109
+  - first:
+      213: -4451072864569826231
+    second: Shelter_Furniture_32x32_Shadow_110
+  - first:
+      213: 6354303838427688113
+    second: Shelter_Furniture_32x32_Shadow_111
+  - first:
+      213: -6971745927491381456
+    second: Shelter_Furniture_32x32_Shadow_112
+  - first:
+      213: -1263675038008112853
+    second: Shelter_Furniture_32x32_Shadow_113
+  - first:
+      213: -3055921504040667987
+    second: Shelter_Furniture_32x32_Shadow_114
+  - first:
+      213: -1373403370773233160
+    second: Shelter_Furniture_32x32_Shadow_115
+  - first:
+      213: 9151411381982284102
+    second: Shelter_Furniture_32x32_Shadow_116
+  - first:
+      213: 3793237204208497845
+    second: Shelter_Furniture_32x32_Shadow_117
+  - first:
+      213: -6155928496361576682
+    second: Shelter_Furniture_32x32_Shadow_118
+  - first:
+      213: -5972391498978477940
+    second: Shelter_Furniture_32x32_Shadow_119
+  - first:
+      213: 4124355826286195730
+    second: Shelter_Furniture_32x32_Shadow_120
+  - first:
+      213: -2618601406083115153
+    second: Shelter_Furniture_32x32_Shadow_121
+  - first:
+      213: 4349988403646708919
+    second: Shelter_Furniture_32x32_Shadow_122
+  - first:
+      213: 7054742056901010217
+    second: Shelter_Furniture_32x32_Shadow_123
+  - first:
+      213: 3332421729581431480
+    second: Shelter_Furniture_32x32_Shadow_124
+  - first:
+      213: 8030101284677513784
+    second: Shelter_Furniture_32x32_Shadow_125
+  - first:
+      213: -2018232367308949812
+    second: Shelter_Furniture_32x32_Shadow_126
+  - first:
+      213: -4876213314355435872
+    second: Shelter_Furniture_32x32_Shadow_127
+  - first:
+      213: 7751011690221974747
+    second: Shelter_Furniture_32x32_Shadow_128
+  - first:
+      213: -7503063742664196541
+    second: Shelter_Furniture_32x32_Shadow_129
+  - first:
+      213: -4125454789375183134
+    second: Shelter_Furniture_32x32_Shadow_130
+  - first:
+      213: -5251863389094586145
+    second: Shelter_Furniture_32x32_Shadow_131
+  - first:
+      213: -1168573272788327790
+    second: Shelter_Furniture_32x32_Shadow_132
+  - first:
+      213: -4257215735143301085
+    second: Shelter_Furniture_32x32_Shadow_133
+  - first:
+      213: 2838663885572526867
+    second: Shelter_Furniture_32x32_Shadow_134
+  - first:
+      213: 4476104935397438817
+    second: Shelter_Furniture_32x32_Shadow_135
+  - first:
+      213: 912677553346277475
+    second: Shelter_Furniture_32x32_Shadow_136
+  - first:
+      213: 3330470902498271007
+    second: Shelter_Furniture_32x32_Shadow_137
+  - first:
+      213: 8251957679429028993
+    second: Shelter_Furniture_32x32_Shadow_138
+  - first:
+      213: -7017044127469996102
+    second: Shelter_Furniture_32x32_Shadow_139
+  - first:
+      213: 7665145690861543353
+    second: Shelter_Furniture_32x32_Shadow_140
+  - first:
+      213: -1639124351343977979
+    second: Shelter_Furniture_32x32_Shadow_141
+  - first:
+      213: 461653023132905887
+    second: Shelter_Furniture_32x32_Shadow_142
+  - first:
+      213: 857304069748107544
+    second: Shelter_Furniture_32x32_Shadow_143
+  - first:
+      213: -3785833829468973501
+    second: Shelter_Furniture_32x32_Shadow_144
+  - first:
+      213: -4214649981955021001
+    second: Shelter_Furniture_32x32_Shadow_145
+  - first:
+      213: -8620369614067097548
+    second: Shelter_Furniture_32x32_Shadow_146
+  - first:
+      213: -1682496078181232090
+    second: Shelter_Furniture_32x32_Shadow_147
+  - first:
+      213: -1575212736507196835
+    second: Shelter_Furniture_32x32_Shadow_148
+  - first:
+      213: -8814391817240315931
+    second: Shelter_Furniture_32x32_Shadow_149
+  - first:
+      213: -4860833049677827966
+    second: Shelter_Furniture_32x32_Shadow_150
+  - first:
+      213: -5207595434913249051
+    second: Shelter_Furniture_32x32_Shadow_151
+  - first:
+      213: 4485764218737813390
+    second: Shelter_Furniture_32x32_Shadow_152
+  - first:
+      213: -6332319838956182934
+    second: Shelter_Furniture_32x32_Shadow_153
+  - first:
+      213: 4286174647623372156
+    second: Shelter_Furniture_32x32_Shadow_154
+  - first:
+      213: -7145251955868342668
+    second: Shelter_Furniture_32x32_Shadow_155
+  - first:
+      213: 6315769396826087965
+    second: Shelter_Furniture_32x32_Shadow_156
+  - first:
+      213: -5481597770050330551
+    second: Shelter_Furniture_32x32_Shadow_157
+  - first:
+      213: -7991644799896742889
+    second: Shelter_Furniture_32x32_Shadow_158
+  - first:
+      213: 4091883433051565004
+    second: Shelter_Furniture_32x32_Shadow_159
+  - first:
+      213: -5033895442054129725
+    second: Shelter_Furniture_32x32_Shadow_160
+  - first:
+      213: 8333995743644981984
+    second: Shelter_Furniture_32x32_Shadow_161
+  - first:
+      213: 509831677393789155
+    second: Shelter_Furniture_32x32_Shadow_162
+  - first:
+      213: -7055209063490476795
+    second: Shelter_Furniture_32x32_Shadow_163
+  - first:
+      213: -8140193773395839927
+    second: Shelter_Furniture_32x32_Shadow_164
+  - first:
+      213: 5598996395797495583
+    second: Shelter_Furniture_32x32_Shadow_165
+  - first:
+      213: 2266344245866579285
+    second: Shelter_Furniture_32x32_Shadow_166
+  - first:
+      213: 1314522041580919344
+    second: Shelter_Furniture_32x32_Shadow_167
+  - first:
+      213: 6917681970102767974
+    second: Shelter_Furniture_32x32_Shadow_168
+  - first:
+      213: -4803420152270131788
+    second: Shelter_Furniture_32x32_Shadow_169
+  - first:
+      213: 2844001945861571282
+    second: Shelter_Furniture_32x32_Shadow_170
+  - first:
+      213: -5581103453999960354
+    second: Shelter_Furniture_32x32_Shadow_171
+  - first:
+      213: 5701735667926931652
+    second: Shelter_Furniture_32x32_Shadow_172
+  - first:
+      213: -3084582931468216772
+    second: Shelter_Furniture_32x32_Shadow_173
+  - first:
+      213: 521662700800895690
+    second: Shelter_Furniture_32x32_Shadow_174
+  - first:
+      213: -3178975080401529062
+    second: Shelter_Furniture_32x32_Shadow_175
+  - first:
+      213: -4791386260582552714
+    second: Shelter_Furniture_32x32_Shadow_176
+  - first:
+      213: 6547313072495153994
+    second: Shelter_Furniture_32x32_Shadow_177
+  - first:
+      213: -105225939401603501
+    second: Shelter_Furniture_32x32_Shadow_178
+  - first:
+      213: -8805047707954325513
+    second: Shelter_Furniture_32x32_Shadow_179
+  - first:
+      213: 3487903717256170354
+    second: Shelter_Furniture_32x32_Shadow_180
+  - first:
+      213: 4977070987872808922
+    second: Shelter_Furniture_32x32_Shadow_181
+  - first:
+      213: 5292376377455408265
+    second: Shelter_Furniture_32x32_Shadow_182
+  - first:
+      213: -2196728674410849734
+    second: Shelter_Furniture_32x32_Shadow_183
+  - first:
+      213: -7073039829092639932
+    second: Shelter_Furniture_32x32_Shadow_184
+  - first:
+      213: 8500445087721853031
+    second: Shelter_Furniture_32x32_Shadow_185
+  - first:
+      213: 3037928629293889962
+    second: Shelter_Furniture_32x32_Shadow_186
+  - first:
+      213: 5685672138305928846
+    second: Shelter_Furniture_32x32_Shadow_187
+  - first:
+      213: -7107451910854787015
+    second: Shelter_Furniture_32x32_Shadow_188
+  - first:
+      213: -8790757463673956917
+    second: Shelter_Furniture_32x32_Shadow_189
+  - first:
+      213: 652099851340717007
+    second: Shelter_Furniture_32x32_Shadow_190
+  - first:
+      213: -4787991931624875274
+    second: Shelter_Furniture_32x32_Shadow_191
+  - first:
+      213: 617757200833576409
+    second: Shelter_Furniture_32x32_Shadow_192
+  - first:
+      213: -3108370815031979496
+    second: Shelter_Furniture_32x32_Shadow_193
+  - first:
+      213: -4687121011302481159
+    second: Shelter_Furniture_32x32_Shadow_194
+  - first:
+      213: -6853631359991947641
+    second: Shelter_Furniture_32x32_Shadow_195
+  - first:
+      213: 6994414952586016822
+    second: Shelter_Furniture_32x32_Shadow_196
+  - first:
+      213: -8135399379637520462
+    second: Shelter_Furniture_32x32_Shadow_197
+  - first:
+      213: 8950487368438240889
+    second: Shelter_Furniture_32x32_Shadow_198
+  - first:
+      213: 6391383029309389160
+    second: Shelter_Furniture_32x32_Shadow_199
+  - first:
+      213: 6180745811924758387
+    second: Shelter_Furniture_32x32_Shadow_200
+  - first:
+      213: 8353624701377422215
+    second: Shelter_Furniture_32x32_Shadow_201
+  - first:
+      213: -3429222983558697916
+    second: Shelter_Furniture_32x32_Shadow_202
+  - first:
+      213: -6036584621104085801
+    second: Shelter_Furniture_32x32_Shadow_203
+  - first:
+      213: -6580896363210787217
+    second: Shelter_Furniture_32x32_Shadow_204
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_0
+      rect:
+        serializedVersion: 2
+        x: 6
+        y: 480
+        width: 20
+        height: 19
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 295a3afb7ec21f680800000000000000
+      internalID: -8723141629375699566
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_1
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 480
+        width: 14
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 58173f4cddec06ea0800000000000000
+      internalID: -5881473661458484859
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_2
+      rect:
+        serializedVersion: 2
+        x: 73
+        y: 480
+        width: 14
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9e90f6ebf0119b020800000000000000
+      internalID: 2357934639222295017
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_3
+      rect:
+        serializedVersion: 2
+        x: 103
+        y: 453
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c0b2aa23e802a3c60800000000000000
+      internalID: 7798581499852892940
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_4
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 454
+        width: 18
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ecaa66c71fb073020800000000000000
+      internalID: 2321337264734907086
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_5
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 452
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 013b1ccf70bc416f0800000000000000
+      internalID: -714723205679303920
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_6
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 452
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 93f8466b52fc1dc70800000000000000
+      internalID: 8994197691716374329
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_7
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 448
+        width: 32
+        height: 39
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2e5411dbed1f8dd60800000000000000
+      internalID: 7915342284060706274
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_8
+      rect:
+        serializedVersion: 2
+        x: 261
+        y: 448
+        width: 22
+        height: 40
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6b92605b5adbd38d0800000000000000
+      internalID: -2864925268533433930
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_9
+      rect:
+        serializedVersion: 2
+        x: 296
+        y: 423
+        width: 48
+        height: 70
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d6dd97cfc08b72df0800000000000000
+      internalID: -204992892107104915
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_10
+      rect:
+        serializedVersion: 2
+        x: 359
+        y: 423
+        width: 18
+        height: 85
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aa90c057870a5f1b0800000000000000
+      internalID: -5623412120481953366
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_11
+      rect:
+        serializedVersion: 2
+        x: 391
+        y: 423
+        width: 18
+        height: 89
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: de35f380b658008a0800000000000000
+      internalID: -6340921580591295507
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_12
+      rect:
+        serializedVersion: 2
+        x: 421
+        y: 480
+        width: 22
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 05c88f9e5398cd120800000000000000
+      internalID: 2439975962779618384
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_13
+      rect:
+        serializedVersion: 2
+        x: 455
+        y: 481
+        width: 50
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b2d2e226a22aef300800000000000000
+      internalID: 287845729117809963
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_14
+      rect:
+        serializedVersion: 2
+        x: 515
+        y: 480
+        width: 26
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5b44e02eddab0ba10800000000000000
+      internalID: 1923242503030326453
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_15
+      rect:
+        serializedVersion: 2
+        x: 545
+        y: 416
+        width: 30
+        height: 92
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 10745fe0a36cabbd0800000000000000
+      internalID: -2613558681073793279
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_16
+      rect:
+        serializedVersion: 2
+        x: 580
+        y: 416
+        width: 56
+        height: 75
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6ab914374baf62500800000000000000
+      internalID: 371259672239381414
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_17
+      rect:
+        serializedVersion: 2
+        x: 6
+        y: 448
+        width: 20
+        height: 30
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3c769a46e0c142bc0800000000000000
+      internalID: -3808888536704653373
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_18
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 448
+        width: 14
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c5ce0148d16f010c0800000000000000
+      internalID: -4606911812169831332
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_19
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 416
+        width: 14
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ff7c25a76241295b0800000000000000
+      internalID: -5363202050751281153
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_20
+      rect:
+        serializedVersion: 2
+        x: 73
+        y: 448
+        width: 14
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c824a1f38ba185d70800000000000000
+      internalID: 9031998431326519948
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_21
+      rect:
+        serializedVersion: 2
+        x: 73
+        y: 416
+        width: 14
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 21e133fa7150c8110800000000000000
+      internalID: 1264391194666016274
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_22
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 415
+        width: 34
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0c3a8ba9fab8d5f60800000000000000
+      internalID: 8024723697375421376
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_23
+      rect:
+        serializedVersion: 2
+        x: 419
+        y: 417
+        width: 26
+        height: 46
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 23fb1d3604b61bc20800000000000000
+      internalID: 3220473132843384626
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_24
+      rect:
+        serializedVersion: 2
+        x: 449
+        y: 416
+        width: 30
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c11484117ae08a1c0800000000000000
+      internalID: -4492324517589794532
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_25
+      rect:
+        serializedVersion: 2
+        x: 485
+        y: 416
+        width: 54
+        height: 45
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 453cef8d8043d1860800000000000000
+      internalID: 7502209766874071892
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_26
+      rect:
+        serializedVersion: 2
+        x: 6
+        y: 416
+        width: 20
+        height: 30
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7a3a70ba851bb2330800000000000000
+      internalID: 3687235714317525927
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_27
+      rect:
+        serializedVersion: 2
+        x: 103
+        y: 389
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a5a6628a90a75bc80800000000000000
+      internalID: -8307599755720627622
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_28
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 390
+        width: 18
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d13aea5598af8ffa0800000000000000
+      internalID: -5766583855092948195
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_29
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 388
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cc1ddb89a826325d0800000000000000
+      internalID: -3088516572038442548
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_30
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 388
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f12eed5dac6a3dc40800000000000000
+      internalID: 5535951757070230047
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_31
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 384
+        width: 32
+        height: 39
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 44b0aa6b155472650800000000000000
+      internalID: 6208006828612782916
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_32
+      rect:
+        serializedVersion: 2
+        x: 265
+        y: 359
+        width: 48
+        height: 57
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1f19cd9b86c4e2e50800000000000000
+      internalID: 6786445701172466161
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_33
+      rect:
+        serializedVersion: 2
+        x: 421
+        y: 384
+        width: 22
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 643eb9d39d77f6b00800000000000000
+      internalID: 824009031757325126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_34
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 384
+        width: 21
+        height: 29
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 313a026b766c51cf0800000000000000
+      internalID: -282101252901264621
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_35
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 386
+        width: 17
+        height: 22
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ba39cce288eb582d0800000000000000
+      internalID: -3277003661732179029
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_36
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 386
+        width: 17
+        height: 22
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3e72513e2fc46ea00800000000000000
+      internalID: 785399791098341347
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_37
+      rect:
+        serializedVersion: 2
+        x: 325
+        y: 354
+        width: 22
+        height: 58
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 114d0bfaa5abfbae0800000000000000
+      internalID: -1531300449625254895
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_38
+      rect:
+        serializedVersion: 2
+        x: 357
+        y: 354
+        width: 22
+        height: 58
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 69142a67b99430190800000000000000
+      internalID: -7997467581220765290
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_39
+      rect:
+        serializedVersion: 2
+        x: 399
+        y: 354
+        width: 18
+        height: 59
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 488da46fac18576a0800000000000000
+      internalID: -6452108182422890364
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_40
+      rect:
+        serializedVersion: 2
+        x: 455
+        y: 385
+        width: 50
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 72d415e8394dd6540800000000000000
+      internalID: 5002888491291462951
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_41
+      rect:
+        serializedVersion: 2
+        x: 515
+        y: 384
+        width: 26
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ddb11a20176e17830800000000000000
+      internalID: 4067285311542074333
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_42
+      rect:
+        serializedVersion: 2
+        x: 545
+        y: 320
+        width: 30
+        height: 92
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 85fa65a3e84a7ba20800000000000000
+      internalID: 3078109801102094168
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_43
+      rect:
+        serializedVersion: 2
+        x: 581
+        y: 320
+        width: 54
+        height: 75
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 76544f170b11d6b10800000000000000
+      internalID: 1976255261009266023
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_44
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 373
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 24e098d3178452a70800000000000000
+      internalID: 8801520697966399042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_45
+      rect:
+        serializedVersion: 2
+        x: 18
+        y: 369
+        width: 12
+        height: 13
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ee7ed3e83042634a0800000000000000
+      internalID: -6614059405057071122
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_46
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 354
+        width: 17
+        height: 22
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4a1fd110b9f20b000800000000000000
+      internalID: 49591938686251428
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_47
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 354
+        width: 17
+        height: 22
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7783d7d6f6457cb20800000000000000
+      internalID: 3154582901551347831
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_48
+      rect:
+        serializedVersion: 2
+        x: 449
+        y: 320
+        width: 30
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5b34fbc813a3eac80800000000000000
+      internalID: -8309640277962832971
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_49
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 325
+        width: 14
+        height: 18
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ac1c6266e6f9672c0800000000000000
+      internalID: -4434181486590639670
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_50
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 325
+        width: 14
+        height: 18
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1fd57cb611058de50800000000000000
+      internalID: 6834300470287621617
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_51
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 323
+        width: 17
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ba03a1153130c5da0800000000000000
+      internalID: -5954881225790705493
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_52
+      rect:
+        serializedVersion: 2
+        x: 103
+        y: 325
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 065540098fa489ff0800000000000000
+      internalID: -29190966149360288
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_53
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 326
+        width: 18
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6e077edf27faefb00800000000000000
+      internalID: 864321086922649830
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_54
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 324
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9a571a33e2df53b40800000000000000
+      internalID: 5419516101486802345
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_55
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 324
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0420c62f9532bc900800000000000000
+      internalID: 705696635839840832
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_56
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 320
+        width: 32
+        height: 39
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: df2029c6e3b52f450800000000000000
+      internalID: 6121055167217533693
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_57
+      rect:
+        serializedVersion: 2
+        x: 267
+        y: 320
+        width: 10
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 46316da46f2b98070800000000000000
+      internalID: 8109209374944531300
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_58
+      rect:
+        serializedVersion: 2
+        x: 297
+        y: 320
+        width: 14
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 35c4095e75b182930800000000000000
+      internalID: 4118571923557862483
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_59
+      rect:
+        serializedVersion: 2
+        x: 325
+        y: 288
+        width: 22
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b1165dc7bba389d40800000000000000
+      internalID: 5591283514308124955
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_60
+      rect:
+        serializedVersion: 2
+        x: 358
+        y: 288
+        width: 22
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bbdb1fcb9c85ce770800000000000000
+      internalID: 8641379408498769339
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_61
+      rect:
+        serializedVersion: 2
+        x: 387
+        y: 290
+        width: 30
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f605a43a7f52ceb0800000000000000
+      internalID: -4701090082547497224
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_62
+      rect:
+        serializedVersion: 2
+        x: 419
+        y: 321
+        width: 26
+        height: 46
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7a07c526a08afff90800000000000000
+      internalID: -6917625740064427865
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_63
+      rect:
+        serializedVersion: 2
+        x: 485
+        y: 320
+        width: 54
+        height: 45
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d3fa54792ac6f8220800000000000000
+      internalID: 2490328564537601853
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_64
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 293
+        width: 14
+        height: 17
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aaf7658c772e3e570800000000000000
+      internalID: 8494882326240985002
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_65
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 289
+        width: 18
+        height: 29
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0d50cca933f6185e0800000000000000
+      internalID: -1909122499597302320
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_66
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 287
+        width: 18
+        height: 34
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 49513e4e5d64064d0800000000000000
+      internalID: -3143434655422540396
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_67
+      rect:
+        serializedVersion: 2
+        x: 103
+        y: 261
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 62759c6a0c17a26d0800000000000000
+      internalID: -3014471928325253338
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_68
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 262
+        width: 18
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1163c24dbfaf52910800000000000000
+      internalID: 1812130384589895185
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_69
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 260
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 82285e70fd76fc9e0800000000000000
+      internalID: -1598945135085387224
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_70
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 260
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: caf43976d7fcfb2a0800000000000000
+      internalID: -6719423981497921620
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_71
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 256
+        width: 32
+        height: 39
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 691b4e9011e761480800000000000000
+      internalID: -8928810599569903210
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_72
+      rect:
+        serializedVersion: 2
+        x: 265
+        y: 288
+        width: 14
+        height: 20
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1d7635ec78d7a5ef0800000000000000
+      internalID: -118644417936267311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_73
+      rect:
+        serializedVersion: 2
+        x: 296
+        y: 288
+        width: 16
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 384f9d1b366013530800000000000000
+      internalID: 3832851783124382851
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_74
+      rect:
+        serializedVersion: 2
+        x: 421
+        y: 288
+        width: 22
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f23fc199d03255540800000000000000
+      internalID: 4995937902947791663
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_75
+      rect:
+        serializedVersion: 2
+        x: 456
+        y: 289
+        width: 50
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1772dfdec4aaf9770800000000000000
+      internalID: 8619795459197446001
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_76
+      rect:
+        serializedVersion: 2
+        x: 515
+        y: 288
+        width: 26
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e5ea273fc1f340ea0800000000000000
+      internalID: -5907527417627234722
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_77
+      rect:
+        serializedVersion: 2
+        x: 545
+        y: 224
+        width: 30
+        height: 92
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9cc1bfd3a6cc24730800000000000000
+      internalID: 3981969777227406537
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_78
+      rect:
+        serializedVersion: 2
+        x: 581
+        y: 224
+        width: 54
+        height: 75
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8e5601ec67dd2da10800000000000000
+      internalID: 1932850692428424680
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_79
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 260
+        width: 14
+        height: 18
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4bde21a970092bef0800000000000000
+      internalID: -93854279897256524
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_80
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 255
+        width: 18
+        height: 34
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bd79fa857caaa4ac0800000000000000
+      internalID: -3870093156608403493
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_81
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 257
+        width: 18
+        height: 29
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f7df6173cc373a5a0800000000000000
+      internalID: -6511233315312829057
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_82
+      rect:
+        serializedVersion: 2
+        x: 264
+        y: 264
+        width: 18
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fe46083704d048dc0800000000000000
+      internalID: -3637768028541655825
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_83
+      rect:
+        serializedVersion: 2
+        x: 296
+        y: 264
+        width: 18
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9b82d86b2c531a420800000000000000
+      internalID: 2639449967018453177
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_84
+      rect:
+        serializedVersion: 2
+        x: 321
+        y: 225
+        width: 30
+        height: 61
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c12ff4cea6913c3e0800000000000000
+      internalID: -2034754659619442148
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_85
+      rect:
+        serializedVersion: 2
+        x: 419
+        y: 225
+        width: 26
+        height: 46
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 15f09fef3c0d4bf40800000000000000
+      internalID: 5743444965019160401
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_86
+      rect:
+        serializedVersion: 2
+        x: 449
+        y: 224
+        width: 30
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c4466e8b2886302f0800000000000000
+      internalID: -1007846980943715252
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_87
+      rect:
+        serializedVersion: 2
+        x: 485
+        y: 224
+        width: 54
+        height: 45
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4a4d275ac8db58d40800000000000000
+      internalID: 5586079324591805604
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_88
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 229
+        width: 14
+        height: 18
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 40333b3cb96d223f0800000000000000
+      internalID: -926942608793324796
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_89
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 224
+        width: 22
+        height: 20
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c191cf013cb0c1100800000000000000
+      internalID: 79951825817311516
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_90
+      rect:
+        serializedVersion: 2
+        x: 69
+        y: 224
+        width: 22
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 616481b834b83e340800000000000000
+      internalID: 4891906742467184150
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_91
+      rect:
+        serializedVersion: 2
+        x: 103
+        y: 197
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: af75982bb308e3f40800000000000000
+      internalID: 5710142371439138810
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_92
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 198
+        width: 18
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 73912af9f5f347cb0800000000000000
+      internalID: -4867195617348019913
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_93
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 196
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5ff6c54df6e1aab50800000000000000
+      internalID: 6605125269145284597
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_94
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 196
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bc5dbbfb477bc1270800000000000000
+      internalID: 8222648731732530635
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_95
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 192
+        width: 32
+        height: 39
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0599da8bc7ec39a60800000000000000
+      internalID: 7679708824666478928
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_96
+      rect:
+        serializedVersion: 2
+        x: 264
+        y: 224
+        width: 18
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a76286ff5ba8852b0800000000000000
+      internalID: -5595570022729111942
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_97
+      rect:
+        serializedVersion: 2
+        x: 296
+        y: 224
+        width: 18
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9648d9108348ad090800000000000000
+      internalID: -8008943611244870551
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_98
+      rect:
+        serializedVersion: 2
+        x: 356
+        y: 226
+        width: 56
+        height: 37
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c7edd786ed00b7490800000000000000
+      internalID: -7747597778724987268
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_99
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 202
+        width: 33
+        height: 12
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 972a0899ad7e29de0800000000000000
+      internalID: -1327744014056643975
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_100
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 192
+        width: 22
+        height: 20
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d063321acceb27450800000000000000
+      internalID: 6085135832617006605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_101
+      rect:
+        serializedVersion: 2
+        x: 69
+        y: 192
+        width: 22
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2f28af59bfaaa4fd0800000000000000
+      internalID: -2356883457445297422
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_102
+      rect:
+        serializedVersion: 2
+        x: 264
+        y: 201
+        width: 18
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6cf5c2be9af048b80800000000000000
+      internalID: -8393566583042318394
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_103
+      rect:
+        serializedVersion: 2
+        x: 296
+        y: 201
+        width: 18
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f8f7503b840c52760800000000000000
+      internalID: 7432558178518531983
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_104
+      rect:
+        serializedVersion: 2
+        x: 321
+        y: 161
+        width: 30
+        height: 61
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c51244f7291d346b0800000000000000
+      internalID: -5313172708236451492
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_105
+      rect:
+        serializedVersion: 2
+        x: 421
+        y: 192
+        width: 22
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 03f4aaef928dbdf80800000000000000
+      internalID: -8080627431508390096
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_106
+      rect:
+        serializedVersion: 2
+        x: 457
+        y: 193
+        width: 50
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4e65fab96224ddc90800000000000000
+      internalID: -7143480700351588636
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_107
+      rect:
+        serializedVersion: 2
+        x: 515
+        y: 192
+        width: 26
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c666976b4f0dda700800000000000000
+      internalID: 553328078688446060
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_108
+      rect:
+        serializedVersion: 2
+        x: 545
+        y: 128
+        width: 30
+        height: 92
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9c5fc943f4afb7fe0800000000000000
+      internalID: -1190082458417302071
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_109
+      rect:
+        serializedVersion: 2
+        x: 581
+        y: 128
+        width: 54
+        height: 75
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 03e4f15d524b67960800000000000000
+      internalID: 7599459495816678960
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_110
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 159
+        width: 12
+        height: 34
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9446fedffcc9a32c0800000000000000
+      internalID: -4451072864569826231
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_111
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 160
+        width: 22
+        height: 20
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1bc226caca50f2850800000000000000
+      internalID: 6354303838427688113
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_112
+      rect:
+        serializedVersion: 2
+        x: 69
+        y: 160
+        width: 22
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 037999f44026f3f90800000000000000
+      internalID: -6971745927491381456
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_113
+      rect:
+        serializedVersion: 2
+        x: 103
+        y: 133
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b298ff78f36867ee0800000000000000
+      internalID: -1263675038008112853
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_114
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 134
+        width: 18
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: da4bd22459f2795d0800000000000000
+      internalID: -3055921504040667987
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_115
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 132
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f1ccbf29e0b0fce0800000000000000
+      internalID: -1373403370773233160
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_116
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 132
+        width: 18
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 64945886a28500f70800000000000000
+      internalID: 9151411381982284102
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_117
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 128
+        width: 32
+        height: 39
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5b4b4a9c32944a430800000000000000
+      internalID: 3793237204208497845
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_118
+      rect:
+        serializedVersion: 2
+        x: 264
+        y: 161
+        width: 18
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 617e9a7e5afb19aa0800000000000000
+      internalID: -6155928496361576682
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_119
+      rect:
+        serializedVersion: 2
+        x: 296
+        y: 161
+        width: 18
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c8833d3239dcd1da0800000000000000
+      internalID: -5972391498978477940
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_120
+      rect:
+        serializedVersion: 2
+        x: 356
+        y: 162
+        width: 56
+        height: 37
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 214f911b5c7ac3930800000000000000
+      internalID: 4124355826286195730
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_121
+      rect:
+        serializedVersion: 2
+        x: 420
+        y: 129
+        width: 26
+        height: 46
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f67d31625ebd8abd0800000000000000
+      internalID: -2618601406083115153
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_122
+      rect:
+        serializedVersion: 2
+        x: 449
+        y: 128
+        width: 30
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7bc3e68e7634e5c30800000000000000
+      internalID: 4349988403646708919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_123
+      rect:
+        serializedVersion: 2
+        x: 485
+        y: 128
+        width: 54
+        height: 45
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 923e79be58a77e160800000000000000
+      internalID: 7054742056901010217
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_124
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 106
+        width: 44
+        height: 44
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8ba7e7938e32f3e20800000000000000
+      internalID: 3332421729581431480
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_125
+      rect:
+        serializedVersion: 2
+        x: 63
+        y: 130
+        width: 34
+        height: 31
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8327c97b296a07f60800000000000000
+      internalID: 8030101284677513784
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_126
+      rect:
+        serializedVersion: 2
+        x: 261
+        y: 132
+        width: 22
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cc6ba50ea5ccdf3e0800000000000000
+      internalID: -2018232367308949812
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_127
+      rect:
+        serializedVersion: 2
+        x: 294
+        y: 95
+        width: 20
+        height: 58
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0a660dc63d5345cb0800000000000000
+      internalID: -4876213314355435872
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_128
+      rect:
+        serializedVersion: 2
+        x: 322
+        y: 127
+        width: 26
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bd4b49dc010219b60800000000000000
+      internalID: 7751011690221974747
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_129
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 127
+        width: 16
+        height: 27
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 34e336b6743cfd790800000000000000
+      internalID: -7503063742664196541
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_130
+      rect:
+        serializedVersion: 2
+        x: 387
+        y: 127
+        width: 26
+        height: 17
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2e6bb560ab07fb6c0800000000000000
+      internalID: -4125454789375183134
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_131
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 112
+        width: 18
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fd8532cb212ad17b0800000000000000
+      internalID: -5251863389094586145
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_132
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 104
+        width: 18
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 292af6dbcc468cfe0800000000000000
+      internalID: -1168573272788327790
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_133
+      rect:
+        serializedVersion: 2
+        x: 100
+        y: 64
+        width: 24
+        height: 62
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 320849638d45be4c0800000000000000
+      internalID: -4257215735143301085
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_134
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 64
+        width: 18
+        height: 62
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 313d74893c5f46720800000000000000
+      internalID: 2838663885572526867
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_135
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 64
+        width: 18
+        height: 62
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 165bcbb29b15e1e30800000000000000
+      internalID: 4476104935397438817
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_136
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 95
+        width: 18
+        height: 31
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3607da1366b7aac00800000000000000
+      internalID: 912677553346277475
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_137
+      rect:
+        serializedVersion: 2
+        x: 231
+        y: 64
+        width: 18
+        height: 62
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f1f1f26e3a5383e20800000000000000
+      internalID: 3330470902498271007
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_138
+      rect:
+        serializedVersion: 2
+        x: 273
+        y: 96
+        width: 13
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 18c8ce7e9c7d48270800000000000000
+      internalID: 8251957679429028993
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_139
+      rect:
+        serializedVersion: 2
+        x: 326
+        y: 95
+        width: 20
+        height: 27
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ab7f8e04b837e9e90800000000000000
+      internalID: -7017044127469996102
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_140
+      rect:
+        serializedVersion: 2
+        x: 352
+        y: 63
+        width: 32
+        height: 63
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9bf1b67e461106a60800000000000000
+      internalID: 7665145690861543353
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_141
+      rect:
+        serializedVersion: 2
+        x: 386
+        y: 95
+        width: 28
+        height: 31
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 50a137f3619a049e0800000000000000
+      internalID: -1639124351343977979
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_142
+      rect:
+        serializedVersion: 2
+        x: 449
+        y: 97
+        width: 17
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f9172558afe186600800000000000000
+      internalID: 461653023132905887
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_143
+      rect:
+        serializedVersion: 2
+        x: 458
+        y: 103
+        width: 21
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 81925dd5281c5eb00800000000000000
+      internalID: 857304069748107544
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_144
+      rect:
+        serializedVersion: 2
+        x: 482
+        y: 95
+        width: 26
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 34658d7b034067bc0800000000000000
+      internalID: -3785833829468973501
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_145
+      rect:
+        serializedVersion: 2
+        x: 515
+        y: 95
+        width: 26
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 737e6fceb2e8285c0800000000000000
+      internalID: -4214649981955021001
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_146
+      rect:
+        serializedVersion: 2
+        x: 544
+        y: 63
+        width: 32
+        height: 57
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 430a5f8328b4e5880800000000000000
+      internalID: -8620369614067097548
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_147
+      rect:
+        serializedVersion: 2
+        x: 578
+        y: 95
+        width: 26
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape:
+      - - {x: 12, y: 1.5}
+        - {x: 12, y: 10.5}
+        - {x: 11, y: 11.5}
+        - {x: -11, y: 11.5}
+        - {x: -12, y: 10.5}
+        - {x: -12, y: 1.5}
+        - {x: -12, y: 1.5}
+        - {x: 12, y: 1.5}
+      tessellationDetail: 0
+      bones: []
+      spriteID: 622150c2bb296a8e0800000000000000
+      internalID: -1682496078181232090
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_148
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 80
+        width: 12
+        height: 17
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d5a41daac58b32ae0800000000000000
+      internalID: -1575212736507196835
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_149
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 96
+        width: 18
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5e7f746c75dfca580800000000000000
+      internalID: -8814391817240315931
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_150
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 88
+        width: 18
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2807979581ada8cb0800000000000000
+      internalID: -4860833049677827966
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_151
+      rect:
+        serializedVersion: 2
+        x: 328
+        y: 63
+        width: 16
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5e8cc000b87eab7b0800000000000000
+      internalID: -5207595434913249051
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_152
+      rect:
+        serializedVersion: 2
+        x: 424
+        y: 63
+        width: 17
+        height: 43
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e8766045ac2a04e30800000000000000
+      internalID: 4485764218737813390
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_153
+      rect:
+        serializedVersion: 2
+        x: 520
+        y: 63
+        width: 16
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a62abd218a41f18a0800000000000000
+      internalID: -6332319838956182934
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_154
+      rect:
+        serializedVersion: 2
+        x: 615
+        y: 3
+        width: 18
+        height: 103
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c7d40e4022d8b7b30800000000000000
+      internalID: 4286174647623372156
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_155
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 67
+        width: 34
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4766dcb0437f6dc90800000000000000
+      internalID: -7145251955868342668
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_156
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 80
+        width: 18
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d122a15ddce16a750800000000000000
+      internalID: 6315769396826087965
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_157
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 72
+        width: 18
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 940a392fed37de3b0800000000000000
+      internalID: -5481597770050330551
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_158
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 64
+        width: 18
+        height: 22
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7149e036569f71190800000000000000
+      internalID: -7991644799896742889
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_159
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 63
+        width: 32
+        height: 21
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ccb28597d4a49c830800000000000000
+      internalID: 4091883433051565004
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_160
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 63
+        width: 32
+        height: 21
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3c7d7e324c2042ab0800000000000000
+      internalID: -5033895442054129725
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_161
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 63
+        width: 32
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0ea939339fc48a370800000000000000
+      internalID: 8333995743644981984
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_162
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 63
+        width: 32
+        height: 22
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3e06c4a9539431700800000000000000
+      internalID: 509831677393789155
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_163
+      rect:
+        serializedVersion: 2
+        x: 480
+        y: 63
+        width: 32
+        height: 22
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 505a882acbcd61e90800000000000000
+      internalID: -7055209063490476795
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_164
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 63
+        width: 32
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 944f4e544e8380f80800000000000000
+      internalID: -8140193773395839927
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_165
+      rect:
+        serializedVersion: 2
+        x: 70
+        y: 32
+        width: 20
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f1fb336ae81a3bd40800000000000000
+      internalID: 5598996395797495583
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_166
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 64
+        width: 18
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 555c0a1851ca37f10800000000000000
+      internalID: 2266344245866579285
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_167
+      rect:
+        serializedVersion: 2
+        x: 102
+        y: 32
+        width: 20
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 03a1ad905de1e3210800000000000000
+      internalID: 1314522041580919344
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_168
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 32
+        width: 20
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6619911b91b800060800000000000000
+      internalID: 6917681970102767974
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_169
+      rect:
+        serializedVersion: 2
+        x: 166
+        y: 32
+        width: 20
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4bd6cf432d2d65db0800000000000000
+      internalID: -4803420152270131788
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_170
+      rect:
+        serializedVersion: 2
+        x: 198
+        y: 32
+        width: 20
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2d2499b93bce77720800000000000000
+      internalID: 2844001945861571282
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_171
+      rect:
+        serializedVersion: 2
+        x: 230
+        y: 32
+        width: 20
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ede60a18affeb82b0800000000000000
+      internalID: -5581103453999960354
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_172
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 32
+        width: 20
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4c895f18162a02f40800000000000000
+      internalID: 5701735667926931652
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_173
+      rect:
+        serializedVersion: 2
+        x: 321
+        y: 34
+        width: 28
+        height: 34
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c369a99aa2c5135d0800000000000000
+      internalID: -3084582931468216772
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_174
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 31
+        width: 32
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: acaeec566715d3700800000000000000
+      internalID: 521662700800895690
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_175
+      rect:
+        serializedVersion: 2
+        x: 416
+        y: 31
+        width: 32
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a1719ded10302e3d0800000000000000
+      internalID: -3178975080401529062
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_176
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 31
+        width: 32
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 67b2a44f493918db0800000000000000
+      internalID: -4791386260582552714
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_177
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 31
+        width: 31
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a43585fdc8abcda50800000000000000
+      internalID: 6547313072495153994
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_178
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 34
+        width: 32
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3568fccc0992a8ef0800000000000000
+      internalID: -105225939401603501
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_179
+      rect:
+        serializedVersion: 2
+        x: 291
+        y: 34
+        width: 26
+        height: 27
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7f7d301c2cf2ec580800000000000000
+      internalID: -8805047707954325513
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_180
+      rect:
+        serializedVersion: 2
+        x: 355
+        y: 34
+        width: 26
+        height: 27
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 27b81dd73f5876030800000000000000
+      internalID: 3487903717256170354
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_181
+      rect:
+        serializedVersion: 2
+        x: 482
+        y: 32
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: adfaf0e91bb121540800000000000000
+      internalID: 4977070987872808922
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_182
+      rect:
+        serializedVersion: 2
+        x: 515
+        y: 36
+        width: 27
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 984f5eb664c427940800000000000000
+      internalID: 5292376377455408265
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_183
+      rect:
+        serializedVersion: 2
+        x: 547
+        y: 36
+        width: 27
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a3a93ddc8e6a381e0800000000000000
+      internalID: -2196728674410849734
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_184
+      rect:
+        serializedVersion: 2
+        x: 579
+        y: 36
+        width: 27
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 44b5eb000c387dd90800000000000000
+      internalID: -7073039829092639932
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_185
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 15
+        width: 21
+        height: 13
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 760106e15c5a7f570800000000000000
+      internalID: 8500445087721853031
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_186
+      rect:
+        serializedVersion: 2
+        x: 3
+        y: 0
+        width: 29
+        height: 17
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aa93d022ef3e82a20800000000000000
+      internalID: 3037928629293889962
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_187
+      rect:
+        serializedVersion: 2
+        x: 34
+        y: 2
+        width: 30
+        height: 18
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e8e7f019fa097ee40800000000000000
+      internalID: 5685672138305928846
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_188
+      rect:
+        serializedVersion: 2
+        x: 70
+        y: 0
+        width: 20
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 930445bd4224d5d90800000000000000
+      internalID: -7107451910854787015
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_189
+      rect:
+        serializedVersion: 2
+        x: 102
+        y: 0
+        width: 20
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bc5991789a4f00680800000000000000
+      internalID: -8790757463673956917
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_190
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 0
+        width: 20
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fcb9f3d1c59bc0900800000000000000
+      internalID: 652099851340717007
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_191
+      rect:
+        serializedVersion: 2
+        x: 166
+        y: 0
+        width: 20
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6fa1010c4b2ad8db0800000000000000
+      internalID: -4787991931624875274
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_192
+      rect:
+        serializedVersion: 2
+        x: 198
+        y: 0
+        width: 20
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9ddff11b6e6b29800800000000000000
+      internalID: 617757200833576409
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_193
+      rect:
+        serializedVersion: 2
+        x: 230
+        y: 0
+        width: 20
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 812d3db6639dcd4d0800000000000000
+      internalID: -3108370815031979496
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_194
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 0
+        width: 20
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9f2cb0e064004feb0800000000000000
+      internalID: -4687121011302481159
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_195
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 78ed336179203e0a0800000000000000
+      internalID: -6853631359991947641
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_196
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 638f1946757211160800000000000000
+      internalID: 6994414952586016822
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_197
+      rect:
+        serializedVersion: 2
+        x: 352
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2b7b5ce0e51491f80800000000000000
+      internalID: -8135399379637520462
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_198
+      rect:
+        serializedVersion: 2
+        x: 389
+        y: 7
+        width: 22
+        height: 19
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 976d16207d4863c70800000000000000
+      internalID: 8950487368438240889
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_199
+      rect:
+        serializedVersion: 2
+        x: 418
+        y: 6
+        width: 28
+        height: 22
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 869327d8001c2b850800000000000000
+      internalID: 6391383029309389160
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_200
+      rect:
+        serializedVersion: 2
+        x: 456
+        y: 6
+        width: 16
+        height: 22
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 37f22c6a19b66c550800000000000000
+      internalID: 6180745811924758387
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_201
+      rect:
+        serializedVersion: 2
+        x: 481
+        y: 4
+        width: 30
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 783a78018690ee370800000000000000
+      internalID: 8353624701377422215
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_202
+      rect:
+        serializedVersion: 2
+        x: 515
+        y: 4
+        width: 27
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 44ce0618dd3f860d0800000000000000
+      internalID: -3429222983558697916
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_203
+      rect:
+        serializedVersion: 2
+        x: 547
+        y: 4
+        width: 27
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7d44182354eb93ca0800000000000000
+      internalID: -6036584621104085801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Shelter_Furniture_32x32_Shadow_204
+      rect:
+        serializedVersion: 2
+        x: 579
+        y: 4
+        width: 27
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f66392fef95fba4a0800000000000000
+      internalID: -6580896363210787217
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: f89bb5335ae55cc428ce9d4d757997a5
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Shelter_Furniture_32x32_Shadow_0: -8723141629375699566
+      Shelter_Furniture_32x32_Shadow_1: -5881473661458484859
+      Shelter_Furniture_32x32_Shadow_10: -5623412120481953366
+      Shelter_Furniture_32x32_Shadow_100: 6085135832617006605
+      Shelter_Furniture_32x32_Shadow_101: -2356883457445297422
+      Shelter_Furniture_32x32_Shadow_102: -8393566583042318394
+      Shelter_Furniture_32x32_Shadow_103: 7432558178518531983
+      Shelter_Furniture_32x32_Shadow_104: -5313172708236451492
+      Shelter_Furniture_32x32_Shadow_105: -8080627431508390096
+      Shelter_Furniture_32x32_Shadow_106: -7143480700351588636
+      Shelter_Furniture_32x32_Shadow_107: 553328078688446060
+      Shelter_Furniture_32x32_Shadow_108: -1190082458417302071
+      Shelter_Furniture_32x32_Shadow_109: 7599459495816678960
+      Shelter_Furniture_32x32_Shadow_11: -6340921580591295507
+      Shelter_Furniture_32x32_Shadow_110: -4451072864569826231
+      Shelter_Furniture_32x32_Shadow_111: 6354303838427688113
+      Shelter_Furniture_32x32_Shadow_112: -6971745927491381456
+      Shelter_Furniture_32x32_Shadow_113: -1263675038008112853
+      Shelter_Furniture_32x32_Shadow_114: -3055921504040667987
+      Shelter_Furniture_32x32_Shadow_115: -1373403370773233160
+      Shelter_Furniture_32x32_Shadow_116: 9151411381982284102
+      Shelter_Furniture_32x32_Shadow_117: 3793237204208497845
+      Shelter_Furniture_32x32_Shadow_118: -6155928496361576682
+      Shelter_Furniture_32x32_Shadow_119: -5972391498978477940
+      Shelter_Furniture_32x32_Shadow_12: 2439975962779618384
+      Shelter_Furniture_32x32_Shadow_120: 4124355826286195730
+      Shelter_Furniture_32x32_Shadow_121: -2618601406083115153
+      Shelter_Furniture_32x32_Shadow_122: 4349988403646708919
+      Shelter_Furniture_32x32_Shadow_123: 7054742056901010217
+      Shelter_Furniture_32x32_Shadow_124: 3332421729581431480
+      Shelter_Furniture_32x32_Shadow_125: 8030101284677513784
+      Shelter_Furniture_32x32_Shadow_126: -2018232367308949812
+      Shelter_Furniture_32x32_Shadow_127: -4876213314355435872
+      Shelter_Furniture_32x32_Shadow_128: 7751011690221974747
+      Shelter_Furniture_32x32_Shadow_129: -7503063742664196541
+      Shelter_Furniture_32x32_Shadow_13: 287845729117809963
+      Shelter_Furniture_32x32_Shadow_130: -4125454789375183134
+      Shelter_Furniture_32x32_Shadow_131: -5251863389094586145
+      Shelter_Furniture_32x32_Shadow_132: -1168573272788327790
+      Shelter_Furniture_32x32_Shadow_133: -4257215735143301085
+      Shelter_Furniture_32x32_Shadow_134: 2838663885572526867
+      Shelter_Furniture_32x32_Shadow_135: 4476104935397438817
+      Shelter_Furniture_32x32_Shadow_136: 912677553346277475
+      Shelter_Furniture_32x32_Shadow_137: 3330470902498271007
+      Shelter_Furniture_32x32_Shadow_138: 8251957679429028993
+      Shelter_Furniture_32x32_Shadow_139: -7017044127469996102
+      Shelter_Furniture_32x32_Shadow_14: 1923242503030326453
+      Shelter_Furniture_32x32_Shadow_140: 7665145690861543353
+      Shelter_Furniture_32x32_Shadow_141: -1639124351343977979
+      Shelter_Furniture_32x32_Shadow_142: 461653023132905887
+      Shelter_Furniture_32x32_Shadow_143: 857304069748107544
+      Shelter_Furniture_32x32_Shadow_144: -3785833829468973501
+      Shelter_Furniture_32x32_Shadow_145: -4214649981955021001
+      Shelter_Furniture_32x32_Shadow_146: -8620369614067097548
+      Shelter_Furniture_32x32_Shadow_147: -1682496078181232090
+      Shelter_Furniture_32x32_Shadow_148: -1575212736507196835
+      Shelter_Furniture_32x32_Shadow_149: -8814391817240315931
+      Shelter_Furniture_32x32_Shadow_15: -2613558681073793279
+      Shelter_Furniture_32x32_Shadow_150: -4860833049677827966
+      Shelter_Furniture_32x32_Shadow_151: -5207595434913249051
+      Shelter_Furniture_32x32_Shadow_152: 4485764218737813390
+      Shelter_Furniture_32x32_Shadow_153: -6332319838956182934
+      Shelter_Furniture_32x32_Shadow_154: 4286174647623372156
+      Shelter_Furniture_32x32_Shadow_155: -7145251955868342668
+      Shelter_Furniture_32x32_Shadow_156: 6315769396826087965
+      Shelter_Furniture_32x32_Shadow_157: -5481597770050330551
+      Shelter_Furniture_32x32_Shadow_158: -7991644799896742889
+      Shelter_Furniture_32x32_Shadow_159: 4091883433051565004
+      Shelter_Furniture_32x32_Shadow_16: 371259672239381414
+      Shelter_Furniture_32x32_Shadow_160: -5033895442054129725
+      Shelter_Furniture_32x32_Shadow_161: 8333995743644981984
+      Shelter_Furniture_32x32_Shadow_162: 509831677393789155
+      Shelter_Furniture_32x32_Shadow_163: -7055209063490476795
+      Shelter_Furniture_32x32_Shadow_164: -8140193773395839927
+      Shelter_Furniture_32x32_Shadow_165: 5598996395797495583
+      Shelter_Furniture_32x32_Shadow_166: 2266344245866579285
+      Shelter_Furniture_32x32_Shadow_167: 1314522041580919344
+      Shelter_Furniture_32x32_Shadow_168: 6917681970102767974
+      Shelter_Furniture_32x32_Shadow_169: -4803420152270131788
+      Shelter_Furniture_32x32_Shadow_17: -3808888536704653373
+      Shelter_Furniture_32x32_Shadow_170: 2844001945861571282
+      Shelter_Furniture_32x32_Shadow_171: -5581103453999960354
+      Shelter_Furniture_32x32_Shadow_172: 5701735667926931652
+      Shelter_Furniture_32x32_Shadow_173: -3084582931468216772
+      Shelter_Furniture_32x32_Shadow_174: 521662700800895690
+      Shelter_Furniture_32x32_Shadow_175: -3178975080401529062
+      Shelter_Furniture_32x32_Shadow_176: -4791386260582552714
+      Shelter_Furniture_32x32_Shadow_177: 6547313072495153994
+      Shelter_Furniture_32x32_Shadow_178: -105225939401603501
+      Shelter_Furniture_32x32_Shadow_179: -8805047707954325513
+      Shelter_Furniture_32x32_Shadow_18: -4606911812169831332
+      Shelter_Furniture_32x32_Shadow_180: 3487903717256170354
+      Shelter_Furniture_32x32_Shadow_181: 4977070987872808922
+      Shelter_Furniture_32x32_Shadow_182: 5292376377455408265
+      Shelter_Furniture_32x32_Shadow_183: -2196728674410849734
+      Shelter_Furniture_32x32_Shadow_184: -7073039829092639932
+      Shelter_Furniture_32x32_Shadow_185: 8500445087721853031
+      Shelter_Furniture_32x32_Shadow_186: 3037928629293889962
+      Shelter_Furniture_32x32_Shadow_187: 5685672138305928846
+      Shelter_Furniture_32x32_Shadow_188: -7107451910854787015
+      Shelter_Furniture_32x32_Shadow_189: -8790757463673956917
+      Shelter_Furniture_32x32_Shadow_19: -5363202050751281153
+      Shelter_Furniture_32x32_Shadow_190: 652099851340717007
+      Shelter_Furniture_32x32_Shadow_191: -4787991931624875274
+      Shelter_Furniture_32x32_Shadow_192: 617757200833576409
+      Shelter_Furniture_32x32_Shadow_193: -3108370815031979496
+      Shelter_Furniture_32x32_Shadow_194: -4687121011302481159
+      Shelter_Furniture_32x32_Shadow_195: -6853631359991947641
+      Shelter_Furniture_32x32_Shadow_196: 6994414952586016822
+      Shelter_Furniture_32x32_Shadow_197: -8135399379637520462
+      Shelter_Furniture_32x32_Shadow_198: 8950487368438240889
+      Shelter_Furniture_32x32_Shadow_199: 6391383029309389160
+      Shelter_Furniture_32x32_Shadow_2: 2357934639222295017
+      Shelter_Furniture_32x32_Shadow_20: 9031998431326519948
+      Shelter_Furniture_32x32_Shadow_200: 6180745811924758387
+      Shelter_Furniture_32x32_Shadow_201: 8353624701377422215
+      Shelter_Furniture_32x32_Shadow_202: -3429222983558697916
+      Shelter_Furniture_32x32_Shadow_203: -6036584621104085801
+      Shelter_Furniture_32x32_Shadow_204: -6580896363210787217
+      Shelter_Furniture_32x32_Shadow_21: 1264391194666016274
+      Shelter_Furniture_32x32_Shadow_22: 8024723697375421376
+      Shelter_Furniture_32x32_Shadow_23: 3220473132843384626
+      Shelter_Furniture_32x32_Shadow_24: -4492324517589794532
+      Shelter_Furniture_32x32_Shadow_25: 7502209766874071892
+      Shelter_Furniture_32x32_Shadow_26: 3687235714317525927
+      Shelter_Furniture_32x32_Shadow_27: -8307599755720627622
+      Shelter_Furniture_32x32_Shadow_28: -5766583855092948195
+      Shelter_Furniture_32x32_Shadow_29: -3088516572038442548
+      Shelter_Furniture_32x32_Shadow_3: 7798581499852892940
+      Shelter_Furniture_32x32_Shadow_30: 5535951757070230047
+      Shelter_Furniture_32x32_Shadow_31: 6208006828612782916
+      Shelter_Furniture_32x32_Shadow_32: 6786445701172466161
+      Shelter_Furniture_32x32_Shadow_33: 824009031757325126
+      Shelter_Furniture_32x32_Shadow_34: -282101252901264621
+      Shelter_Furniture_32x32_Shadow_35: -3277003661732179029
+      Shelter_Furniture_32x32_Shadow_36: 785399791098341347
+      Shelter_Furniture_32x32_Shadow_37: -1531300449625254895
+      Shelter_Furniture_32x32_Shadow_38: -7997467581220765290
+      Shelter_Furniture_32x32_Shadow_39: -6452108182422890364
+      Shelter_Furniture_32x32_Shadow_4: 2321337264734907086
+      Shelter_Furniture_32x32_Shadow_40: 5002888491291462951
+      Shelter_Furniture_32x32_Shadow_41: 4067285311542074333
+      Shelter_Furniture_32x32_Shadow_42: 3078109801102094168
+      Shelter_Furniture_32x32_Shadow_43: 1976255261009266023
+      Shelter_Furniture_32x32_Shadow_44: 8801520697966399042
+      Shelter_Furniture_32x32_Shadow_45: -6614059405057071122
+      Shelter_Furniture_32x32_Shadow_46: 49591938686251428
+      Shelter_Furniture_32x32_Shadow_47: 3154582901551347831
+      Shelter_Furniture_32x32_Shadow_48: -8309640277962832971
+      Shelter_Furniture_32x32_Shadow_49: -4434181486590639670
+      Shelter_Furniture_32x32_Shadow_5: -714723205679303920
+      Shelter_Furniture_32x32_Shadow_50: 6834300470287621617
+      Shelter_Furniture_32x32_Shadow_51: -5954881225790705493
+      Shelter_Furniture_32x32_Shadow_52: -29190966149360288
+      Shelter_Furniture_32x32_Shadow_53: 864321086922649830
+      Shelter_Furniture_32x32_Shadow_54: 5419516101486802345
+      Shelter_Furniture_32x32_Shadow_55: 705696635839840832
+      Shelter_Furniture_32x32_Shadow_56: 6121055167217533693
+      Shelter_Furniture_32x32_Shadow_57: 8109209374944531300
+      Shelter_Furniture_32x32_Shadow_58: 4118571923557862483
+      Shelter_Furniture_32x32_Shadow_59: 5591283514308124955
+      Shelter_Furniture_32x32_Shadow_6: 8994197691716374329
+      Shelter_Furniture_32x32_Shadow_60: 8641379408498769339
+      Shelter_Furniture_32x32_Shadow_61: -4701090082547497224
+      Shelter_Furniture_32x32_Shadow_62: -6917625740064427865
+      Shelter_Furniture_32x32_Shadow_63: 2490328564537601853
+      Shelter_Furniture_32x32_Shadow_64: 8494882326240985002
+      Shelter_Furniture_32x32_Shadow_65: -1909122499597302320
+      Shelter_Furniture_32x32_Shadow_66: -3143434655422540396
+      Shelter_Furniture_32x32_Shadow_67: -3014471928325253338
+      Shelter_Furniture_32x32_Shadow_68: 1812130384589895185
+      Shelter_Furniture_32x32_Shadow_69: -1598945135085387224
+      Shelter_Furniture_32x32_Shadow_7: 7915342284060706274
+      Shelter_Furniture_32x32_Shadow_70: -6719423981497921620
+      Shelter_Furniture_32x32_Shadow_71: -8928810599569903210
+      Shelter_Furniture_32x32_Shadow_72: -118644417936267311
+      Shelter_Furniture_32x32_Shadow_73: 3832851783124382851
+      Shelter_Furniture_32x32_Shadow_74: 4995937902947791663
+      Shelter_Furniture_32x32_Shadow_75: 8619795459197446001
+      Shelter_Furniture_32x32_Shadow_76: -5907527417627234722
+      Shelter_Furniture_32x32_Shadow_77: 3981969777227406537
+      Shelter_Furniture_32x32_Shadow_78: 1932850692428424680
+      Shelter_Furniture_32x32_Shadow_79: -93854279897256524
+      Shelter_Furniture_32x32_Shadow_8: -2864925268533433930
+      Shelter_Furniture_32x32_Shadow_80: -3870093156608403493
+      Shelter_Furniture_32x32_Shadow_81: -6511233315312829057
+      Shelter_Furniture_32x32_Shadow_82: -3637768028541655825
+      Shelter_Furniture_32x32_Shadow_83: 2639449967018453177
+      Shelter_Furniture_32x32_Shadow_84: -2034754659619442148
+      Shelter_Furniture_32x32_Shadow_85: 5743444965019160401
+      Shelter_Furniture_32x32_Shadow_86: -1007846980943715252
+      Shelter_Furniture_32x32_Shadow_87: 5586079324591805604
+      Shelter_Furniture_32x32_Shadow_88: -926942608793324796
+      Shelter_Furniture_32x32_Shadow_89: 79951825817311516
+      Shelter_Furniture_32x32_Shadow_9: -204992892107104915
+      Shelter_Furniture_32x32_Shadow_90: 4891906742467184150
+      Shelter_Furniture_32x32_Shadow_91: 5710142371439138810
+      Shelter_Furniture_32x32_Shadow_92: -4867195617348019913
+      Shelter_Furniture_32x32_Shadow_93: 6605125269145284597
+      Shelter_Furniture_32x32_Shadow_94: 8222648731732530635
+      Shelter_Furniture_32x32_Shadow_95: 7679708824666478928
+      Shelter_Furniture_32x32_Shadow_96: -5595570022729111942
+      Shelter_Furniture_32x32_Shadow_97: -8008943611244870551
+      Shelter_Furniture_32x32_Shadow_98: -7747597778724987268
+      Shelter_Furniture_32x32_Shadow_99: -1327744014056643975
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

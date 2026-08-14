@@ -1181,10 +1181,10 @@ public class DungeonGenerator : MonoBehaviour
         TeleportPortal[] oldPortals = Object.FindObjectsByType<TeleportPortal>(FindObjectsSortMode.None);
         foreach (var p in oldPortals)
         {
-            if (p != null) Destroy(p.gameObject);
+            if (p != null && p.gameObject != null) DestroySmart(p.gameObject);
         }
         GameObject oldPortalObj = GameObject.Find("TeleportPortal");
-        if (oldPortalObj != null) Destroy(oldPortalObj);
+        if (oldPortalObj != null) DestroySmart(oldPortalObj);
 
         // 🧹 DỌN DẸP SẠCH SẼ TẤT CẢ VẬT PHẨM VÀ VŨ KHÍ RƠI VÃI TẦNG CŨ KHI QUA TẦNG MỚI (CẢ SINGLEPLAYER & MULTIPLAYER)
         LootItem[] remainingLoot = Object.FindObjectsByType<LootItem>(FindObjectsSortMode.None);
@@ -1214,17 +1214,23 @@ public class DungeonGenerator : MonoBehaviour
         for (int i = transform.childCount - 1; i >= 0; i--)
         {
             GameObject child = transform.GetChild(i).gameObject;
-            if (Application.isPlaying)
-            {
-                Destroy(child);
-            }
-            else
-            {
-                DestroyImmediate(child);
-            }
+            DestroySmart(child);
         }
 
-        Debug.Log("?ã xoá s?ch toàn b? Tilemap và các Prefab c?a c?.");
+        Debug.Log("Đã xóa sạch toàn bộ Tilemap và các Prefab cũ.");
+    }
+
+    private void DestroySmart(GameObject obj)
+    {
+        if (obj == null) return;
+        if (Application.isPlaying)
+        {
+            Destroy(obj);
+        }
+        else
+        {
+            DestroyImmediate(obj);
+        }
     }
 
     private void DecorateWallsByCluster()
@@ -1793,6 +1799,28 @@ public class DungeonGenerator : MonoBehaviour
                 Debug.Log($"[DungeonGenerator] Đã gán phòng Rương báu tại tọa độ lưới: {chestRoom.gridPos}");
             }
         }
+    }
+
+    /// <summary>
+    /// Trả về tập hợp các cặp phòng (gridPosA, gridPosB) có hành lang nối thực tế với nhau
+    /// </summary>
+    public HashSet<KeyValuePair<Vector2Int, Vector2Int>> GetRoomConnections()
+    {
+        var result = new HashSet<KeyValuePair<Vector2Int, Vector2Int>>();
+        if (connections != null)
+        {
+            foreach (var conn in connections)
+            {
+                if (conn != null && conn.from != null && conn.to != null)
+                {
+                    Vector2Int a = conn.from.gridPos;
+                    Vector2Int b = conn.to.gridPos;
+                    result.Add(new KeyValuePair<Vector2Int, Vector2Int>(a, b));
+                    result.Add(new KeyValuePair<Vector2Int, Vector2Int>(b, a));
+                }
+            }
+        }
+        return result;
     }
 }
 
