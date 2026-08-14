@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -60,6 +60,12 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // Chỉ thêm điều kiện dừng di chuyển nếu Shop UI đang mở
+        if (ShopUIController.Instance != null && ShopUIController.Instance.IsShopOpen())
+        {
+            return;
+        }
+
         if (rb2d != null)
         {
             rb2d.MovePosition(rb2d.position + moveInput.normalized * moveSpeed * Time.fixedDeltaTime);

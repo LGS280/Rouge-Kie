@@ -57,13 +57,18 @@ public class ShopUIController : MonoBehaviour
 
     private void Start()
     {
+        if (shopPanel == null)
+        {
+            BuildAutoShopUI();
+        }
+
         if (closeShopButton != null)
         {
             closeShopButton.onClick.AddListener(CloseShop);
         }
 
-        if (gemTabButton != null) gemTabButton.onClick.AddListener(() => SwitchTab(0));
-        if (coinTabButton != null) coinTabButton.onClick.AddListener(() => SwitchTab(1));
+        if (coinTabButton != null) coinTabButton.onClick.AddListener(() => SwitchTab(0));
+        if (gemTabButton != null) gemTabButton.onClick.AddListener(() => SwitchTab(1));
         if (skinTabButton != null) skinTabButton.onClick.AddListener(() => SwitchTab(2));
 
         SwitchTab(0);
@@ -72,6 +77,10 @@ public class ShopUIController : MonoBehaviour
 
     public void OpenShop()
     {
+        if (shopPanel == null)
+        {
+            BuildAutoShopUI();
+        }
         if (shopPanel != null) shopPanel.SetActive(true);
         FetchShopItems();
     }
@@ -81,10 +90,18 @@ public class ShopUIController : MonoBehaviour
         if (shopPanel != null) shopPanel.SetActive(false);
     }
 
+    /// <summary>
+    /// Kiểm tra xem giao diện Cửa Hàng có đang mở hay không để vô hiệu hóa di chuyển/xoay súng của nhân vật
+    /// </summary>
+    public bool IsShopOpen()
+    {
+        return shopPanel != null && shopPanel.activeSelf;
+    }
+
     public void SwitchTab(int tabIndex)
     {
-        if (gemTabContent != null) gemTabContent.SetActive(tabIndex == 0);
-        if (coinTabContent != null) coinTabContent.SetActive(tabIndex == 1);
+        if (coinTabContent != null) coinTabContent.SetActive(tabIndex == 0);
+        if (gemTabContent != null) gemTabContent.SetActive(tabIndex == 1);
         if (skinTabContent != null) skinTabContent.SetActive(tabIndex == 2);
     }
 
@@ -116,7 +133,7 @@ public class ShopUIController : MonoBehaviour
     }
 
     /// <summary>
-    /// Bấm Nạp Gem qua PayOS VietQR
+    /// Bấm Mua Súng trực tiếp bằng Tiền thật qua PayOS VietQR
     /// </summary>
     public void BuyGemPackage(int amountVnd, string description)
     {
@@ -137,7 +154,7 @@ public class ShopUIController : MonoBehaviour
     }
 
     /// <summary>
-    /// Bấm Mua vật phẩm Shop/Skin bằng Gem hoặc Vàng qua Backend API
+    /// Bấm Mua vật phẩm Súng/Skin bằng Coins trong Game qua Backend API
     /// </summary>
     public void BuyShopItem(int shopItemId)
     {
@@ -173,5 +190,288 @@ public class ShopUIController : MonoBehaviour
             Debug.LogError($"[ShopUIController] API Buy Item Error: {err}");
             if (statusText != null) statusText.text = "<color=red>Purchase Failed!</color>";
         });
+    }
+
+    /// <summary>
+    /// Tự động xây dựng giao diện Cửa Hàng mua Súng trực tiếp bằng Xu trong game hoặc Tiền thật VietQR
+    /// </summary>
+    private void BuildAutoShopUI()
+    {
+        Canvas canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
+        GameObject canvasObj;
+        if (canvas != null && canvas.renderMode == RenderMode.ScreenSpaceOverlay)
+        {
+            canvasObj = canvas.gameObject;
+        }
+        else
+        {
+            canvasObj = new GameObject("ShopUICanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            Canvas c = canvasObj.GetComponent<Canvas>();
+            c.renderMode = RenderMode.ScreenSpaceOverlay;
+            c.sortingOrder = 100;
+
+            CanvasScaler scaler = canvasObj.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+        }
+
+        // 1. Panel nền che mờ toàn màn hình
+        shopPanel = new GameObject("ShopPanel", typeof(RectTransform), typeof(Image));
+        shopPanel.transform.SetParent(canvasObj.transform, false);
+
+        RectTransform panelRect = shopPanel.GetComponent<RectTransform>();
+        panelRect.anchorMin = Vector2.zero;
+        panelRect.anchorMax = Vector2.one;
+        panelRect.sizeDelta = Vector2.zero;
+
+        Image panelImg = shopPanel.GetComponent<Image>();
+        panelImg.color = new Color(0.02f, 0.04f, 0.08f, 0.85f);
+
+        // 2. Khung cửa sổ chính (Shop Dialog)
+        GameObject dialog = new GameObject("ShopDialog", typeof(RectTransform), typeof(Image));
+        dialog.transform.SetParent(shopPanel.transform, false);
+
+        RectTransform dialogRect = dialog.GetComponent<RectTransform>();
+        dialogRect.sizeDelta = new Vector2(900, 620);
+        dialogRect.anchoredPosition = Vector2.zero;
+
+        Image dialogImg = dialog.GetComponent<Image>();
+        dialogImg.color = new Color(0.1f, 0.14f, 0.22f, 0.98f);
+
+        // 3. Tiêu đề Cửa Hàng (Header)
+        GameObject headerObj = new GameObject("HeaderTitle", typeof(RectTransform), typeof(TextMeshProUGUI));
+        headerObj.transform.SetParent(dialog.transform, false);
+        RectTransform headerRect = headerObj.GetComponent<RectTransform>();
+        headerRect.anchoredPosition = new Vector2(0, 260);
+        headerRect.sizeDelta = new Vector2(600, 50);
+
+        TextMeshProUGUI headerTxt = headerObj.GetComponent<TextMeshProUGUI>();
+        headerTxt.text = "CỬA HÀNG VŨ KHÍ & DỊCH VỤ";
+        headerTxt.fontSize = 28;
+        headerTxt.color = new Color(1f, 0.85f, 0.3f);
+        headerTxt.alignment = TextAlignmentOptions.Center;
+        headerTxt.fontStyle = FontStyles.Bold;
+
+        // Nút Đóng [X]
+        GameObject closeObj = new GameObject("CloseButton", typeof(RectTransform), typeof(Image), typeof(Button));
+        closeObj.transform.SetParent(dialog.transform, false);
+        RectTransform closeRect = closeObj.GetComponent<RectTransform>();
+        closeRect.anchoredPosition = new Vector2(410, 260);
+        closeRect.sizeDelta = new Vector2(40, 40);
+
+        Image closeImg = closeObj.GetComponent<Image>();
+        closeImg.color = new Color(0.8f, 0.2f, 0.2f);
+
+        GameObject closeTxtObj = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        closeTxtObj.transform.SetParent(closeObj.transform, false);
+        RectTransform closeTxtRect = closeTxtObj.GetComponent<RectTransform>();
+        closeTxtRect.anchorMin = Vector2.zero;
+        closeTxtRect.anchorMax = Vector2.one;
+        closeTxtRect.sizeDelta = Vector2.zero;
+
+        TextMeshProUGUI closeTxt = closeTxtObj.GetComponent<TextMeshProUGUI>();
+        closeTxt.text = "X";
+        closeTxt.fontSize = 22;
+        closeTxt.color = Color.white;
+        closeTxt.alignment = TextAlignmentOptions.Center;
+        closeTxt.fontStyle = FontStyles.Bold;
+
+        closeShopButton = closeObj.GetComponent<Button>();
+
+        // 4. Thanh Nút Chuyển Tab (Tab Navigation Bar)
+        GameObject tabBar = new GameObject("TabBar", typeof(RectTransform));
+        tabBar.transform.SetParent(dialog.transform, false);
+        RectTransform tabBarRect = tabBar.GetComponent<RectTransform>();
+        tabBarRect.anchoredPosition = new Vector2(0, 195);
+        tabBarRect.sizeDelta = new Vector2(840, 50);
+
+        coinTabButton = CreateTabButton(tabBar.transform, new Vector2(-280, 0), "SÚNG (COINS GAME)");
+        gemTabButton = CreateTabButton(tabBar.transform, new Vector2(0, 0), "SÚNG VIP (VietQR)");
+        skinTabButton = CreateTabButton(tabBar.transform, new Vector2(280, 0), "TRANG PHỤC (SKINS)");
+
+        // 5. Khung chứa Nội dung 3 Tab (Tab Contents)
+        coinTabContent = CreateTabContent(dialog.transform, "CoinTabContent");
+        gemTabContent = CreateTabContent(dialog.transform, "GemTabContent");
+        skinTabContent = CreateTabContent(dialog.transform, "SkinTabContent");
+
+        // 5a. Súng mua bằng Xu trong Game (In-Game Coins)
+        CreateShopCard(coinTabContent.transform, "AK-47 Gold", "500 Coins", "Súng trường mạ vàng sát thương cao", "MUA (500 COINS)", "Weapons/AK_47A_Gold", () => BuyShopItem(1));
+        CreateShopCard(coinTabContent.transform, "Missile Launcher", "800 Coins", "Súng bắn Tên Lửa tầm xa định vị", "MUA (800 COINS)", "Weapons/Missile_Launcher", () => BuyShopItem(2));
+        CreateShopCard(coinTabContent.transform, "Rocket Launcher", "1,200 Coins", "Súng Bazooka Rocket nổ diện rộng", "MUA (1.2K COINS)", "Weapons/Rocket_Launcher", () => BuyShopItem(3));
+
+        // 5b. Súng VIP mua trực tiếp bằng Tiền Thật qua VietQR (PayOS)
+        CreateShopCard(gemTabContent.transform, "AK-47 Gold VIP", "50,000 VNĐ", "Thanh toán VietQR mua súng AK-47 Gold VIP", "MUA NGAY (50K VNĐ)", "Weapons/AK_47A_Gold", () => BuyGemPackage(50000, "Mua AK-47 Gold VIP"));
+        CreateShopCard(gemTabContent.transform, "Missile Launcher VIP", "100,000 VNĐ", "Thanh toán VietQR mua Súng Tên Lửa VIP", "MUA NGAY (100K VNĐ)", "Weapons/Missile_Launcher", () => BuyGemPackage(100000, "Mua Missile Launcher VIP"));
+        CreateShopCard(gemTabContent.transform, "Rocket Launcher VIP", "150,000 VNĐ", "Thanh toán VietQR mua Súng Bazooka VIP", "MUA NGAY (150K VNĐ)", "Weapons/Rocket_Launcher", () => BuyGemPackage(150000, "Mua Rocket Launcher VIP"));
+
+        // 5c. Trang Phục Skins
+        CreateShopCard(skinTabContent.transform, "Cyber Rookie", "100 Gems", "Trang phục chiến binh Rookie", "MUA (100 GEMS)", "", () => BuyShopItem(4));
+        CreateShopCard(skinTabContent.transform, "Hero Zero", "200 Gems", "Trang phục siêu anh hùng Zero", "MUA (200 GEMS)", "", () => BuyShopItem(5));
+
+        // 6. Dòng trạng thái (Status Text)
+        GameObject statusObj = new GameObject("StatusText", typeof(RectTransform), typeof(TextMeshProUGUI));
+        statusObj.transform.SetParent(dialog.transform, false);
+        RectTransform statusRect = statusObj.GetComponent<RectTransform>();
+        statusRect.anchoredPosition = new Vector2(0, -270);
+        statusRect.sizeDelta = new Vector2(800, 40);
+
+        statusText = statusObj.GetComponent<TextMeshProUGUI>();
+        statusText.text = "Cửa hàng sẵn sàng!";
+        statusText.fontSize = 18;
+        statusText.color = new Color(0.4f, 0.9f, 0.4f);
+        statusText.alignment = TextAlignmentOptions.Center;
+
+        shopPanel.SetActive(false);
+    }
+
+    private Button CreateTabButton(Transform parent, Vector2 pos, string label)
+    {
+        GameObject btnObj = new GameObject(label, typeof(RectTransform), typeof(Image), typeof(Button));
+        btnObj.transform.SetParent(parent, false);
+
+        RectTransform rect = btnObj.GetComponent<RectTransform>();
+        rect.anchoredPosition = pos;
+        rect.sizeDelta = new Vector2(260, 45);
+
+        Image img = btnObj.GetComponent<Image>();
+        img.color = new Color(0.18f, 0.24f, 0.35f);
+
+        GameObject txtObj = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+        txtObj.transform.SetParent(btnObj.transform, false);
+
+        RectTransform txtRect = txtObj.GetComponent<RectTransform>();
+        txtRect.anchorMin = Vector2.zero;
+        txtRect.anchorMax = Vector2.one;
+        txtRect.sizeDelta = Vector2.zero;
+
+        TextMeshProUGUI tmp = txtObj.GetComponent<TextMeshProUGUI>();
+        tmp.text = label;
+        tmp.fontSize = 16;
+        tmp.color = Color.white;
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.fontStyle = FontStyles.Bold;
+
+        return btnObj.GetComponent<Button>();
+    }
+
+    private GameObject CreateTabContent(Transform parent, string name)
+    {
+        GameObject content = new GameObject(name, typeof(RectTransform), typeof(HorizontalLayoutGroup));
+        content.transform.SetParent(parent, false);
+
+        RectTransform rect = content.GetComponent<RectTransform>();
+        rect.anchoredPosition = new Vector2(0, -30);
+        rect.sizeDelta = new Vector2(840, 360);
+
+        HorizontalLayoutGroup layout = content.GetComponent<HorizontalLayoutGroup>();
+        layout.spacing = 20;
+        layout.childAlignment = TextAnchor.MiddleCenter;
+        layout.childControlWidth = false;
+        layout.childControlHeight = false;
+
+        return content;
+    }
+
+    private void CreateShopCard(Transform parent, string title, string price, string desc, string buttonText, string spritePath, UnityEngine.Events.UnityAction onClickAction)
+    {
+        GameObject card = new GameObject("Card_" + title, typeof(RectTransform), typeof(Image));
+        card.transform.SetParent(parent, false);
+
+        RectTransform rect = card.GetComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(250, 320);
+
+        Image img = card.GetComponent<Image>();
+        img.color = new Color(0.15f, 0.19f, 0.28f);
+
+        // Title
+        GameObject tObj = new GameObject("Title", typeof(RectTransform), typeof(TextMeshProUGUI));
+        tObj.transform.SetParent(card.transform, false);
+        RectTransform tRect = tObj.GetComponent<RectTransform>();
+        tRect.anchoredPosition = new Vector2(0, 125);
+        tRect.sizeDelta = new Vector2(230, 30);
+        TextMeshProUGUI tTxt = tObj.GetComponent<TextMeshProUGUI>();
+        tTxt.text = title;
+        tTxt.fontSize = 17;
+        tTxt.color = new Color(1f, 0.9f, 0.4f);
+        tTxt.alignment = TextAlignmentOptions.Center;
+        tTxt.fontStyle = FontStyles.Bold;
+
+        // Icon súng
+        GameObject iconObj = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+        iconObj.transform.SetParent(card.transform, false);
+        RectTransform iconRect = iconObj.GetComponent<RectTransform>();
+        iconRect.anchoredPosition = new Vector2(0, 55);
+        iconRect.sizeDelta = new Vector2(130, 75);
+
+        Image iconImg = iconObj.GetComponent<Image>();
+        iconImg.preserveAspect = true;
+
+        if (!string.IsNullOrEmpty(spritePath))
+        {
+            Sprite s = Resources.Load<Sprite>(spritePath);
+            if (s != null)
+            {
+                iconImg.sprite = s;
+                iconImg.color = Color.white;
+            }
+            else
+            {
+                iconImg.color = new Color(1f, 1f, 1f, 0.15f);
+            }
+        }
+        else
+        {
+            iconImg.color = new Color(1f, 1f, 1f, 0.15f);
+        }
+
+        // Desc
+        GameObject dObj = new GameObject("Desc", typeof(RectTransform), typeof(TextMeshProUGUI));
+        dObj.transform.SetParent(card.transform, false);
+        RectTransform dRect = dObj.GetComponent<RectTransform>();
+        dRect.anchoredPosition = new Vector2(0, -20);
+        dRect.sizeDelta = new Vector2(220, 60);
+        TextMeshProUGUI dTxt = dObj.GetComponent<TextMeshProUGUI>();
+        dTxt.text = desc;
+        dTxt.fontSize = 13;
+        dTxt.color = new Color(0.8f, 0.85f, 0.9f);
+        dTxt.alignment = TextAlignmentOptions.Center;
+
+        // Price
+        GameObject pObj = new GameObject("Price", typeof(RectTransform), typeof(TextMeshProUGUI));
+        pObj.transform.SetParent(card.transform, false);
+        RectTransform pRect = pObj.GetComponent<RectTransform>();
+        pRect.anchoredPosition = new Vector2(0, -65);
+        pRect.sizeDelta = new Vector2(220, 25);
+        TextMeshProUGUI pTxt = pObj.GetComponent<TextMeshProUGUI>();
+        pTxt.text = price;
+        pTxt.fontSize = 17;
+        pTxt.color = new Color(0.4f, 0.9f, 0.5f);
+        pTxt.alignment = TextAlignmentOptions.Center;
+        pTxt.fontStyle = FontStyles.Bold;
+
+        // Buy Button
+        GameObject bObj = new GameObject("BuyBtn", typeof(RectTransform), typeof(Image), typeof(Button));
+        bObj.transform.SetParent(card.transform, false);
+        RectTransform bRect = bObj.GetComponent<RectTransform>();
+        bRect.anchoredPosition = new Vector2(0, -115);
+        bRect.sizeDelta = new Vector2(200, 45);
+        Image bImg = bObj.GetComponent<Image>();
+        bImg.color = new Color(0.2f, 0.65f, 0.35f);
+
+        GameObject btObj = new GameObject("Txt", typeof(RectTransform), typeof(TextMeshProUGUI));
+        btObj.transform.SetParent(bObj.transform, false);
+        RectTransform btRect = btObj.GetComponent<RectTransform>();
+        btRect.anchorMin = Vector2.zero;
+        btRect.anchorMax = Vector2.one;
+        btRect.sizeDelta = Vector2.zero;
+        TextMeshProUGUI btTxt = btObj.GetComponent<TextMeshProUGUI>();
+        btTxt.text = string.IsNullOrEmpty(buttonText) ? "MUA NGAY" : buttonText;
+        btTxt.fontSize = 15;
+        btTxt.color = Color.white;
+        btTxt.alignment = TextAlignmentOptions.Center;
+        btTxt.fontStyle = FontStyles.Bold;
+
+        Button btn = bObj.GetComponent<Button>();
+        btn.onClick.AddListener(onClickAction);
     }
 }

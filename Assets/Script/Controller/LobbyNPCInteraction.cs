@@ -24,6 +24,11 @@ public class LobbyNPCInteraction : MonoBehaviour
 
     private void Start()
     {
+        if (floatingCanvas == null)
+        {
+            CreateAutoFloatingCanvas();
+        }
+
         if (promptTextUI != null)
         {
             promptTextUI.text = promptText;
@@ -33,6 +38,45 @@ public class LobbyNPCInteraction : MonoBehaviour
         {
             floatingCanvas.SetActive(false);
         }
+    }
+
+    /// <summary>
+    /// Tự động tạo Canvas World Space chữ nổi trên đầu NPC chuẩn tỷ lệ 100% không cần chỉnh tay Inspector
+    /// </summary>
+    private void CreateAutoFloatingCanvas()
+    {
+        GameObject canvasObj = new GameObject("AutoPromptCanvas", typeof(RectTransform), typeof(Canvas));
+        canvasObj.transform.SetParent(transform, false);
+
+        Canvas canvas = canvasObj.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.WorldSpace;
+        canvas.sortingOrder = 50;
+
+        RectTransform canvasRect = canvasObj.GetComponent<RectTransform>();
+        canvasRect.sizeDelta = new Vector2(250, 60);
+        canvasRect.localScale = new Vector3(0.0065f, 0.0065f, 1f); // Kích thước vừa vặn cân đối
+        canvasRect.anchoredPosition = new Vector2(0f, 0.68f); // Vị trí chuẩn sát đỉnh đầu NPC
+
+        GameObject textObj = new GameObject("PromptText", typeof(RectTransform), typeof(TextMeshProUGUI));
+        textObj.transform.SetParent(canvasObj.transform, false);
+
+        RectTransform textRect = textObj.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.sizeDelta = Vector2.zero;
+        textRect.anchoredPosition = Vector2.zero;
+
+        TextMeshProUGUI tmp = textObj.GetComponent<TextMeshProUGUI>();
+        tmp.text = string.IsNullOrEmpty(promptText) ? "Bấm [E] mở Shop" : promptText;
+        tmp.fontSize = 20;
+        tmp.color = Color.white;
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.enableAutoSizing = true;
+        tmp.fontSizeMin = 10;
+        tmp.fontSizeMax = 22; // Cỡ chữ max 22 hoàn hảo
+
+        promptTextUI = tmp;
+        floatingCanvas = canvasObj;
     }
 
     private void Update()
@@ -68,16 +112,15 @@ public class LobbyNPCInteraction : MonoBehaviour
         switch (interactionType)
         {
             case LobbyInteractionType.ShopMerchant:
-                if (ShopUIController.Instance != null)
+                ShopUIController shop = ShopUIController.Instance;
+                if (shop == null) shop = Object.FindFirstObjectByType<ShopUIController>();
+
+                if (shop == null)
                 {
-                    ShopUIController.Instance.OpenShop();
+                    GameObject shopObj = new GameObject("ShopUIController");
+                    shop = shopObj.AddComponent<ShopUIController>();
                 }
-                else
-                {
-                    ShopUIController shop = Object.FindFirstObjectByType<ShopUIController>();
-                    if (shop != null) shop.OpenShop();
-                    else Debug.LogWarning("[LobbyNPCInteraction] Không tìm thấy ShopUIController!");
-                }
+                shop.OpenShop();
                 break;
 
             case LobbyInteractionType.DungeonPortal:
