@@ -1186,6 +1186,31 @@ public class DungeonGenerator : MonoBehaviour
         GameObject oldPortalObj = GameObject.Find("TeleportPortal");
         if (oldPortalObj != null) DestroySmart(oldPortalObj);
 
+        // 🧹 DỌN DẸP SẠCH SẼ TẤT CẢ VẬT PHẨM VÀ VŨ KHÍ RƠI VÃI TẦNG CŨ KHI QUA TẦNG MỚI (CẢ SINGLEPLAYER & MULTIPLAYER)
+        LootItem[] remainingLoot = Object.FindObjectsByType<LootItem>(FindObjectsSortMode.None);
+        foreach (var loot in remainingLoot)
+        {
+            if (loot != null && loot.gameObject != null) Destroy(loot.gameObject);
+        }
+
+        GroundWeapon[] remainingWeapons = Object.FindObjectsByType<GroundWeapon>(FindObjectsSortMode.None);
+        foreach (var weapon in remainingWeapons)
+        {
+            if (weapon != null && weapon.gameObject != null) Destroy(weapon.gameObject);
+        }
+
+        RewardChest[] remainingRewardChests = Object.FindObjectsByType<RewardChest>(FindObjectsSortMode.None);
+        foreach (var chest in remainingRewardChests)
+        {
+            if (chest != null && chest.gameObject != null) Destroy(chest.gameObject);
+        }
+
+        WeaponChest[] remainingWeaponChests = Object.FindObjectsByType<WeaponChest>(FindObjectsSortMode.None);
+        foreach (var chest in remainingWeaponChests)
+        {
+            if (chest != null && chest.gameObject != null) Destroy(chest.gameObject);
+        }
+
         for (int i = transform.childCount - 1; i >= 0; i--)
         {
             GameObject child = transform.GetChild(i).gameObject;
@@ -1419,7 +1444,22 @@ public class DungeonGenerator : MonoBehaviour
 
         for (int i = 0; i < mobCount; i++)
         {
-            GameObject mobPrefab = GetRandomMobPrefabFromTheme();
+            GameObject mobPrefab = null;
+
+            if (isBossRoom)
+            {
+                // 👑 PHÒNG BOSS / MINI-BOSS: Ưu tiên nạp Melog.prefab làm Mini Boss 2 tay 2 súng!
+#if UNITY_EDITOR
+                mobPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/Mobs/Melog.prefab");
+#endif
+                if (mobPrefab == null) mobPrefab = Resources.Load<GameObject>("Prefab/Mobs/Melog");
+                if (mobPrefab == null) mobPrefab = Resources.Load<GameObject>("Mobs/Melog");
+                if (mobPrefab == null) mobPrefab = GetRandomMobPrefabFromTheme();
+            }
+            else
+            {
+                mobPrefab = GetRandomMobPrefabFromTheme();
+            }
 
             if (mobPrefab == null)
                 continue;
@@ -1470,6 +1510,12 @@ public class DungeonGenerator : MonoBehaviour
             if (mobH != null && room.controller != null)
             {
                 room.controller.AddMob(mobH);
+
+                MobAI mobAI = mobObj.GetComponent<MobAI>();
+                if (mobAI != null) mobAI.SetRoom(room.controller);
+
+                MelogBossAI melogAI = mobObj.GetComponent<MelogBossAI>();
+                if (melogAI != null) melogAI.SetRoom(room.controller);
             }
             else
             {

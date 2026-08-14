@@ -148,7 +148,7 @@ public class MultiplayerSyncManager : MonoBehaviour
         {
             allMobs[i].networkId = $"mob_{i}";
         }
-        
+
         Debug.Log($"Đã gán thành công {allRooms.Length} Room IDs và {allMobs.Length} Mob IDs đồng bộ.");
     }
 
@@ -594,22 +594,10 @@ public class MultiplayerSyncManager : MonoBehaviour
     {
         if (NetworkManager.Instance == null) return;
 
-        if (targetConnId == NetworkManager.Instance.MyConnectionId)
+        // 🎯 CHỈ XỬ LÝ HIỂN THỊ CHO ĐỒNG ĐỘI (REMOTE PLAYER)
+        // Bản thân (Local Player cả Host và Guest) đã tự trừ máu & hiển thị -9 cục bộ khi bị dính đạn rồi!
+        if (targetConnId != NetworkManager.Instance.MyConnectionId)
         {
-            // Nếu chính mình là mục tiêu chịu sát thương (Host gửi xuống cho Player 2), gọi TakeDamageFromNetwork
-            GameObject localPlayerObj = GameObject.FindGameObjectWithTag("Player");
-            if (localPlayerObj != null)
-            {
-                RookieHealth health = localPlayerObj.GetComponent<RookieHealth>();
-                if (health != null && !health.isDead)
-                {
-                    health.TakeDamageFromNetwork(Mathf.RoundToInt(damage));
-                }
-            }
-        }
-        else
-        {
-            // Nếu là đồng đội nhận sát thương, hiển thị chữ số sát thương và chớp đỏ trên nhân vật đồng đội
             Debug.Log($"[MultiplayerSyncManager] Đồng đội {targetConnId} nhận sát thương: {damage} HP");
             GameObject remoteObj = GetRemotePlayerById(targetConnId);
             if (remoteObj != null)
@@ -635,10 +623,13 @@ public class MultiplayerSyncManager : MonoBehaviour
         SpriteRenderer sr = remoteObj.GetComponent<SpriteRenderer>();
         if (sr != null)
         {
-            Color oldColor = sr.color;
-            sr.color = new Color(1f, 0.4f, 0.4f);
+            sr.color = new Color(1f, 0.35f, 0.35f, 1f);
             yield return new WaitForSeconds(0.15f);
-            if (sr != null) sr.color = oldColor;
+            if (sr != null)
+            {
+                // 🎯 RESET VỀ MÀU TRẮNG NGUYÊN BẢN (Color.white): Đảm bảo 100% nhân vật trả về màu gốc, không kẹt màu đỏ!
+                sr.color = Color.white;
+            }
         }
     }
 
@@ -735,7 +726,15 @@ public class MultiplayerSyncManager : MonoBehaviour
             }
             else
             {
-                enemy.transform.position = new Vector3(x, y, enemy.transform.position.z);
+                MelogBossAI melogBossAI = enemy.GetComponent<MelogBossAI>();
+                if (melogBossAI != null)
+                {
+                    melogBossAI.UpdateNetworkPosition(new Vector2(x, y));
+                }
+                else
+                {
+                    enemy.transform.position = new Vector3(x, y, enemy.transform.position.z);
+                }
             }
         }
     }
