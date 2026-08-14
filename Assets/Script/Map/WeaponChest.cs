@@ -69,12 +69,12 @@ public class WeaponChest : MonoBehaviour
     {
         GameObject textObj = new GameObject("PromptText");
         textObj.transform.SetParent(transform);
-        textObj.transform.localPosition = new Vector3(0f, 0.9f, 0f); // Phía trên nắp rương
+        textObj.transform.localPosition = new Vector3(0f, 0.95f, 0f); // Phía trên nắp rương
 
         promptText = textObj.AddComponent<TextMesh>();
-        promptText.text = ""; // Không hiện tiêu đề rương ban đầu như yêu cầu
-        promptText.fontSize = 24;
-        promptText.characterSize = 0.05f;
+        promptText.text = ""; // Không hiện tiêu đề rương ban đầu
+        promptText.fontSize = 32;
+        promptText.characterSize = 0.07f; // Cỡ chữ vừa vặn ngang cỡ chữ súng
         promptText.anchor = TextAnchor.MiddleCenter;
         promptText.alignment = TextAlignment.Center;
         promptText.color = Color.green;
@@ -82,7 +82,7 @@ public class WeaponChest : MonoBehaviour
         MeshRenderer mr = textObj.GetComponent<MeshRenderer>();
         if (mr != null)
         {
-            mr.sortingOrder = 7;
+            mr.sortingOrder = 10;
         }
     }
 
@@ -92,17 +92,16 @@ public class WeaponChest : MonoBehaviour
 
         if (isPlayerInRange)
         {
-            // Cập nhật text động tùy theo thiết bị đang sử dụng
+            // Cập nhật text động đơn giản 'Press E' hoặc 'Press B'
             if (promptText != null)
             {
-                string keyName = InputDeviceHelper.GetInteractKeyDisplayString();
                 if (InputDeviceHelper.IsGamepadActive())
                 {
                     promptText.text = "Press B";
                 }
                 else
                 {
-                    promptText.text = "Press " + keyName;
+                    promptText.text = "Press E";
                 }
                 promptText.color = Color.green;
             }

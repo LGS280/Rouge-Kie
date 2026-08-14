@@ -740,6 +740,7 @@ MonoBehaviour:
   obstacleTilemap: {fileID: 1500275692}
   doorPrefab: {fileID: 8190796687291338659, guid: 5737eaea6b8fa0b4d8c1fdec509fb971, type: 3}
   chestPrefab: {fileID: 1794885319913789208, guid: cd33e2f60b137ef4ba0032240d9fda01, type: 3}
+  weaponChestPrefab: {fileID: 0}
   doorTilemap: {fileID: 286068818}
   doorTopTilemap: {fileID: 0}
   minRoomSize: 12
@@ -28446,9 +28447,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.060185183
-    width: 0.33333334
-    height: 0.32323232
+    y: 0.014814815
+    width: 1
+    height: 0.96969694
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
