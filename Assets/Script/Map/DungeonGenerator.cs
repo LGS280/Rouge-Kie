@@ -1510,6 +1510,12 @@ public class DungeonGenerator : MonoBehaviour
             if (mobH != null && room.controller != null)
             {
                 room.controller.AddMob(mobH);
+
+                MobAI mobAI = mobObj.GetComponent<MobAI>();
+                if (mobAI != null) mobAI.SetRoom(room.controller);
+
+                MelogBossAI melogAI = mobObj.GetComponent<MelogBossAI>();
+                if (melogAI != null) melogAI.SetRoom(room.controller);
             }
             else
             {
