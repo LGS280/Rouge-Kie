@@ -22,6 +22,21 @@ public class MinimapRoomUI : MonoBehaviour
         {
             roomIcon.sprite = iconSprite;
             roomIcon.gameObject.SetActive(iconSprite != null);
+            
+            // Icon Portal được vẽ sát mép ảnh nên thu nhỏ sizeDelta về 28x28 để vừa lọt lòng ô phòng
+            if (iconSprite != null && iconSprite.name.ToLower().Contains("portal"))
+            {
+                roomIcon.rectTransform.sizeDelta = new Vector2(28f, 28f);
+            }
+            else
+            {
+                float defaultSize = 46.75f;
+                if (MinimapManager.Instance != null)
+                {
+                    defaultSize = MinimapManager.Instance.roomSpacing * 0.85f;
+                }
+                roomIcon.rectTransform.sizeDelta = new Vector2(defaultSize, defaultSize);
+            }
         }
 
         if (playerIndicator != null)

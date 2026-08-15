@@ -1,19 +1,10 @@
 fileFormatVersion: 2
-guid: a5674ab29f128934984b4fae7a859413
+guid: 8059c2d0b29490540b2747a9977a3c87
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -317570121096677399
-    second: Melog_Death_0
-  - first:
-      213: 5959932273253930339
-    second: Melog_Death_1
-  - first:
-      213: 7140792980690284779
-    second: Melog_Death_2
-  - first:
-      213: 7830115231881212533
-    second: Melog_Death_3
+      213: -5816642994671486895
+    second: portal_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -60,7 +51,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 24
+  spritePixelsToUnits: 32
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -109,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Melog_Death_1
+      name: portal_0
       rect:
         serializedVersion: 2
-        x: 3
-        y: 5
-        width: 26
-        height: 21
+        x: 7
+        y: 4
+        width: 12
+        height: 12
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -124,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 365dfa053dee5b250800000000000000
-      internalID: 5959932273253930339
+      spriteID: 1587755a302274fa0800000000000000
+      internalID: -5816642994671486895
       vertices: []
       indices: 
       edges: []
@@ -134,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 36be04cdd9b8407468aa91dd6928bb8f
+    spriteID: 64cc3b8e548d1aa4cac0d26846193dcb
     internalID: 0
     vertices: []
     indices: 
@@ -146,10 +137,7 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      Melog_Death_0: -317570121096677399
-      Melog_Death_1: 5959932273253930339
-      Melog_Death_2: 7140792980690284779
-      Melog_Death_3: 7830115231881212533
+      portal_0: -5816642994671486895
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
