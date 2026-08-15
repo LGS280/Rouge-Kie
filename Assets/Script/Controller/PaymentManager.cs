@@ -18,6 +18,7 @@ public class PaymentManager : MonoBehaviour
     public Button closeButton;
     public Button openBrowserButton;
     public Button devSimulateSuccessButton;
+    public string pendingBoughtWeaponPrefab = "";
 
     private Coroutine pollingCoroutine;
     private string currentPaymentUrl = "";
@@ -184,8 +185,8 @@ public class PaymentManager : MonoBehaviour
                     PaymentResponseData res = JsonUtility.FromJson<PaymentResponseData>(responseJson);
                     if (res.status == "PAID")
                     {
-                        Debug.Log($"[PaymentManager] Giao dich OrderCode {orderCode} da duoc THANH TOAN thanh cong!");
-                        if (statusText != null) statusText.text = "<color=green>Payment SUCCESSFUL! Assets added!</color>";
+                        Debug.Log($"[PaymentManager] Giao dịch OrderCode {orderCode} đã được THANH TOÁN thành công!");
+                        if (statusText != null) statusText.text = "<color=green>Thanh toán thành công! Súng đã xuất hiện trên bàn!</color>";
 
                         // Tự động làm mới UI Profile Gems/Coins người chơi
                         if (PlayerProfileUI.Instance != null)
@@ -193,9 +194,16 @@ public class PaymentManager : MonoBehaviour
                             PlayerProfileUI.Instance.RefreshProfile();
                         }
 
-                        // Dừng polling và tự động đóng modal sau 2s
+                        // Tự động sinh súng vừa mua bằng VietQR lên Bàn Trưng Bày
+                        if (!string.IsNullOrEmpty(pendingBoughtWeaponPrefab) && ShopUIController.Instance != null)
+                        {
+                            ShopUIController.Instance.SpawnBoughtWeaponOnTable(pendingBoughtWeaponPrefab);
+                            pendingBoughtWeaponPrefab = "";
+                        }
+
+                        // Dừng polling và tự động đóng modal sau 1.5s
                         if (pollingCoroutine != null) StopCoroutine(pollingCoroutine);
-                        Invoke(nameof(CloseQRModal), 2f);
+                        Invoke(nameof(CloseQRModal), 1.5f);
                     }
                 }
                 catch (Exception ex)
@@ -225,7 +233,7 @@ public class PaymentManager : MonoBehaviour
 
         ApiClient.Instance.Post($"/Payment/dev-simulate-success/{currentOrderCode}", "{}", (res) =>
         {
-            Debug.Log("[PaymentManager] Gia lap thanh toan thanh cong!");
+            Debug.Log("[PaymentManager] Giả lập thanh toán thành công!");
             if (statusText != null) statusText.text = "<color=green>Dev Simulation Successful!</color>";
 
             if (PlayerProfileUI.Instance != null)
@@ -233,10 +241,24 @@ public class PaymentManager : MonoBehaviour
                 PlayerProfileUI.Instance.RefreshProfile();
             }
 
+            // Tự động sinh súng vừa mua bằng VietQR lên Bàn Trưng Bày
+            if (!string.IsNullOrEmpty(pendingBoughtWeaponPrefab) && ShopUIController.Instance != null)
+            {
+                ShopUIController.Instance.SpawnBoughtWeaponOnTable(pendingBoughtWeaponPrefab);
+                pendingBoughtWeaponPrefab = "";
+            }
+
             Invoke(nameof(CloseQRModal), 1.5f);
         }, (err) =>
         {
-            Debug.LogError($"[PaymentManager] Dev simulation error: {err}");
+            Debug.LogWarning($"[PaymentManager] Dev simulation API error (Offline Mode Fallback): {err}");
+            // Dev Offline Fallback
+            if (!string.IsNullOrEmpty(pendingBoughtWeaponPrefab) && ShopUIController.Instance != null)
+            {
+                ShopUIController.Instance.SpawnBoughtWeaponOnTable(pendingBoughtWeaponPrefab);
+                pendingBoughtWeaponPrefab = "";
+            }
+            Invoke(nameof(CloseQRModal), 1.5f);
         });
     }
 

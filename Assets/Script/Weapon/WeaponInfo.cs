@@ -188,7 +188,7 @@ public class WeaponInfo : MonoBehaviour
             var bSlash = spawnedStab.GetComponent<MeleeSlash>();
             if (bSlash != null) bSlash.InitFromDb(secondId);
 
-            PlayWeaponSound();
+            // Bỏ phát âm thanh bắn súng AK-47 khi đâm lưỡi lê cận chiến
             TriggerAttackAnimation();
         }
     }

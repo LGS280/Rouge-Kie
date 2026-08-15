@@ -15,6 +15,7 @@ public class MinimapManager : MonoBehaviour
     public Sprite spriteHome;              // Sprite nhà xuất phát (Home.png)
     public Sprite spriteBoss;              // Sprite phòng Boss (Boss.png)
     public Sprite spriteChest;             // Sprite phòng rương báu (Chest.png)
+    public Sprite spritePortal;            // Sprite cổng dịch chuyển (portal.png)
     public Sprite spritePlayer;            // Sprite chấm tròn/mũi tên người chơi (nếu có)
 
     [Header("Layout Settings")]
@@ -263,7 +264,7 @@ public class MinimapManager : MonoBehaviour
                         iconSprite = spriteChest;
                         break;
                     case RoomType.Portal:
-                        iconSprite = spriteBoss;
+                        iconSprite = (spritePortal != null) ? spritePortal : LoadSpriteSafely("Minimap/portal");
                         break;
                 }
 
@@ -294,6 +295,7 @@ public class MinimapManager : MonoBehaviour
     public void UpdateMinimap()
     {
         if (roomControllers.Count == 0) return;
+        CenterMapOnCurrentRoom();
 
         HashSet<Vector2Int> visitedCoords = new HashSet<Vector2Int>();
         foreach (var kvp in roomControllers)
@@ -462,6 +464,7 @@ public class MinimapManager : MonoBehaviour
         if (room == null) return;
         currentRoom = room;
         room.isVisited = true;
+        CenterMapOnCurrentRoom();
         UpdateMinimap();
 
         // BỔ SUNG: Phát sóng phòng đã ghé thăm sang máy đồng đội qua SignalR
@@ -514,6 +517,7 @@ public class MinimapManager : MonoBehaviour
         iconObj.transform.SetParent(roomObj.transform, false);
         Image iconImg = iconObj.AddComponent<Image>();
         iconImg.rectTransform.sizeDelta = new Vector2(roomSpacing * 0.85f, roomSpacing * 0.85f);
+        iconImg.preserveAspect = true;
 
         // 4. Tạo Node con hiển thị chấm đỏ người chơi đứng
         GameObject playerObj = new GameObject("PlayerIndicator", typeof(RectTransform));
@@ -561,6 +565,15 @@ public class MinimapManager : MonoBehaviour
         GameObject windowObj = GameObject.Find("MinimapWindow");
         if (windowObj != null)
         {
+            RectTransform winRect = windowObj.GetComponent<RectTransform>();
+            if (winRect != null)
+            {
+                winRect.anchorMin = new Vector2(1, 1);
+                winRect.anchorMax = new Vector2(1, 1);
+                winRect.pivot = new Vector2(1, 1);
+                winRect.anchoredPosition = new Vector2(-45f, -55f);
+            }
+
             Image bg = windowObj.GetComponent<Image>();
             if (bg != null)
             {
@@ -621,7 +634,7 @@ public class MinimapManager : MonoBehaviour
         windowRect.anchorMax = new Vector2(1, 1);
         windowRect.pivot = new Vector2(1, 1);
         windowRect.sizeDelta = new Vector2(240, 240);
-        windowRect.anchoredPosition = new Vector2(-20, -20); // Góc trên bên phải tuyệt đối
+        windowRect.anchoredPosition = new Vector2(-45f, -55f); // Hạ xuống và dời ra xa góc màn hình
 
         // Thêm nền xanh mờ nhẹ nhàng và trong suốt (Alpha = 0.22f) để xuyên thấu sàn nhà
         Image windowBg = windowObj.AddComponent<Image>();
@@ -653,6 +666,7 @@ public class MinimapManager : MonoBehaviour
         manager.spriteHome = LoadSpriteSafely("Minimap/Home");
         manager.spriteBoss = LoadSpriteSafely("Minimap/Boss");
         manager.spriteChest = LoadSpriteSafely("Minimap/Chest");
+        manager.spritePortal = LoadSpriteSafely("Minimap/portal");
         manager.spritePlayer = LoadSpriteSafely("UI/Skin/Knob");
 
         Debug.Log("[MinimapManager] Đã tự động tạo và cấu hình Minimap UI.");

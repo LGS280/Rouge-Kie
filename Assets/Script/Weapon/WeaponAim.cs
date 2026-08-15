@@ -38,8 +38,18 @@ public class WeaponAim : MonoBehaviour
     void Update()
     {
         // BỎ QUA NẾU ĐÂY LÀ SÚNG CỦA REMOTE PLAYER
-        // Theo kiến trúc, Remote Player không có PlayerController, nên biến này sẽ null
         if (playerController == null)
+        {
+            return;
+        }
+
+        // Vô hiệu hóa ngắm và bắn khi đang mở Shop UI hoặc click trỏ chuột trên UI
+        if (ShopUIController.Instance != null && ShopUIController.Instance.IsShopOpen())
+        {
+            return;
+        }
+
+        if (UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
         {
             return;
         }

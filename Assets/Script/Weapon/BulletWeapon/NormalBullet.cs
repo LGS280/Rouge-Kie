@@ -24,8 +24,16 @@ public class NormalBullet : MonoBehaviour
         }
     }
 
+    [Header("Default Parameters Fallback")]
+    public float defaultSpeed = 22f;
+    public float defaultBaseDamage = 15f;
+
     protected virtual void Start()
     {
+        if (speed <= 0f) speed = defaultSpeed;
+        if (baseDamage <= 0f) baseDamage = defaultBaseDamage;
+        if (critMultiplier <= 0f) critMultiplier = 1.5f;
+
         Destroy(gameObject, lifeTime);
     }
 
