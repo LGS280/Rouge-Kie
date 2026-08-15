@@ -143,7 +143,7 @@ public class LobbyNPCInteraction : MonoBehaviour
         RectTransform canvasRect = canvasObj.GetComponent<RectTransform>();
         canvasRect.sizeDelta = new Vector2(300, 60);
         canvasRect.localScale = new Vector3(0.005f, 0.005f, 1f); // Tỷ lệ chuẩn nét căng không bị méo chữ
-        canvasRect.anchoredPosition = new Vector2(0f, 2.2f); // Vị trí chuẩn trên đỉnh cổng lớn
+        canvasRect.anchoredPosition = new Vector2(0f, 0.65f); // Vị trí chuẩn sát ngay trên đầu NPC Shop Merchant
 
         GameObject textObj = new GameObject("PromptText", typeof(RectTransform), typeof(TextMeshProUGUI));
         textObj.transform.SetParent(canvasObj.transform, false);
@@ -156,7 +156,7 @@ public class LobbyNPCInteraction : MonoBehaviour
 
         TextMeshProUGUI tmp = textObj.GetComponent<TextMeshProUGUI>();
         tmp.text = string.IsNullOrEmpty(promptText) ? "Bấm [E] mở Shop" : promptText;
-        tmp.fontSize = 22;
+        tmp.fontSize = 28; // Tăng cỡ chữ to nổi bật hơn chút xíu
         tmp.color = Color.white;
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.enableAutoSizing = false;
@@ -228,6 +228,16 @@ public class LobbyNPCInteraction : MonoBehaviour
 
             case LobbyInteractionType.DungeonPortal:
                 Debug.Log("[LobbyNPCInteraction] Chuyển tới Dungeon (SampleScene)...");
+                if (WeaponManager.Instance != null)
+                {
+                    WeaponManager.Instance.SaveEquippedWeapons();
+                }
+
+                if (LoadingScreenUI.Instance != null)
+                {
+                    LoadingScreenUI.Instance.ShowLoading("TẦNG 1 - 1", "Đang kết nối và khởi tạo hầm ngục mới...");
+                }
+
                 UnityEngine.SceneManagement.SceneManager.LoadScene("SampleScene");
                 break;
 

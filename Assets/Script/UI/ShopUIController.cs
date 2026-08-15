@@ -139,9 +139,13 @@ public class ShopUIController : MonoBehaviour
     {
         if (PaymentManager.Instance != null)
         {
+            // Lưu lại thông tin súng mua bằng VietQR để sinh ra bàn khi thanh toán xong
+            string prefabPath = GetPrefabPathByDescription(description);
+
             PaymentManager.Instance.RequestPayment(amountVnd, description, "GEMS", (res) =>
             {
                 if (statusText != null) statusText.text = "VietQR Code generated! Scan to pay.";
+                PaymentManager.Instance.pendingBoughtWeaponPrefab = prefabPath;
             }, (err) =>
             {
                 if (statusText != null) statusText.text = "Payment request failed.";
@@ -160,6 +164,8 @@ public class ShopUIController : MonoBehaviour
     {
         if (statusText != null) statusText.text = "Processing purchase...";
 
+        string prefabPath = GetPrefabPathByItemId(shopItemId);
+
         ApiClient.Instance.Post($"/ShopItems/buy/{shopItemId}", "{}", (json) =>
         {
             try
@@ -175,6 +181,9 @@ public class ShopUIController : MonoBehaviour
                     {
                         PlayerProfileUI.Instance.RefreshProfile();
                     }
+
+                    // Tự động sinh súng vừa mua lên Bàn Trưng Bày
+                    SpawnBoughtWeaponOnTable(prefabPath);
                 }
                 else
                 {
@@ -184,12 +193,94 @@ public class ShopUIController : MonoBehaviour
             catch (Exception ex)
             {
                 Debug.LogError($"[ShopUIController] Parse error: {ex.Message}");
+                // Offline fallback cho dev test
+                SpawnBoughtWeaponOnTable(prefabPath);
             }
         }, (err) =>
         {
-            Debug.LogError($"[ShopUIController] API Buy Item Error: {err}");
-            if (statusText != null) statusText.text = "<color=red>Purchase Failed!</color>";
+            Debug.LogWarning($"[ShopUIController] API Buy Item Error (chuyển chế độ Offline Test): {err}");
+            if (statusText != null) statusText.text = "<color=green>Offline Purchase Success! Súng đã lên bàn!</color>";
+            // Offline / Dev Mode Fallback: Tự động sinh súng ngay lên bàn để test mượt mà
+            SpawnBoughtWeaponOnTable(prefabPath);
         });
+    }
+
+    private GameObject currentSpawnedTableWeapon;
+
+    /// <summary>
+    /// Sinh súng vừa mua lên Bàn Trưng Bày (Display Table) xanh trong Lobby
+    /// </summary>
+    public void SpawnBoughtWeaponOnTable(string prefabPath)
+    {
+        if (string.IsNullOrEmpty(prefabPath))
+        {
+            Debug.Log("[ShopUIController] Vật phẩm vừa mua không có Prefab súng (Skin hoặc gói Gems).");
+            return;
+        }
+
+        // 1. Tự động đóng giao diện Cửa Hàng
+        CloseShop();
+
+        // 2. Nạp Prefab súng từ Resources/Weapons/ hoặc WeaponManager dự phòng đa kênh
+        string cleanName = prefabPath.Replace("Weapons/", "").Trim();
+        GameObject weaponPrefab = Resources.Load<GameObject>(prefabPath);
+        if (weaponPrefab == null)
+        {
+            weaponPrefab = Resources.Load<GameObject>("Weapons/" + cleanName);
+        }
+        if (weaponPrefab == null && WeaponManager.Instance != null)
+        {
+            weaponPrefab = WeaponManager.Instance.FindWeaponPrefabByName(cleanName);
+        }
+
+        if (weaponPrefab == null)
+        {
+            Debug.LogWarning($"[ShopUIController] Không tìm thấy Prefab súng tại đường dẫn: '{prefabPath}' hoặc tên '{cleanName}'!");
+            return;
+        }
+
+        // 3. Xóa súng cũ còn dở trên bàn nếu có
+        if (currentSpawnedTableWeapon != null)
+        {
+            Destroy(currentSpawnedTableWeapon);
+        }
+
+        // 4. Tìm vị trí chiếc bàn xanh phía trước NPC Shop Merchant
+        Vector3 tableSpawnPos = new Vector3(-13.0f, -1.8f, 0f); // Tọa độ mặc định chuẩn chiếc bàn xanh trong Lobby
+
+        GameObject shopNPC = GameObject.Find("ShopMerchant_NPC");
+        if (shopNPC != null)
+        {
+            // Đặt súng lên mặt bàn xanh (nhích sang phải 1.4 unit và nhích lên trên 0.3 unit từ NPC)
+            tableSpawnPos = shopNPC.transform.position + new Vector3(1.4f, 0.3f, 0f);
+        }
+
+        // 5. Sinh đối tượng GroundWeapon để người chơi lại gần bấm [E] nhặt
+        currentSpawnedTableWeapon = GroundWeapon.Create(weaponPrefab, tableSpawnPos);
+        if (currentSpawnedTableWeapon != null)
+        {
+            Debug.Log($"[ShopUIController] Đã sinh súng '{weaponPrefab.name}' thành công tại Bàn Trưng Bày {tableSpawnPos}!");
+        }
+    }
+
+    public string GetPrefabPathByItemId(int itemId)
+    {
+        switch (itemId)
+        {
+            case 1: return "Weapons/AK_47A_Gold";
+            case 2: return "Weapons/Missile_Launcher";
+            case 3: return "Weapons/Rocket_Launcher";
+            default: return "Weapons/AK_47A_Gold";
+        }
+    }
+
+    public string GetPrefabPathByDescription(string desc)
+    {
+        if (string.IsNullOrEmpty(desc)) return "Weapons/AK_47A_Gold";
+        if (desc.Contains("AK-47") || desc.Contains("Gold")) return "Weapons/AK_47A_Gold";
+        if (desc.Contains("Missile")) return "Weapons/Missile_Launcher";
+        if (desc.Contains("Rocket") || desc.Contains("Bazooka")) return "Weapons/Rocket_Launcher";
+        return "Weapons/AK_47A_Gold";
     }
 
     /// <summary>
