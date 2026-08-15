@@ -17,6 +17,14 @@ public class MobWeaponInfo : MonoBehaviour
 
     [HideInInspector] public GameObject cachedBulletPrefab;
     [HideInInspector] public bool isMelee = false;
+    public bool IsMelee
+    {
+        get
+        {
+            GetWeaponConfig();
+            return isMelee;
+        }
+    }
 
     private void Awake()
     {
@@ -125,16 +133,54 @@ public class MobWeaponInfo : MonoBehaviour
     /// </summary>
     public void Shoot(Vector2 targetPosition, int damageOverride)
     {
-        PlayShootSound();
-
         WeaponConfig wConfig = GetWeaponConfig();
         BulletConfig bConfig = GetBulletConfig();
 
         if (isMelee)
         {
+            PlayShootSound();
             StartCoroutine(MeleeAttackRoutine(bConfig));
             return;
         }
+
+        int bulletCount = 1;
+        float spread = 6.0f;
+
+        if (wConfig != null)
+        {
+            if (wConfig.bulletsPerShot > 1) bulletCount = wConfig.bulletsPerShot;
+            if (wConfig.spreadAngle > 0) spread = wConfig.spreadAngle;
+        }
+
+        if (bulletCount > 1)
+        {
+            // Xả bão đạn Gatling nhiều viên: Giãn cách vài ms giữa từng viên + Độ tỏa ngẫu nhiên
+            StartCoroutine(BurstShootRoutine(targetPosition, damageOverride, bulletCount, spread));
+        }
+        else
+        {
+            PlayShootSound();
+            FireSingleBullet(targetPosition, damageOverride, 0f);
+        }
+    }
+
+    private IEnumerator BurstShootRoutine(Vector2 targetPosition, int damageOverride, int bulletCount, float spreadAngle)
+    {
+        for (int i = 0; i < bulletCount; i++)
+        {
+            PlayShootSound();
+            float randomSpread = Random.Range(-spreadAngle, spreadAngle);
+            FireSingleBullet(targetPosition, damageOverride, randomSpread);
+
+            // Giãn cách vài mili giây (50ms = 0.05s) giữa từng viên đạn trong 1 đợt xả đạn Gatling
+            yield return new WaitForSeconds(0.05f);
+        }
+    }
+
+    private void FireSingleBullet(Vector2 targetPosition, int damageOverride, float spreadAngleOffset)
+    {
+        WeaponConfig wConfig = GetWeaponConfig();
+        BulletConfig bConfig = GetBulletConfig();
 
         if (cachedBulletPrefab == null)
         {
@@ -144,9 +190,12 @@ public class MobWeaponInfo : MonoBehaviour
         }
 
         Vector3 spawnPos = firePoint != null ? firePoint.position : transform.position;
-        Vector2 shootDir = (targetPosition - (Vector2)spawnPos).normalized;
+        Vector2 baseDir = (targetPosition - (Vector2)spawnPos).normalized;
 
-        GameObject bullet = Instantiate(cachedBulletPrefab, spawnPos, Quaternion.identity);
+        float baseAngle = Mathf.Atan2(baseDir.y, baseDir.x) * Mathf.Rad2Deg;
+        float finalAngle = baseAngle + spreadAngleOffset;
+
+        GameObject bullet = Instantiate(cachedBulletPrefab, spawnPos, Quaternion.Euler(0, 0, finalAngle));
 
         // Gỡ bỏ tất cả script Đạn của Player bám trên Prefab nếu có
         MonoBehaviour[] scripts = bullet.GetComponents<MonoBehaviour>();
@@ -164,10 +213,6 @@ public class MobWeaponInfo : MonoBehaviour
         {
             bullet.layer = enemyBulletLayer;
         }
-
-        // Xoay đạn theo hướng bắn
-        float angle = Mathf.Atan2(shootDir.y, shootDir.x) * Mathf.Rad2Deg;
-        bullet.transform.rotation = Quaternion.Euler(0, 0, angle);
 
         // Gán script MobBullet dành riêng cho Quái (Chỉ bắn trúng Player)
         MobBullet mobBullet = bullet.GetComponent<MobBullet>();
@@ -226,10 +271,10 @@ public class MobWeaponInfo : MonoBehaviour
         }
 
         Vector3 originalLocalPos = transform.localPosition;
-        Vector3 thrustPos = originalLocalPos + Vector3.right * 0.4f;
+        Vector3 thrustPos = originalLocalPos + Vector3.right * 0.2f; // 🗡️ Đâm thương vươn xa 0.8m cắm sâu vào ngực Player
 
         float elapsed = 0f;
-        float thrustTime = 0.15f;
+        float thrustTime = 0.08f;
 
         // Đâm ra
         while (elapsed < thrustTime)

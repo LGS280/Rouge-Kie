@@ -65,7 +65,7 @@ public class MobMeleeSlash : MonoBehaviour
                 {
                     playerHealth.TakeDamage(damage);
                 }
-                else if (rpc != null && NetworkManager.Instance != null)
+                else if (rpc != null && !rpc.isDead && NetworkManager.Instance != null)
                 {
                     NetworkManager.Instance.SendPlayerDamaged(rpc.connectionId, damage);
                     Debug.Log($"[MobMeleeSlash] Đâm trúng Remote Player {rpc.connectionId}, gửi {damage} sát thương qua mạng.");

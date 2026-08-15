@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: 7981424314593033643}
   - component: {fileID: 6502909763795613612}
   m_Layer: 6
-  m_Name: Brog
+  m_Name: Brog_Spear
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -172,8 +172,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MobHealth
   maxHealth: 100
   isDead: 0
-  coinPrefabOverride: {fileID: 0}
-  manaPrefabOverride: {fileID: 0}
+  coinPrefabOverride: {fileID: 5135757895966900724, guid: cc04880d9ca75264a8c00200bb996385, type: 3}
+  manaPrefabOverride: {fileID: 499877432794843320, guid: 37ed24bef8ff4eb4aa62a61cda0fdad4, type: 3}
+  lootDropChance: 0.2
 --- !u!50 &7981424314593033643
 Rigidbody2D:
   serializedVersion: 5
@@ -358,7 +359,8 @@ Transform:
   m_LocalPosition: {x: 0, y: -0.3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 5209490842096332311}
   m_Father: {fileID: 351577314419221494}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1990315503604431701
@@ -466,3 +468,65 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1001 &8676233971999222318
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 3274005920562199835}
+    m_Modifications:
+    - target: {fileID: 3468889392129360953, guid: 48ee5083945d2004292eeeda9aae22a6, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.036
+      objectReference: {fileID: 0}
+    - target: {fileID: 3468889392129360953, guid: 48ee5083945d2004292eeeda9aae22a6, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.039
+      objectReference: {fileID: 0}
+    - target: {fileID: 3468889392129360953, guid: 48ee5083945d2004292eeeda9aae22a6, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3468889392129360953, guid: 48ee5083945d2004292eeeda9aae22a6, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3468889392129360953, guid: 48ee5083945d2004292eeeda9aae22a6, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3468889392129360953, guid: 48ee5083945d2004292eeeda9aae22a6, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3468889392129360953, guid: 48ee5083945d2004292eeeda9aae22a6, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3468889392129360953, guid: 48ee5083945d2004292eeeda9aae22a6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3468889392129360953, guid: 48ee5083945d2004292eeeda9aae22a6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3468889392129360953, guid: 48ee5083945d2004292eeeda9aae22a6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9100733008214628815, guid: 48ee5083945d2004292eeeda9aae22a6, type: 3}
+      propertyPath: m_Name
+      value: Brog's_Spear
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 48ee5083945d2004292eeeda9aae22a6, type: 3}
+--- !u!4 &5209490842096332311 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3468889392129360953, guid: 48ee5083945d2004292eeeda9aae22a6, type: 3}
+  m_PrefabInstance: {fileID: 8676233971999222318}
+  m_PrefabAsset: {fileID: 0}
