@@ -24,6 +24,7 @@ public class DungeonGenerator : MonoBehaviour
 
     [Header("Chest Prefab")]
     public GameObject chestPrefab;
+    public GameObject weaponChestPrefab;
 
     [Header("Door Tilemap")]
     public Tilemap doorTilemap;
@@ -1411,24 +1412,40 @@ public class DungeonGenerator : MonoBehaviour
     {
         if (room.controller == null) return;
 
-        if (chestPrefab != null)
+        GameObject targetPrefab = weaponChestPrefab;
+#if UNITY_EDITOR
+        if (targetPrefab == null)
+        {
+            targetPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/Map/WeaponChest.prefab");
+        }
+#endif
+        if (targetPrefab == null)
+        {
+            targetPrefab = Resources.Load<GameObject>("Prefab/Map/WeaponChest");
+        }
+        if (targetPrefab == null)
+        {
+            targetPrefab = chestPrefab;
+        }
+
+        if (targetPrefab != null)
         {
             Vector3 worldPos = floorTilemap.CellToWorld((Vector3Int)room.Center) + new Vector3(0.5f, 0.5f, 0f);
             if (room.controller != null)
             {
                 worldPos = room.controller.GetSafeChestSpawnPosition(worldPos);
             }
-            GameObject chestObj = Instantiate(chestPrefab, worldPos, Quaternion.identity);
+            GameObject chestObj = Instantiate(targetPrefab, worldPos, Quaternion.identity);
             chestObj.transform.SetParent(transform);
 
             // Cấu hình phòng Rương đã được dọn sạch để mở cửa
             room.controller.roomCleared = true;
             room.controller.chestSpawned = true; // Chặn sinh rương thêm lần nữa khi dọn dẹp
-            Debug.Log($"[DungeonGenerator] Đã sinh Rương tại phòng Rương báu: {room.gridPos}");
+            Debug.Log($"[DungeonGenerator] Đã sinh Rương Vũ Khí (WeaponChest) tại phòng Rương báu: {room.gridPos}");
         }
         else
         {
-            Debug.LogWarning("[DungeonGenerator] Chưa gán chestPrefab để sinh trong phòng Rương báu.");
+            Debug.LogWarning("[DungeonGenerator] Chưa gán weaponChestPrefab để sinh trong phòng Rương báu.");
         }
     }
 

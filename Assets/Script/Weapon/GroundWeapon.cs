@@ -134,6 +134,12 @@ public class GroundWeapon : MonoBehaviour
             string cleanName = sName.Replace("(Clone)", "").Replace("_", " ");
             
             string keyName = InputDeviceHelper.GetInteractKeyDisplayString();
+            if (!string.IsNullOrEmpty(keyName))
+            {
+                keyName = keyName.Replace("HOLD ", "").Replace("HOLD", "").Replace("[", "").Replace("]", "").Trim();
+            }
+            if (string.IsNullOrEmpty(keyName)) keyName = "E";
+
             if (InputDeviceHelper.IsGamepadActive())
             {
                 tm.text = cleanName + "\n(Press B)";
