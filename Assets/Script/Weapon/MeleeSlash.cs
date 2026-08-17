@@ -2,7 +2,8 @@ using UnityEngine;
 
 public class MeleeSlash : MonoBehaviour
 {
-    public float delayTime = 0.1f;
+    [Header("Thời gian tồn tại vệt sáng (Life Time)")]
+    public float lifeTime = 0.1f;
     [HideInInspector] public float damage;
     [HideInInspector] public float critChance;
     [HideInInspector] public float critMultiplier;
@@ -19,7 +20,7 @@ public class MeleeSlash : MonoBehaviour
 
     void Start()
     {
-        Destroy(gameObject, delayTime);
+        Destroy(gameObject, lifeTime);
     }
 
     void OnTriggerEnter2D(Collider2D collision)

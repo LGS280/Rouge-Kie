@@ -255,7 +255,7 @@ public class RookieHealth : MonoBehaviour
             rb.bodyType = RigidbodyType2D.Kinematic;
         }
 
-        // Tắt bóng Shadow và vòng xanh Player_Ring để tạo cảm giác nhân vật nằm bệt xuống sàn
+        // Ẩn bóng Shadow và vòng xanh Player_Ring khi hy sinh/gục ngã
         Transform shadowPos = transform.Find("Shadow");
         if (shadowPos != null) shadowPos.gameObject.SetActive(false);
 
@@ -322,6 +322,10 @@ public class RookieHealth : MonoBehaviour
     public void Revive(int healthAmount)
     {
         if (!isDead) return;
+
+        // DỪNG LẬP TỨC COROUTINE LÀM TỐI MÀU (FadeToGray) NẾU ĐANG CHẠY DỞ!
+        StopAllCoroutines();
+
         isDead = false;
 
         currentHealth = Mathf.Clamp(healthAmount, 1, maxHealth);
@@ -401,6 +405,14 @@ public class RookieHealth : MonoBehaviour
         foreach (var sr in srs)
         {
             if (sr != null) sr.color = Color.white;
+        }
+
+        // 7. Ép vòng chọn chân Player_Ring xuất hiện trở lại và có đúng màu XANH LÁ CÂY (Color.green)
+        if (ringPos != null)
+        {
+            ringPos.gameObject.SetActive(true);
+            SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
+            if (ringSr != null) ringSr.color = Color.green;
         }
 
         Debug.Log($"[RookieHealth] Người chơi đã được HỒI SINH hoàn toàn với {currentHealth} Máu và {currentArmor} Giáp!");

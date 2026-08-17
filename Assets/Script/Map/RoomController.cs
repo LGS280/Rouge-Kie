@@ -181,6 +181,7 @@ public class RoomController : MonoBehaviour
     {
         roomCleared = true;
         roomStarted = false;
+        CollectDoorsNearRoom();
         OpenDoors();
 
         if (RunStatsTracker.Instance != null)
@@ -246,7 +247,11 @@ public class RoomController : MonoBehaviour
         TeleportPortal[] oldPortals = Object.FindObjectsByType<TeleportPortal>(FindObjectsSortMode.None);
         foreach (var p in oldPortals)
         {
-            if (p != null && p.gameObject != null) Destroy(p.gameObject);
+            if (p != null && p.gameObject != null)
+            {
+                if (Application.isPlaying) Destroy(p.gameObject);
+                else DestroyImmediate(p.gameObject);
+            }
         }
 
         Debug.Log($"[RoomController] Đang khởi tạo cổng dịch chuyển mới tại phòng {gameObject.name}");
@@ -448,6 +453,12 @@ public class RoomController : MonoBehaviour
                 if (mobAI != null)
                 {
                     mobAI.ActivateMob();
+                }
+
+                MelogBossAI melogBossAI = mob.GetComponent<MelogBossAI>();
+                if (melogBossAI != null)
+                {
+                    melogBossAI.ActivateMob();
                 }
             }
         }

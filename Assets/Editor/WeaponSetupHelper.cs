@@ -128,95 +128,6 @@ public class WeaponSetupHelper
         Debug.Log("=== [Tools] Đã hoàn thành cấu hình tự động toàn bộ vũ khí và rương! ===");
     }
 
-    [MenuItem("Tools/Build Weapon Chest Prefab")]
-    public static void BuildWeaponChestPrefab()
-    {
-        // 1. Tạo GameObject cha
-        GameObject chestParent = new GameObject("WeaponChest");
-        WeaponChest weaponChest = chestParent.AddComponent<WeaponChest>();
-        
-        // Thêm BoxCollider2D và thiết lập làm Trigger va chạm nhặt súng
-        BoxCollider2D collider = chestParent.AddComponent<BoxCollider2D>();
-        collider.isTrigger = true;
-        collider.size = new Vector2(1.2f, 1.0f); // Kích thước va chạm
-
-        // Thêm Rigidbody2D ở chế độ Kinematic để nhận diện va chạm 2D Trigger
-        Rigidbody2D rb = chestParent.AddComponent<Rigidbody2D>();
-        rb.bodyType = RigidbodyType2D.Kinematic;
-
-        // 2. Load các Sprite đã cắt (Multiple sprites) từ sheet rương vũ khí
-        string bodyPath = "Assets/Item/Chest/Weapon_Chest/Body_Weapon_Chest.png";
-        string topPath = "Assets/Item/Chest/Weapon_Chest/Top_Weapon_Chest.png";
-        string insidePath = "Assets/Item/Chest/Weapon_Chest/Inside_Weapon_Chest.png";
-
-        Sprite bodySprite = LoadSpriteFromSheet(bodyPath, "Body_Weapon_Chest_0");
-        Sprite topSprite = LoadSpriteFromSheet(topPath, "Top_Weapon_Chest_0");
-        Sprite insideSprite = LoadSpriteFromSheet(insidePath, "Inside_Weapon_Chest_0");
-
-        if (bodySprite == null || topSprite == null || insideSprite == null)
-        {
-            Debug.LogError("Không tìm thấy các Sprite cắt sẵn (Body_Weapon_Chest_0, Top_Weapon_Chest_0, Inside_Weapon_Chest_0). Vui lòng kiểm tra lại import mode.");
-            Object.DestroyImmediate(chestParent);
-            return;
-        }
-
-        // 3. Tạo GameObject con: Body (Thân rương)
-        GameObject bodyObj = new GameObject("Body");
-        bodyObj.transform.SetParent(chestParent.transform);
-        // Dịch chuyển thân rương xuống -0.09375f (tương đương -1.5 pixel) để bù trừ phần bóng 3px ở đáy (tổng chiều cao từ 8px lên 11px), giúp nắp rương giữ nguyên 0.5f khớp khít
-        bodyObj.transform.localPosition = new Vector3(0f, -0.09375f, 0f);
-        SpriteRenderer bodyRenderer = bodyObj.AddComponent<SpriteRenderer>();
-        bodyRenderer.sprite = bodySprite;
-        bodyRenderer.sortingOrder = 5;
-
-        // 4. Tạo GameObject con: Top (Nắp rương khi đóng)
-        GameObject topObj = new GameObject("Top");
-        topObj.transform.SetParent(chestParent.transform);
-        // Định vị nắp rương (0.5625f unit tương đương dịch chuyển 9 pixel để đè chồng đúng 1 hàng của thân rương)
-        topObj.transform.localPosition = new Vector3(0f, 0.5625f, 0f);
-        SpriteRenderer topRenderer = topObj.AddComponent<SpriteRenderer>();
-        topRenderer.sprite = topSprite;
-        topRenderer.sortingOrder = 6;
-
-        // 5. Tạo GameObject con: Inside (Lòng rương khi mở)
-        GameObject insideObj = new GameObject("Inside");
-        insideObj.transform.SetParent(chestParent.transform);
-        // Định vị lòng rương trùng khớp
-        insideObj.transform.localPosition = new Vector3(0f, 0.5625f, 0f);
-        SpriteRenderer insideRenderer = insideObj.AddComponent<SpriteRenderer>();
-        insideRenderer.sprite = insideSprite;
-        insideRenderer.sortingOrder = 6;
-        insideObj.SetActive(false); // Ẩn ban đầu
-
-        // 6. Gán các trường tham chiếu vào Script
-        weaponChest.body = bodyObj;
-        weaponChest.top = topObj;
-        weaponChest.inside = insideObj;
-
-        // 7. Tạo thư mục Prefab/Map nếu chưa tồn tại
-        if (!AssetDatabase.IsValidFolder("Assets/Prefab/Map"))
-        {
-            if (!AssetDatabase.IsValidFolder("Assets/Prefab"))
-            {
-                AssetDatabase.CreateFolder("Assets", "Prefab");
-            }
-            AssetDatabase.CreateFolder("Assets/Prefab", "Map");
-        }
-
-        // 8. Xuất GameObject thành Prefab
-        string localPath = "Assets/Prefab/Map/WeaponChest.prefab";
-        PrefabUtility.SaveAsPrefabAssetAndConnect(chestParent, localPath, InteractionMode.UserAction);
-        
-        Object.DestroyImmediate(chestParent);
-
-        Debug.Log("Đã dựng thành công Prefab Rương Vũ Khí (WeaponChest) tại: " + localPath);
-        
-        // Gọi SetupPrefabs luôn để nạp đầy đủ súng vào rương mới dựng xong
-        SetupPrefabs();
-        
-        AssetDatabase.Refresh();
-    }
-
     [MenuItem("Tools/Make Explosion Prefab From Selected Sprites")]
     public static void MakeExplosionPrefabFromSelectedSprites()
     {
@@ -276,6 +187,8 @@ public class WeaponSetupHelper
         Debug.Log($"[WeaponSetupHelper] 🎉 Đã tạo thành công Prefab Vụ Nổ mới từ {spriteList.Count} ảnh tại: {prefabPath}");
         AssetDatabase.Refresh();
     }
+
+
 
     private static Sprite LoadSpriteFromSheet(string path, string spriteName)
     {

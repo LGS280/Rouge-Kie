@@ -75,14 +75,15 @@ public class MainMenuController : MonoBehaviour
     public void OnSingleplayerPressed()
     {
         Debug.Log("Chạy chế độ chơi đơn...");
+        WeaponManager.ResetSavedWeapons();
 
         if (LoadingScreenUI.Instance != null)
         {
-            LoadingScreenUI.Instance.ShowLoading("TẦNG 1 - 1", "Đang khởi tạo tài nguyên hầm ngục...");
+            LoadingScreenUI.Instance.ShowLoading("SẢNH CHỜ", "Đang di chuyển tới Sảnh Chờ...");
         }
 
-        // Lệnh chuyển sang màn chơi chính
-        SceneManager.LoadScene("SampleScene");
+        // Lệnh chuyển sang Sảnh Chờ (Lobby) trước khi vào trận đấu
+        SceneManager.LoadScene("Lobby_Scene");
     }
 
 

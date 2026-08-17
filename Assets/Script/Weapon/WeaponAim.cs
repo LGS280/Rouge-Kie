@@ -38,8 +38,18 @@ public class WeaponAim : MonoBehaviour
     void Update()
     {
         // BỎ QUA NẾU ĐÂY LÀ SÚNG CỦA REMOTE PLAYER
-        // Theo kiến trúc, Remote Player không có PlayerController, nên biến này sẽ null
         if (playerController == null)
+        {
+            return;
+        }
+
+        // Vô hiệu hóa ngắm và bắn khi đang mở Shop UI hoặc click trỏ chuột trên UI
+        if (ShopUIController.Instance != null && ShopUIController.Instance.IsShopOpen())
+        {
+            return;
+        }
+
+        if (UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
         {
             return;
         }
@@ -210,7 +220,18 @@ public class WeaponAim : MonoBehaviour
                 // Kiểm tra xem vũ khí hiện tại có phải là cận chiến không (kiểm tra từ DB weaponType = Sword / Melee)
                 bool isCurrentWeaponMelee = currentWeapon != null && currentWeapon.IsMeleeWeapon();
 
-                // Chỉ kích hoạt chém tay khi đang cầm SÚNG và quái lại quá gần
+                // NẾU súng có gắn lưỡi lê áp sát (secondBulletId > 0), thực hiện đâm lưỡi lê 0 MANA
+                if (currentWeapon != null && currentWeapon.HasBayonetStab())
+                {
+                    float checkRadius = (playerMelee != null) ? playerMelee.meleeRadius : 2.5f;
+                    string checkTag = (playerMelee != null) ? playerMelee.enemyTag : "Enemy";
+                    if (currentWeapon.TryBayonetStab(checkRadius, checkTag))
+                    {
+                        return;
+                    }
+                }
+
+                // Chỉ kích hoạt chém tay khi đang cầm SÚNG thường (không có lưỡi lê) và quái lại quá gần
                 if (playerMelee != null && !isCurrentWeaponMelee)
                 {
                     if (playerMelee.TryMeleeAttack(currentWeapon.firePoint))

@@ -133,13 +133,20 @@ public class GroundWeapon : MonoBehaviour
             string sName = (weaponPrefab != null) ? weaponPrefab.name : "Vũ Khí";
             string cleanName = sName.Replace("(Clone)", "").Replace("_", " ");
             
+            string keyName = InputDeviceHelper.GetInteractKeyDisplayString();
+            if (!string.IsNullOrEmpty(keyName))
+            {
+                keyName = keyName.Replace("HOLD ", "").Replace("HOLD", "").Replace("[", "").Replace("]", "").Trim();
+            }
+            if (string.IsNullOrEmpty(keyName)) keyName = "E";
+
             if (InputDeviceHelper.IsGamepadActive())
             {
-                tm.text = cleanName + "\n(Nút B)";
+                tm.text = cleanName + "\n(Press B)";
             }
             else
             {
-                tm.text = cleanName + "\n(Bấm E)";
+                tm.text = cleanName + "\n(Press " + keyName + ")";
             }
 
             if (nameTagTrans != null)
