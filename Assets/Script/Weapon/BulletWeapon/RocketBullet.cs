@@ -1,13 +1,13 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class RocketBullet : MissileBullet
 {
-    [Header("Rocket Impact Effect")]
-    public GameObject blastMarkPrefab; // Prefab vết cháy xám trên sàn dành riêng cho Rocket
+    [Header("hiệu ứng sàn xám của rocket")]
+    public GameObject blastMarkPrefab;
 
     protected override void Start()
     {
-        // Tự động gắn bộ nhả dải khói liên tục cho đạn Rocket
+
         if (GetComponent<SmokeTrailEmitter>() == null)
         {
             gameObject.AddComponent<SmokeTrailEmitter>();
