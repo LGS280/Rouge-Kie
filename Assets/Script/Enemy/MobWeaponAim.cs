@@ -2,11 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Component ngắm bắn 60 FPS mượt như Player dành riêng cho Quái (Mob / Enemy).
-/// Được gắn trên GameObject Hand_Position của Quái.
-/// Tuyệt đối KHÔNG BAO GIỜ xoay nghiêng thân người con Quái Gốc!
-/// </summary>
 public class MobWeaponAim : MonoBehaviour
 {
     [Header("Kho Vũ Khí Quái (Tự động quét kho Assets/Prefab/Mobs_Weapons)")]
@@ -20,7 +15,7 @@ public class MobWeaponAim : MonoBehaviour
 
     private void Awake()
     {
-        // 🎯 TỰ ĐỘNG KHÓA VỊ TRÍ HAND_POSITION: Nếu gán nhầm trên Root Quái, tự nhảy tới Hand_Position
+
         if (transform.name == "Hand_Position")
         {
             handTransform = transform;
@@ -46,14 +41,10 @@ public class MobWeaponAim : MonoBehaviour
         InitializeMobWeapon();
     }
 
-    /// <summary>
-    /// Tự động nhận diện vũ khí được cắm sẵn dưới Hand_Position trong Prefab Quái (Giống WeaponAim của Player)
-    /// </summary>
     public void InitializeMobWeapon()
     {
         Transform spawnParent = (handTransform != null) ? handTransform : transform;
 
-        // 🎯 TỰ ĐỘNG NHẬN DIỆN VŨ KHÍ CẮM SẴN TRONG PREFAB QUÁI (GIỐNG WEAPONAIM CỦA PLAYER)
         currentWeaponInfo = spawnParent.GetComponentInChildren<MobWeaponInfo>(true);
         if (currentWeaponInfo != null)
         {
@@ -64,7 +55,7 @@ public class MobWeaponAim : MonoBehaviour
         }
         else if (spawnParent.childCount > 0)
         {
-            // Dự phòng: Tìm bất kỳ GameObject con nào nằm dưới Hand_Position
+
             currentWeaponObject = spawnParent.GetChild(0).gameObject;
             currentWeaponInfo = currentWeaponObject.GetComponent<MobWeaponInfo>();
             if (currentWeaponInfo == null)
@@ -82,7 +73,6 @@ public class MobWeaponAim : MonoBehaviour
     {
         if (handTransform == null) handTransform = transform;
 
-        // 🎯 NẾU QUÁI ĐÃ CHẾT: KHÓA NGUYÊN HƯỚNG QUAY, 100% KHÔNG LẬT MẶT XOAY ĐẦU THEO PLAYER
         MobHealth mobHealth = GetComponentInParent<MobHealth>();
         if (mobHealth != null && mobHealth.isDead)
         {
@@ -90,7 +80,6 @@ public class MobWeaponAim : MonoBehaviour
             return;
         }
 
-        // 🔒 BẢO VỆ TUYỆT ĐỐI: Khóa thân người con Quái Root luôn đứng thẳng (Quaternion.identity), 100% KHÔNG BAO GIỜ nghiêng 45 độ!
         if (transform != handTransform)
         {
             transform.localRotation = Quaternion.identity;
@@ -100,7 +89,6 @@ public class MobWeaponAim : MonoBehaviour
             transform.parent.localRotation = Quaternion.identity;
         }
 
-        // 🎯 CHỈ XOAY NGẮM SÚNG KHI PLAYER ĐÃ BƯỚC VÀO PHÒNG CHIẾN ĐẤU (IsCombatActivated == true)
         if (mobAI != null && mobAI.IsCombatActivated())
         {
             Transform target = (mobAI.targetPlayer != null) ? mobAI.targetPlayer : FindNearestPlayerFallback();
@@ -112,13 +100,12 @@ public class MobWeaponAim : MonoBehaviour
 
                 if (distanceToPlayer <= maxDetect)
                 {
-                    // 🎯 CHỈ XOAY ĐÚNG VŨ KHÍ TRÊN HAND_POSITION!
+
                     Vector2 aimDirection = target.position - handTransform.position;
                     float angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
 
                     handTransform.rotation = Quaternion.Euler(0, 0, angle);
 
-                    // Smart Scale Y Flip trực tiếp trên Hand_Position (Giữ nguyên tỉ lệ gốc)
                     if (angle > 90f || angle < -90f)
                     {
                         handTransform.localScale = new Vector3(initialScale.x, -Mathf.Abs(initialScale.y), initialScale.z);
@@ -134,25 +121,20 @@ public class MobWeaponAim : MonoBehaviour
             }
         }
 
-        // 🎯 KHI CHƯA AIM PLAYER (ĐANG ĐI DẠO WANDER HOẶC IDLE):
-        // Vũ khí tự động xoay và lật mặt xuôi theo hướng di chuyển/nhìn của Quái!
         if (mobSpriteRenderer != null && mobSpriteRenderer.flipX)
         {
-            // Quái đang nhìn sang TRAÍ: Súng xuôi theo hướng trái
+
             handTransform.rotation = Quaternion.Euler(0, 0, 180f);
             handTransform.localScale = new Vector3(initialScale.x, -Mathf.Abs(initialScale.y), initialScale.z);
         }
         else
         {
-            // Quái đang nhìn sang PHẢI: Súng xuôi theo hướng phải
+
             handTransform.rotation = Quaternion.Euler(0, 0, 0);
             handTransform.localScale = new Vector3(initialScale.x, Mathf.Abs(initialScale.y), initialScale.z);
         }
     }
 
-    /// <summary>
-    /// Bắn đạn / Đâm thương khi Quái tấn công
-    /// </summary>
     public void Fire(Vector2 targetPos, int damageOverride)
     {
         if (currentWeaponInfo != null)
@@ -161,9 +143,6 @@ public class MobWeaponAim : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Xóa súng ngay lập tức khi Quái chết để súng không bị treo lơ lửng
-    /// </summary>
     public void DestroyWeaponOnDeath()
     {
         if (currentWeaponObject != null)

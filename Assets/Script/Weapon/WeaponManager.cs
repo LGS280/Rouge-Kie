@@ -4,18 +4,18 @@ using System.Collections.Generic;
 
 public class WeaponManager : MonoBehaviour
 {
-    [Header("ĐIỂM NEO VỊ TRÍ")]
+    [Header("điểm treo vũ khí")]
     public Transform handPosition;
     public Transform backPosition;
 
-    [Header("HAI Ô VŨ KHÍ")]
+    [Header("2 ô vũ khí")]
     public GameObject weaponSlot1;
     public GameObject weaponSlot2;
 
-    [Header("DANH SÁCH TẤT CẢ VŨ KHÍ (Dự phòng tự động nạp)")]
+    [Header("list các vũ khí của player (dự phòng chưa nạp)")]
     public GameObject[] allWeaponPrefabs;
 
-    [Header("NHẶT VŨ KHÍ")]
+    [Header("nhặt vũ khí")]
     [HideInInspector] public List<GroundWeapon> nearbyWeapons = new List<GroundWeapon>();
 
     public static WeaponManager Instance { get; private set; }
@@ -35,23 +35,22 @@ public class WeaponManager : MonoBehaviour
 
         if (weaponSlot1 != null)
         {
-            // Tạo bản sao độc lập hoàn toàn trong Scene
+
             GameObject instance1 = Instantiate(weaponSlot1, handPosition.position, Quaternion.identity);
-            Destroy(weaponSlot1); // Xóa bỏ cái xác Prefab bị lỗi cũ đi
+            Destroy(weaponSlot1);
             weaponSlot1 = instance1;
         }
 
         if (weaponSlot2 != null)
         {
-            // Tạo bản sao độc lập hoàn toàn trong Scene
+
             GameObject instance2 = Instantiate(weaponSlot2, backPosition.position, Quaternion.identity);
-            Destroy(weaponSlot2); // Xóa bỏ cái xác Prefab bị lỗi cũ đi
+            Destroy(weaponSlot2);
             weaponSlot2 = instance2;
         }
 
         ResetWeaponsStatus();
 
-        // Tự động khôi phục súng đã nhặt/đổi ở Lobby khi vào Map chiến đấu
         RestoreSavedEquippedWeapons();
     }
 
@@ -65,12 +64,9 @@ public class WeaponManager : MonoBehaviour
         PlayerPrefs.DeleteKey("Lobby_Slot1_Weapon");
         PlayerPrefs.DeleteKey("Lobby_Slot2_Weapon");
         PlayerPrefs.Save();
-        Debug.Log("[WeaponManager] Đã đặt lại bộ nhớ lưu súng tạm thời.");
+
     }
 
-    /// <summary>
-    /// Lưu trữ thông tin tên Prefab vũ khí đang trang bị ở Lobby vào Bộ nhớ tĩnh / PlayerPrefs
-    /// </summary>
     public void SaveEquippedWeapons()
     {
         string s1Name = GetCleanWeaponPrefabName(weaponSlot1);
@@ -83,7 +79,6 @@ public class WeaponManager : MonoBehaviour
         if (!string.IsNullOrEmpty(s2Name)) PlayerPrefs.SetString("Lobby_Slot2_Weapon", s2Name);
         PlayerPrefs.Save();
 
-        Debug.Log($"[WeaponManager] Đã lưu súng trang bị từ Lobby: Slot1='{s1Name}', Slot2='{s2Name}'");
     }
 
     private string GetCleanWeaponPrefabName(GameObject weaponObj)
@@ -99,17 +94,12 @@ public class WeaponManager : MonoBehaviour
         return weaponObj.name.Replace("(Clone)", "").Trim();
     }
 
-    /// <summary>
-    /// Khôi phục súng người chơi đã nhặt ở Lobby khi vừa nạp vào Map chiến đấu (SampleScene)
-    /// </summary>
     private void RestoreSavedEquippedWeapons()
     {
         string s1Name = !string.IsNullOrEmpty(savedSlot1PrefabName) ? savedSlot1PrefabName : PlayerPrefs.GetString("Lobby_Slot1_Weapon", "");
         string s2Name = !string.IsNullOrEmpty(savedSlot2PrefabName) ? savedSlot2PrefabName : PlayerPrefs.GetString("Lobby_Slot2_Weapon", "");
 
         if (string.IsNullOrEmpty(s1Name) && string.IsNullOrEmpty(s2Name)) return;
-
-        Debug.Log($"[WeaponManager] Khôi phục súng từ Lobby sang Map: Slot1='{s1Name}', Slot2='{s2Name}'");
 
         if (!string.IsNullOrEmpty(s1Name))
         {
@@ -139,10 +129,9 @@ public class WeaponManager : MonoBehaviour
 
     void Update()
     {
-        // 1. Kiểm tra nhặt vũ khí (Phím E bàn phím hoặc Nút B tay cầm khi có súng gần đó)
+
         CheckWeaponPickup();
 
-        // 2. Logic đổi vũ khí (Swap) - Hỗ trợ Rebind phím động từ Settings
         bool hasPressedSwapKey = false;
 
         InputAction switchAction = (InputLoader.Instance != null) ? InputLoader.Instance.GetAction("SwitchWeapon") : null;
@@ -163,7 +152,7 @@ public class WeaponManager : MonoBehaviour
             if (Time.time >= nextScrollSwapTime)
             {
                 hasPressedSwapKey = true;
-                nextScrollSwapTime = Time.time + 1.0f; // Delay 1s giữa các lần cuộn chuột đổi súng
+                nextScrollSwapTime = Time.time + 1.0f;
             }
         }
 
@@ -184,12 +173,12 @@ public class WeaponManager : MonoBehaviour
         {
             hasPressedPickupKey = true;
         }
-        // Bàn phím bấm phím mặc định E (vừa mở rương vừa nhặt súng)
+
         else if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
         {
             hasPressedPickupKey = true;
         }
-        // Tay cầm bấm Nút B (vừa mở rương vừa nhặt súng)
+
         else if (Gamepad.current != null && Gamepad.current.bButton.wasPressedThisFrame)
         {
             hasPressedPickupKey = true;
@@ -222,27 +211,23 @@ public class WeaponManager : MonoBehaviour
         return closest;
     }
 
-    // Hàm dự phòng để tìm Prefab súng dựa vào tên GameObject của súng
     public GameObject FindWeaponPrefabByName(string weaponName)
     {
         if (string.IsNullOrEmpty(weaponName)) return null;
         string cleanName = weaponName.Replace("(Clone)", "").Trim();
-        Debug.Log($"[WeaponManager] Đang tìm Prefab bằng tên: '{cleanName}'");
 
-        // Bước 1: Tìm trong allWeaponPrefabs của chính mình
         if (allWeaponPrefabs != null && allWeaponPrefabs.Length > 0)
         {
             foreach (var prefab in allWeaponPrefabs)
             {
                 if (prefab != null && prefab.name == cleanName)
                 {
-                    Debug.Log($"[WeaponManager] Tìm thấy khớp trong allWeaponPrefabs: {prefab.name}");
+
                     return prefab;
                 }
             }
         }
 
-        // Bước 2: Dự phòng mở rộng - Dò tìm từ các WeaponChest trong Scene đang hoạt động
         WeaponChest[] chests = Object.FindObjectsByType<WeaponChest>(FindObjectsSortMode.None);
         foreach (var chest in chests)
         {
@@ -252,19 +237,18 @@ public class WeaponManager : MonoBehaviour
                 {
                     if (prefab != null && prefab.name == cleanName)
                     {
-                        Debug.Log($"[WeaponManager] Tìm thấy khớp từ WeaponChest: {prefab.name}");
+
                         return prefab;
                     }
                 }
             }
         }
 
-        // Bước 3: Dò tìm trong Resources/Weapons/
         GameObject resPrefab = Resources.Load<GameObject>("Weapons/" + cleanName);
         if (resPrefab == null) resPrefab = Resources.Load<GameObject>(cleanName);
         if (resPrefab != null)
         {
-            Debug.Log($"[WeaponManager] Tìm thấy khớp từ Resources/Weapons: {resPrefab.name}");
+
             return resPrefab;
         }
 
@@ -276,39 +260,32 @@ public class WeaponManager : MonoBehaviour
         GameObject newWeaponPrefab = groundWeapon.weaponPrefab;
         if (newWeaponPrefab == null)
         {
-            Debug.LogError($"[WeaponManager] Không thể nhặt vì groundWeapon.weaponPrefab bị NULL! Tên đối tượng trên đất: '{groundWeapon.gameObject.name}'");
+
             return;
         }
 
-        // 1. Xác định vũ khí hiện tại ở Hand_Position
         GameObject currentHandWeapon = isUsingSlot1 ? weaponSlot1 : weaponSlot2;
-        Debug.Log($"[WeaponManager] Bắt đầu nhặt: {newWeaponPrefab.name}. Đang cầm: {(currentHandWeapon != null ? currentHandWeapon.name : "Không có")}");
 
-        // 2. Nếu đang cầm súng cũ, hãy vứt ra đất
         if (currentHandWeapon != null)
         {
             GameObject oldWeaponPrefab = null;
-            
+
             WeaponInfo oldInfo = currentHandWeapon.GetComponent<WeaponInfo>();
             WeaponLaser oldLaser = currentHandWeapon.GetComponent<WeaponLaser>();
             if (oldInfo != null) oldWeaponPrefab = oldInfo.weaponPrefab;
             else if (oldLaser != null) oldWeaponPrefab = oldLaser.weaponPrefab;
 
-            // QUAN TRỌNG: Nếu oldWeaponPrefab là đối tượng trong Scene (chứ không phải Prefab trong Project),
-            // ta buộc phải ép về null để tìm kiếm file gốc từ Project, tránh việc tham chiếu bị hủy (Destroy) sau đó.
             if (oldWeaponPrefab != null && oldWeaponPrefab.scene.IsValid())
             {
-                Debug.LogWarning($"[WeaponManager] Phát hiện oldWeaponPrefab '{oldWeaponPrefab.name}' là đối tượng trong Scene! Đang ép về null để tìm file gốc từ Project...");
+
                 oldWeaponPrefab = null;
             }
 
-            // DỰ PHÒNG 1: Dò tìm bằng Tên súng trong các danh sách nạp sẵn
             if (oldWeaponPrefab == null)
             {
                 oldWeaponPrefab = FindWeaponPrefabByName(currentHandWeapon.name);
             }
 
-            // DỰ PHÒNG 2 (CHỈ KHI CHẠY TRONG EDITOR): Tự động load trực tiếp từ Assets/Prefab/Weapons/ bằng AssetDatabase
 #if UNITY_EDITOR
             if (oldWeaponPrefab == null)
             {
@@ -317,33 +294,31 @@ public class WeaponManager : MonoBehaviour
                 oldWeaponPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(path);
                 if (oldWeaponPrefab != null)
                 {
-                    Debug.Log($"[WeaponManager] [Editor Mode] Tải thành công prefab súng bằng AssetDatabase tại đường dẫn '{path}': {oldWeaponPrefab.name}");
+
                 }
                 else
                 {
-                    Debug.LogError($"[WeaponManager] [Editor Mode] Thất bại tải prefab súng bằng AssetDatabase tại đường dẫn '{path}'");
+
                 }
             }
 #endif
 
             if (oldWeaponPrefab != null)
             {
-                // Sinh súng rơi trên đất tại vị trí người chơi bằng C# code (ko cần kéo thả groundWeaponPrefab)
+
                 GroundWeapon.Create(oldWeaponPrefab, transform.position);
-                Debug.Log($"[WeaponManager] Đã vứt súng cũ ra đất: {oldWeaponPrefab.name}");
+
             }
             else
             {
-                Debug.LogError($"[WeaponManager] THẤT BẠI HOÀN TOÀN: Không tìm thấy Prefab cho súng cũ '{currentHandWeapon.name}' để vứt ra đất!");
+
             }
-            
-            // Hủy súng cũ trên tay
+
             Destroy(currentHandWeapon);
         }
 
-        // 3. Khởi tạo súng mới và gắn vào active slot
         GameObject newWeaponInstance = Instantiate(newWeaponPrefab, handPosition.position, Quaternion.identity);
-        
+
         if (isUsingSlot1)
         {
             weaponSlot1 = newWeaponInstance;
@@ -355,14 +330,12 @@ public class WeaponManager : MonoBehaviour
             UpdateWeaponParent(weaponSlot2, handPosition, true);
         }
 
-        // 4. Xóa GroundWeapon cũ dưới đất khỏi danh sách nhặt và tiêu hủy
         if (nearbyWeapons.Contains(groundWeapon))
         {
             nearbyWeapons.Remove(groundWeapon);
         }
         Destroy(groundWeapon.gameObject);
 
-        Debug.Log($"[WeaponManager] Đã nhặt súng mới thành công: {newWeaponPrefab.name}");
         SaveEquippedWeapons();
     }
 
@@ -399,7 +372,6 @@ public class WeaponManager : MonoBehaviour
             UpdateWeaponParent(weaponSlot1, backPosition, false);
         }
 
-        // BỔ SUNG: Phát tín hiệu đổi súng lên mạng khi đổi vũ khí
         SyncActiveWeaponToNetwork();
     }
 
@@ -407,7 +379,6 @@ public class WeaponManager : MonoBehaviour
     {
         if (weapon == null) return;
 
-        // Bây giờ đối tượng đã là bản sao độc lập, SetParent thoải mái không bao giờ lỗi nữa!
         weapon.transform.SetParent(newParent);
         weapon.transform.localRotation = Quaternion.identity;
         weapon.transform.localScale = Vector3.one;
@@ -472,13 +443,9 @@ public class WeaponManager : MonoBehaviour
             UpdateWeaponParent(weaponSlot2, backPosition, false);
         }
 
-        // BỔ SUNG: Đồng bộ loại súng đang cầm lên mạng cho các người chơi khác cùng thấy
         SyncActiveWeaponToNetwork();
     }
 
-    /// <summary>
-    /// Phát sóng loại súng chính và súng phụ đang cầm hiện tại lên Server SignalR
-    /// </summary>
     public void SyncActiveWeaponToNetwork()
     {
         if (NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId))

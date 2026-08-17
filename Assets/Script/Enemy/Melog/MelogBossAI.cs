@@ -2,11 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Script trí tuệ nhân tạo (AI) dành riêng cho Mini Boss Melog (2 tay 2 súng Gatling).
-/// Tự động xoay thân Rotation Y = 0 (bên phải) và Rotation Y = 180 (bên trái).
-/// Tách biệt hoàn toàn 100% với quái thường MobAI.cs.
-/// </summary>
 public class MelogBossAI : MonoBehaviour
 {
     public enum BossState { Idle, Wander, Chase, Attack }
@@ -42,7 +37,6 @@ public class MelogBossAI : MonoBehaviour
         myRoom = room;
     }
 
-    // Multiplayer smoothing variables
     private Vector2 networkTargetPos;
     private Vector2 lastNetworkTargetPos;
     private Vector3 mobNetworkVelocity;
@@ -50,7 +44,7 @@ public class MelogBossAI : MonoBehaviour
     private float lastMobPacketTime;
     private bool hasFirstNetworkPos = false;
     private float lastNetworkSyncTime = 0f;
-    private float networkSyncInterval = 0.05f; // 20 FPS
+    private float networkSyncInterval = 0.05f;
 
     private void Awake()
     {
@@ -97,12 +91,11 @@ public class MelogBossAI : MonoBehaviour
             return;
         }
 
-        // Quét tìm Player gần nhất cho cả Host và Client
         FindNearestPlayer();
 
         if (isHost)
         {
-            // Host: Đồng bộ vị trí cho Client 20 FPS
+
             if (NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && mobNetworkIdentity != null && !string.IsNullOrEmpty(mobNetworkIdentity.networkId))
             {
                 if (Time.time - lastNetworkSyncTime >= networkSyncInterval)
@@ -114,13 +107,13 @@ public class MelogBossAI : MonoBehaviour
 
             if (isRoomActivated && targetPlayer != null)
             {
-                // 🎯 CHỈ QUAY MẶT THÂN VỀ PHÍA PLAYER KHI ĐÃ KÍCH HOẠT CHIẾN ĐẤU TRONG PHÒNG
+
                 UpdateBossFacing(targetPlayer.position.x - transform.position.x);
             }
 
             if (!isRoomActivated)
             {
-                // Chỉ tự động mở khóa khi kéo Melog vào Scene test độc lập (không có phòng myRoom)
+
                 if (myRoom == null && targetPlayer != null && Vector2.Distance(transform.position, targetPlayer.position) <= detectRange)
                 {
                     isRoomActivated = true;
@@ -151,10 +144,9 @@ public class MelogBossAI : MonoBehaviour
         }
         else
         {
-            // Client: Tìm Player để ngắm bắn hiển thị mượt 60 FPS
+
             FindNearestPlayer();
 
-            // Client: Kích hoạt hiển thị hoạt ảnh tấn công & bão đạn 2 súng khi áp sát Player 2
             if (targetPlayer != null && melogWeaponAim != null)
             {
                 float dist = Vector2.Distance(transform.position, targetPlayer.position);
@@ -168,7 +160,6 @@ public class MelogBossAI : MonoBehaviour
                 }
             }
 
-            // Client: Nhận vị trí nội suy mượt mà SmoothDamp từ Host
             if (hasFirstNetworkPos)
             {
                 Vector3 predictedMobPos = (Vector3)networkTargetPos + ((Vector3)estimatedMobVelocity * 0.033f);
@@ -318,14 +309,12 @@ public class MelogBossAI : MonoBehaviour
 
         float distanceToPlayer = Vector2.Distance(transform.position, targetPlayer.position);
 
-        // 🎯 PLAYER DI CHUYỂN RA XA NGOÀI TẦM NHÌN: BỎ CUỘC VÀ CHUYỂN VỀ WANDER
         if (distanceToPlayer > detectRange)
         {
             currentState = BossState.Wander;
             return;
         }
 
-        // NẾU ĐÃ HẾT COOLDOWN 4S HỒI CHIÊU:
         if (Time.time >= nextAttackTime)
         {
             if (distanceToPlayer <= attackRange)
@@ -344,7 +333,6 @@ public class MelogBossAI : MonoBehaviour
             return;
         }
 
-        // NẾU ĐANG TRONG 4S HỒI CHIÊU: Di chuyển lượn vòng hông ngắm súng ở cự ly 5.0m
         if (distanceToPlayer < 5.0f)
         {
             Vector2 targetDir = (targetPlayer.position - transform.position).normalized;
@@ -378,16 +366,14 @@ public class MelogBossAI : MonoBehaviour
         if (rb != null) rb.linearVelocity = Vector2.zero;
         if (animator != null) animator.SetBool("isMoving", false);
 
-        // KÍCH HOẠT XẢ BÃỎ ĐẠN 2 NÒNG GATLING DUAL BARRAGE
         if (animator != null) animator.SetTrigger("attack");
 
         if (melogWeaponAim != null)
         {
-            // Sát thương (5 HP) được MobBullet tự động đọc trực tiếp từ cột Damage bảng BulletConfigs DB
+
             melogWeaponAim.FireBothGuns(targetPlayer.position, 0);
         }
 
-        // Thời gian hồi chiêu (FireRate = 3.0s) được tự động đọc trực tiếp từ cột FireRate bảng WeaponConfigs DB
         nextAttackTime = Time.time + GetWeaponFireRateFromDb();
         currentState = BossState.Chase;
     }
@@ -402,7 +388,7 @@ public class MelogBossAI : MonoBehaviour
                 return config.fireRate;
             }
         }
-        return 3.0f; // Dự phòng mặc định nếu DB chưa load
+        return 3.0f;
     }
 
     private Vector2 GetSeparationForce()
@@ -434,22 +420,18 @@ public class MelogBossAI : MonoBehaviour
         return Vector2.zero;
     }
 
-    /// <summary>
-    /// 🔥 BÀI MẸO ĐỈNH CAO: LẬT TOÀN BỘ KHỐI 3D SANG TRÁI BẰNG ROTATION Y = 180!
-    /// Dính 100% 2 báng súng vào tay cầm không bao giờ bị lệch!
-    /// </summary>
     private void UpdateBossFacing(float dirX)
     {
         if (Mathf.Abs(dirX) > 0.05f)
         {
             if (dirX < 0)
             {
-                // Xoay sang TRÁI bằng Rotation Y = 180
+
                 transform.rotation = Quaternion.Euler(0f, 180f, 0f);
             }
             else
             {
-                // Xoay sang PHẢI bằng Rotation Y = 0
+
                 transform.rotation = Quaternion.Euler(0f, 0f, 0f);
             }
         }

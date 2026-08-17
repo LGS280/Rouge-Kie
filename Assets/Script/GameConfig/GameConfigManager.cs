@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO; // Thêm thư viện này để đọc file
+using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -9,13 +9,10 @@ public class GameConfigManager : MonoBehaviour
 {
     public static GameConfigManager Instance { get; private set; }
 
-    // Sự kiện báo hiệu khi nạp xong cấu hình từ API
     public static event Action OnConfigLoaded;
 
-    // Xóa const cũ, thay bằng biến private để gán từ file json
     private string baseUrl;
 
-    // BỔ SUNG: Cung cấp property để các Controller khác (Login, NetworkManager) lấy URL cấu hình động
     public string BaseUrl => baseUrl;
 
     public Dictionary<int, BulletConfig> BulletDb = new Dictionary<int, BulletConfig>();
@@ -29,7 +26,7 @@ public class GameConfigManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            LoadConfig(); // Đọc file config ngay khi khởi tạo
+            LoadConfig();
         }
         else
         {
@@ -37,7 +34,6 @@ public class GameConfigManager : MonoBehaviour
         }
     }
 
-    // Hàm đọc file cấu hình cục bộ
     private void LoadConfig()
     {
         string filePath = Path.Combine(Application.streamingAssetsPath, "appsettings.json");
@@ -47,10 +43,9 @@ public class GameConfigManager : MonoBehaviour
             try
             {
                 string jsonText = File.ReadAllText(filePath);
-                // Xóa các dòng comment // để JsonUtility của Unity không bị lỗi
-                // Dùng Multiline và ^ để chỉ xóa các comment ở đầu dòng, tránh xóa nhầm // trong URL
+
                 jsonText = System.Text.RegularExpressions.Regex.Replace(jsonText, @"^\s*//.*", "", System.Text.RegularExpressions.RegexOptions.Multiline);
-                
+
                 ConfigData config = JsonUtility.FromJson<ConfigData>(jsonText);
                 if (config != null && !string.IsNullOrEmpty(config.baseUrl))
                 {
@@ -63,24 +58,23 @@ public class GameConfigManager : MonoBehaviour
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[Config] Lỗi đọc file appsettings.json: {ex.Message}. Sử dụng URL mặc định.");
-                baseUrl = "https://rougekiebe.azurewebsites.net/api"; // URL dự phòng
+
+                baseUrl = "https://rougekiebe.azurewebsites.net/api";
             }
         }
         else
         {
-            // Fallback nếu không tìm thấy file (ví dụ: khi build lên môi trường production)
+
             baseUrl = "https://your-production-api.com/api";
-            Debug.LogWarning("[Config] Không tìm thấy appsettings.json. Sử dụng URL mặc định.");
+
         }
     }
 
     private IEnumerator Start()
     {
-        // Chờ nạp xong baseUrl (đề phòng trường hợp bất đồng bộ)
+
         if (string.IsNullOrEmpty(baseUrl)) yield return null;
 
-        // Thử nạp ngay khi Start (nếu đã có token lưu từ trước)
         yield return StartCoroutine(FetchConfigsRoutine());
     }
 
@@ -100,12 +94,12 @@ public class GameConfigManager : MonoBehaviour
                 if (wrapper != null && wrapper.data != null)
                 {
                     foreach (var b in wrapper.data) BulletDb[b.id] = b;
-                    Debug.Log($"[API] Đã nạp {BulletDb.Count} cấu hình đạn thành công.");
+
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[API Error] Lỗi parse cấu hình đạn: {ex.Message} - Json: {json}");
+
             }
         }));
 
@@ -125,12 +119,12 @@ public class GameConfigManager : MonoBehaviour
                             WeaponDbByName[w.prefabName.Trim()] = w;
                         }
                     }
-                    Debug.Log($"[API] Đã nạp {WeaponDb.Count} cấu hình vũ khí ({WeaponDbByName.Count} theo tên Prefab) thành công.");
+
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[API Error] Lỗi parse cấu hình vũ khí: {ex.Message} - Json: {json}");
+
             }
         }));
 
@@ -144,16 +138,15 @@ public class GameConfigManager : MonoBehaviour
                 {
                     BuffDb.Clear();
                     foreach (var b in wrapper.data) BuffDb.Add(b);
-                    Debug.Log($"[API] Đã nạp {BuffDb.Count} cấu hình Buff thành công.");
+
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[API Error] Lỗi parse cấu hình Buff: {ex.Message} - Json: {json}");
+
             }
         }));
 
-        // Kích hoạt sự kiện báo hiệu cấu hình đã được nạp xong từ API
         OnConfigLoaded?.Invoke();
     }
 
@@ -172,8 +165,6 @@ public class GameConfigManager : MonoBehaviour
 
             if (webRequest.result == UnityWebRequest.Result.Success)
                 onSuccess?.Invoke(webRequest.downloadHandler.text);
-            else
-                Debug.LogError($"[API Error] Lỗi kết nối đến {url}: {webRequest.error}");
         }
     }
 
@@ -187,11 +178,9 @@ public class GameConfigManager : MonoBehaviour
         BuffDb.Add(new BuffConfig { id = 3, buffName = "Tăng Năng Lượng Tối Đa", description = "+30 Năng lượng tối đa", buffType = "Mana", value = 30, rarity = "Common" });
         BuffDb.Add(new BuffConfig { id = 4, buffName = "Sức Mạnh Toàn Diện", description = "+10 Máu tối đa", buffType = "HP", value = 10, rarity = "Rare" });
 
-        Debug.Log($"[GameConfigManager] Đã khởi tạo thành công {BuffDb.Count} Buff mặc định dự phòng.");
     }
 }
 
-// Class bổ trợ để map dữ liệu từ file appsettings.json
 [Serializable]
 public class ConfigData
 {

@@ -111,6 +111,25 @@ MonoBehaviour:
   customHandPosition: {x: 0.2, y: 0.1, z: 0}
   firePoint: {fileID: 8568073828566795883}
   secondFirePoint: {fileID: 0}
+  allPlayerBulletPrefabs:
+  - {fileID: 5457056256669451622, guid: e189e784771179944b5166cfa9f456b3, type: 3}
+  - {fileID: 5457056256669451622, guid: b151046f8c1e0f844b3f31b266ffbb4a, type: 3}
+  - {fileID: 5457056256669451622, guid: 349415035f1c8e94eb1f83e88cc6cdee, type: 3}
+  - {fileID: 8000759159702084119, guid: 2c9f4f6e9e408274c8e5bbb0da485d58, type: 3}
+  - {fileID: 5457056256669451622, guid: 0e52bb5860cc0514ba306fb6ba029223, type: 3}
+  - {fileID: 5457056256669451622, guid: fdfcd43ad686eb945ad5ed4e3fc6bddb, type: 3}
+  - {fileID: 5457056256669451622, guid: 1e0cdcc75c86d314585ccab61998b881, type: 3}
+  - {fileID: 5457056256669451622, guid: 52724980f667839499e0ed6fad57fd8d, type: 3}
+  - {fileID: 5457056256669451622, guid: 31423f60f5ac48d48ab9d4feb7a5ac82, type: 3}
+  - {fileID: 5457056256669451622, guid: 7f3e5407bc7b6ef4aa11953265d003a3, type: 3}
+  - {fileID: 6231754123693432805, guid: 475cef929f68d3043b3d17cb128c5801, type: 3}
+  - {fileID: 8616719184387406343, guid: 0f9f2a81ca31463408b2c686ed0b2437, type: 3}
+  - {fileID: 6528320182406490979, guid: 9d3eaac674aa91f4da42f175584a39ae, type: 3}
+  - {fileID: 8301437630412802708, guid: f54df3ca18937e94ca8c6e1992ba351a, type: 3}
+  - {fileID: 1395929543879269571, guid: 438802f0d9451c145a49275926516999, type: 3}
+  - {fileID: 753050928091114740, guid: 5c4438f63aee98744bc3ba82bb2a6886, type: 3}
+  - {fileID: 6357435638210122470, guid: 9a4ce21bc71a20343af59c23447af4ed, type: 3}
+  - {fileID: 6483934579231364458, guid: a17a21628867ba049b960ef193a1d2dc, type: 3}
   bulletPrefab: {fileID: 5457056256669451622, guid: 31423f60f5ac48d48ab9d4feb7a5ac82, type: 3}
   fireRate: 1.5
   manaCostPerShot: 0
