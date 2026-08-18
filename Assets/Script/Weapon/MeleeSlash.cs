@@ -2,7 +2,8 @@ using UnityEngine;
 
 public class MeleeSlash : MonoBehaviour
 {
-    public float delayTime = 0.1f;
+    [Header("life time")]
+    public float lifeTime = 0.1f;
     [HideInInspector] public float damage;
     [HideInInspector] public float critChance;
     [HideInInspector] public float critMultiplier;
@@ -12,14 +13,14 @@ public class MeleeSlash : MonoBehaviour
         if (GameConfigManager.Instance != null && GameConfigManager.Instance.BulletDb.TryGetValue(bulletId, out BulletConfig config))
         {
             damage = config.damage;
-            critChance = config.critRate; // Script cận chiến của bạn dùng [Range(0,1)] nên giữ nguyên hệ thập phân
+            critChance = config.critRate;
             critMultiplier = config.critMultiplier;
         }
     }
 
     void Start()
     {
-        Destroy(gameObject, delayTime);
+        Destroy(gameObject, lifeTime);
     }
 
     void OnTriggerEnter2D(Collider2D collision)
@@ -37,12 +38,12 @@ public class MeleeSlash : MonoBehaviour
             float finalCritChance = critChance;
             if (PlayerBuffManager.Instance != null)
             {
-                finalCritChance += PlayerBuffManager.Instance.critChanceOffset / 100f; // Chia 100 vì critChance ở dạng 0-1
+                finalCritChance += PlayerBuffManager.Instance.critChanceOffset / 100f;
             }
 
             if (Random.value <= finalCritChance)
             {
-                finalDamage *= critMultiplier; // Nhân critMultiplier của cận chiến
+                finalDamage *= critMultiplier;
                 isCrit = true;
             }
 
@@ -51,7 +52,7 @@ public class MeleeSlash : MonoBehaviour
             {
                 if (!gameObject.name.EndsWith("_Remote"))
                 {
-                    enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage), isCrit); // Truyền isCrit để hiển thị màu text crit nếu cần
+                    enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage), isCrit);
                 }
             }
         }

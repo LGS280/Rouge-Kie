@@ -5,22 +5,26 @@ public class WeaponInfo : MonoBehaviour
     [Header("Cấu hình API kết nối (Tự động theo PrefabName)")]
     [HideInInspector] public int weaponDbId;
 
-    [Header("Prefab tham chiếu để vứt súng")]
+    [Header("prefab vứt súng")]
     public GameObject weaponPrefab;
 
-    [Header("Âm thanh bắn súng")]
+    [Header("âm thanh bắn súng")]
     public AudioClip shootSoundClip;
 
     private string soundFileName;
     private float soundVolume = 0.8f;
 
-    [Header("VỊ TRÍ CẦM SÚNG (Đọc từ DB)")]
+    [Header("vị trí custom cầm súng")]
     [HideInInspector] public Vector3 customHandPosition;
 
-    [Header("THIẾT LẬP BẮN ĐẠN")]
-    public GameObject bulletPrefab;
+    [Header("đầu nòng súng 1 và 2")]
     public Transform firePoint;
+    public Transform secondFirePoint;
 
+    [Header("Danh sách các loại đạn Player (Tự động đóng gói Build)")]
+    public GameObject[] allPlayerBulletPrefabs;
+
+    [HideInInspector] public GameObject bulletPrefab;
     [HideInInspector] public float fireRate;
     [HideInInspector] public int manaCostPerShot;
 
@@ -42,6 +46,13 @@ public class WeaponInfo : MonoBehaviour
         GameConfigManager.OnConfigLoaded -= ApplyConfigFromDb;
     }
 
+    private void Start()
+    {
+        if (firePoint == null) firePoint = transform.Find("FirePoint");
+        if (secondFirePoint == null) secondFirePoint = transform.Find("SecondFirePoint");
+        if (secondFirePoint == null) secondFirePoint = transform.Find("MeleePoint");
+    }
+
 #if UNITY_EDITOR
     private void OnValidate()
     {
@@ -54,6 +65,29 @@ public class WeaponInfo : MonoBehaviour
                 UnityEditor.EditorUtility.SetDirty(this);
             }
         }
+
+        string bulletFolder = "Assets/Prefab/Bullet";
+        string effectFolder = "Assets/Prefab/Effects";
+        System.Collections.Generic.List<GameObject> list = new System.Collections.Generic.List<GameObject>();
+
+        if (System.IO.Directory.Exists(bulletFolder))
+        {
+            foreach (string file in System.IO.Directory.GetFiles(bulletFolder, "*.prefab"))
+            {
+                GameObject prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(file);
+                if (prefab != null) list.Add(prefab);
+            }
+        }
+        if (System.IO.Directory.Exists(effectFolder))
+        {
+            foreach (string file in System.IO.Directory.GetFiles(effectFolder, "*.prefab"))
+            {
+                GameObject prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(file);
+                if (prefab != null) list.Add(prefab);
+            }
+        }
+        allPlayerBulletPrefabs = list.ToArray();
+        UnityEditor.EditorUtility.SetDirty(this);
     }
 #endif
 
@@ -85,18 +119,112 @@ public class WeaponInfo : MonoBehaviour
             fireRate = config.fireRate;
             manaCostPerShot = config.manaCost;
 
-            // 1. Nạp vị trí cầm súng từ DB và cập nhật ngay
             customHandPosition = new Vector3(config.handPositionX, config.handPositionY, config.handPositionZ);
             transform.localPosition = customHandPosition;
 
-            // 2. Nạp thông số âm thanh
             soundFileName = config.shootSound;
             soundVolume = config.shootVolume;
 
-            // 3. Nạp thông số độ giật
             recoilDistance = config.recoilDistance;
             recoilDuration = config.recoilDuration;
             returnDuration = config.returnDuration;
+        }
+    }
+
+    public GameObject GetBulletPrefabFromDb(int bId)
+    {
+        if (GameConfigManager.Instance != null && GameConfigManager.Instance.BulletDb.TryGetValue(bId, out BulletConfig bConfig))
+        {
+            if (!string.IsNullOrEmpty(bConfig.prefabName))
+            {
+                string targetName = bConfig.prefabName.ToLower();
+
+                if (allPlayerBulletPrefabs != null)
+                {
+                    foreach (var prefab in allPlayerBulletPrefabs)
+                    {
+                        if (prefab != null && prefab.name.ToLower() == targetName)
+                        {
+                            return prefab;
+                        }
+                    }
+                    foreach (var prefab in allPlayerBulletPrefabs)
+                    {
+                        if (prefab != null && prefab.name.ToLower().Contains(targetName))
+                        {
+                            return prefab;
+                        }
+                    }
+                }
+
+#if UNITY_EDITOR
+                string editorPath = $"Assets/Prefab/Bullet/{bConfig.prefabName}.prefab";
+                GameObject loadedInEditor = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(editorPath);
+                if (loadedInEditor != null) return loadedInEditor;
+
+                string editorEffectPath = $"Assets/Prefab/Effects/{bConfig.prefabName}.prefab";
+                loadedInEditor = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(editorEffectPath);
+                if (loadedInEditor != null) return loadedInEditor;
+#endif
+            }
+        }
+        return bulletPrefab;
+    }
+
+    public bool HasBayonetStab()
+    {
+        WeaponConfig config = GetWeaponConfig();
+        return config != null && config.secondBulletId > 0;
+    }
+
+    public bool TryBayonetStab(float meleeRadius, string enemyTag)
+    {
+        WeaponConfig config = GetWeaponConfig();
+        if (config == null || config.secondBulletId <= 0) return false;
+
+        Transform originPoint = (secondFirePoint != null) ? secondFirePoint : (firePoint != null ? firePoint : transform);
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, meleeRadius);
+
+        foreach (var hit in hits)
+        {
+            if (hit.CompareTag(enemyTag))
+            {
+                MobHealth hp = hit.GetComponent<MobHealth>();
+                if (hp != null && hp.isDead) continue;
+
+                Vector2 dirToEnemy = (hit.transform.position - transform.position).normalized;
+                Vector2 weaponDir = originPoint.right;
+
+                if (Vector2.Dot(weaponDir, dirToEnemy) > 0f)
+                {
+                    PerformBayonetStab(config.secondBulletId, originPoint);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void PerformBayonetStab(int secondId, Transform originPoint)
+    {
+        GameObject stabPrefab = GetBulletPrefabFromDb(secondId);
+        if (stabPrefab != null && originPoint != null)
+        {
+            GameObject spawnedStab = Instantiate(stabPrefab, originPoint.position, originPoint.rotation);
+
+            Collider2D col = spawnedStab.GetComponent<Collider2D>();
+            if (col != null)
+            {
+                col.isTrigger = true;
+            }
+
+            var bullet = spawnedStab.GetComponent<NormalBullet>();
+            if (bullet != null) bullet.InitFromDb(secondId);
+
+            var bSlash = spawnedStab.GetComponent<MeleeSlash>();
+            if (bSlash != null) bSlash.InitFromDb(secondId);
+
+            TriggerAttackAnimation();
         }
     }
 
@@ -108,15 +236,10 @@ public class WeaponInfo : MonoBehaviour
         }
         else if (!string.IsNullOrEmpty(soundFileName) && RogueKie.Audio.AudioManager.Instance != null)
         {
-            // Tự load file âm thanh dựa vào tên file trong thư mục Assets/Resources/Audio/
             AudioClip clip = Resources.Load<AudioClip>($"Audio/{soundFileName}");
             if (clip != null)
             {
                 RogueKie.Audio.AudioManager.Instance.PlaySFXAtPosition(clip, transform.position, soundVolume);
-            }
-            else
-            {
-                Debug.LogWarning($"[Audio Warning] Không tìm thấy file sound tên '{soundFileName}' trong Resources/Audio/");
             }
         }
     }
@@ -129,40 +252,37 @@ public class WeaponInfo : MonoBehaviour
             positionSaved = true;
         }
 
+        WeaponConfig wConfig = GetWeaponConfig();
+        Transform spawnPoint = (firePoint != null) ? firePoint : transform;
+
+        GameObject targetBulletPrefab = (wConfig != null && wConfig.bulletId > 0)
+            ? GetBulletPrefabFromDb(wConfig.bulletId)
+            : bulletPrefab;
+
+        if (targetBulletPrefab == null)
+        {
+
+            return;
+        }
+
         RookieHealth playerHealth = GetComponentInParent<RookieHealth>();
         if (playerHealth != null && !playerHealth.UseMana(manaCostPerShot))
             return;
 
-        if (bulletPrefab != null && firePoint != null)
+        if (targetBulletPrefab != null && spawnPoint != null)
         {
-            WeaponConfig wConfig = GetWeaponConfig();
-            if (wConfig == null)
-            {
-                string rawName = weaponPrefab != null ? weaponPrefab.name : gameObject.name;
-                string keyName = rawName.Replace("(Clone)", "").Trim();
-                Debug.LogWarning($"[WeaponInfo] ⚠️ KHÔNG TÌM THẤY cấu hình DB cho súng '{keyName}'! Hãy đảm bảo Backend API đã được khởi động lại và trả về tên PrefabName = '{keyName}'.");
-            }
-
             int count = (wConfig != null && wConfig.bulletsPerShot > 0) ? wConfig.bulletsPerShot : 1;
             float spread = (wConfig != null && wConfig.spreadAngle > 0) ? wConfig.spreadAngle : 20f;
-            float baseAngle = firePoint.eulerAngles.z;
+            float baseAngle = spawnPoint.eulerAngles.z;
 
             for (int i = 0; i < count; i++)
             {
-                float angleOffset = 0f;
-                if (count > 1)
-                {
-                    // Bắn tỏa đều các viên đạn theo hình quạt từ -spread đến +spread
-                    angleOffset = Mathf.Lerp(-spread, spread, (float)i / (count - 1));
-                }
-                else
-                {
-                    // 1 viên duy nhất -> lệch ngẫu nhiên trong khoảng spread
-                    angleOffset = Random.Range(-spread, spread);
-                }
+                float angleOffset = (count > 1)
+                    ? Mathf.Lerp(-spread, spread, (float)i / (count - 1))
+                    : Random.Range(-spread, spread);
 
                 Quaternion bulletRotation = Quaternion.Euler(0, 0, baseAngle + angleOffset);
-                GameObject spawnedBullet = Instantiate(bulletPrefab, firePoint.position, bulletRotation);
+                GameObject spawnedBullet = Instantiate(targetBulletPrefab, spawnPoint.position, bulletRotation);
 
                 if (wConfig != null && wConfig.bulletId > 0)
                 {
@@ -188,33 +308,33 @@ public class WeaponInfo : MonoBehaviour
             positionSaved = true;
         }
 
-        if (bulletPrefab != null)
+        WeaponConfig wConfig = GetWeaponConfig();
+        Transform spawnPoint = (firePoint != null) ? firePoint : transform;
+        Vector3 spawnPosition = (spawnPoint != null) ? spawnPoint.position : position;
+
+        GameObject targetBulletPrefab = (wConfig != null && wConfig.bulletId > 0)
+            ? GetBulletPrefabFromDb(wConfig.bulletId)
+            : bulletPrefab;
+
+        if (targetBulletPrefab != null)
         {
-            Vector3 spawnPosition = (firePoint != null) ? firePoint.position : position;
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             Quaternion baseRotation = Quaternion.AngleAxis(angle, Vector3.forward);
 
-            WeaponConfig wConfig = GetWeaponConfig();
             int count = (wConfig != null && wConfig.bulletsPerShot > 0) ? wConfig.bulletsPerShot : 1;
             float spread = (wConfig != null) ? wConfig.spreadAngle : 0f;
 
             for (int i = 0; i < count; i++)
             {
-                float angleOffset = 0f;
-                if (count > 1)
-                {
-                    angleOffset = Mathf.Lerp(-spread, spread, (float)i / (count - 1));
-                }
-                else
-                {
-                    angleOffset = Random.Range(-spread, spread);
-                }
+                float angleOffset = (count > 1)
+                    ? Mathf.Lerp(-spread, spread, (float)i / (count - 1))
+                    : Random.Range(-spread, spread);
 
                 Quaternion bulletRotation = baseRotation * Quaternion.Euler(0, 0, angleOffset);
-                GameObject spawnedBullet = Instantiate(bulletPrefab, spawnPosition, bulletRotation);
+                GameObject spawnedBullet = Instantiate(targetBulletPrefab, spawnPosition, bulletRotation);
                 spawnedBullet.name += "_Remote";
 
-                if (wConfig != null)
+                if (wConfig != null && wConfig.bulletId > 0)
                 {
                     var bullet = spawnedBullet.GetComponent<NormalBullet>();
                     if (bullet != null) bullet.InitFromDb(wConfig.bulletId);
@@ -257,12 +377,12 @@ public class WeaponInfo : MonoBehaviour
         }
     }
 
-    private bool slashDownward = true; // Đổi hướng chém luân phiên (Chém xuôi & Chém ngược)
+    private bool slashDownward = true;
 
     System.Collections.IEnumerator SwordSlashRoutine()
     {
-        float slashDuration = 0.08f;  // Thời gian vung kiếm quạt nhanh
-        float returnDuration = 0.12f; // Thời gian thu kiếm về góc nghỉ
+        float slashDuration = 0.08f;
+        float returnDuration = 0.12f;
 
         float startAngle = slashDownward ? 60f : -60f;
         float endAngle = slashDownward ? -60f : 60f;
@@ -276,17 +396,14 @@ public class WeaponInfo : MonoBehaviour
             t += Time.deltaTime;
             float progress = t / slashDuration;
 
-            // Xoay vung lưỡi kiếm từ góc trên xuống góc dưới (hoặc ngược lại)
             float currentAngle = Mathf.Lerp(startAngle, endAngle, progress);
             transform.localRotation = Quaternion.Euler(0, 0, currentAngle);
 
-            // Nhích nhẹ lưỡi kiếm ra phía trước theo quán tính nhát chém
             transform.localPosition = Vector3.Lerp(originalLocalPos, forwardThrust, Mathf.Sin(progress * Mathf.PI));
 
             yield return null;
         }
 
-        // Thu kiếm trở lại góc nghỉ ban đầu
         t = 0f;
         Quaternion currentRot = transform.localRotation;
         Quaternion targetRot = Quaternion.identity;

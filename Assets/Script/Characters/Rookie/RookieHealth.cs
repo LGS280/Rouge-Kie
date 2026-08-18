@@ -255,14 +255,14 @@ public class RookieHealth : MonoBehaviour
             rb.bodyType = RigidbodyType2D.Kinematic;
         }
 
-        // Giữ nguyên bóng Shadow và vòng xanh Player_Ring khi gục ngã để hiển thị tự nhiên
+        // Ẩn bóng Shadow và vòng xanh Player_Ring khi hy sinh/gục ngã
         Transform shadowPos = transform.Find("Shadow");
-        if (shadowPos != null) shadowPos.gameObject.SetActive(true);
+        if (shadowPos != null) shadowPos.gameObject.SetActive(false);
 
         Transform ringPos = transform.Find("Player_Ring");
         if (ringPos == null) ringPos = transform.Find("Ring");
         if (ringPos == null) ringPos = transform.Find("PlayerRing");
-        if (ringPos != null) ringPos.gameObject.SetActive(true);
+        if (ringPos != null) ringPos.gameObject.SetActive(false);
 
         WeaponAim weapon = GetComponentInChildren<WeaponAim>();
         if (weapon != null) weapon.enabled = false;
@@ -322,6 +322,10 @@ public class RookieHealth : MonoBehaviour
     public void Revive(int healthAmount)
     {
         if (!isDead) return;
+
+        // DỪNG LẬP TỨC COROUTINE LÀM TỐI MÀU (FadeToGray) NẾU ĐANG CHẠY DỞ!
+        StopAllCoroutines();
+
         isDead = false;
 
         currentHealth = Mathf.Clamp(healthAmount, 1, maxHealth);
@@ -401,6 +405,14 @@ public class RookieHealth : MonoBehaviour
         foreach (var sr in srs)
         {
             if (sr != null) sr.color = Color.white;
+        }
+
+        // 7. Ép vòng chọn chân Player_Ring xuất hiện trở lại và có đúng màu XANH LÁ CÂY (Color.green)
+        if (ringPos != null)
+        {
+            ringPos.gameObject.SetActive(true);
+            SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
+            if (ringSr != null) ringSr.color = Color.green;
         }
 
         Debug.Log($"[RookieHealth] Người chơi đã được HỒI SINH hoàn toàn với {currentHealth} Máu và {currentArmor} Giáp!");

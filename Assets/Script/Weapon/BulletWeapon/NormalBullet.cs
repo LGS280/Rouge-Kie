@@ -9,10 +9,6 @@ public class NormalBullet : MonoBehaviour
 
     public float lifeTime = 3f;
 
-    [Header("Impact Effect")]
-    public GameObject explosionEffectPrefab; // Prefab hiệu ứng vụ nổ (tùy chọn)
-
-    // Hàm nhận dữ liệu từ DB truyền qua
     public void InitFromDb(int bulletId)
     {
         if (bulletId <= 0) return;
@@ -21,14 +17,22 @@ public class NormalBullet : MonoBehaviour
         {
             speed = config.flightSpeed;
             baseDamage = config.damage;
-            critChance = config.critRate * 100f; // Đổi thập phân (0.2) thành phần trăm (20%)
+            critChance = config.critRate * 100f;
             critMultiplier = config.critMultiplier;
-            Debug.Log($"[NormalBullet] Nạp thành công bulletId={bulletId}: Speed={speed}, Damage={baseDamage}");
+
         }
     }
 
+    [Header("Default Parameters Fallback")]
+    public float defaultSpeed = 22f;
+    public float defaultBaseDamage = 15f;
+
     protected virtual void Start()
     {
+        if (speed <= 0f) speed = defaultSpeed;
+        if (baseDamage <= 0f) baseDamage = defaultBaseDamage;
+        if (critMultiplier <= 0f) critMultiplier = 1.5f;
+
         Destroy(gameObject, lifeTime);
     }
 
@@ -44,11 +48,6 @@ public class NormalBullet : MonoBehaviour
             if (collision.CompareTag("Enemy"))
             {
                 CalculateAndApplyDamage(collision);
-            }
-
-            if (explosionEffectPrefab != null)
-            {
-                Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
             }
 
             Destroy(gameObject);
@@ -74,7 +73,7 @@ public class NormalBullet : MonoBehaviour
 
         if (roll <= finalCritChance)
         {
-            finalDamage *= critMultiplier; // Nhân hệ số chí mạng của đạn
+            finalDamage *= critMultiplier;
             isCrit = true;
         }
 

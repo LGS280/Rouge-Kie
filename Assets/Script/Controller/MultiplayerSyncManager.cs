@@ -10,7 +10,7 @@ public class MultiplayerSyncManager : MonoBehaviour
 
     [Header("Local Player reference")]
     [SerializeField] private Transform localPlayer;
-    [SerializeField] private float syncInterval = 0.05f; // Gửi tọa độ mỗi 50ms (Tần số 20Hz)
+    [SerializeField] private float syncInterval = 0.033f; // Gửi tọa độ mỗi 33ms (Tần số 30Hz mượt mà)
     private float lastSyncTime = 0f;
 
     // Quản lý danh sách các đồng đội đang có trong trận qua ConnectionId
@@ -148,7 +148,7 @@ public class MultiplayerSyncManager : MonoBehaviour
         {
             allMobs[i].networkId = $"mob_{i}";
         }
-        
+
         Debug.Log($"Đã gán thành công {allRooms.Length} Room IDs và {allMobs.Length} Mob IDs đồng bộ.");
     }
 
@@ -194,13 +194,47 @@ public class MultiplayerSyncManager : MonoBehaviour
     }
 
     // Khi Server báo một phòng đã bắt đầu đánh nhau
+    private RoomController FindRoomById(string targetRoomId)
+    {
+        if (string.IsNullOrEmpty(targetRoomId)) return null;
+
+        if (roomCache.TryGetValue(targetRoomId, out RoomController room) && room != null)
+        {
+            return room;
+        }
+
+        // Fallback 1: Quét lại tất cả RoomController trong Scene xem có roomUniqueId trùng khớp không
+        RoomController[] allRooms = Object.FindObjectsByType<RoomController>(FindObjectsSortMode.None);
+        foreach (var r in allRooms)
+        {
+            if (r != null && r.roomUniqueId == targetRoomId)
+            {
+                if (!roomCache.ContainsKey(targetRoomId)) roomCache[targetRoomId] = r;
+                return r;
+            }
+        }
+
+        // Fallback 2: Lấy phòng duy nhất đang bị khóa cửa đánh quái (roomStarted == true)
+        foreach (var r in allRooms)
+        {
+            if (r != null && r.roomStarted && !r.roomCleared)
+            {
+                return r;
+            }
+        }
+
+        return null;
+    }
+
+    // Khi Server báo một phòng đã bắt đầu đánh nhau
     private void HandleRoomCombatStarted(string targetRoomId, float safeX, float safeY)
     {
         Debug.Log($"NHẬN LỆNH TỪ SERVER: Bắt đầu combat tại phòng {targetRoomId}");
 
         Vector3 targetPos = new Vector3(safeX, safeY, 0);
+        RoomController room = FindRoomById(targetRoomId);
 
-        if (roomCache.TryGetValue(targetRoomId, out RoomController room) && room != null)
+        if (room != null)
         {
             // 1. Chỉ dịch chuyển localPlayer nếu còn sống và đang ở NGOÀI phòng
             if (localPlayer != null)
@@ -240,7 +274,8 @@ public class MultiplayerSyncManager : MonoBehaviour
     {
         Debug.Log($"NHẬN LỆNH TỪ SERVER: Phòng {targetRoomId} đã clear xong. Mở cửa!");
 
-        if (roomCache.TryGetValue(targetRoomId, out RoomController room) && room != null)
+        RoomController room = FindRoomById(targetRoomId);
+        if (room != null)
         {
             room.ExecuteClearRoomLocal();
         }
@@ -258,14 +293,14 @@ public class MultiplayerSyncManager : MonoBehaviour
             SpriteRenderer sr = remoteObj.GetComponent<SpriteRenderer>();
             if (sr != null) sr.color = new Color(0.35f, 0.35f, 0.35f, 1f);
 
-            // Giữ nguyên bóng Shadow và vòng xanh Player_Ring của đồng đội khi hy sinh
+            // Ẩn bóng Shadow và vòng xanh Player_Ring của đồng đội khi hy sinh
             Transform shadowPos = remoteObj.transform.Find("Shadow");
-            if (shadowPos != null) shadowPos.gameObject.SetActive(true);
+            if (shadowPos != null) shadowPos.gameObject.SetActive(false);
 
             Transform ringPos = remoteObj.transform.Find("Player_Ring");
             if (ringPos == null) ringPos = remoteObj.transform.Find("Ring");
             if (ringPos == null) ringPos = remoteObj.transform.Find("PlayerRing");
-            if (ringPos != null) ringPos.gameObject.SetActive(true);
+            if (ringPos != null) ringPos.gameObject.SetActive(false);
         }
     }
 
@@ -292,7 +327,12 @@ public class MultiplayerSyncManager : MonoBehaviour
             Transform ringPos = remoteObj.transform.Find("Player_Ring");
             if (ringPos == null) ringPos = remoteObj.transform.Find("Ring");
             if (ringPos == null) ringPos = remoteObj.transform.Find("PlayerRing");
-            if (ringPos != null) ringPos.gameObject.SetActive(true);
+            if (ringPos != null)
+            {
+                ringPos.gameObject.SetActive(true);
+                SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
+                if (ringSr != null) ringSr.color = Color.green;
+            }
         }
     }
 
@@ -391,7 +431,7 @@ public class MultiplayerSyncManager : MonoBehaviour
                 RemotePlayerController rpc = remote.GetComponent<RemotePlayerController>();
                 if (rpc != null)
                 {
-                    rpc.targetPosition = new Vector3(x, y, 0);
+                    rpc.SetNewTargetPosition(new Vector3(x, y, 0));
                 }
                 else
                 {
@@ -535,6 +575,11 @@ public class MultiplayerSyncManager : MonoBehaviour
 
         if (weaponPrefab == null)
         {
+#if UNITY_EDITOR
+            string editorPath = $"Assets/Prefab/Weapons/{cleanName}.prefab";
+            weaponPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(editorPath);
+            if (weaponPrefab != null) return weaponPrefab;
+#endif
             weaponPrefab = Resources.Load<GameObject>($"Prefab/Weapons/{cleanName}");
             if (weaponPrefab == null)
             {
@@ -549,22 +594,10 @@ public class MultiplayerSyncManager : MonoBehaviour
     {
         if (NetworkManager.Instance == null) return;
 
-        if (targetConnId == NetworkManager.Instance.MyConnectionId)
+        // 🎯 CHỈ XỬ LÝ HIỂN THỊ CHO ĐỒNG ĐỘI (REMOTE PLAYER)
+        // Bản thân (Local Player cả Host và Guest) đã tự trừ máu & hiển thị -9 cục bộ khi bị dính đạn rồi!
+        if (targetConnId != NetworkManager.Instance.MyConnectionId)
         {
-            // Nếu chính mình là mục tiêu chịu sát thương (Host gửi xuống cho Player 2), gọi TakeDamageFromNetwork
-            GameObject localPlayerObj = GameObject.FindGameObjectWithTag("Player");
-            if (localPlayerObj != null)
-            {
-                RookieHealth health = localPlayerObj.GetComponent<RookieHealth>();
-                if (health != null && !health.isDead)
-                {
-                    health.TakeDamageFromNetwork(Mathf.RoundToInt(damage));
-                }
-            }
-        }
-        else
-        {
-            // Nếu là đồng đội nhận sát thương, hiển thị chữ số sát thương và chớp đỏ trên nhân vật đồng đội
             Debug.Log($"[MultiplayerSyncManager] Đồng đội {targetConnId} nhận sát thương: {damage} HP");
             GameObject remoteObj = GetRemotePlayerById(targetConnId);
             if (remoteObj != null)
@@ -590,10 +623,13 @@ public class MultiplayerSyncManager : MonoBehaviour
         SpriteRenderer sr = remoteObj.GetComponent<SpriteRenderer>();
         if (sr != null)
         {
-            Color oldColor = sr.color;
-            sr.color = new Color(1f, 0.4f, 0.4f);
+            sr.color = new Color(1f, 0.35f, 0.35f, 1f);
             yield return new WaitForSeconds(0.15f);
-            if (sr != null) sr.color = oldColor;
+            if (sr != null)
+            {
+                // 🎯 RESET VỀ MÀU TRẮNG NGUYÊN BẢN (Color.white): Đảm bảo 100% nhân vật trả về màu gốc, không kẹt màu đỏ!
+                sr.color = Color.white;
+            }
         }
     }
 
@@ -603,32 +639,17 @@ public class MultiplayerSyncManager : MonoBehaviour
         GameObject remoteObj = GetRemotePlayerById(connId);
         if (remoteObj == null) return;
 
-        // Tìm hoặc tự động tạo Hand_Position độc lập cho Remote Player để xoay súng (Không làm xoay thân nhân vật)
-        Transform handPos = remoteObj.transform.Find("Hand_Position");
-        if (handPos == null)
+        RemotePlayerController rpc = remoteObj.GetComponent<RemotePlayerController>();
+        if (rpc != null)
         {
-            GameObject newHand = new GameObject("Hand_Position");
-            newHand.transform.SetParent(remoteObj.transform, false);
-            newHand.transform.localPosition = new Vector3(0.15f, -0.1f, 0f);
-            handPos = newHand.transform;
+            rpc.targetWeaponAngle = angle;
+
+            // Bọc lót cập nhật vị trí nếu nhận được cùng gói tin
+            if (Vector3.Distance(remoteObj.transform.position, new Vector3(px, py, 0)) > 2.5f)
+            {
+                rpc.SetNewTargetPosition(new Vector3(px, py, 0));
+            }
         }
-
-        if (angle > 180f) angle -= 360f;
-        if (angle < -180f) angle += 360f;
-
-        // Xoay duy nhất Hand_Position quanh tâm tay nhân vật (TUYỆT ĐỐI KHÔNG xoay remoteObj.transform)
-        handPos.rotation = Quaternion.Euler(0, 0, angle);
-
-        // Lật Sprite thân nhân vật và lật trục Y của súng khi ngắm sang bên trái
-        SpriteRenderer playerRenderer = remoteObj.GetComponent<SpriteRenderer>();
-        bool isFacingLeft = (angle > 90f || angle < -90f);
-        if (playerRenderer != null)
-        {
-            playerRenderer.flipX = isFacingLeft;
-        }
-
-        // Lật trục Y của Hand_Position để súng không bị ngửa bụng khi quay trái
-        handPos.localScale = new Vector3(1f, isFacingLeft ? -1f : 1f, 1f);
     }
 
     // Xử lý vẽ đạn của người chơi khác
@@ -705,7 +726,15 @@ public class MultiplayerSyncManager : MonoBehaviour
             }
             else
             {
-                enemy.transform.position = new Vector3(x, y, enemy.transform.position.z);
+                MelogBossAI melogBossAI = enemy.GetComponent<MelogBossAI>();
+                if (melogBossAI != null)
+                {
+                    melogBossAI.UpdateNetworkPosition(new Vector2(x, y));
+                }
+                else
+                {
+                    enemy.transform.position = new Vector3(x, y, enemy.transform.position.z);
+                }
             }
         }
     }

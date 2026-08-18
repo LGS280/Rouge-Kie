@@ -10,7 +10,7 @@ public class WeaponConfig
     public int bulletsPerShot;
     public float spreadAngle;
     public int bulletId;
-    public int? secondBulletId; // ID của đạn thứ hai / nhát đâm lưỡi lê cận chiến (cho phép null nếu súng đơn đạn)
+    public int secondBulletId;
 
     public string prefabName;
     public string shootSound;
@@ -22,9 +22,8 @@ public class WeaponConfig
     public float recoilDuration;
     public float returnDuration;
 
-    // 2 Cột mới bổ sung từ Backend Database API
-    public string weaponType; // "Pistol", "Heavy Gun", "Sniper", "Rifle", "Laser Gun", "SMG", "Shotgun", "Sword"
-    public string rarity;     // "Common", "Rare", "Epic", "Legendary"
+    public string weaponType;
+    public string rarity;
 }
 
 [Serializable]

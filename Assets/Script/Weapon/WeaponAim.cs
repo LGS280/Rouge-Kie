@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -10,14 +10,13 @@ public class WeaponAim : MonoBehaviour
     private PlayerMeleeSlash playerMelee;
     private WeaponManager weaponManager;
 
-    // biến ẩn để biết súng nào đang trên tay nhằm kích hoạt bắn/tốc độ bắn
     [HideInInspector] public WeaponInfo currentWeapon;
     private float nextFireTime = 0f;
 
-    [Header("Setting Aim Bot")]
-    public float aimRadius = 7f; // bán kính vòng tròn quét quái 
+    [Header("cài đặt aimbot (cho tay cầm)")]
+    public float aimRadius = 7f;
     public LayerMask enemyLayer;
-    private Transform currentTarget; // lưu con quái bị aim 
+    private Transform currentTarget;
 
     private float currentGamepadAngle = 0f;
     private Transform previousTarget;
@@ -37,16 +36,24 @@ public class WeaponAim : MonoBehaviour
 
     void Update()
     {
-        // BỎ QUA NẾU ĐÂY LÀ SÚNG CỦA REMOTE PLAYER
-        // Theo kiến trúc, Remote Player không có PlayerController, nên biến này sẽ null
+
         if (playerController == null)
+        {
+            return;
+        }
+
+        if (ShopUIController.Instance != null && ShopUIController.Instance.IsShopOpen())
+        {
+            return;
+        }
+
+        if (UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
         {
             return;
         }
 
         float angle = 0f;
 
-        // chơi bằng tay cầm
         if (playerController != null && playerController.currentMode == PlayerController.InputMode.Gamepad)
         {
             Vector2 gamepadDirection = playerController.GetMoveInput();
@@ -55,16 +62,16 @@ public class WeaponAim : MonoBehaviour
 
             if (currentTarget != null)
             {
-                // khi có quái trong tầm thì sẽ aim vô quái bỏ qua joystick
+
                 Vector2 aimDirection = currentTarget.position - transform.position;
                 angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
-                currentGamepadAngle = angle; // lưu lại góc quay súng để khi quái chết ko bị giật 
+                currentGamepadAngle = angle;
 
-                HandleTargetRingUI(currentTarget, true); // bật vòng đỏ dưới chân quái để hiện aim bot
+                HandleTargetRingUI(currentTarget, true);
             }
             else
             {
-                // Khi mất quái thì thò tay tắt vòng đỏ của con quái cũ đi trước
+
                 if (previousTarget != null)
                 {
                     HandleTargetRingUI(previousTarget, false);
@@ -77,21 +84,21 @@ public class WeaponAim : MonoBehaviour
                 }
                 else
                 {
-                    angle = currentGamepadAngle; // Buông cần thì giữ nguyên hướng súng cũ
+                    angle = currentGamepadAngle;
                 }
             }
 
             if (currentTarget != previousTarget && previousTarget != null)
             {
-                // Tắt vòng đỏ của con quái cũ (A) đi để bật con quái mới (B)
+
                 HandleTargetRingUI(previousTarget, false);
             }
             previousTarget = currentTarget;
         }
-        // chơi bằng bàn phím + chuột
+
         else
         {
-            // nếu người chơi qua bàn phím thì tắt vòng đỏ đi
+
             if (currentTarget != null)
             {
                 HandleTargetRingUI(currentTarget, false);
@@ -106,12 +113,8 @@ public class WeaponAim : MonoBehaviour
             angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
         }
 
-        //  BỘ XỬ LÝ LẬT MẶT VÀ XOAY SÚNG ĐỒNG BỘ (CHỐNG XUNG ĐỘT)
-
-        // Tự xoay chính nó (Cây súng)
         transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
 
-        // Chuẩn hóa góc về khoảng -180 đến 180 độ để tính toán hướng lật mặt
         if (angle > 180f)
         {
             angle -= 360f;
@@ -121,22 +124,20 @@ public class WeaponAim : MonoBehaviour
             angle += 360f;
         }
 
-        // Quy định hướng: Cứ họng súng hướng sang trái (góc > 90 hoặc < -90) là người và súng cùng lật
         if (playerRenderer != null)
         {
             if (angle > 90f || angle < -90f)
             {
-                playerRenderer.flipX = true; // Nhân vật nhìn sang trái
-                transform.localScale = new Vector3(1f, -1f, 1f); // Lật trục Y của súng chống ngược súng
+                playerRenderer.flipX = true;
+                transform.localScale = new Vector3(1f, -1f, 1f);
             }
             else
             {
-                playerRenderer.flipX = false; // Nhân vật nhìn sang phải
-                transform.localScale = new Vector3(1f, 1f, 1f); // Súng thẳng bình thường
+                playerRenderer.flipX = false;
+                transform.localScale = new Vector3(1f, 1f, 1f);
             }
         }
 
-        // Logic xả đạn
         HandleShooting();
     }
 
@@ -167,7 +168,7 @@ public class WeaponAim : MonoBehaviour
 
     void HandleShooting()
     {
-        // Khóa bắn súng nếu có súng ở gần dưới đất để nhặt
+
         if (weaponManager != null && weaponManager.nearbyWeapons.Count > 0) return;
 
         if (currentWeapon == null) return;
@@ -184,7 +185,7 @@ public class WeaponAim : MonoBehaviour
         if (Time.time >= nextFireTime)
         {
             bool isShooting = false;
-            bool isNewClick = false; // click mới hay đang giữ
+            bool isNewClick = false;
 
             if (playerController != null && playerController.currentMode == PlayerController.InputMode.Gamepad)
             {
@@ -207,10 +208,18 @@ public class WeaponAim : MonoBehaviour
             {
                 nextFireTime = Time.time + currentFireRate;
 
-                // Kiểm tra xem vũ khí hiện tại có phải là cận chiến không (kiểm tra từ DB weaponType = Sword / Melee)
                 bool isCurrentWeaponMelee = currentWeapon != null && currentWeapon.IsMeleeWeapon();
 
-                // Chỉ kích hoạt chém tay khi đang cầm SÚNG và quái lại quá gần
+                if (currentWeapon != null && currentWeapon.HasBayonetStab())
+                {
+                    float checkRadius = (playerMelee != null) ? playerMelee.meleeRadius : 2.5f;
+                    string checkTag = (playerMelee != null) ? playerMelee.enemyTag : "Enemy";
+                    if (currentWeapon.TryBayonetStab(checkRadius, checkTag))
+                    {
+                        return;
+                    }
+                }
+
                 if (playerMelee != null && !isCurrentWeaponMelee)
                 {
                     if (playerMelee.TryMeleeAttack(currentWeapon.firePoint))
@@ -219,27 +228,25 @@ public class WeaponAim : MonoBehaviour
                     }
                 }
 
-                currentWeapon.Attack(); // truyền thêm isNewClick
+                currentWeapon.Attack();
 
-                // Gửi sự kiện bắn đạn lên mạng cho các người chơi khác
                 if (NetworkManager.Instance != null && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId))
                 {
                     Vector3 shootPos = currentWeapon.firePoint != null ? currentWeapon.firePoint.position : transform.position;
                     Vector3 shootDir = currentWeapon.firePoint != null ? currentWeapon.firePoint.right : transform.right;
-                    
+
                     NetworkManager.Instance.SendShootEvent(currentWeapon.name, shootPos, shootDir);
                 }
             }
         }
     }
 
-    private void OnDrawGizmosSelected() // vẽ vòng tròn trong scene để xem tầm aim bot tới đâu
+    private void OnDrawGizmosSelected()
     {
-        // Vòng đỏ: xem tầm aim bot tới đâu
+
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, aimRadius);
 
-        // Vòng xanh dương: Vẽ tầm cận chiến của súng đang cầm nếu có
         if (playerMelee != null)
         {
             Gizmos.color = Color.blue;
@@ -249,7 +256,7 @@ public class WeaponAim : MonoBehaviour
 
     private void OnDisable()
     {
-        // Tắt vòng tròn ngắm dưới chân quái vật để tránh bị kẹt vòng đỏ khi pause game
+
         if (currentTarget != null)
         {
             HandleTargetRingUI(currentTarget, false);

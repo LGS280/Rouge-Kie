@@ -37,7 +37,7 @@ public class TeleportPortal : MonoBehaviour
                     Debug.LogWarning("[TeleportPortal] Vẫn còn đồng đội gục ngã! Không thể lên tầng tiếp theo.");
                     if (LoadingScreenUI.Instance != null)
                     {
-                        LoadingScreenUI.Instance.ShowLoading("CỔNG CHƯA THỂ KÍCH HOẠT", "Phải hồi sinh đồng đội mới có thể lên tầng tiếp theo!");
+                        LoadingScreenUI.Instance.ShowLoading("PORTAL LOCKED", "Must revive your teammate before moving to the next floor!");
                         StartCoroutine(HideWarningRoutine());
                     }
                     return; // Ngăn chặn chuyển tầng

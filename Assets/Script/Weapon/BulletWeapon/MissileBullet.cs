@@ -1,15 +1,19 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class MissileBullet : NormalBullet
 {
-    [Header("Missile Homing Configuration")]
-    public float detectRadius = 5.0f;     // Bán kính dò tìm kẻ địch
-    public float turnSpeed = 260.0f;      // Tốc độ xoay lượn cong mềm mại (độ/giây)
-    public float initialDirectTime = 0.05f; // Bắt đầu lượn bẻ lái cực nhanh sau 0.05s
+    [Header("cấu hình đạn theo dõi")]
+    public bool isHoming = true;
+    public float detectRadius = 5.0f;
+    public float turnSpeed = 260.0f;
+    public float initialDirectTime = 0.05f;
 
-    [Header("Visual Tail Effect")]
-    public bool hasFireTail = true;      // Cờ bật/tắt đuôi lửa (ví dụ: Tên lửa = true, Mũi tên phép = false)
-    public GameObject fireTailObject;   // Reference tới GameObject đuôi lửa
+    [Header("hiệu ứng đuôi lửa")]
+    public bool hasFireTail = true;
+    public GameObject fireTailObject;
+
+    [Header("hiệu ứng nổ")]
+    public GameObject explosionEffectPrefab;
 
     private Transform targetEnemy;
     private float spawnTimestamp;
@@ -19,7 +23,6 @@ public class MissileBullet : NormalBullet
         base.Start();
         spawnTimestamp = Time.time;
 
-        // Tự động tìm GameObject con "Fire_Tail" nếu chưa gán thủ công
         if (fireTailObject == null)
         {
             Transform tailTrans = transform.Find("Fire_Tail");
@@ -29,16 +32,28 @@ public class MissileBullet : NormalBullet
             }
         }
 
-        // Bật/tắt hiển thị đuôi lửa theo cờ hasFireTail
         if (fireTailObject != null)
         {
             fireTailObject.SetActive(hasFireTail);
         }
     }
 
+    protected override void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Obstacle") || collision.CompareTag("Enemy") || collision.CompareTag("Door"))
+        {
+            if (explosionEffectPrefab != null)
+            {
+                Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
+            }
+        }
+
+        base.OnTriggerEnter2D(collision);
+    }
+
     protected override void Update()
     {
-        // 1. Hiệu ứng bùng nhấp nháy loa lửa ngay đít tên lửa (Nozzle Flame Cone)
+
         if (hasFireTail && fireTailObject != null && fireTailObject.activeSelf)
         {
             float scaleX = 0.9f + Random.Range(-0.1f, 0.1f);
@@ -46,8 +61,7 @@ public class MissileBullet : NormalBullet
             fireTailObject.transform.localScale = new Vector3(scaleX, scaleY, 1f);
         }
 
-        // 2. Dò tìm và xoay hướng bay theo đuổi quái
-        if (Time.time - spawnTimestamp >= initialDirectTime)
+        if (isHoming && Time.time - spawnTimestamp >= initialDirectTime)
         {
             FindTargetEnemy();
 
@@ -56,7 +70,6 @@ public class MissileBullet : NormalBullet
                 Vector2 direction = (targetEnemy.position - transform.position).normalized;
                 float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
 
-                // Xoay từ từ hướng đạn về phía quái theo turnSpeed
                 float currentAngle = transform.eulerAngles.z;
                 float newAngle = Mathf.MoveTowardsAngle(currentAngle, targetAngle, turnSpeed * Time.deltaTime);
 
@@ -64,13 +77,12 @@ public class MissileBullet : NormalBullet
             }
         }
 
-        // 3. Tiến thẳng về phía trước theo hướng hiện tại (tính năng kế thừa speed từ NormalBullet)
         transform.Translate(Vector2.right * speed * Time.deltaTime, Space.Self);
     }
 
     private void FindTargetEnemy()
     {
-        // Kiểm tra target hiện tại còn hợp lệ hay không
+
         if (targetEnemy != null)
         {
             if (!targetEnemy.gameObject.activeInHierarchy)
@@ -87,7 +99,6 @@ public class MissileBullet : NormalBullet
             }
         }
 
-        // Nếu chưa có target, quét tìm con quái gần nhất trong bán kính detectRadius
         if (targetEnemy == null)
         {
             Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, detectRadius);
@@ -116,7 +127,7 @@ public class MissileBullet : NormalBullet
 
     private void OnDrawGizmosSelected()
     {
-        // Vẽ vòng tròn bán kính dò quái trong Unity Editor để xem trực quan
+
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, detectRadius);
     }

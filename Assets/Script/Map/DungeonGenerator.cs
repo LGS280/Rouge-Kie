@@ -24,6 +24,10 @@ public class DungeonGenerator : MonoBehaviour
 
     [Header("Chest Prefab")]
     public GameObject chestPrefab;
+    public GameObject weaponChestPrefab;
+
+    [Header("Boss Prefab")]
+    public GameObject miniBossPrefab;
 
     [Header("Door Tilemap")]
     public Tilemap doorTilemap;
@@ -1181,25 +1185,56 @@ public class DungeonGenerator : MonoBehaviour
         TeleportPortal[] oldPortals = Object.FindObjectsByType<TeleportPortal>(FindObjectsSortMode.None);
         foreach (var p in oldPortals)
         {
-            if (p != null) Destroy(p.gameObject);
+            if (p != null && p.gameObject != null) DestroySmart(p.gameObject);
         }
         GameObject oldPortalObj = GameObject.Find("TeleportPortal");
-        if (oldPortalObj != null) Destroy(oldPortalObj);
+        if (oldPortalObj != null) DestroySmart(oldPortalObj);
+
+        // 🧹 DỌN DẸP SẠCH SẼ TẤT CẢ VẬT PHẨM VÀ VŨ KHÍ RƠI VÃI TẦNG CŨ KHI QUA TẦNG MỚI (CẢ SINGLEPLAYER & MULTIPLAYER)
+        LootItem[] remainingLoot = Object.FindObjectsByType<LootItem>(FindObjectsSortMode.None);
+        foreach (var loot in remainingLoot)
+        {
+            if (loot != null && loot.gameObject != null) Destroy(loot.gameObject);
+        }
+
+        GroundWeapon[] remainingWeapons = Object.FindObjectsByType<GroundWeapon>(FindObjectsSortMode.None);
+        foreach (var weapon in remainingWeapons)
+        {
+            if (weapon != null && weapon.gameObject != null) Destroy(weapon.gameObject);
+        }
+
+        RewardChest[] remainingRewardChests = Object.FindObjectsByType<RewardChest>(FindObjectsSortMode.None);
+        foreach (var chest in remainingRewardChests)
+        {
+            if (chest != null && chest.gameObject != null) Destroy(chest.gameObject);
+        }
+
+        WeaponChest[] remainingWeaponChests = Object.FindObjectsByType<WeaponChest>(FindObjectsSortMode.None);
+        foreach (var chest in remainingWeaponChests)
+        {
+            if (chest != null && chest.gameObject != null) Destroy(chest.gameObject);
+        }
 
         for (int i = transform.childCount - 1; i >= 0; i--)
         {
             GameObject child = transform.GetChild(i).gameObject;
-            if (Application.isPlaying)
-            {
-                Destroy(child);
-            }
-            else
-            {
-                DestroyImmediate(child);
-            }
+            DestroySmart(child);
         }
 
-        Debug.Log("?ã xoá s?ch toàn b? Tilemap và các Prefab c?a c?.");
+        Debug.Log("Đã xóa sạch toàn bộ Tilemap và các Prefab cũ.");
+    }
+
+    private void DestroySmart(GameObject obj)
+    {
+        if (obj == null) return;
+        if (Application.isPlaying)
+        {
+            Destroy(obj);
+        }
+        else
+        {
+            DestroyImmediate(obj);
+        }
     }
 
     private void DecorateWallsByCluster()
@@ -1380,24 +1415,40 @@ public class DungeonGenerator : MonoBehaviour
     {
         if (room.controller == null) return;
 
-        if (chestPrefab != null)
+        GameObject targetPrefab = weaponChestPrefab;
+#if UNITY_EDITOR
+        if (targetPrefab == null)
+        {
+            targetPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/Map/WeaponChest.prefab");
+        }
+#endif
+        if (targetPrefab == null)
+        {
+            targetPrefab = Resources.Load<GameObject>("Prefab/Map/WeaponChest");
+        }
+        if (targetPrefab == null)
+        {
+            targetPrefab = chestPrefab;
+        }
+
+        if (targetPrefab != null)
         {
             Vector3 worldPos = floorTilemap.CellToWorld((Vector3Int)room.Center) + new Vector3(0.5f, 0.5f, 0f);
             if (room.controller != null)
             {
                 worldPos = room.controller.GetSafeChestSpawnPosition(worldPos);
             }
-            GameObject chestObj = Instantiate(chestPrefab, worldPos, Quaternion.identity);
+            GameObject chestObj = Instantiate(targetPrefab, worldPos, Quaternion.identity);
             chestObj.transform.SetParent(transform);
 
             // Cấu hình phòng Rương đã được dọn sạch để mở cửa
             room.controller.roomCleared = true;
             room.controller.chestSpawned = true; // Chặn sinh rương thêm lần nữa khi dọn dẹp
-            Debug.Log($"[DungeonGenerator] Đã sinh Rương tại phòng Rương báu: {room.gridPos}");
+            Debug.Log($"[DungeonGenerator] Đã sinh Rương Vũ Khí (WeaponChest) tại phòng Rương báu: {room.gridPos}");
         }
         else
         {
-            Debug.LogWarning("[DungeonGenerator] Chưa gán chestPrefab để sinh trong phòng Rương báu.");
+            Debug.LogWarning("[DungeonGenerator] Chưa gán weaponChestPrefab để sinh trong phòng Rương báu.");
         }
     }
 
@@ -1413,7 +1464,26 @@ public class DungeonGenerator : MonoBehaviour
 
         for (int i = 0; i < mobCount; i++)
         {
-            GameObject mobPrefab = GetRandomMobPrefabFromTheme();
+            GameObject mobPrefab = null;
+
+            if (isBossRoom)
+            {
+                if (miniBossPrefab != null)
+                {
+                    mobPrefab = miniBossPrefab;
+                }
+#if UNITY_EDITOR
+                else
+                {
+                    mobPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/Mobs/Melog.prefab");
+                }
+#endif
+                if (mobPrefab == null) mobPrefab = GetRandomMobPrefabFromTheme();
+            }
+            else
+            {
+                mobPrefab = GetRandomMobPrefabFromTheme();
+            }
 
             if (mobPrefab == null)
                 continue;
@@ -1464,6 +1534,12 @@ public class DungeonGenerator : MonoBehaviour
             if (mobH != null && room.controller != null)
             {
                 room.controller.AddMob(mobH);
+
+                MobAI mobAI = mobObj.GetComponent<MobAI>();
+                if (mobAI != null) mobAI.SetRoom(room.controller);
+
+                MelogBossAI melogAI = mobObj.GetComponent<MelogBossAI>();
+                if (melogAI != null) melogAI.SetRoom(room.controller);
             }
             else
             {
@@ -1753,6 +1829,28 @@ public class DungeonGenerator : MonoBehaviour
                 Debug.Log($"[DungeonGenerator] Đã gán phòng Rương báu tại tọa độ lưới: {chestRoom.gridPos}");
             }
         }
+    }
+
+    /// <summary>
+    /// Trả về tập hợp các cặp phòng (gridPosA, gridPosB) có hành lang nối thực tế với nhau
+    /// </summary>
+    public HashSet<KeyValuePair<Vector2Int, Vector2Int>> GetRoomConnections()
+    {
+        var result = new HashSet<KeyValuePair<Vector2Int, Vector2Int>>();
+        if (connections != null)
+        {
+            foreach (var conn in connections)
+            {
+                if (conn != null && conn.from != null && conn.to != null)
+                {
+                    Vector2Int a = conn.from.gridPos;
+                    Vector2Int b = conn.to.gridPos;
+                    result.Add(new KeyValuePair<Vector2Int, Vector2Int>(a, b));
+                    result.Add(new KeyValuePair<Vector2Int, Vector2Int>(b, a));
+                }
+            }
+        }
+        return result;
     }
 }
 

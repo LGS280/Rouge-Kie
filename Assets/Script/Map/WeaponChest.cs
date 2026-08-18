@@ -4,13 +4,13 @@ using UnityEngine.InputSystem;
 
 public class WeaponChest : MonoBehaviour
 {
-    [Header("Visual Components")]
-    public GameObject body;      // Body (thân rương)
-    public GameObject top;       // Top (nắp rương)
-    public GameObject inside;    // Inside (lòng rương hiển thị khi mở)
+    [Header("thành phần của rương")]
+    public GameObject body;
+    public GameObject top;
+    public GameObject inside;
 
-    [Header("Loot Configuration")]
-    public GameObject[] weaponPrefabs;      // Danh sách các súng để random khi mở
+    [Header("cấu hình vật phẩm trong rương")]
+    public GameObject[] weaponPrefabs;
 
     private bool isOpened = false;
     private bool isPlayerInRange = false;
@@ -18,7 +18,7 @@ public class WeaponChest : MonoBehaviour
 
     private void Start()
     {
-        // 1. Tự động sửa lỗi liên kết ở Runtime (Self-healing)
+
         if (body == null)
         {
             Transform bodyTrans = transform.Find("Body");
@@ -37,10 +37,8 @@ public class WeaponChest : MonoBehaviour
             if (insideTrans != null) inside = insideTrans.gameObject;
         }
 
-        // 2. Ép cứng Sorting Order để rương hiển thị đúng đè lớp
         EnforceSortingOrders();
 
-        // 3. Tạo chữ hướng dẫn tương tác bay phía trên
         CreatePromptText();
     }
 
@@ -69,12 +67,12 @@ public class WeaponChest : MonoBehaviour
     {
         GameObject textObj = new GameObject("PromptText");
         textObj.transform.SetParent(transform);
-        textObj.transform.localPosition = new Vector3(0f, 0.9f, 0f); // Phía trên nắp rương
+        textObj.transform.localPosition = new Vector3(0f, 0.95f, 0f);
 
         promptText = textObj.AddComponent<TextMesh>();
-        promptText.text = ""; // Không hiện tiêu đề rương ban đầu như yêu cầu
-        promptText.fontSize = 24;
-        promptText.characterSize = 0.05f;
+        promptText.text = "";
+        promptText.fontSize = 32;
+        promptText.characterSize = 0.07f;
         promptText.anchor = TextAnchor.MiddleCenter;
         promptText.alignment = TextAlignment.Center;
         promptText.color = Color.green;
@@ -82,7 +80,7 @@ public class WeaponChest : MonoBehaviour
         MeshRenderer mr = textObj.GetComponent<MeshRenderer>();
         if (mr != null)
         {
-            mr.sortingOrder = 7;
+            mr.sortingOrder = 10;
         }
     }
 
@@ -92,28 +90,27 @@ public class WeaponChest : MonoBehaviour
 
         if (isPlayerInRange)
         {
-            // Cập nhật text động tùy theo thiết bị đang sử dụng
+
             if (promptText != null)
             {
                 if (InputDeviceHelper.IsGamepadActive())
                 {
-                    promptText.text = "Nút B";
+                    promptText.text = "Press B";
                 }
                 else
                 {
-                    promptText.text = "Bấm E";
+                    promptText.text = "Press E";
                 }
                 promptText.color = Color.green;
             }
 
             bool hasPressedOpenKey = false;
 
-            // Bàn phím bấm E
             if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
             {
                 hasPressedOpenKey = true;
             }
-            // Tay cầm bấm B (buttonEast)
+
             else if (Gamepad.current != null && Gamepad.current.bButton.wasPressedThisFrame)
             {
                 hasPressedOpenKey = true;
@@ -131,27 +128,22 @@ public class WeaponChest : MonoBehaviour
         if (isOpened) return;
         isOpened = true;
 
-        // 1. Cập nhật hiển thị rương mở
         if (body != null) body.SetActive(true);
         if (inside != null) inside.SetActive(true);
 
-        // 2. Xóa chữ hướng dẫn
         if (promptText != null)
         {
             Destroy(promptText.gameObject);
         }
 
-        // 3. Sinh vũ khí ngẫu nhiên nằm yên trên sàn (lệch sang phải 0.8 unit)
         SpawnWeaponLoot();
 
-        // 4. Vô hiệu hóa vùng va chạm để không tương tác nữa
         Collider2D col = GetComponent<Collider2D>();
         if (col != null)
         {
             col.enabled = false;
         }
 
-        // 5. Chạy animation nắp rương di chuyển nhẹ về phía sau rồi biến mất
         if (top != null)
         {
             StartCoroutine(AnimateTopChestOpen(top));
@@ -162,9 +154,9 @@ public class WeaponChest : MonoBehaviour
     {
         SpriteRenderer sr = topObj.GetComponent<SpriteRenderer>();
         Vector3 startPos = topObj.transform.localPosition;
-        Vector3 targetPos = startPos + new Vector3(0f, 0.4f, 0f); // Di chuyển nhẹ về phía sau/trên
+        Vector3 targetPos = startPos + new Vector3(0f, 0.4f, 0f);
 
-        float duration = 0.55f; // Tăng từ 0.25s lên 0.55s để animation chậm lại mượt mà, dễ quan sát
+        float duration = 0.55f;
         float elapsed = 0f;
 
         Color startColor = (sr != null) ? sr.color : Color.white;
@@ -191,7 +183,7 @@ public class WeaponChest : MonoBehaviour
 
     private void SpawnWeaponLoot()
     {
-        // DỰ PHÒNG EDITOR: Tự động nạp súng nếu mảng trống khi đang chạy trong Editor
+
 #if UNITY_EDITOR
         if (weaponPrefabs == null || weaponPrefabs.Length == 0)
         {
@@ -213,18 +205,15 @@ public class WeaponChest : MonoBehaviour
 
         if (weaponPrefabs == null || weaponPrefabs.Length == 0)
         {
-            Debug.LogWarning("[WeaponChest] Thiếu cấu hình weaponPrefabs!");
+
             return;
         }
 
-        // Chọn súng ngẫu nhiên theo Trọng số Phẩm chất (Common: 50%, Rare: 30%, Epic: 15%, Legendary: 5%)
         GameObject randomWeaponPrefab = SelectWeaponByRarity(weaponPrefabs);
-        
-        // Sinh súng nằm yên trên sàn (không cần GroundWeapon prefab), lệch phải 0.8 unit để không đè lên rương
+
         Vector3 spawnPos = transform.position + new Vector3(0.8f, 0f, 0f);
         GroundWeapon.Create(randomWeaponPrefab, spawnPos);
 
-        Debug.Log($"[WeaponChest] 🎉 Đã mở rương vũ khí! Sinh súng: {randomWeaponPrefab.name} tại {spawnPos}");
     }
 
     private GameObject SelectWeaponByRarity(GameObject[] prefabs)
@@ -234,9 +223,9 @@ public class WeaponChest : MonoBehaviour
 
         for (int i = 0; i < prefabs.Length; i++)
         {
-            float weight = 40f; // Trọng số mặc định nếu không có DB
+            float weight = 40f;
             GameObject p = prefabs[i];
-            
+
             if (p != null)
             {
                 string pName = p.name.Replace("(Clone)", "").Trim();
@@ -247,16 +236,16 @@ public class WeaponChest : MonoBehaviour
                         switch (config.rarity.Trim().ToLower())
                         {
                             case "common":
-                                weight = 50f; // Tỷ lệ phổ thông
+                                weight = 50f;
                                 break;
                             case "rare":
-                                weight = 30f; // Tỷ lệ súng hiếm (Shotgun, Laser, M249, Missile)
+                                weight = 30f;
                                 break;
                             case "epic":
-                                weight = 15f; // Tỷ lệ súng xịn (Snipe, Gold Katana)
+                                weight = 15f;
                                 break;
                             case "legendary":
-                                weight = 5f;  // Tỷ lệ súng siêu xịn huyền thoại
+                                weight = 5f;
                                 break;
                         }
                     }
@@ -300,7 +289,6 @@ public class WeaponChest : MonoBehaviour
         {
             isPlayerInRange = false;
 
-            // Xóa text tương tác khi đi xa
             if (promptText != null)
             {
                 promptText.text = "";
