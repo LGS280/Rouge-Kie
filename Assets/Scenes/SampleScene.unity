@@ -613,7 +613,7 @@ MonoBehaviour:
   sfxSource: {fileID: 1900883050}
   buttonHoverClip: {fileID: 0}
   buttonClickClip: {fileID: 0}
-  menuBgmClip: {fileID: 0}
+  menuBgmClip: {fileID: 8300000, guid: e67b825deadf0554ca41602e0177a5b8, type: 3}
 --- !u!1 &70719157
 GameObject:
   m_ObjectHideFlags: 0
@@ -7941,7 +7941,7 @@ AudioSource:
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
-  Loop: 0
+  Loop: 1
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
@@ -28446,10 +28446,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
-    y: 0.014814815
-    width: 1
-    height: 0.96969694
+    x: 0.13402998
+    y: 0
+    width: 0.73091775
+    height: 0.99886173
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
