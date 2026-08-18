@@ -17,7 +17,7 @@ public class MobHealth : MonoBehaviour
 
     private void Awake()
     {
-        originalMaxHealth = maxHealth; // Lưu trữ máu gốc
+        originalMaxHealth = maxHealth;
         networkIdentity = GetComponent<MobNetworkIdentity>();
         if (networkIdentity == null)
         {
@@ -25,12 +25,9 @@ public class MobHealth : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Tính toán và nhân tỉ lệ máu tối đa của quái theo tầng hiện tại từ GameProgressionManager
-    /// </summary>
     private void ScaleHealthByProgression()
     {
-        // Nếu quái này là Boss (tên chứa chữ BOSS), bỏ qua cơ chế tự động scale quái thường
+
         if (gameObject.name.Contains("BOSS"))
         {
             return;
@@ -65,7 +62,6 @@ public class MobHealth : MonoBehaviour
         if (shadowObj != null) shadowObj.gameObject.SetActive(true);
     }
 
-    // Đạn bắn trúng máy nào, máy đó gọi hàm này
     public void TakeDamage(int damage, bool isCrit = false)
     {
         if (isDead) return;
@@ -78,11 +74,10 @@ public class MobHealth : MonoBehaviour
             RunStatsTracker.Instance.LogDamageDealt(damage);
         }
 
-        // BÍ QUYẾT: Gửi MÁU HIỆN TẠI (currentHealth) qua mạng thay vì gửi damage
         bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
         if (isMultiplayer && networkIdentity != null)
         {
-            Debug.Log($"[MobHealth] {gameObject.name} (networkId={networkIdentity.networkId}) TakeDamage: damage={damage}, remainingHealth={currentHealth}. Sending sync...");
+
             NetworkManager.Instance.SendEnemyHitEvent(NetworkManager.Instance.CurrentRoomId, networkIdentity.networkId, (float)currentHealth);
         }
 
@@ -98,11 +93,9 @@ public class MobHealth : MonoBehaviour
     {
         if (isDead)
         {
-            Debug.Log($"[MobHealth] {gameObject.name} (networkId={networkIdentity?.networkId}) received SyncHealthFromNetwork={networkHealth} nhưng đã chết.");
+
             return;
         }
-
-        Debug.Log($"[MobHealth] {gameObject.name} (networkId={networkIdentity?.networkId}) SyncHealthFromNetwork: networkHealth={networkHealth}, currentHealth={currentHealth}");
 
         int damageTaken = currentHealth - networkHealth;
         currentHealth = networkHealth;
@@ -118,7 +111,6 @@ public class MobHealth : MonoBehaviour
         }
     }
 
-    // Tách riêng phần hiển thị UI cho sạch code
     private void ShowDamageUI(int damageAmount, bool isCrit)
     {
         try
@@ -133,15 +125,13 @@ public class MobHealth : MonoBehaviour
         }
         catch (System.Exception ex)
         {
-            Debug.LogWarning("Lỗi UI số dame: " + ex.Message);
+
         }
     }
 
     public void ExecuteDieLocal()
     {
         if (isDead) return;
-
-        Debug.Log($"[MobHealth] {gameObject.name} (networkId={networkIdentity?.networkId}) ExecuteDieLocal() - Killing mob locally.");
 
         isDead = true;
 
@@ -191,14 +181,13 @@ public class MobHealth : MonoBehaviour
     [Header("Cấu hình Rớt Loot Khi Chết")]
     public GameObject coinPrefabOverride;
     public GameObject manaPrefabOverride;
-    [Range(0f, 1f)] public float lootDropChance = 0.2f; // 🎯 20% tỷ lệ rớt đồ, 80% rớt tay không
+    [Range(0f, 1f)] public float lootDropChance = 0.2f;
 
     private void SpawnLootOnDeath()
     {
-        // 🎯 TỶ LỆ RỚT ĐỒ: Nếu không trúng tỷ lệ -> Không rớt đồ (tay không)
+
         if (Random.value > lootDropChance) return;
 
-        // 1. Tìm Prefab Vàng & Mana
         GameObject coinPrefab = coinPrefabOverride;
         if (coinPrefab == null) coinPrefab = Resources.Load<GameObject>("Prefab/Item/Coin/Coin");
         if (coinPrefab == null) coinPrefab = Resources.Load<GameObject>("Coin");
@@ -207,13 +196,11 @@ public class MobHealth : MonoBehaviour
         if (manaPrefab == null) manaPrefab = Resources.Load<GameObject>("Prefab/Item/Mana");
         if (manaPrefab == null) manaPrefab = Resources.Load<GameObject>("Mana");
 
-        // 2. CHỌN NGẪU NHIÊN 1 LOẠI (Vàng HOẶC Mana)
         bool dropCoin = Random.value > 0.5f;
         GameObject targetLootPrefab = (dropCoin && coinPrefab != null) ? coinPrefab : ((manaPrefab != null) ? manaPrefab : coinPrefab);
 
         if (targetLootPrefab == null) return;
 
-        // 3. CHỈ RỚT SỐ LƯỢNG 1 HOẶC 2 VIÊN
         int dropAmount = Random.Range(1, 3);
 
         MobAI mobAI = GetComponent<MobAI>();
@@ -221,12 +208,11 @@ public class MobHealth : MonoBehaviour
 
         for (int i = 0; i < dropAmount; i++)
         {
-            // 🎯 RỚT TẠI CHỖ VỊ TRÍ QUÁI GỤC NGÃ (Nhích nhẹ 0.15m để không đè hình)
+
             Vector3 spawnPos = transform.position;
             Vector2 smallOffset = Random.insideUnitCircle * 0.15f;
             Vector3 finalPos = spawnPos + (Vector3)smallOffset;
 
-            // Đảm bảo rớt trong ranh giới phòng
             if (roomBounds.size != Vector3.zero)
             {
                 finalPos.x = Mathf.Clamp(finalPos.x, roomBounds.min.x + 0.5f, roomBounds.max.x - 0.5f);
@@ -235,7 +221,6 @@ public class MobHealth : MonoBehaviour
 
             GameObject lootObj = Instantiate(targetLootPrefab, finalPos, Quaternion.identity);
 
-            // 🎯 KHÓA LỰC VĂNG: Giữ item đứng yên 100% tại chỗ không bị trượt bay ra ngoài map
             Rigidbody2D lootRb = lootObj.GetComponent<Rigidbody2D>();
             if (lootRb != null)
             {

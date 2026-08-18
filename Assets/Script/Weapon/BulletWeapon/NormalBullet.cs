@@ -9,7 +9,6 @@ public class NormalBullet : MonoBehaviour
 
     public float lifeTime = 3f;
 
-    // Hàm nhận dữ liệu từ DB truyền qua
     public void InitFromDb(int bulletId)
     {
         if (bulletId <= 0) return;
@@ -18,9 +17,9 @@ public class NormalBullet : MonoBehaviour
         {
             speed = config.flightSpeed;
             baseDamage = config.damage;
-            critChance = config.critRate * 100f; // Đổi thập phân (0.2) thành phần trăm (20%)
+            critChance = config.critRate * 100f;
             critMultiplier = config.critMultiplier;
-            Debug.Log($"[NormalBullet] Nạp thành công bulletId={bulletId}: Speed={speed}, Damage={baseDamage}");
+
         }
     }
 
@@ -74,7 +73,7 @@ public class NormalBullet : MonoBehaviour
 
         if (roll <= finalCritChance)
         {
-            finalDamage *= critMultiplier; // Nhân hệ số chí mạng của đạn
+            finalDamage *= critMultiplier;
             isCrit = true;
         }
 

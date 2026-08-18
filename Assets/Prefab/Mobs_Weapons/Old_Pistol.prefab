@@ -105,12 +105,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52314a4d7a53014408ddc3eaa869c58d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MobWeaponInfo
-  weaponNameOverride: 
   firePoint: {fileID: 4120134598869887392}
-  bulletId: 0
-  fireRate: 1
-  baseDamage: 10
-  bulletSpeed: 10
+  mobBulletPrefabs:
+  - {fileID: 4961830840616290143, guid: 32d5c2b03917d1040b269800f9442b80, type: 3}
+  - {fileID: 4961830840616290143, guid: 27667d7329bb487498d8c7ce2e046852, type: 3}
+  - {fileID: 1395929543879269571, guid: 07a711cc05fa5ec4ba48cdbdaa465f68, type: 3}
   cachedBulletPrefab: {fileID: 0}
   isMelee: 0
 --- !u!1 &4575574495187919995

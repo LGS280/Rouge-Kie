@@ -2,11 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Script ngắm bắn 2 tay 2 súng 360 độ dành riêng cho Mini Boss Melog.
-/// Tự động xoay ngắm cả 2 nút tay Left_Hand_Position và Right_Hand_Position rượt theo Player.
-/// Tách biệt hoàn toàn 100% với quái thường.
-/// </summary>
 public class MelogWeaponAim : MonoBehaviour
 {
     [Header("Khớp tay 1 & 2 của Melog")]
@@ -107,13 +102,11 @@ public class MelogWeaponAim : MonoBehaviour
 
         bool isBodyFlippedLeft = Mathf.Abs(transform.eulerAngles.y - 180f) < 10f;
 
-        // Nếu thân đang quay sang trái (Y = 180), điều chỉnh góc quay tương đối trong không gian địa phương
         if (isBodyFlippedLeft)
         {
             float localAngle = 180f - angle;
             hand.localRotation = Quaternion.Euler(0, 0, localAngle);
 
-            // Lật scaleY nếu ngắm bắn hướng ngược lại
             float scaleY = (aimDirection.x > 0) ? -1f : 1f;
             hand.localScale = new Vector3(1f, scaleY, 1f);
         }
@@ -121,15 +114,11 @@ public class MelogWeaponAim : MonoBehaviour
         {
             hand.localRotation = Quaternion.Euler(0, 0, angle);
 
-            // Lật scaleY nếu ngắm bắn hướng bên trái
             float scaleY = (aimDirection.x < 0) ? -1f : 1f;
             hand.localScale = new Vector3(1f, scaleY, 1f);
         }
     }
 
-    /// <summary>
-    /// Thực thi bắn bão đạn đồng thời từ cả 2 nòng Gatling tay trái và tay phải!
-    /// </summary>
     public void FireBothGuns(Vector2 targetPosition, int damage)
     {
         if (leftWeaponInfo != null)

@@ -5,23 +5,26 @@ public class WeaponInfo : MonoBehaviour
     [Header("Cấu hình API kết nối (Tự động theo PrefabName)")]
     [HideInInspector] public int weaponDbId;
 
-    [Header("Prefab tham chiếu để vứt súng")]
+    [Header("prefab vứt súng")]
     public GameObject weaponPrefab;
 
-    [Header("Âm thanh bắn súng")]
+    [Header("âm thanh bắn súng")]
     public AudioClip shootSoundClip;
 
     private string soundFileName;
     private float soundVolume = 0.8f;
 
-    [Header("VỊ TRÍ CẦM SÚNG (Đọc từ DB)")]
+    [Header("vị trí custom cầm súng")]
     [HideInInspector] public Vector3 customHandPosition;
 
-    [Header("VỊ TRÍ NÒNG SÚNG & ĐÂM LÊ (Tự tìm nếu null)")]
+    [Header("đầu nòng súng 1 và 2")]
     public Transform firePoint;
     public Transform secondFirePoint;
 
-    [HideInInspector] public GameObject bulletPrefab; // Tùy chọn fallback
+    [Header("Danh sách các loại đạn Player (Tự động đóng gói Build)")]
+    public GameObject[] allPlayerBulletPrefabs;
+
+    [HideInInspector] public GameObject bulletPrefab;
     [HideInInspector] public float fireRate;
     [HideInInspector] public int manaCostPerShot;
 
@@ -62,6 +65,29 @@ public class WeaponInfo : MonoBehaviour
                 UnityEditor.EditorUtility.SetDirty(this);
             }
         }
+
+        string bulletFolder = "Assets/Prefab/Bullet";
+        string effectFolder = "Assets/Prefab/Effects";
+        System.Collections.Generic.List<GameObject> list = new System.Collections.Generic.List<GameObject>();
+
+        if (System.IO.Directory.Exists(bulletFolder))
+        {
+            foreach (string file in System.IO.Directory.GetFiles(bulletFolder, "*.prefab"))
+            {
+                GameObject prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(file);
+                if (prefab != null) list.Add(prefab);
+            }
+        }
+        if (System.IO.Directory.Exists(effectFolder))
+        {
+            foreach (string file in System.IO.Directory.GetFiles(effectFolder, "*.prefab"))
+            {
+                GameObject prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(file);
+                if (prefab != null) list.Add(prefab);
+            }
+        }
+        allPlayerBulletPrefabs = list.ToArray();
+        UnityEditor.EditorUtility.SetDirty(this);
     }
 #endif
 
@@ -93,7 +119,6 @@ public class WeaponInfo : MonoBehaviour
             fireRate = config.fireRate;
             manaCostPerShot = config.manaCost;
 
-            // Nạp vị trí tay từ DB và cập nhật trực tiếp vị trí của súng
             customHandPosition = new Vector3(config.handPositionX, config.handPositionY, config.handPositionZ);
             transform.localPosition = customHandPosition;
 
@@ -108,11 +133,30 @@ public class WeaponInfo : MonoBehaviour
 
     public GameObject GetBulletPrefabFromDb(int bId)
     {
-        if (bId <= 0) return bulletPrefab;
         if (GameConfigManager.Instance != null && GameConfigManager.Instance.BulletDb.TryGetValue(bId, out BulletConfig bConfig))
         {
             if (!string.IsNullOrEmpty(bConfig.prefabName))
             {
+                string targetName = bConfig.prefabName.ToLower();
+
+                if (allPlayerBulletPrefabs != null)
+                {
+                    foreach (var prefab in allPlayerBulletPrefabs)
+                    {
+                        if (prefab != null && prefab.name.ToLower() == targetName)
+                        {
+                            return prefab;
+                        }
+                    }
+                    foreach (var prefab in allPlayerBulletPrefabs)
+                    {
+                        if (prefab != null && prefab.name.ToLower().Contains(targetName))
+                        {
+                            return prefab;
+                        }
+                    }
+                }
+
 #if UNITY_EDITOR
                 string editorPath = $"Assets/Prefab/Bullet/{bConfig.prefabName}.prefab";
                 GameObject loadedInEditor = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(editorPath);
@@ -122,13 +166,6 @@ public class WeaponInfo : MonoBehaviour
                 loadedInEditor = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(editorEffectPath);
                 if (loadedInEditor != null) return loadedInEditor;
 #endif
-
-                GameObject loaded = Resources.Load<GameObject>($"Prefab/Bullet/{bConfig.prefabName}");
-                if (loaded == null) loaded = Resources.Load<GameObject>($"Bullet/{bConfig.prefabName}");
-                if (loaded == null) loaded = Resources.Load<GameObject>($"Prefab/Effects/{bConfig.prefabName}");
-                if (loaded == null) loaded = Resources.Load<GameObject>($"Effects/{bConfig.prefabName}");
-                if (loaded == null) loaded = Resources.Load<GameObject>(bConfig.prefabName);
-                if (loaded != null) return loaded;
             }
         }
         return bulletPrefab;
@@ -174,8 +211,7 @@ public class WeaponInfo : MonoBehaviour
         if (stabPrefab != null && originPoint != null)
         {
             GameObject spawnedStab = Instantiate(stabPrefab, originPoint.position, originPoint.rotation);
-            
-            // Đảm bảo Collider2D của hiệu ứng đâm luôn là Trigger (không đẩy lùi nhân vật + kích hoạt OnTriggerEnter2D gây sát thương)
+
             Collider2D col = spawnedStab.GetComponent<Collider2D>();
             if (col != null)
             {
@@ -188,7 +224,6 @@ public class WeaponInfo : MonoBehaviour
             var bSlash = spawnedStab.GetComponent<MeleeSlash>();
             if (bSlash != null) bSlash.InitFromDb(secondId);
 
-            // Bỏ phát âm thanh bắn súng AK-47 khi đâm lưỡi lê cận chiến
             TriggerAttackAnimation();
         }
     }
@@ -226,7 +261,7 @@ public class WeaponInfo : MonoBehaviour
 
         if (targetBulletPrefab == null)
         {
-            Debug.LogWarning($"[WeaponInfo] ⚠️ Không tìm thấy Prefab đạn cho súng '{gameObject.name}'! Kiểm tra lại bulletId trong DB.");
+
             return;
         }
 
@@ -342,12 +377,12 @@ public class WeaponInfo : MonoBehaviour
         }
     }
 
-    private bool slashDownward = true; // Đổi hướng chém luân phiên (Chém xuôi & Chém ngược)
+    private bool slashDownward = true;
 
     System.Collections.IEnumerator SwordSlashRoutine()
     {
-        float slashDuration = 0.08f;  // Thời gian vung kiếm quạt nhanh
-        float returnDuration = 0.12f; // Thời gian thu kiếm về góc nghỉ
+        float slashDuration = 0.08f;
+        float returnDuration = 0.12f;
 
         float startAngle = slashDownward ? 60f : -60f;
         float endAngle = slashDownward ? -60f : 60f;
@@ -361,17 +396,14 @@ public class WeaponInfo : MonoBehaviour
             t += Time.deltaTime;
             float progress = t / slashDuration;
 
-            // Xoay vung lưỡi kiếm từ góc trên xuống góc dưới (hoặc ngược lại)
             float currentAngle = Mathf.Lerp(startAngle, endAngle, progress);
             transform.localRotation = Quaternion.Euler(0, 0, currentAngle);
 
-            // Nhích nhẹ lưỡi kiếm ra phía trước theo quán tính nhát chém
             transform.localPosition = Vector3.Lerp(originalLocalPos, forwardThrust, Mathf.Sin(progress * Mathf.PI));
 
             yield return null;
         }
 
-        // Thu kiếm trở lại góc nghỉ ban đầu
         t = 0f;
         Quaternion currentRot = transform.localRotation;
         Quaternion targetRot = Quaternion.identity;

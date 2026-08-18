@@ -2,14 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Script quản lý AI Quái (FSM State Machine) - Nâng cấp 5 Trạng Thái Hoàn Hảo:
-/// 1. Quái đi dạo tuần tra (Wander/Patrol) thong thả trong phòng khi chưa thấy Player.
-/// 2. Quái bắn xa Kiting (Tự động đi lùi giữ cự cự 4.5m).
-/// 3. Flocking Avoidance (Tự động đẩy nhau giàn hàng bao vây, không đè hình).
-/// 4. Giữ nguyên 100% logic lật mặt flipX theo hướng nhìn.
-/// 5. BẢO TOÀN 100% ĐỒNG BỘ MULTIPLAYER.
-/// </summary>
 public class MobAI : MonoBehaviour
 {
     public enum EnemyState { Idle, Wander, Chase, Attack, Retreat }
@@ -23,12 +15,11 @@ public class MobAI : MonoBehaviour
     public float attackRange = 4.5f;
     public float attackCooldown = 2.0f;
     public int attackDamage = 10;
-    public float wallPadding = 0.5f; // Khoảng cách đệm an toàn với tường
+    public float wallPadding = 0.5f;
 
     [Header("Network Sync (Co-op Multiplayer)")]
     public bool isHost = true;
 
-    // Lerp Variables cho Client
     private Vector2 networkTargetPos;
     private bool hasFirstNetworkPos = false;
     private Vector3 mobNetworkVelocity;
@@ -48,7 +39,6 @@ public class MobAI : MonoBehaviour
     private float nextAttackTime;
     private float retreatEndTime;
 
-    // Các biến hỗ trợ đi dạo tuần tra (Wander)
     private Vector2 wanderTargetPos;
     private float nextWanderTimer;
 
@@ -56,7 +46,7 @@ public class MobAI : MonoBehaviour
 
     private MobNetworkIdentity mobNetworkIdentity;
     private float lastNetworkSyncTime = 0f;
-    private float networkSyncInterval = 0.05f; // Gửi tọa độ quái mỗi 50ms (20Hz)
+    private float networkSyncInterval = 0.05f;
 
     void Start()
     {
@@ -69,12 +59,11 @@ public class MobAI : MonoBehaviour
 
         mobWeaponAim = GetComponentInChildren<MobWeaponAim>();
 
-        // 🎯 TỰ ĐỘNG ĐIỀU CHỈNH TẦM NHÌN, TẦM ĐÁNH VÀ ĐỌC FIRERATE TỪ DB WEAPONCONFIGS
         if (mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null)
         {
             bool isMelee = mobWeaponAim.currentWeaponInfo.IsMelee;
             detectRange = isMelee ? 5.0f : 7.0f;
-            attackRange = isMelee ? 0.9f : 4.0f; // 🗡️ Cận chiến đo từ mũi giáo tới Player (0.9m)
+            attackRange = isMelee ? 0.9f : 4.0f;
 
             WeaponConfig wConfig = mobWeaponAim.currentWeaponInfo.GetWeaponConfig();
             if (wConfig != null && wConfig.fireRate > 0)
@@ -114,7 +103,7 @@ public class MobAI : MonoBehaviour
 
         if (isHost)
         {
-            // BỔ SUNG: Gửi đồng bộ tọa độ quái từ Host sang Client (Player 2)
+
             bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
             if (isMultiplayer && isRoomActivated && mobNetworkIdentity != null && !string.IsNullOrEmpty(mobNetworkIdentity.networkId))
             {
@@ -156,10 +145,9 @@ public class MobAI : MonoBehaviour
         }
         else
         {
-            // Client: Dò tìm người chơi gần nhất để xoay súng/giáo ngắm bắn hiển thị trên màn hình Player 2
+
             FindNearestPlayer();
 
-            // Client: Kích hoạt hiển thị hoạt ảnh tấn công & đạn/vệt chém khi quái áp sát Player 2
             if (targetPlayer != null && mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null)
             {
                 Vector3 clientAttackOrigin = (mobWeaponAim.currentWeaponInfo.firePoint != null) ? mobWeaponAim.currentWeaponInfo.firePoint.position : transform.position;
@@ -173,7 +161,6 @@ public class MobAI : MonoBehaviour
                 }
             }
 
-            // Client: Nhận vị trí nội suy mượt mà 60 FPS từ Host (Extrapolation + SmoothDamp)
             if (hasFirstNetworkPos)
             {
                 Vector3 predictedMobPos = (Vector3)networkTargetPos + ((Vector3)estimatedMobVelocity * 0.033f);
@@ -415,14 +402,12 @@ public class MobAI : MonoBehaviour
             return;
         }
 
-        // 🎯 ĐO KHOẢNG CÁCH TỪ MŨI GIÁO/SÚNG TỚI PLAYER
         Vector3 attackOrigin = (mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null && mobWeaponAim.currentWeaponInfo.firePoint != null)
             ? mobWeaponAim.currentWeaponInfo.firePoint.position
             : transform.position;
 
         float distanceToPlayer = Vector2.Distance(attackOrigin, targetPlayer.position);
 
-        // 🎯 NẾU PLAYER DI CHUYỂN RA XA NGOÀI TẦM NHÌN: QUÁI BỎ CUỘC VÀ QUAY VỀ ĐI DẠO TUẦN TRA (Wander)
         if (distanceToPlayer > detectRange)
         {
             currentState = EnemyState.Wander;
@@ -431,9 +416,8 @@ public class MobAI : MonoBehaviour
 
         bool isMelee = (mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null && mobWeaponAim.currentWeaponInfo.IsMelee);
 
-        float targetAttackDistance = isMelee ? 0.9f : 4.0f; // Mũi giáo cách Player 0.9m
+        float targetAttackDistance = isMelee ? 0.9f : 4.0f;
 
-        // NẾU ĐÃ HẾT COOLDOWN BẮN/ĐÂM:
         if (Time.time >= nextAttackTime)
         {
             if (distanceToPlayer <= targetAttackDistance)
@@ -442,7 +426,6 @@ public class MobAI : MonoBehaviour
                 return;
             }
 
-            // Tiếp tục di chuyển tiến lại gần nếu chưa tới cự ly
             Vector2 targetDir = (targetPlayer.position - transform.position).normalized;
             Vector2 separateForce = GetSeparationForce();
             Vector2 finalMoveDir = (targetDir + separateForce).normalized;
@@ -453,10 +436,9 @@ public class MobAI : MonoBehaviour
             return;
         }
 
-        // NẾU ĐANG TRONG THỜI GIAN CHỜ COOLDOWN:
         if (isMelee)
         {
-            // Tiến sát kè kè bên người Player (cách 1.1m) chờ cooldown
+
             if (distanceToPlayer > 1.1f)
             {
                 Vector2 targetDir = (targetPlayer.position - transform.position).normalized;
@@ -474,7 +456,7 @@ public class MobAI : MonoBehaviour
         }
         else
         {
-            // Tầm xa: Dạt lùi ngắm bắn
+
             if (distanceToPlayer < 5.0f)
             {
                 Vector2 targetDir = (targetPlayer.position - transform.position).normalized;

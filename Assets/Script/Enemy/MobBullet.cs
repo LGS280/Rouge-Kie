@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Script quản lý Đạn dành riêng cho Quái (Enemy Bullet).
-/// Tự động nạp DB và CHỈ GÂY SÁT THƯƠNG CHO PLAYER (Bỏ qua Quái đồng đội).
-/// </summary>
 public class MobBullet : MonoBehaviour
 {
     [Header("Thời gian tồn tại đạn (Bảng Inspector)")]
@@ -14,9 +10,6 @@ public class MobBullet : MonoBehaviour
 
     private bool hasHit = false;
 
-    /// <summary>
-    /// Nạp thông số đạn tự động từ DB BulletConfig
-    /// </summary>
     public void InitFromDb(int bulletId)
     {
         if (bulletId <= 0) return;
@@ -25,13 +18,13 @@ public class MobBullet : MonoBehaviour
         {
             speed = config.flightSpeed > 0 ? config.flightSpeed : 10f;
             damage = config.damage > 0 ? config.damage : 10;
-            Debug.Log($"[MobBullet] Nạp thành công bulletId={bulletId}: Speed={speed}, Damage={damage}");
+
         }
     }
 
     private void Start()
     {
-        // Gán Layer EnemyBullet
+
         int enemyBulletLayer = LayerMask.NameToLayer("EnemyBullet");
         if (enemyBulletLayer != -1)
         {
@@ -50,13 +43,11 @@ public class MobBullet : MonoBehaviour
     {
         if (hasHit) return;
 
-        // 🛡️ BỎ QUA VẬT LÝ VÀ SÁT THƯƠNG NẾU VA CHẠM VỚI QUÁI ĐỒNG ĐỘI (Tag "Enemy" hoặc Layer "Enemy")
         if (collision.CompareTag("Enemy") || collision.gameObject.layer == LayerMask.NameToLayer("Enemy"))
         {
-            return; // Không nổ, không gây sát thương cho quái đồng đội
+            return;
         }
 
-        // 🎯 GÂY SÁT THƯƠNG NẾU BẮN TRÚNG LOCAL PLAYER HOẶC REMOTE PLAYER
         RookieHealth playerHealth = collision.GetComponent<RookieHealth>();
         if (playerHealth == null) playerHealth = collision.GetComponentInParent<RookieHealth>();
 
@@ -73,14 +64,13 @@ public class MobBullet : MonoBehaviour
             else if (rpc != null && !rpc.isDead && NetworkManager.Instance != null)
             {
                 NetworkManager.Instance.SendPlayerDamaged(rpc.connectionId, damage);
-                Debug.Log($"[MobBullet] Bắn trúng Remote Player {rpc.connectionId}, gửi {damage} sát thương qua mạng.");
+
             }
 
             Destroy(gameObject);
             return;
         }
 
-        // 🧱 NỔ/TỰ HỦY NẾU BẮN TRÚNG TƯỜNG / RÀO CHẮN
         if (collision.CompareTag("Obstacle") || collision.CompareTag("Door"))
         {
             hasHit = true;

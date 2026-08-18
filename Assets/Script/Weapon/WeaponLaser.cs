@@ -6,18 +6,18 @@ public class WeaponLaser : MonoBehaviour
     [Header("Cấu hình API kết nối (Tự động theo PrefabName)")]
     [HideInInspector] public int weaponDbId;
 
-    [Header("Prefab tham chiếu để vứt súng")]
+    [Header("prefab để vứt súng")]
     public GameObject weaponPrefab;
 
-    [Header("--- THIẾT LẬP LASER ---")]
+    [Header("cấu hình đạn laser")]
     public GameObject laserPrefab;
     public Transform firePoint;
     public float maxLaserDistance = 15f;
 
-    [Header("VỊ TRÍ CẦM SÚNG (Đọc từ DB)")]
+    [Header("đọc vị trí cầm súng lấy từ db")]
     [HideInInspector] public Vector3 customHandPosition;
 
-    [Header("--- THIẾT LẬP TAG ---")]
+    [Header("quản lý tag")]
     public string obstacleTag = "Obstacle";
     public string enemyTag = "Enemy";
     public string doorTag = "Door";
@@ -92,7 +92,6 @@ public class WeaponLaser : MonoBehaviour
         {
             chargeDuration = wConfig.fireRate;
 
-            // Nạp vị trí cầm súng từ DB
             customHandPosition = new Vector3(wConfig.handPositionX, wConfig.handPositionY, wConfig.handPositionZ);
             transform.localPosition = customHandPosition;
 
@@ -171,7 +170,7 @@ public class WeaponLaser : MonoBehaviour
 
     void CheckAttackInput()
     {
-        // Khóa bắn laser nếu người chơi đang đứng gần súng trên đất để nhặt
+
         WeaponManager wm = GetComponentInParent<WeaponManager>();
         if (wm != null && wm.nearbyWeapons.Count > 0)
         {

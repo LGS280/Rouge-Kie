@@ -75,7 +75,6 @@ public class MainMenuController : MonoBehaviour
     public void OnSingleplayerPressed()
     {
         Debug.Log("Chạy chế độ chơi đơn...");
-        WeaponManager.ResetSavedWeapons();
 
         if (LoadingScreenUI.Instance != null)
         {

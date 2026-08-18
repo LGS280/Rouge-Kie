@@ -483,6 +483,7 @@ MonoBehaviour:
   detectRange: 7
   attackRange: 5
   targetPlayer: {fileID: 0}
+  myRoom: {fileID: 0}
 --- !u!114 &5515153704086489067
 MonoBehaviour:
   m_ObjectHideFlags: 0
