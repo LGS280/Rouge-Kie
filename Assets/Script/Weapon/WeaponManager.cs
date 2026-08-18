@@ -35,7 +35,6 @@ public class WeaponManager : MonoBehaviour
 
         if (weaponSlot1 != null)
         {
-
             GameObject instance1 = Instantiate(weaponSlot1, handPosition.position, Quaternion.identity);
             Destroy(weaponSlot1);
             weaponSlot1 = instance1;
@@ -43,15 +42,12 @@ public class WeaponManager : MonoBehaviour
 
         if (weaponSlot2 != null)
         {
-
             GameObject instance2 = Instantiate(weaponSlot2, backPosition.position, Quaternion.identity);
             Destroy(weaponSlot2);
             weaponSlot2 = instance2;
         }
 
         ResetWeaponsStatus();
-
-        RestoreSavedEquippedWeapons();
     }
 
     private static string savedSlot1PrefabName = "";

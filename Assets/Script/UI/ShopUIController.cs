@@ -221,21 +221,26 @@ public class ShopUIController : MonoBehaviour
         // 1. Tự động đóng giao diện Cửa Hàng
         CloseShop();
 
-        // 2. Nạp Prefab súng từ Resources/Weapons/ hoặc WeaponManager dự phòng đa kênh
+        // 2. Nạp Prefab súng từ WeaponManager hoặc Assets/Prefab/Weapons/ (Không dùng Resources)
         string cleanName = prefabPath.Replace("Weapons/", "").Trim();
-        GameObject weaponPrefab = Resources.Load<GameObject>(prefabPath);
-        if (weaponPrefab == null)
-        {
-            weaponPrefab = Resources.Load<GameObject>("Weapons/" + cleanName);
-        }
-        if (weaponPrefab == null && WeaponManager.Instance != null)
+        GameObject weaponPrefab = null;
+
+        if (WeaponManager.Instance != null)
         {
             weaponPrefab = WeaponManager.Instance.FindWeaponPrefabByName(cleanName);
         }
 
+#if UNITY_EDITOR
         if (weaponPrefab == null)
         {
-            Debug.LogWarning($"[ShopUIController] Không tìm thấy Prefab súng tại đường dẫn: '{prefabPath}' hoặc tên '{cleanName}'!");
+            string editorPath = $"Assets/Prefab/Weapons/{cleanName}.prefab";
+            weaponPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(editorPath);
+        }
+#endif
+
+        if (weaponPrefab == null)
+        {
+            Debug.LogWarning($"[ShopUIController] Không tìm thấy Prefab súng tại đường dẫn: Assets/Prefab/Weapons/{cleanName}.prefab!");
             return;
         }
 
@@ -267,20 +272,66 @@ public class ShopUIController : MonoBehaviour
     {
         switch (itemId)
         {
-            case 1: return "Weapons/AK_47A_Gold";
-            case 2: return "Weapons/Missile_Launcher";
-            case 3: return "Weapons/Rocket_Launcher";
-            default: return "Weapons/AK_47A_Gold";
+            case 1: return "AK_47A_Gold";
+            case 2: return "Missile_Launcher";
+            case 3: return "Rocket_Launcher";
+            default: return "AK_47A_Gold";
         }
     }
 
     public string GetPrefabPathByDescription(string desc)
     {
-        if (string.IsNullOrEmpty(desc)) return "Weapons/AK_47A_Gold";
-        if (desc.Contains("AK-47") || desc.Contains("Gold")) return "Weapons/AK_47A_Gold";
-        if (desc.Contains("Missile")) return "Weapons/Missile_Launcher";
-        if (desc.Contains("Rocket") || desc.Contains("Bazooka")) return "Weapons/Rocket_Launcher";
-        return "Weapons/AK_47A_Gold";
+        if (string.IsNullOrEmpty(desc)) return "AK_47A_Gold";
+        if (desc.Contains("AK-47") || desc.Contains("Gold")) return "AK_47A_Gold";
+        if (desc.Contains("Missile")) return "Missile_Launcher";
+        if (desc.Contains("Rocket") || desc.Contains("Bazooka")) return "Rocket_Launcher";
+        return "AK_47A_Gold";
+    }
+
+    /// <summary>
+    /// Tìm và nạp Sprite hình ảnh của vũ khí từ thư mục Assets/Weapons/Player_Weapon/ hoặc từ Prefab súng
+    /// </summary>
+    public Sprite GetWeaponSpriteFromPrefab(string weaponName)
+    {
+        if (string.IsNullOrEmpty(weaponName)) return null;
+
+        string cleanName = weaponName.Replace("Weapons/", "").Replace("(Clone)", "").Trim();
+
+#if UNITY_EDITOR
+        // 1. Ưu tiên tìm trực tiếp file Sprite ảnh súng trong thư mục Assets/Weapons/Player_Weapon/{cleanName}/
+        string spritePath = $"Assets/Weapons/Player_Weapon/{cleanName}/{cleanName}.png";
+        Sprite directSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
+        if (directSprite != null) return directSprite;
+
+        // 2. Tìm file Sprite ảnh súng trong Assets/Weapons/
+        spritePath = $"Assets/Weapons/{cleanName}.png";
+        directSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
+        if (directSprite != null) return directSprite;
+#endif
+
+        // 3. Dự phòng: Tìm từ SpriteRenderer của Prefab súng trong Assets/Prefab/Weapons/
+        GameObject prefab = null;
+        if (WeaponManager.Instance != null)
+        {
+            prefab = WeaponManager.Instance.FindWeaponPrefabByName(cleanName);
+        }
+
+#if UNITY_EDITOR
+        if (prefab == null)
+        {
+            string editorPath = $"Assets/Prefab/Weapons/{cleanName}.prefab";
+            prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(editorPath);
+        }
+#endif
+
+        if (prefab != null)
+        {
+            SpriteRenderer sr = prefab.GetComponent<SpriteRenderer>();
+            if (sr == null) sr = prefab.GetComponentInChildren<SpriteRenderer>();
+            if (sr != null && sr.sprite != null) return sr.sprite;
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -499,7 +550,7 @@ public class ShopUIController : MonoBehaviour
 
         if (!string.IsNullOrEmpty(spritePath))
         {
-            Sprite s = Resources.Load<Sprite>(spritePath);
+            Sprite s = GetWeaponSpriteFromPrefab(spritePath);
             if (s != null)
             {
                 iconImg.sprite = s;
