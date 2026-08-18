@@ -52,10 +52,9 @@ namespace RogueKie.Effects
                 {
                     spriteRenderer.sprite = animationFrames[i];
                 }
-                yield return new WaitForSeconds(frameDuration);
+                yield return new WaitForSeconds(frameDuration); // hoạt ảnh của vụ nổ, mỗi ảnh cách nhau 0,1s
             }
 
-            // Xóa hiệu ứng vụ nổ khỏi Scene ngay sau khi phát xong frame cuối
             Destroy(gameObject);
         }
     }
