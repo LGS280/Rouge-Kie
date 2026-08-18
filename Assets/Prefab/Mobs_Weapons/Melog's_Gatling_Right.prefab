@@ -137,6 +137,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MobWeaponInfo
   firePoint: {fileID: 5869634401395068103}
-  shootSoundClip: {fileID: 0}
+  mobBulletPrefabs:
+  - {fileID: 4961830840616290143, guid: 32d5c2b03917d1040b269800f9442b80, type: 3}
+  - {fileID: 4961830840616290143, guid: 27667d7329bb487498d8c7ce2e046852, type: 3}
+  - {fileID: 1395929543879269571, guid: 07a711cc05fa5ec4ba48cdbdaa465f68, type: 3}
   cachedBulletPrefab: {fileID: 0}
   isMelee: 0

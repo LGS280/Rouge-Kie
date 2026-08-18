@@ -26,6 +26,9 @@ public class DungeonGenerator : MonoBehaviour
     public GameObject chestPrefab;
     public GameObject weaponChestPrefab;
 
+    [Header("Boss Prefab")]
+    public GameObject miniBossPrefab;
+
     [Header("Door Tilemap")]
     public Tilemap doorTilemap;
     public Tilemap doorTopTilemap;
@@ -1465,12 +1468,16 @@ public class DungeonGenerator : MonoBehaviour
 
             if (isBossRoom)
             {
-                // 👑 PHÒNG BOSS / MINI-BOSS: Ưu tiên nạp Melog.prefab làm Mini Boss 2 tay 2 súng!
+                if (miniBossPrefab != null)
+                {
+                    mobPrefab = miniBossPrefab;
+                }
 #if UNITY_EDITOR
-                mobPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/Mobs/Melog.prefab");
+                else
+                {
+                    mobPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/Mobs/Melog.prefab");
+                }
 #endif
-                if (mobPrefab == null) mobPrefab = Resources.Load<GameObject>("Prefab/Mobs/Melog");
-                if (mobPrefab == null) mobPrefab = Resources.Load<GameObject>("Mobs/Melog");
                 if (mobPrefab == null) mobPrefab = GetRandomMobPrefabFromTheme();
             }
             else
