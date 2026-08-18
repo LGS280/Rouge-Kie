@@ -36,6 +36,7 @@ public class GameConfigManager : MonoBehaviour
 
     private void LoadConfig()
     {
+#if !UNITY_WEBGL || UNITY_EDITOR
         string filePath = Path.Combine(Application.streamingAssetsPath, "appsettings.json");
 
         if (File.Exists(filePath))
@@ -43,7 +44,6 @@ public class GameConfigManager : MonoBehaviour
             try
             {
                 string jsonText = File.ReadAllText(filePath);
-
                 jsonText = System.Text.RegularExpressions.Regex.Replace(jsonText, @"^\s*//.*", "", System.Text.RegularExpressions.RegexOptions.Multiline);
 
                 ConfigData config = JsonUtility.FromJson<ConfigData>(jsonText);
@@ -51,27 +51,33 @@ public class GameConfigManager : MonoBehaviour
                 {
                     baseUrl = config.baseUrl;
                 }
-                else
-                {
-                    throw new Exception("baseUrl is null or empty");
-                }
             }
-            catch (Exception ex)
+            catch
             {
-
-                baseUrl = "https://rougekiebe.azurewebsites.net/api";
             }
         }
-        else
-        {
-
-            baseUrl = "https://your-production-api.com/api";
-
-        }
+#endif
     }
 
     private IEnumerator Start()
     {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        string streamingPath = Path.Combine(Application.streamingAssetsPath, "appsettings.json");
+        using (UnityWebRequest www = UnityWebRequest.Get(streamingPath))
+        {
+            yield return www.SendWebRequest();
+            if (www.result == UnityWebRequest.Result.Success)
+            {
+                string jsonText = www.downloadHandler.text;
+                jsonText = System.Text.RegularExpressions.Regex.Replace(jsonText, @"^\s*//.*", "", System.Text.RegularExpressions.RegexOptions.Multiline);
+                ConfigData config = JsonUtility.FromJson<ConfigData>(jsonText);
+                if (config != null && !string.IsNullOrEmpty(config.baseUrl))
+                {
+                    baseUrl = config.baseUrl;
+                }
+            }
+        }
+#endif
 
         if (string.IsNullOrEmpty(baseUrl)) yield return null;
 
