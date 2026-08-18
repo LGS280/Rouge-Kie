@@ -748,13 +748,13 @@ MonoBehaviour:
   maxRoomSize: 18
   currentWidth: 18
   currentHeight: 18
-  doorSize: 4
+  doorSize: 6
   maxRooms: 4
   corridorLength: 12
   corridorWidth: 6
   randomRoomSize: 0
-  fixedRoomWidth: 18
-  fixedRoomHeight: 18
+  fixedRoomWidth: 24
+  fixedRoomHeight: 24
   spawnObstacleInStartRoom: 0
 --- !u!4 &86388286
 Transform:
