@@ -259,7 +259,7 @@ public class LobbyUIController : MonoBehaviour
             if (emptyRoomListText != null)
             {
                 emptyRoomListText.gameObject.SetActive(true);
-                emptyRoomListText.text = "Chưa có phòng nào đang mở. Hãy tạo phòng mới!";
+                emptyRoomListText.text = "No rooms available.\nCreate one now!";
             }
             return;
         }
