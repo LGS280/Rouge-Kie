@@ -6,7 +6,24 @@ using UnityEngine;
 
 public class NetworkManager : MonoBehaviour
 {
-    public static NetworkManager Instance { get; private set; }
+    private static NetworkManager _instance;
+    public static NetworkManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindAnyObjectByType<NetworkManager>();
+                if (_instance == null)
+                {
+                    GameObject go = new GameObject("NetworkManager");
+                    _instance = go.AddComponent<NetworkManager>();
+                }
+            }
+            return _instance;
+        }
+        private set => _instance = value;
+    }
 
     [Header("Server Connection Settings")]
     [SerializeField] private string serverUrl = "http://localhost:5000/gamehub";
@@ -85,9 +102,9 @@ public class NetworkManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
+        if (_instance == null)
         {
-            Instance = this;
+            _instance = this;
             DontDestroyOnLoad(gameObject);
             unityContext = SynchronizationContext.Current;
 
@@ -102,7 +119,7 @@ public class NetworkManager : MonoBehaviour
                 Debug.Log($"[NetworkManager] Tự động đăng nhập người dùng: {LoggedInUsername}");
             }
         }
-        else
+        else if (_instance != this)
         {
             Destroy(gameObject);
         }
