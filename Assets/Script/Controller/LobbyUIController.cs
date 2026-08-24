@@ -286,7 +286,7 @@ public class LobbyUIController : MonoBehaviour
                 if (infoText != null)
                 {
                     string status = r.isGameStarted ? "<color=#FF4444>[IN-GAME]</color>" : "<color=#00FF66>[WAITING]</color>";
-                    infoText.text = $"{status} {r.hostName} ({r.currentPlayers}/{r.maxPlayers}) - Mã: <b>{r.roomCode}</b>";
+                    infoText.text = $"{status} <b>{r.hostName}</b> ({r.currentPlayers}/{r.maxPlayers})";
                 }
 
                 // Gán sự kiện cho Nút Join 1-Click
