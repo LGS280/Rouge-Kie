@@ -53,6 +53,15 @@ public class LobbyUIController : MonoBehaviour
         {
             refreshRoomsButton.onClick.AddListener(OnRefreshRoomsPressed);
         }
+
+        // Xóa sạch các GameObject mẫu đặt sẵn trong Editor khi bắt đầu
+        if (roomListContainer != null)
+        {
+            foreach (Transform child in roomListContainer)
+            {
+                Destroy(child.gameObject);
+            }
+        }
     }
 
     private void OnDestroy()
@@ -148,10 +157,18 @@ public class LobbyUIController : MonoBehaviour
 
     public void OnBackPressedFromRoomCode()
     {
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.RequestLeaveRoom();
+        }
+
         lobbyMenuPanel.SetActive(true);
         playMenuPanel.SetActive(false);
         roomLobbyPanel.SetActive(false);
         ResetCopyButtonText();
+
+        // Làm mới lại danh sách phòng sau khi vừa rời
+        OnRefreshRoomsPressed();
     }
 
     public void OnStartGamePressed()
@@ -242,7 +259,7 @@ public class LobbyUIController : MonoBehaviour
             if (emptyRoomListText != null)
             {
                 emptyRoomListText.gameObject.SetActive(true);
-                emptyRoomListText.text = "Chưa có phòng nào đang mở. Hãy tạo phòng mới!";
+                emptyRoomListText.text = "No rooms available.\nCreate one now!";
             }
             return;
         }
@@ -255,25 +272,48 @@ public class LobbyUIController : MonoBehaviour
             {
                 GameObject itemObj = Instantiate(roomItemPrefab, roomListContainer);
 
-                // Gán Text thông tin phòng
-                TMP_Text infoText = itemObj.GetComponentInChildren<TMP_Text>();
+                string host = !string.IsNullOrEmpty(r.hostName) ? r.hostName : "Host";
+                int current = r.currentPlayers > 0 ? r.currentPlayers : 1;
+                int max = r.maxPlayers > 0 ? r.maxPlayers : 4;
+
+                // Tìm nút Join trước
+                Button joinBtn = itemObj.GetComponentInChildren<Button>(true);
+
+                // Tìm chính xác Text hiển thị thông tin phòng (loại trừ Text bên trong Button)
+                TMP_Text[] allTexts = itemObj.GetComponentsInChildren<TMP_Text>(true);
+                TMP_Text infoText = null;
+
+                foreach (var txt in allTexts)
+                {
+                    if (joinBtn != null && txt.transform.IsChildOf(joinBtn.transform))
+                    {
+                        // Giữ nguyên hoặc đặt chữ của nút bấm là "JOIN"
+                        txt.text = "JOIN";
+                    }
+                    else
+                    {
+                        infoText = txt;
+                    }
+                }
+
                 if (infoText != null)
                 {
                     string status = r.isGameStarted ? "<color=#FF4444>[IN-GAME]</color>" : "<color=#00FF66>[WAITING]</color>";
-                    infoText.text = $"{status} <b>{r.hostName}</b> ({r.currentPlayers}/{r.maxPlayers}) - Mã: <b>{r.roomCode}</b>";
+                    infoText.text = $"{status} <b>{host}</b> ({current}/{max})";
                 }
 
                 // Gán sự kiện cho Nút Join 1-Click
-                Button joinBtn = itemObj.GetComponentInChildren<Button>();
                 if (joinBtn != null)
                 {
-                    if (r.isGameStarted || r.currentPlayers >= r.maxPlayers)
+                    if (r.isGameStarted || (max > 0 && current >= max))
                     {
                         joinBtn.interactable = false;
                     }
                     else
                     {
+                        joinBtn.interactable = true;
                         string code = r.roomCode;
+                        joinBtn.onClick.RemoveAllListeners();
                         joinBtn.onClick.AddListener(() =>
                         {
                             string username = GetValidUsername();

@@ -265,6 +265,22 @@ public class NetworkManager : MonoBehaviour
         }
     }
 
+    public async void RequestLeaveRoom()
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("LeaveRoom");
+            }
+            CurrentRoomId = null;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] RequestLeaveRoom gián đoạn: {ex.Message}");
+        }
+    }
+
     public async void RequestCreateRoom(string username)
     {
         try
