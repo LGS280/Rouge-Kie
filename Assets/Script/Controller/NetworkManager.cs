@@ -25,12 +25,23 @@ public class NetworkManager : MonoBehaviour
     public event System.Action<string, float> OnRemoteEnemyDamaged;
     public event System.Action<string, float, float, float> OnReceiveWeaponAngle;
 
+    [System.Serializable]
+    public class PublicRoomInfo
+    {
+        public string roomCode;
+        public string hostName;
+        public int currentPlayers;
+        public int maxPlayers;
+        public bool isGameStarted;
+    }
+
     // --- CÁC SỰ KIỆN C# ĐỂ LỚP UI & SYNC MANAGER LẮNG NGHE ---
     public event Action<string> OnRoomCreated;
     public event Action<string, List<string>> OnJoinRoomSuccess;
     public event Action<string> OnJoinRoomFailed;
     public event Action<string, string> OnPlayerJoined;
     public event Action<string, string> OnPlayerDisconnected;
+    public event Action<List<PublicRoomInfo>> OnReceivePublicRooms;
 
     // Sự kiện đồng bộ vị trí (Đồng đội gọi)
     public event Action<string, float, float> OnReceivePosition;
@@ -217,6 +228,12 @@ public class NetworkManager : MonoBehaviour
             unityContext.Post(_ => OnHostDisconnectedEndGame?.Invoke(hostName), null);
         });
 
+        // BỔ SUNG: Lắng nghe danh sách phòng từ Server trả về
+        hubConnection.On<List<PublicRoomInfo>>("OnReceivePublicRooms", (rooms) =>
+        {
+            unityContext.Post(_ => OnReceivePublicRooms?.Invoke(rooms), null);
+        });
+
         // Gọi hàm đăng ký các sự kiện Combat mạng
         RegisterCombatCallbacks();
 
@@ -232,6 +249,21 @@ public class NetworkManager : MonoBehaviour
     }
 
     // --- CÁC HÀM GỬI LỆNH LÊN SERVER ---
+
+    public async void RequestGetPublicRooms()
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("GetPublicRooms");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] RequestGetPublicRooms gián đoạn: {ex.Message}");
+        }
+    }
 
     public async void RequestCreateRoom(string username)
     {

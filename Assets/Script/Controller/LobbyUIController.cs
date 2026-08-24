@@ -22,6 +22,12 @@ public class LobbyUIController : MonoBehaviour
     [SerializeField] private Button startGameButton;
     [SerializeField] private Button copyRoomCodeButton;
 
+    [Header("Public Room List UI (Optional)")]
+    [SerializeField] private Transform roomListContainer; // Khung Content trong ScrollView chứa danh sách các phòng
+    [SerializeField] private GameObject roomItemPrefab; // Prefab thanh thông tin phòng (Text + Nút Join)
+    [SerializeField] private TMP_Text emptyRoomListText; // Text "Hiện không có phòng nào đang mở"
+    [SerializeField] private Button refreshRoomsButton; // Nút làm mới danh sách phòng
+
     private List<string> activePlayers = new List<string>();
 
     private void Start()
@@ -35,11 +41,17 @@ public class LobbyUIController : MonoBehaviour
             NetworkManager.Instance.OnPlayerJoined += HandlePlayerJoined;
             NetworkManager.Instance.OnPlayerDisconnected += HandlePlayerDisconnected;
             NetworkManager.Instance.OnGameStarted += HandleGameStarted;
+            NetworkManager.Instance.OnReceivePublicRooms += HandleReceivePublicRooms;
         }
 
         if (copyRoomCodeButton != null)
         {
             copyRoomCodeButton.onClick.AddListener(OnCopyRoomCodePressed);
+        }
+
+        if (refreshRoomsButton != null)
+        {
+            refreshRoomsButton.onClick.AddListener(OnRefreshRoomsPressed);
         }
     }
 
@@ -54,6 +66,7 @@ public class LobbyUIController : MonoBehaviour
             NetworkManager.Instance.OnPlayerJoined -= HandlePlayerJoined;
             NetworkManager.Instance.OnPlayerDisconnected -= HandlePlayerDisconnected;
             NetworkManager.Instance.OnGameStarted -= HandleGameStarted;
+            NetworkManager.Instance.OnReceivePublicRooms -= HandleReceivePublicRooms;
         }
     }
 
@@ -98,6 +111,9 @@ public class LobbyUIController : MonoBehaviour
         playMenuPanel.SetActive(false);
         lobbyMenuPanel.SetActive(true);
         roomLobbyPanel.SetActive(false);
+
+        // Tự động làm mới danh sách phòng khi mở sảnh
+        OnRefreshRoomsPressed();
 
         //playMenuPanel.SetActive(false);
         //lobbyMenuPanel.SetActive(true);
@@ -201,6 +217,73 @@ public class LobbyUIController : MonoBehaviour
         Debug.Log($"Người chơi thoát: {username}");
         activePlayers.Remove(username);
         UpdatePlayerListUI();
+    }
+
+    public void OnRefreshRoomsPressed()
+    {
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.RequestGetPublicRooms();
+        }
+    }
+
+    private void HandleReceivePublicRooms(List<NetworkManager.PublicRoomInfo> rooms)
+    {
+        if (roomListContainer == null) return;
+
+        // Dọn sạch các phòng cũ hiển thị trong ScrollView
+        foreach (Transform child in roomListContainer)
+        {
+            Destroy(child.gameObject);
+        }
+
+        if (rooms == null || rooms.Count == 0)
+        {
+            if (emptyRoomListText != null)
+            {
+                emptyRoomListText.gameObject.SetActive(true);
+                emptyRoomListText.text = "Chưa có phòng nào đang mở. Hãy tạo phòng mới!";
+            }
+            return;
+        }
+
+        if (emptyRoomListText != null) emptyRoomListText.gameObject.SetActive(false);
+
+        foreach (var r in rooms)
+        {
+            if (roomItemPrefab != null)
+            {
+                GameObject itemObj = Instantiate(roomItemPrefab, roomListContainer);
+
+                // Gán Text thông tin phòng
+                TMP_Text infoText = itemObj.GetComponentInChildren<TMP_Text>();
+                if (infoText != null)
+                {
+                    string status = r.isGameStarted ? "<color=#FF4444>[IN-GAME]</color>" : "<color=#00FF66>[WAITING]</color>";
+                    infoText.text = $"{status} <b>{r.hostName}</b> ({r.currentPlayers}/{r.maxPlayers}) - Mã: <b>{r.roomCode}</b>";
+                }
+
+                // Gán sự kiện cho Nút Join 1-Click
+                Button joinBtn = itemObj.GetComponentInChildren<Button>();
+                if (joinBtn != null)
+                {
+                    if (r.isGameStarted || r.currentPlayers >= r.maxPlayers)
+                    {
+                        joinBtn.interactable = false;
+                    }
+                    else
+                    {
+                        string code = r.roomCode;
+                        joinBtn.onClick.AddListener(() =>
+                        {
+                            string username = GetValidUsername();
+                            if (roomCodeInput != null) roomCodeInput.text = code;
+                            NetworkManager.Instance.RequestJoinRoom(code, username);
+                        });
+                    }
+                }
+            }
+        }
     }
 
     // --- HÀM PHỤ TRỢ ---
