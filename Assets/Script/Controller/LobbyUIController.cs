@@ -53,6 +53,15 @@ public class LobbyUIController : MonoBehaviour
         {
             refreshRoomsButton.onClick.AddListener(OnRefreshRoomsPressed);
         }
+
+        // Xóa sạch các GameObject mẫu đặt sẵn trong Editor khi bắt đầu
+        if (roomListContainer != null)
+        {
+            foreach (Transform child in roomListContainer)
+            {
+                Destroy(child.gameObject);
+            }
+        }
     }
 
     private void OnDestroy()
@@ -295,13 +304,15 @@ public class LobbyUIController : MonoBehaviour
                 // Gán sự kiện cho Nút Join 1-Click
                 if (joinBtn != null)
                 {
-                    if (r.isGameStarted || r.currentPlayers >= r.maxPlayers)
+                    if (r.isGameStarted || (max > 0 && current >= max))
                     {
                         joinBtn.interactable = false;
                     }
                     else
                     {
+                        joinBtn.interactable = true;
                         string code = r.roomCode;
+                        joinBtn.onClick.RemoveAllListeners();
                         joinBtn.onClick.AddListener(() =>
                         {
                             string username = GetValidUsername();
