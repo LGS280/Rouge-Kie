@@ -1,9 +1,5 @@
-<<<<<<< HEAD
 using UnityEngine;
 
-=======
-﻿using UnityEngine;
->>>>>>> hoangnd
 public class WeaponInfo : MonoBehaviour
 {
     [Header("Cấu hình API kết nối (Tự động theo PrefabName)")]
@@ -25,31 +21,21 @@ public class WeaponInfo : MonoBehaviour
     public Transform firePoint;
     public Transform secondFirePoint;
 
-<<<<<<< HEAD
     [Header("Danh sách các loại đạn Player (Tự động đóng gói Build)")]
     public GameObject[] allPlayerBulletPrefabs;
 
     [HideInInspector] public GameObject bulletPrefab;
     [HideInInspector] public float fireRate;
-    [HideInInspector] public int manaCostPerShot;
-
-    private float recoilDistance = 0.15f;
-    private float recoilDuration = 0.05f;
-    private float returnDuration = 0.1f;
-=======
-    [Header("MANA")]
-    public int manaCostPerShot = 2; // mỗi khẩu súng chỉnh khác nhau trong Inspector
+    [HideInInspector] public int manaCostPerShot = 2;
 
     [Header("RECOIL")]
-    [SerializeField] float recoilDistance = 0.15f;
-    [SerializeField] float recoilDuration = 0.05f;
-    [SerializeField] float returnDuration = 0.1f;
->>>>>>> hoangnd
+    [SerializeField] private float recoilDistance = 0.15f;
+    [SerializeField] private float recoilDuration = 0.05f;
+    [SerializeField] private float returnDuration = 0.1f;
 
     Vector3 originalLocalPos;
     bool positionSaved = false;
 
-<<<<<<< HEAD
     void OnEnable()
     {
         ApplyConfigFromDb();
@@ -258,9 +244,6 @@ public class WeaponInfo : MonoBehaviour
             }
         }
     }
-=======
-    void Awake() { }
->>>>>>> hoangnd
 
     public void Attack()
     {
@@ -270,7 +253,11 @@ public class WeaponInfo : MonoBehaviour
             positionSaved = true;
         }
 
-<<<<<<< HEAD
+        // Kiểm tra mana trước khi bắn
+        RookieHealth playerHealth = GetComponentInParent<RookieHealth>();
+        if (playerHealth != null && !playerHealth.UseMana(manaCostPerShot))
+            return; // hết mana, không bắn
+
         WeaponConfig wConfig = GetWeaponConfig();
         Transform spawnPoint = (firePoint != null) ? firePoint : transform;
 
@@ -280,27 +267,8 @@ public class WeaponInfo : MonoBehaviour
 
         if (targetBulletPrefab == null)
         {
-
             return;
-=======
-        // Kiểm tra mana trước khi bắn
-        RookieHealth playerHealth = GetComponentInParent<RookieHealth>();
-        if (playerHealth != null && !playerHealth.UseMana(manaCostPerShot))
-            return; // hết mana, không bắn
-
-        if (bulletPrefab != null && firePoint != null)
-        {
-            Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
-            if (shootSound != null && RogueKie.Audio.AudioManager.Instance != null)
-            {
-                RogueKie.Audio.AudioManager.Instance.PlaySFXAtPosition(shootSound, transform.position, shootVolume);
-            }
->>>>>>> hoangnd
         }
-
-        RookieHealth playerHealth = GetComponentInParent<RookieHealth>();
-        if (playerHealth != null && !playerHealth.UseMana(manaCostPerShot))
-            return;
 
         if (targetBulletPrefab != null && spawnPoint != null)
         {
