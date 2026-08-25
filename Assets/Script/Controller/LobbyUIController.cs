@@ -330,7 +330,7 @@ public class LobbyUIController : MonoBehaviour
                     else
                     {
                         joinBtn.interactable = true;
-                        string code = !string.IsNullOrEmpty(r.roomCode) ? r.roomCode : r.RoomCode;
+                        string code = r.roomCode;
                         joinBtn.onClick.RemoveAllListeners();
                         joinBtn.onClick.AddListener(() =>
                         {

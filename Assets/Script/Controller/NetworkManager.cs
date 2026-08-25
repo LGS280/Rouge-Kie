@@ -45,17 +45,11 @@ public class NetworkManager : MonoBehaviour
     [System.Serializable]
     public class PublicRoomInfo
     {
-        public string roomCode { get; set; }
-        public string hostName { get; set; }
-        public int currentPlayers { get; set; }
-        public int maxPlayers { get; set; }
-        public bool isGameStarted { get; set; }
-
-        public string RoomCode { get => roomCode; set => roomCode = value; }
-        public string HostName { get => hostName; set => hostName = value; }
-        public int CurrentPlayers { get => currentPlayers; set => currentPlayers = value; }
-        public int MaxPlayers { get => maxPlayers; set => maxPlayers = value; }
-        public bool IsGameStarted { get => isGameStarted; set => isGameStarted = value; }
+        public string roomCode { get; set; } = string.Empty;
+        public string hostName { get; set; } = "Host";
+        public int currentPlayers { get; set; } = 1;
+        public int maxPlayers { get; set; } = 4;
+        public bool isGameStarted { get; set; } = false;
     }
 
     // --- CÁC SỰ KIỆN C# ĐỂ LỚP UI & SYNC MANAGER LẮNG NGHE ---
@@ -254,6 +248,7 @@ public class NetworkManager : MonoBehaviour
         // BỔ SUNG: Lắng nghe danh sách phòng từ Server trả về
         hubConnection.On<List<PublicRoomInfo>>("OnReceivePublicRooms", (rooms) =>
         {
+            Debug.Log($"[NetworkManager] Nhận được danh sách phòng từ Server: {(rooms != null ? rooms.Count : 0)} phòng.");
             unityContext.Post(_ => OnReceivePublicRooms?.Invoke(rooms), null);
         });
 
