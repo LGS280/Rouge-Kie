@@ -1,5 +1,10 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Scenes/Lobby_Scene.unity.meta
 guid: 1636c7ec8a89c6d4eb0d440a60fb9fe6
+========
+guid: d805c80a928c7a14087aaf1e87a3d3fc
+folderAsset: yes
+>>>>>>>> hoangnd:Assets/Script/Characters/HUD.meta
 DefaultImporter:
   externalObjects: {}
   userData: 

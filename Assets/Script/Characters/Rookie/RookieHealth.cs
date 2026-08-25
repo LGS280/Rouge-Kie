@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 using UnityEngine;
+=======
+﻿using UnityEngine;
+>>>>>>> hoangnd
 using UnityEngine.Events;
 
 public class RookieHealth : MonoBehaviour
@@ -11,7 +15,11 @@ public class RookieHealth : MonoBehaviour
     private Collider2D playerCollider;
     private Rigidbody2D rb;
 
+<<<<<<< HEAD
     [Header("THI?T L?P GI�P")]
+=======
+    [Header("THIẾT LẬP GIÁP")]
+>>>>>>> hoangnd
     public int maxArmor = 4;
     private int currentArmor;
     private float armorRegenDelayTimer = 0f;
@@ -20,7 +28,11 @@ public class RookieHealth : MonoBehaviour
     public float armorRegenDelay = 2f;
     public float armorRegenTick = 1f;
 
+<<<<<<< HEAD
     [Header("THI?T L?P MANA")]
+=======
+    [Header("THIẾT LẬP MANA")]
+>>>>>>> hoangnd
     public int maxMana = 200;
     private int currentMana;
 
@@ -40,11 +52,18 @@ public class RookieHealth : MonoBehaviour
 
     void Update()
     {
+<<<<<<< HEAD
 
+=======
+>>>>>>> hoangnd
         if (Input.GetKeyDown(KeyCode.T))
         {
             TakeDamage(1);
         }
+<<<<<<< HEAD
+=======
+        // Hồi giáp
+>>>>>>> hoangnd
         if (currentArmor < maxArmor && !isDead)
         {
             if (!armorRegenStarted)
@@ -56,6 +75,10 @@ public class RookieHealth : MonoBehaviour
                     armorRegenTickTimer = armorRegenTick;
                 }
             }
+<<<<<<< HEAD
+=======
+          
+>>>>>>> hoangnd
             else
             {
                 armorRegenTickTimer -= Time.deltaTime;
@@ -75,6 +98,7 @@ public class RookieHealth : MonoBehaviour
     {
         if (isDead) return;
 
+<<<<<<< HEAD
         int originalDamage = damage; // Lưu lại lượng sát thương thực tế để hiển thị chữ số bay
 
         if (currentArmor > 0)
@@ -174,6 +198,24 @@ public class RookieHealth : MonoBehaviour
             yield return new WaitForSeconds(0.15f);
             sr.color = Color.white; // Trả lại màu gốc
         }
+=======
+        if (currentArmor > 0)
+        {
+            int absorbed = Mathf.Min(currentArmor, damage);
+            currentArmor -= absorbed;
+            damage -= absorbed;
+        }
+
+        armorRegenDelayTimer = armorRegenDelay;
+        armorRegenStarted = false;
+
+        currentHealth -= damage;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+        onHealthChanged?.Invoke();
+
+        if (animator != null) animator.SetTrigger("hurt");
+        if (currentHealth <= 0) Die();
+>>>>>>> hoangnd
     }
 
     public void Heal(int amount)
@@ -190,6 +232,7 @@ public class RookieHealth : MonoBehaviour
         return true;
     }
 
+<<<<<<< HEAD
     public void RestoreMana(int amount)
     {
         currentMana = Mathf.Clamp(currentMana + amount, 0, maxMana);
@@ -214,6 +257,8 @@ public class RookieHealth : MonoBehaviour
         onHealthChanged?.Invoke();
     }
 
+=======
+>>>>>>> hoangnd
     public int GetCurrentHealth() => currentHealth;
     public int GetMaxHealth() => maxHealth;
     public int GetCurrentArmor() => currentArmor;
@@ -226,6 +271,7 @@ public class RookieHealth : MonoBehaviour
         if (isDead) return;
         isDead = true;
 
+<<<<<<< HEAD
         // 1. Tắt di chuyển và điều khiển
         PlayerMovement pm = GetComponent<PlayerMovement>();
         if (pm != null) pm.enabled = false;
@@ -249,6 +295,11 @@ public class RookieHealth : MonoBehaviour
         if (backPos != null) backPos.gameObject.SetActive(false);
 
         // 3. Khóa vật lý để nằm yên cố định tại chỗ, không bị đẩy trượt
+=======
+        if (animator != null) animator.SetTrigger("die");
+
+        if (playerCollider != null) playerCollider.enabled = false;
+>>>>>>> hoangnd
         if (rb != null)
         {
             rb.linearVelocity = Vector2.zero;
@@ -388,6 +439,7 @@ public class RookieHealth : MonoBehaviour
             rb.linearVelocity = Vector2.zero;
         }
 
+<<<<<<< HEAD
         // 4. Kích hoạt lại Collider2D
         if (playerCollider != null) playerCollider.enabled = true;
 
@@ -418,3 +470,42 @@ public class RookieHealth : MonoBehaviour
         Debug.Log($"[RookieHealth] Người chơi đã được HỒI SINH hoàn toàn với {currentHealth} Máu và {currentArmor} Giáp!");
     }
 }
+=======
+        PlayerController controller = GetComponent<PlayerController>();
+        if (controller != null) controller.enabled = false;
+
+        Transform handPos = transform.Find("Hand_Position");
+        Transform backPos = transform.Find("Back_Position");
+        if (handPos != null) handPos.gameObject.SetActive(false);
+        if (backPos != null) backPos.gameObject.SetActive(false);
+
+        WeaponAim weapon = GetComponentInChildren<WeaponAim>();
+        if (weapon != null) weapon.enabled = false;
+
+        transform.position += new Vector3(0, -0.6f, 0);
+
+        StartCoroutine(FadeToGray());
+    }
+
+    System.Collections.IEnumerator FadeToGray()
+    {
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr == null) yield break;
+
+        Color startColor = sr.color;
+        Color targetColor = new Color(0.3f, 0.3f, 0.3f, 1f); // xám tối
+        float duration = 0.5f;
+        float t = 0f;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            sr.color = Color.Lerp(startColor, targetColor, t / duration);
+            yield return null;
+        }
+
+        sr.color = targetColor;
+    
+}
+}
+>>>>>>> hoangnd
