@@ -40,6 +40,7 @@ public class LobbyUIController : MonoBehaviour
             NetworkManager.Instance.OnJoinRoomFailed += HandleJoinRoomFailed;
             NetworkManager.Instance.OnPlayerJoined += HandlePlayerJoined;
             NetworkManager.Instance.OnPlayerDisconnected += HandlePlayerDisconnected;
+            NetworkManager.Instance.OnHostDisconnectedEndGame += HandleHostDisconnected;
             NetworkManager.Instance.OnGameStarted += HandleGameStarted;
             NetworkManager.Instance.OnReceivePublicRooms += HandleReceivePublicRooms;
         }
@@ -74,6 +75,7 @@ public class LobbyUIController : MonoBehaviour
             NetworkManager.Instance.OnJoinRoomFailed -= HandleJoinRoomFailed;
             NetworkManager.Instance.OnPlayerJoined -= HandlePlayerJoined;
             NetworkManager.Instance.OnPlayerDisconnected -= HandlePlayerDisconnected;
+            NetworkManager.Instance.OnHostDisconnectedEndGame -= HandleHostDisconnected;
             NetworkManager.Instance.OnGameStarted -= HandleGameStarted;
             NetworkManager.Instance.OnReceivePublicRooms -= HandleReceivePublicRooms;
         }
@@ -234,6 +236,22 @@ public class LobbyUIController : MonoBehaviour
         Debug.Log($"Người chơi thoát: {username}");
         activePlayers.Remove(username);
         UpdatePlayerListUI();
+    }
+
+    private void HandleHostDisconnected(string hostName)
+    {
+        Debug.LogWarning($"[LobbyUIController] Chủ phòng ({hostName}) đã rời phòng. Phòng đã bị giải tán!");
+
+        // Đóng sảnh chờ và tự động đưa người chơi quay về màn hình chọn phòng
+        roomLobbyPanel.SetActive(false);
+        lobbyMenuPanel.SetActive(true);
+        playMenuPanel.SetActive(false);
+
+        activePlayers.Clear();
+        ResetCopyButtonText();
+
+        // Tự động làm mới lại danh sách phòng
+        OnRefreshRoomsPressed();
     }
 
     public void OnRefreshRoomsPressed()
