@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 using UnityEngine;
 
+=======
+﻿using UnityEngine;
+>>>>>>> hoangnd
 public class WeaponInfo : MonoBehaviour
 {
     [Header("Cấu hình API kết nối (Tự động theo PrefabName)")]
@@ -21,6 +25,7 @@ public class WeaponInfo : MonoBehaviour
     public Transform firePoint;
     public Transform secondFirePoint;
 
+<<<<<<< HEAD
     [Header("Danh sách các loại đạn Player (Tự động đóng gói Build)")]
     public GameObject[] allPlayerBulletPrefabs;
 
@@ -31,10 +36,20 @@ public class WeaponInfo : MonoBehaviour
     private float recoilDistance = 0.15f;
     private float recoilDuration = 0.05f;
     private float returnDuration = 0.1f;
+=======
+    [Header("MANA")]
+    public int manaCostPerShot = 2; // mỗi khẩu súng chỉnh khác nhau trong Inspector
+
+    [Header("RECOIL")]
+    [SerializeField] float recoilDistance = 0.15f;
+    [SerializeField] float recoilDuration = 0.05f;
+    [SerializeField] float returnDuration = 0.1f;
+>>>>>>> hoangnd
 
     Vector3 originalLocalPos;
     bool positionSaved = false;
 
+<<<<<<< HEAD
     void OnEnable()
     {
         ApplyConfigFromDb();
@@ -243,6 +258,9 @@ public class WeaponInfo : MonoBehaviour
             }
         }
     }
+=======
+    void Awake() { }
+>>>>>>> hoangnd
 
     public void Attack()
     {
@@ -252,6 +270,7 @@ public class WeaponInfo : MonoBehaviour
             positionSaved = true;
         }
 
+<<<<<<< HEAD
         WeaponConfig wConfig = GetWeaponConfig();
         Transform spawnPoint = (firePoint != null) ? firePoint : transform;
 
@@ -263,6 +282,20 @@ public class WeaponInfo : MonoBehaviour
         {
 
             return;
+=======
+        // Kiểm tra mana trước khi bắn
+        RookieHealth playerHealth = GetComponentInParent<RookieHealth>();
+        if (playerHealth != null && !playerHealth.UseMana(manaCostPerShot))
+            return; // hết mana, không bắn
+
+        if (bulletPrefab != null && firePoint != null)
+        {
+            Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+            if (shootSound != null && RogueKie.Audio.AudioManager.Instance != null)
+            {
+                RogueKie.Audio.AudioManager.Instance.PlaySFXAtPosition(shootSound, transform.position, shootVolume);
+            }
+>>>>>>> hoangnd
         }
 
         RookieHealth playerHealth = GetComponentInParent<RookieHealth>();
