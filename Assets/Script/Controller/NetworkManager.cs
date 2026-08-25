@@ -45,11 +45,17 @@ public class NetworkManager : MonoBehaviour
     [System.Serializable]
     public class PublicRoomInfo
     {
-        public string roomCode;
-        public string hostName;
-        public int currentPlayers;
-        public int maxPlayers;
-        public bool isGameStarted;
+        public string roomCode { get; set; }
+        public string hostName { get; set; }
+        public int currentPlayers { get; set; }
+        public int maxPlayers { get; set; }
+        public bool isGameStarted { get; set; }
+
+        public string RoomCode { get => roomCode; set => roomCode = value; }
+        public string HostName { get => hostName; set => hostName = value; }
+        public int CurrentPlayers { get => currentPlayers; set => currentPlayers = value; }
+        public int MaxPlayers { get => maxPlayers; set => maxPlayers = value; }
+        public bool IsGameStarted { get => isGameStarted; set => isGameStarted = value; }
     }
 
     // --- CÁC SỰ KIỆN C# ĐỂ LỚP UI & SYNC MANAGER LẮNG NGHE ---

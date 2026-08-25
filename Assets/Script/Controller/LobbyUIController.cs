@@ -330,12 +330,13 @@ public class LobbyUIController : MonoBehaviour
                     else
                     {
                         joinBtn.interactable = true;
-                        string code = r.roomCode;
+                        string code = !string.IsNullOrEmpty(r.roomCode) ? r.roomCode : r.RoomCode;
                         joinBtn.onClick.RemoveAllListeners();
                         joinBtn.onClick.AddListener(() =>
                         {
                             string username = GetValidUsername();
-                            if (roomCodeInput != null) roomCodeInput.text = code;
+                            if (roomCodeInput != null && !string.IsNullOrEmpty(code)) roomCodeInput.text = code;
+                            Debug.Log($"[LobbyUIController] Đang tham gia phòng '{code}' với tên '{username}'...");
                             NetworkManager.Instance.RequestJoinRoom(code, username);
                         });
                     }
