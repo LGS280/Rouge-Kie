@@ -16,6 +16,10 @@ public class LocalPlayerIndicator : MonoBehaviour
     [Tooltip("Tự động ẩn nếu GameObject cha này là Remote Player")]
     [SerializeField] private bool onlyForLocalPlayer = true;
 
+    [Header("Rotation Lock")]
+    [Tooltip("Khóa góc xoay để mũi tên luôn chĩa thẳng xuống đầu nhân vật")]
+    [SerializeField] private bool lockRotation = true;
+
     private Vector3 initialLocalPos;
 
     private void Awake()
@@ -37,10 +41,16 @@ public class LocalPlayerIndicator : MonoBehaviour
         }
     }
 
-    private void Update()
+    private void LateUpdate()
     {
         // Hiệu ứng dao động hình sin nhấp nhô lơ lửng
         float newY = initialLocalPos.y + Mathf.Sin(Time.time * bobSpeed) * bobHeight;
         transform.localPosition = new Vector3(initialLocalPos.x, newY, initialLocalPos.z);
+
+        if (lockRotation)
+        {
+            // Luôn giữ góc xoay hướng thẳng xuống đỉnh đầu nhân vật (180 độ Z)
+            transform.rotation = Quaternion.Euler(0f, 0f, 180f);
+        }
     }
 }
