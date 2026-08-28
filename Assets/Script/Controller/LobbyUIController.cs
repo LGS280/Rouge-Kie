@@ -22,6 +22,12 @@ public class LobbyUIController : MonoBehaviour
     [SerializeField] private Button startGameButton;
     [SerializeField] private Button copyRoomCodeButton;
 
+    [Header("Public Room List UI (Optional)")]
+    [SerializeField] private Transform roomListContainer; // Khung Content trong ScrollView chứa danh sách các phòng
+    [SerializeField] private GameObject roomItemPrefab; // Prefab thanh thông tin phòng (Text + Nút Join)
+    [SerializeField] private TMP_Text emptyRoomListText; // Text "Hiện không có phòng nào đang mở"
+    [SerializeField] private Button refreshRoomsButton; // Nút làm mới danh sách phòng
+
     private List<string> activePlayers = new List<string>();
 
     private void Start()
@@ -34,12 +40,28 @@ public class LobbyUIController : MonoBehaviour
             NetworkManager.Instance.OnJoinRoomFailed += HandleJoinRoomFailed;
             NetworkManager.Instance.OnPlayerJoined += HandlePlayerJoined;
             NetworkManager.Instance.OnPlayerDisconnected += HandlePlayerDisconnected;
+            NetworkManager.Instance.OnHostDisconnectedEndGame += HandleHostDisconnected;
             NetworkManager.Instance.OnGameStarted += HandleGameStarted;
+            NetworkManager.Instance.OnReceivePublicRooms += HandleReceivePublicRooms;
         }
 
         if (copyRoomCodeButton != null)
         {
             copyRoomCodeButton.onClick.AddListener(OnCopyRoomCodePressed);
+        }
+
+        if (refreshRoomsButton != null)
+        {
+            refreshRoomsButton.onClick.AddListener(OnRefreshRoomsPressed);
+        }
+
+        // Xóa sạch các GameObject mẫu đặt sẵn trong Editor khi bắt đầu
+        if (roomListContainer != null)
+        {
+            foreach (Transform child in roomListContainer)
+            {
+                Destroy(child.gameObject);
+            }
         }
     }
 
@@ -53,7 +75,9 @@ public class LobbyUIController : MonoBehaviour
             NetworkManager.Instance.OnJoinRoomFailed -= HandleJoinRoomFailed;
             NetworkManager.Instance.OnPlayerJoined -= HandlePlayerJoined;
             NetworkManager.Instance.OnPlayerDisconnected -= HandlePlayerDisconnected;
+            NetworkManager.Instance.OnHostDisconnectedEndGame -= HandleHostDisconnected;
             NetworkManager.Instance.OnGameStarted -= HandleGameStarted;
+            NetworkManager.Instance.OnReceivePublicRooms -= HandleReceivePublicRooms;
         }
     }
 
@@ -99,6 +123,9 @@ public class LobbyUIController : MonoBehaviour
         lobbyMenuPanel.SetActive(true);
         roomLobbyPanel.SetActive(false);
 
+        // Tự động làm mới danh sách phòng khi mở sảnh
+        OnRefreshRoomsPressed();
+
         //playMenuPanel.SetActive(false);
         //lobbyMenuPanel.SetActive(true);
         //roomLobbyPanel.SetActive(false);
@@ -132,10 +159,18 @@ public class LobbyUIController : MonoBehaviour
 
     public void OnBackPressedFromRoomCode()
     {
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.RequestLeaveRoom();
+        }
+
         lobbyMenuPanel.SetActive(true);
         playMenuPanel.SetActive(false);
         roomLobbyPanel.SetActive(false);
         ResetCopyButtonText();
+
+        // Làm mới lại danh sách phòng sau khi vừa rời
+        OnRefreshRoomsPressed();
     }
 
     public void OnStartGamePressed()
@@ -201,6 +236,113 @@ public class LobbyUIController : MonoBehaviour
         Debug.Log($"Người chơi thoát: {username}");
         activePlayers.Remove(username);
         UpdatePlayerListUI();
+    }
+
+    private void HandleHostDisconnected(string hostName)
+    {
+        Debug.LogWarning($"[LobbyUIController] Chủ phòng ({hostName}) đã rời phòng. Phòng đã bị giải tán!");
+
+        // Đóng sảnh chờ và tự động đưa người chơi quay về màn hình chọn phòng
+        roomLobbyPanel.SetActive(false);
+        lobbyMenuPanel.SetActive(true);
+        playMenuPanel.SetActive(false);
+
+        activePlayers.Clear();
+        ResetCopyButtonText();
+
+        // Tự động làm mới lại danh sách phòng
+        OnRefreshRoomsPressed();
+    }
+
+    public void OnRefreshRoomsPressed()
+    {
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.RequestGetPublicRooms();
+        }
+    }
+
+    private void HandleReceivePublicRooms(List<NetworkManager.PublicRoomInfo> rooms)
+    {
+        if (roomListContainer == null) return;
+
+        // Dọn sạch các phòng cũ hiển thị trong ScrollView
+        foreach (Transform child in roomListContainer)
+        {
+            Destroy(child.gameObject);
+        }
+
+        if (rooms == null || rooms.Count == 0)
+        {
+            if (emptyRoomListText != null)
+            {
+                emptyRoomListText.gameObject.SetActive(true);
+                emptyRoomListText.text = "No rooms available.\nCreate one now!";
+            }
+            return;
+        }
+
+        if (emptyRoomListText != null) emptyRoomListText.gameObject.SetActive(false);
+
+        foreach (var r in rooms)
+        {
+            if (roomItemPrefab != null)
+            {
+                GameObject itemObj = Instantiate(roomItemPrefab, roomListContainer);
+
+                string host = !string.IsNullOrEmpty(r.hostName) ? r.hostName : "Host";
+                int current = r.currentPlayers > 0 ? r.currentPlayers : 1;
+                int max = r.maxPlayers > 0 ? r.maxPlayers : 4;
+
+                // Tìm nút Join trước
+                Button joinBtn = itemObj.GetComponentInChildren<Button>(true);
+
+                // Tìm chính xác Text hiển thị thông tin phòng (loại trừ Text bên trong Button)
+                TMP_Text[] allTexts = itemObj.GetComponentsInChildren<TMP_Text>(true);
+                TMP_Text infoText = null;
+
+                foreach (var txt in allTexts)
+                {
+                    if (joinBtn != null && txt.transform.IsChildOf(joinBtn.transform))
+                    {
+                        // Giữ nguyên hoặc đặt chữ của nút bấm là "JOIN"
+                        txt.text = "JOIN";
+                    }
+                    else
+                    {
+                        infoText = txt;
+                    }
+                }
+
+                if (infoText != null)
+                {
+                    string status = r.isGameStarted ? "<color=#FF4444>[IN-GAME]</color>" : "<color=#00FF66>[WAITING]</color>";
+                    infoText.text = $"{status} <b>{host}</b> ({current}/{max})";
+                }
+
+                // Gán sự kiện cho Nút Join 1-Click
+                if (joinBtn != null)
+                {
+                    if (r.isGameStarted || (max > 0 && current >= max))
+                    {
+                        joinBtn.interactable = false;
+                    }
+                    else
+                    {
+                        joinBtn.interactable = true;
+                        string code = r.roomCode;
+                        joinBtn.onClick.RemoveAllListeners();
+                        joinBtn.onClick.AddListener(() =>
+                        {
+                            string username = GetValidUsername();
+                            if (roomCodeInput != null && !string.IsNullOrEmpty(code)) roomCodeInput.text = code;
+                            Debug.Log($"[LobbyUIController] Đang tham gia phòng '{code}' với tên '{username}'...");
+                            NetworkManager.Instance.RequestJoinRoom(code, username);
+                        });
+                    }
+                }
+            }
+        }
     }
 
     // --- HÀM PHỤ TRỢ ---

@@ -3,7 +3,7 @@ using UnityEngine.Events;
 
 public class RookieHealth : MonoBehaviour
 {
-    [Header("THI?T L?P M�U PLAYER")]
+    [Header("THIẾT LẬP MÁU PLAYER")]
     public int maxHealth = 5;
     private int currentHealth;
     [HideInInspector] public bool isDead = false;
@@ -11,7 +11,7 @@ public class RookieHealth : MonoBehaviour
     private Collider2D playerCollider;
     private Rigidbody2D rb;
 
-    [Header("THI?T L?P GI�P")]
+    [Header("THIẾT LẬP GIÁP")]
     public int maxArmor = 4;
     private int currentArmor;
     private float armorRegenDelayTimer = 0f;
@@ -20,7 +20,7 @@ public class RookieHealth : MonoBehaviour
     public float armorRegenDelay = 2f;
     public float armorRegenTick = 1f;
 
-    [Header("THI?T L?P MANA")]
+    [Header("THIẾT LẬP MANA")]
     public int maxMana = 200;
     private int currentMana;
 
@@ -40,11 +40,12 @@ public class RookieHealth : MonoBehaviour
 
     void Update()
     {
-
         if (Input.GetKeyDown(KeyCode.T))
         {
             TakeDamage(1);
         }
+
+        // Hồi giáp
         if (currentArmor < maxArmor && !isDead)
         {
             if (!armorRegenStarted)
@@ -213,7 +214,6 @@ public class RookieHealth : MonoBehaviour
 
         onHealthChanged?.Invoke();
     }
-
     public int GetCurrentHealth() => currentHealth;
     public int GetMaxHealth() => maxHealth;
     public int GetCurrentArmor() => currentArmor;

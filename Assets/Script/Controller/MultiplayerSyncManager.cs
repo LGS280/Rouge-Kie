@@ -331,7 +331,7 @@ public class MultiplayerSyncManager : MonoBehaviour
             {
                 ringPos.gameObject.SetActive(true);
                 SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
-                if (ringSr != null) ringSr.color = Color.green;
+                if (ringSr != null) ringSr.color = (rpc != null) ? rpc.assignedRingColor : new Color(0f, 0.75f, 1f, 1f);
             }
         }
     }
@@ -415,6 +415,23 @@ public class MultiplayerSyncManager : MonoBehaviour
             }
 
             remotePlayers.Add(connId, newRemote);
+
+            // BỔ SUNG: Gán màu vòng chân phân biệt 4 người chơi (Player 2: Xanh Dương, Player 3: Vàng, Player 4: Tím)
+            int playerIndex = remotePlayers.Count; // 1, 2, 3
+            Color ringColor = new Color(0f, 0.75f, 1f, 1f); // Mặc định Xanh Dương (P2)
+            if (playerIndex == 2) ringColor = new Color(1f, 0.85f, 0f, 1f); // Vàng (P3)
+            else if (playerIndex >= 3) ringColor = new Color(0.8f, 0.2f, 1f, 1f); // Tím (P4)
+
+            rpc.assignedRingColor = ringColor;
+
+            Transform ringPos = newRemote.transform.Find("Player_Ring");
+            if (ringPos == null) ringPos = newRemote.transform.Find("Ring");
+            if (ringPos == null) ringPos = newRemote.transform.Find("PlayerRing");
+            if (ringPos != null)
+            {
+                SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
+                if (ringSr != null) ringSr.color = ringColor;
+            }
 
             // BỔ SUNG: Phát tín hiệu súng của chính mình lên mạng ngay khi xuất hiện đồng đội mới
             if (WeaponManager.Instance != null)

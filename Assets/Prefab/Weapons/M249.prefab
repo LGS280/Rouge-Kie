@@ -133,6 +133,9 @@ MonoBehaviour:
   bulletPrefab: {fileID: 5457056256669451622, guid: fdfcd43ad686eb945ad5ed4e3fc6bddb, type: 3}
   fireRate: 0.2
   manaCostPerShot: 0
+  recoilDistance: 0.15
+  recoilDuration: 0.05
+  returnDuration: 0.1
 --- !u!1 &4513706913163337098
 GameObject:
   m_ObjectHideFlags: 0

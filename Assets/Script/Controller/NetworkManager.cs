@@ -6,7 +6,24 @@ using UnityEngine;
 
 public class NetworkManager : MonoBehaviour
 {
-    public static NetworkManager Instance { get; private set; }
+    private static NetworkManager _instance;
+    public static NetworkManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindAnyObjectByType<NetworkManager>();
+                if (_instance == null)
+                {
+                    GameObject go = new GameObject("NetworkManager");
+                    _instance = go.AddComponent<NetworkManager>();
+                }
+            }
+            return _instance;
+        }
+        private set => _instance = value;
+    }
 
     [Header("Server Connection Settings")]
     [SerializeField] private string serverUrl = "http://localhost:5000/gamehub";
@@ -25,12 +42,23 @@ public class NetworkManager : MonoBehaviour
     public event System.Action<string, float> OnRemoteEnemyDamaged;
     public event System.Action<string, float, float, float> OnReceiveWeaponAngle;
 
+    [System.Serializable]
+    public class PublicRoomInfo
+    {
+        public string roomCode { get; set; } = string.Empty;
+        public string hostName { get; set; } = "Host";
+        public int currentPlayers { get; set; } = 1;
+        public int maxPlayers { get; set; } = 4;
+        public bool isGameStarted { get; set; } = false;
+    }
+
     // --- CÁC SỰ KIỆN C# ĐỂ LỚP UI & SYNC MANAGER LẮNG NGHE ---
     public event Action<string> OnRoomCreated;
     public event Action<string, List<string>> OnJoinRoomSuccess;
     public event Action<string> OnJoinRoomFailed;
     public event Action<string, string> OnPlayerJoined;
     public event Action<string, string> OnPlayerDisconnected;
+    public event Action<List<PublicRoomInfo>> OnReceivePublicRooms;
 
     // Sự kiện đồng bộ vị trí (Đồng đội gọi)
     public event Action<string, float, float> OnReceivePosition;
@@ -74,9 +102,9 @@ public class NetworkManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
+        if (_instance == null)
         {
-            Instance = this;
+            _instance = this;
             DontDestroyOnLoad(gameObject);
             unityContext = SynchronizationContext.Current;
 
@@ -91,7 +119,7 @@ public class NetworkManager : MonoBehaviour
                 Debug.Log($"[NetworkManager] Tự động đăng nhập người dùng: {LoggedInUsername}");
             }
         }
-        else
+        else if (_instance != this)
         {
             Destroy(gameObject);
         }
@@ -217,6 +245,13 @@ public class NetworkManager : MonoBehaviour
             unityContext.Post(_ => OnHostDisconnectedEndGame?.Invoke(hostName), null);
         });
 
+        // BỔ SUNG: Lắng nghe danh sách phòng từ Server trả về
+        hubConnection.On<List<PublicRoomInfo>>("OnReceivePublicRooms", (rooms) =>
+        {
+            Debug.Log($"[NetworkManager] Nhận được danh sách phòng từ Server: {(rooms != null ? rooms.Count : 0)} phòng.");
+            unityContext.Post(_ => OnReceivePublicRooms?.Invoke(rooms), null);
+        });
+
         // Gọi hàm đăng ký các sự kiện Combat mạng
         RegisterCombatCallbacks();
 
@@ -232,6 +267,37 @@ public class NetworkManager : MonoBehaviour
     }
 
     // --- CÁC HÀM GỬI LỆNH LÊN SERVER ---
+
+    public async void RequestGetPublicRooms()
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("GetPublicRooms");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] RequestGetPublicRooms gián đoạn: {ex.Message}");
+        }
+    }
+
+    public async void RequestLeaveRoom()
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("LeaveRoom");
+            }
+            CurrentRoomId = null;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] RequestLeaveRoom gián đoạn: {ex.Message}");
+        }
+    }
 
     public async void RequestCreateRoom(string username)
     {
