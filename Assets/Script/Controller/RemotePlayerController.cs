@@ -43,6 +43,7 @@ public class RemotePlayerController : MonoBehaviour
     }
 
     public bool isDead = false;
+    public Color assignedRingColor = new Color(0f, 0.75f, 1f, 1f); // Mặc định Xanh Dương cho Player 2
 
     public void DieRemotePlayer()
     {
@@ -85,7 +86,7 @@ public class RemotePlayerController : MonoBehaviour
         {
             ringPos.gameObject.SetActive(true);
             SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
-            if (ringSr != null) ringSr.color = Color.green;
+            if (ringSr != null) ringSr.color = assignedRingColor; // Khôi phục đúng màu ban đầu của đồng đội
         }
 
         if (animator != null)
