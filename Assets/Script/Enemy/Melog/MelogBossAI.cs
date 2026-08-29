@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class MelogBossAI : MonoBehaviour
 {
-    public enum BossState { Idle, Wander, Chase, Attack }
+    public enum BossState { Idle, Wander, Chase, Attack } // 4 trạng thái của boss
 
     [Header("Trạng thái hiện tại của Mini Boss")]
     public BossState currentState = BossState.Idle;
@@ -37,16 +37,16 @@ public class MelogBossAI : MonoBehaviour
         myRoom = room;
     }
 
-    private Vector2 networkTargetPos;
-    private Vector2 lastNetworkTargetPos;
-    private Vector3 mobNetworkVelocity;
+    private Vector2 networkTargetPos; // Vị trí mạng nhận được ở gói tin mới nhất và trước đó
+    private Vector2 lastNetworkTargetPos; 
+    private Vector3 mobNetworkVelocity; // Vận tốc mạng dùng cho nội suy vị trí mượt
     private Vector2 estimatedMobVelocity;
-    private float lastMobPacketTime;
+    private float lastMobPacketTime; // Thời điểm nhận gói tin mạng gần nhất để tính vận tốc ngoại suy
     private bool hasFirstNetworkPos = false;
     private float lastNetworkSyncTime = 0f;
     private float networkSyncInterval = 0.05f;
 
-    private void Awake()
+    private void Awake() // tự động lấy các component cần thiết gắn trên boss
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
@@ -59,7 +59,7 @@ public class MelogBossAI : MonoBehaviour
     {
         if (melogWeaponAim != null)
         {
-            melogWeaponAim.InitializeDualHandsAndWeapons();
+            melogWeaponAim.InitializeDualHandsAndWeapons(); // khởi tạo 2 tay cầm 2 vũ khí
         }
 
         bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
@@ -77,8 +77,8 @@ public class MelogBossAI : MonoBehaviour
             rb.bodyType = RigidbodyType2D.Kinematic;
         }
 
-        FindNearestPlayer();
-        GetNewWanderTarget();
+        FindNearestPlayer(); // tìm người chơi gần nhất
+        GetNewWanderTarget(); // lấy 1 điểm để đi tuần tra
     }
 
     private void Update()
@@ -110,6 +110,8 @@ public class MelogBossAI : MonoBehaviour
 
                 UpdateBossFacing(targetPlayer.position.x - transform.position.x);
             }
+            // gửi tọa độ X Y của boss lên sv để đồng bộ với các client khác
+            // xoay mặt boss về phía người chơi nếu thấy player 
 
             if (!isRoomActivated)
             {
@@ -215,7 +217,7 @@ public class MelogBossAI : MonoBehaviour
         networkTargetPos = newPos;
     }
 
-    private void FindNearestPlayer()
+    private void FindNearestPlayer() // hàm tìm người chơi gần đó
     {
         float shortestDistance = Mathf.Infinity;
         Transform nearestPlayer = null;

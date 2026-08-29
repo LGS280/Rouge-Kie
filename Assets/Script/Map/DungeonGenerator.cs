@@ -178,6 +178,11 @@ public class DungeonGenerator : MonoBehaviour
     [ContextMenu("Generate Soul Knight Map")]
     public void GenerateSoulKnightMap()
     {
+        if (GameConfigManager.Instance != null)
+        {
+            GameConfigManager.Instance.ReloadConfigs();
+        }
+
         // 1. Nạp Hạt giống ngẫu nhiên đồng bộ cho Co-op
         InitMapSeed();
 
