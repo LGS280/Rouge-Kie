@@ -103,6 +103,7 @@ public class LobbyUIController : MonoBehaviour
         if (!NetworkManager.Instance.IsLoggedIn)
         {
             Debug.Log("Chưa đăng nhập! Đang gọi Scene Login/Register...");
+            LoginController.PendingActionAfterLogin = "COOP";
 
             // 1. Kiểm tra xem Scene Login đã được load chưa để tránh load trùng
             if (!UnityEngine.SceneManagement.SceneManager.GetSceneByName("LoginScrene").isLoaded)
