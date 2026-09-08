@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
@@ -47,6 +48,7 @@ public class MatchHistoryUI : MonoBehaviour
     [SerializeField] private GameObject historyPanel;         // Panel tổng chứa bảng lịch sử đấu
     [SerializeField] private Button closeButton;              // Nút đóng bảng (X)
     [SerializeField] private Button refreshButton;            // Nút làm mới dữ liệu
+    [SerializeField] private ScrollRect scrollRect;           // ScrollRect cuộn danh sách (tự tìm nếu để trống)
     [SerializeField] private TMP_Text emptyHistoryText;       // Dòng chữ báo trống khi chưa có trận đấu
 
     [Header("Option A: ScrollView Container (Prefab Item)")]
@@ -209,12 +211,30 @@ public class MatchHistoryUI : MonoBehaviour
         {
             historyFullText.gameObject.SetActive(true);
             StringBuilder sb = new StringBuilder();
+
+            // Đệm khoảng trống ở đầu để dòng đầu tiên không bao giờ bị mép trên của Viewport/Mask che khuất
+            sb.AppendLine("<size=14>\n</size>");
+
             foreach (var item in items)
             {
                 sb.AppendLine(FormatItemText(item));
-                sb.AppendLine("<size=6>\n</size>"); // Tạo khoảng trống đệm thoáng mắt giữa các trận, không cần vạch gạch
+                sb.AppendLine("<size=12>\n</size>"); // Tạo khoảng trống đệm thoáng mắt giữa các trận
             }
             historyFullText.text = sb.ToString();
+
+            // Tự động cuộn thanh cuộn lên trên cùng (Top)
+            StartCoroutine(ResetScrollToTop());
+        }
+    }
+
+    private IEnumerator ResetScrollToTop()
+    {
+        yield return null;
+        Canvas.ForceUpdateCanvases();
+        ScrollRect sr = scrollRect != null ? scrollRect : GetComponentInChildren<ScrollRect>();
+        if (sr != null)
+        {
+            sr.verticalNormalizedPosition = 1f;
         }
     }
 
