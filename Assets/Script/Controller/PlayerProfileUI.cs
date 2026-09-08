@@ -89,6 +89,7 @@ public class PlayerProfileUI : MonoBehaviour
     {
         if (!UnityEngine.SceneManagement.SceneManager.GetSceneByName("LoginScrene").isLoaded)
         {
+            LoginController.PendingActionAfterLogin = "";
             UnityEngine.SceneManagement.SceneManager.LoadScene("LoginScrene", UnityEngine.SceneManagement.LoadSceneMode.Additive);
         }
     }
