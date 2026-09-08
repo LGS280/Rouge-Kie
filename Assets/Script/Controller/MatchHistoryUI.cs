@@ -66,9 +66,18 @@ public class MatchHistoryUI : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        // Tự động tải dữ liệu mỗi khi bảng được bật lên (kể cả khi bật bằng SetActive thông thường)
+        LoadHistoryFromServer();
+    }
+
     private void Start()
     {
-        if (historyPanel != null) historyPanel.SetActive(false);
+        if (historyPanel != null && !historyPanel.activeSelf) 
+        {
+            // Nếu panel đang tắt thì không cần làm gì
+        }
 
         if (closeButton != null)
         {
@@ -115,30 +124,35 @@ public class MatchHistoryUI : MonoBehaviour
     /// </summary>
     public void LoadHistoryFromServer()
     {
+        Debug.Log("[MatchHistoryUI] Bắt đầu gọi API LoadHistoryFromServer...");
+
         // 1. Kiểm tra trạng thái đăng nhập
         string token = PlayerPrefs.GetString("jwt_token", "");
         if (string.IsNullOrEmpty(token))
         {
-            ShowEmptyMessage("Vui lòng đăng nhập tài khoản để xem lịch sử đấu!");
+            Debug.LogWarning("[MatchHistoryUI] Chưa có jwt_token trong PlayerPrefs. Người chơi chưa đăng nhập!");
+            ShowEmptyMessage("<color=#FFAA00>Vui lòng đăng nhập tài khoản để xem lịch sử đấu!</color>");
             ClearContainerItems();
             return;
         }
 
         if (ApiClient.Instance == null)
         {
-            ShowEmptyMessage("Không thể kết nối tới dịch vụ mạng (ApiClient).");
+            Debug.LogError("[MatchHistoryUI] Không tìm thấy ApiClient.Instance!");
+            ShowEmptyMessage("<color=#FF4444>Không thể kết nối tới dịch vụ mạng (ApiClient).</color>");
             return;
         }
 
-        ShowEmptyMessage("Đang tải dữ liệu lịch sử đấu...");
+        ShowEmptyMessage("<color=#AAAAAA>Đang tải dữ liệu lịch sử đấu từ máy chủ...</color>");
 
         ApiClient.Instance.Get("/runhistory", (json) =>
         {
+            Debug.Log($"[MatchHistoryUI] Phản hồi từ /runhistory: {json}");
             try
             {
-                if (string.IsNullOrWhiteSpace(json) || json == "[]")
+                if (string.IsNullOrWhiteSpace(json) || json.Trim() == "[]")
                 {
-                    ShowEmptyMessage("Bạn chưa có trận đấu nào.\nHãy vào chơi một trận ngay!");
+                    ShowEmptyMessage("<color=#FFFFFF>Bạn chưa có trận đấu nào.\nHãy vào chơi một trận ngay!</color>");
                     ClearContainerItems();
                     return;
                 }
@@ -149,24 +163,25 @@ public class MatchHistoryUI : MonoBehaviour
 
                 if (wrapper != null && wrapper.items != null && wrapper.items.Length > 0)
                 {
+                    Debug.Log($"[MatchHistoryUI] Đã nhận được {wrapper.items.Length} trận đấu.");
                     HideEmptyMessage();
                     UpdateUI(wrapper.items);
                 }
                 else
                 {
-                    ShowEmptyMessage("Bạn chưa có trận đấu nào.\nHãy vào chơi một trận ngay!");
+                    ShowEmptyMessage("<color=#FFFFFF>Bạn chưa có trận đấu nào.\nHãy vào chơi một trận ngay!</color>");
                     ClearContainerItems();
                 }
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[MatchHistoryUI] Lỗi phân tích dữ liệu lịch sử: {ex.Message}");
-                ShowEmptyMessage("Lỗi xử lý dữ liệu lịch sử đấu.");
+                ShowEmptyMessage("<color=#FF4444>Lỗi xử lý dữ liệu lịch sử đấu.</color>");
             }
         }, (err) =>
         {
             Debug.LogError($"[MatchHistoryUI] Lỗi khi tải lịch sử đấu: {err}");
-            ShowEmptyMessage("Không thể tải lịch sử đấu từ máy chủ.\nVui lòng thử lại sau!");
+            ShowEmptyMessage($"<color=#FF4444>Lỗi tải lịch sử từ máy chủ: {err}</color>");
         });
     }
 
@@ -192,6 +207,7 @@ public class MatchHistoryUI : MonoBehaviour
         // Cách 2 (Fallback): Nạp vào 1 TextMeshPro dài duy nhất
         if (historyFullText != null)
         {
+            historyFullText.gameObject.SetActive(true);
             StringBuilder sb = new StringBuilder();
             foreach (var item in items)
             {
@@ -234,7 +250,7 @@ public class MatchHistoryUI : MonoBehaviour
                 Destroy(child.gameObject);
             }
         }
-        if (historyFullText != null)
+        if (historyFullText != null && historyFullText != emptyHistoryText)
         {
             historyFullText.text = "";
         }
@@ -251,7 +267,7 @@ public class MatchHistoryUI : MonoBehaviour
 
     private void HideEmptyMessage()
     {
-        if (emptyHistoryText != null)
+        if (emptyHistoryText != null && emptyHistoryText != historyFullText)
         {
             emptyHistoryText.gameObject.SetActive(false);
         }
