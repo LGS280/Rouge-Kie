@@ -330,9 +330,20 @@ public class WeaponManager : MonoBehaviour
         {
             nearbyWeapons.Remove(groundWeapon);
         }
+
+        // BỔ SUNG: Nếu đang trong phòng Co-op, gửi lệnh nhặt súng để xóa trên toàn bộ máy đồng đội
+        bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+        if (isMultiplayer && groundWeapon != null && !string.IsNullOrEmpty(groundWeapon.networkId))
+        {
+            NetworkManager.Instance.SendPickupGroundWeapon(groundWeapon.networkId);
+        }
+
         Destroy(groundWeapon.gameObject);
 
         SaveEquippedWeapons();
+
+        // BỔ SUNG: Đồng bộ ngay lập tức súng mới trên tay mình cho toàn bộ đồng đội thấy
+        SyncActiveWeaponToNetwork();
     }
 
     void SwapWeapon()
