@@ -238,7 +238,13 @@ public class MatchHistoryUI : MonoBehaviour
             }
         }
 
-        return $"{dateStr}{statusTag} <b>Stage {item.wavesSurvived}/5</b> | Time: {timeStr} | Kills: {item.enemiesKilled} | Dmg: {item.damageDealt:N0} | <color=#FFD700>+{item.currencyEarned} Coins</color>";
+        // DÒNG 1: Ngày giờ diễn ra + Trạng thái Thắng/Thua + Số Tầng vượt qua
+        string line1 = $"{dateStr}{statusTag} <b>Stage {item.wavesSurvived}/5</b>";
+
+        // DÒNG 2: Các thông số chi tiết (Thời lượng, Số quái hạ gục, Lượng sát thương, Vàng kiếm được)
+        string line2 = $"<color=#DDDDDD>Time: {timeStr} | Kills: {item.enemiesKilled} | Dmg: {item.damageDealt:N0} |</color> <color=#FFD700>+{item.currencyEarned} Coins</color>";
+
+        return $"{line1}\n{line2}";
     }
 
     private void ClearContainerItems()
