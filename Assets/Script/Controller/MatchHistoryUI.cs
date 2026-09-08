@@ -212,7 +212,7 @@ public class MatchHistoryUI : MonoBehaviour
             foreach (var item in items)
             {
                 sb.AppendLine(FormatItemText(item));
-                sb.AppendLine("<color=#444444>────────────────────────────────────────</color>");
+                sb.AppendLine("<size=6>\n</size>"); // Tạo khoảng trống đệm thoáng mắt giữa các trận, không cần vạch gạch
             }
             historyFullText.text = sb.ToString();
         }
