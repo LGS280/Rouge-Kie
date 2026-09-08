@@ -80,6 +80,9 @@ public class AcceptAllCerts : CertificateHandler
 
 public class LoginController : MonoBehaviour
 {
+    // Cờ ghi nhớ hành động đang chờ sau khi đăng nhập thành công ("SINGLEPLAYER", "COOP", hoặc "")
+    public static string PendingActionAfterLogin = "";
+
     [Header("Scene Pages")]
     [SerializeField] private GameObject loginPanel;
     [SerializeField] private GameObject registerPanel;
@@ -556,9 +559,30 @@ public class LoginController : MonoBehaviour
         // Cập nhật thông tin profile lên UI (Cập nhật từ dev)
         PlayerProfileUI.Instance?.RefreshProfile();
 
-        // Tự động gọi Menu chính mở sảnh Co-op
-        LobbyUIController lobbyUI = UnityEngine.Object.FindFirstObjectByType<LobbyUIController>();
-        if (lobbyUI != null) lobbyUI.OnCoOpButtonPressed();
+        // Điều hướng tự động dựa trên hành động người chơi đã chọn trước khi mở Login
+        if (PendingActionAfterLogin == "SINGLEPLAYER")
+        {
+            PendingActionAfterLogin = "";
+            MainMenuController mainMenu = UnityEngine.Object.FindFirstObjectByType<MainMenuController>();
+            if (mainMenu != null)
+            {
+                mainMenu.ProceedToSingleplayer();
+            }
+            else
+            {
+                if (LoadingScreenUI.Instance != null)
+                {
+                    LoadingScreenUI.Instance.ShowLoading("SẢNH CHỜ", "Đang di chuyển tới Sảnh Chờ...");
+                }
+                UnityEngine.SceneManagement.SceneManager.LoadScene("Lobby_Scene");
+            }
+        }
+        else if (PendingActionAfterLogin == "COOP")
+        {
+            PendingActionAfterLogin = "";
+            LobbyUIController lobbyUI = UnityEngine.Object.FindFirstObjectByType<LobbyUIController>();
+            if (lobbyUI != null) lobbyUI.OnCoOpButtonPressed();
+        }
 
         ShowLoginMessage("Đăng nhập thành công!", Color.green);
 
