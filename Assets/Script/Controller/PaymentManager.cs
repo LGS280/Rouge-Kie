@@ -170,25 +170,49 @@ public class PaymentManager : MonoBehaviour
     /// </summary>
     public void RequestPayment(int amount, string description = "Nap Gem RogueKie", string currencyType = "GEMS", Action<PaymentResponseData> onSuccess = null, Action<string> onError = null)
     {
-        // Luôn tạo đơn hàng trực tiếp với cổng PayOS API để nhận đúng tài khoản ảo (VQRQ...) và mã EMVCo chuẩn
-        StartCoroutine(CreatePayOSOrderDirectly(amount, description, (res) =>
-        {
-            onSuccess?.Invoke(res);
+        string token = PlayerPrefs.GetString("jwt_token", "");
 
-            // Nếu người chơi đã đăng nhập, đồng thời gửi thông tin đơn hàng lên Backend để lưu DB
-            string token = PlayerPrefs.GetString("jwt_token", "");
-            if (!string.IsNullOrEmpty(token))
+        // 1. Nếu đã đăng nhập: Gọi Backend API để tạo Transaction trong DB và nhận mã QR PayOS chuẩn
+        if (!string.IsNullOrEmpty(token))
+        {
+            var req = new CreatePaymentRequestData
             {
-                var req = new CreatePaymentRequestData
+                amount = amount,
+                description = description,
+                currencyType = currencyType
+            };
+
+            string json = JsonUtility.ToJson(req);
+            if (statusText != null) statusText.text = "Đang kết nối Backend tạo mã VietQR...";
+
+            ApiClient.Instance.Post("/Payment/create-payment-link", json, (responseJson) =>
+            {
+                try
                 {
-                    amount = amount,
-                    description = description,
-                    currencyType = currencyType
-                };
-                string json = JsonUtility.ToJson(req);
-                ApiClient.Instance.Post("/Payment/create-payment-link", json, null, null);
-            }
-        }, onError));
+                    PaymentResponseData res = JsonUtility.FromJson<PaymentResponseData>(responseJson);
+                    currentPaymentUrl = res.paymentUrl;
+                    currentOrderCode = res.orderCode;
+
+                    Debug.Log($"[PaymentManager] Backend tạo đơn thành công! OrderCode: {res.orderCode}, URL: {res.paymentUrl}");
+                    ShowQRModal(res);
+                    onSuccess?.Invoke(res);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"[PaymentManager] Parse Backend response lỗi ({ex.Message}) -> Chuyển sang tạo đơn PayOS trực tiếp.");
+                    StartCoroutine(CreatePayOSOrderDirectly(amount, description, onSuccess, onError));
+                }
+            }, (err) =>
+            {
+                Debug.LogWarning($"[PaymentManager] Backend API lỗi ({err}) -> Chuyển sang tạo đơn PayOS trực tiếp.");
+                StartCoroutine(CreatePayOSOrderDirectly(amount, description, onSuccess, onError));
+            });
+        }
+        else
+        {
+            // 2. Nếu chưa đăng nhập (Guest mode): Tạo đơn hàng trực tiếp với PayOS API
+            StartCoroutine(CreatePayOSOrderDirectly(amount, description, onSuccess, onError));
+        }
     }
 
     /// <summary>
@@ -384,7 +408,7 @@ public class PaymentManager : MonoBehaviour
                 Debug.LogWarning($"[PaymentManager] Không thể tải ảnh VietQR: {www.error}");
                 if (statusText != null)
                 {
-                    statusText.text = "<color=yellow>Không tải được ảnh QR. Hãy bấm 'MỞ TRÌNH DUYỆT' hoặc 'TEST GIẢ LẬP'!</color>";
+                    statusText.text = "<color=yellow>Không thể tải mã QR. Vui lòng đóng và thử lại!</color>";
                 }
             }
         }
@@ -444,6 +468,13 @@ public class PaymentManager : MonoBehaviour
     {
         Debug.Log($"[PaymentManager] Giao dịch OrderCode {orderCode} đã được THANH TOÁN thành công!");
         if (statusText != null) statusText.text = "<color=green>Thanh toán thành công! Súng đã xuất hiện trên bàn!</color>";
+
+        // Gọi Backend để đồng bộ trạng thái đơn hàng sang PAID trong Database
+        string token = PlayerPrefs.GetString("jwt_token", "");
+        if (!string.IsNullOrEmpty(token))
+        {
+            ApiClient.Instance.Get($"/Payment/check-status/{orderCode}", null, null);
+        }
 
         // Tự động làm mới UI Profile Gems/Coins người chơi
         if (PlayerProfileUI.Instance != null)
@@ -564,7 +595,7 @@ public class PaymentManager : MonoBehaviour
         dialogRect.anchorMax = new Vector2(0.5f, 0.5f);
         dialogRect.pivot = new Vector2(0.5f, 0.5f);
         dialogRect.anchoredPosition = Vector2.zero;
-        dialogRect.sizeDelta = new Vector2(520, 680);
+        dialogRect.sizeDelta = new Vector2(480, 500);
         dialogRect.localScale = Vector3.one;
 
         Image dialogImg = dialog.GetComponent<Image>();
@@ -574,13 +605,13 @@ public class PaymentManager : MonoBehaviour
         GameObject headerObj = new GameObject("HeaderTitle", typeof(RectTransform), typeof(TextMeshProUGUI));
         headerObj.transform.SetParent(dialog.transform, false);
         RectTransform headerRect = headerObj.GetComponent<RectTransform>();
-        headerRect.anchoredPosition = new Vector2(0, 305);
-        headerRect.sizeDelta = new Vector2(460, 40);
+        headerRect.anchoredPosition = new Vector2(0, 215);
+        headerRect.sizeDelta = new Vector2(400, 36);
         headerRect.localScale = Vector3.one;
 
         TextMeshProUGUI headerTxt = headerObj.GetComponent<TextMeshProUGUI>();
         headerTxt.text = "THANH TOÁN VIETQR";
-        headerTxt.fontSize = 24;
+        headerTxt.fontSize = 22;
         headerTxt.color = new Color(1f, 0.85f, 0.3f);
         headerTxt.alignment = TextAlignmentOptions.Center;
         headerTxt.fontStyle = FontStyles.Bold;
@@ -589,8 +620,8 @@ public class PaymentManager : MonoBehaviour
         GameObject closeObj = new GameObject("CloseButton", typeof(RectTransform), typeof(Image), typeof(Button));
         closeObj.transform.SetParent(dialog.transform, false);
         RectTransform closeRect = closeObj.GetComponent<RectTransform>();
-        closeRect.anchoredPosition = new Vector2(225, 305);
-        closeRect.sizeDelta = new Vector2(36, 36);
+        closeRect.anchoredPosition = new Vector2(205, 215);
+        closeRect.sizeDelta = new Vector2(34, 34);
         closeRect.localScale = Vector3.one;
 
         Image closeImg = closeObj.GetComponent<Image>();
@@ -607,7 +638,7 @@ public class PaymentManager : MonoBehaviour
 
         TextMeshProUGUI closeTxt = closeTxtObj.GetComponent<TextMeshProUGUI>();
         closeTxt.text = "X";
-        closeTxt.fontSize = 20;
+        closeTxt.fontSize = 18;
         closeTxt.color = Color.white;
         closeTxt.alignment = TextAlignmentOptions.Center;
         closeTxt.fontStyle = FontStyles.Bold;
@@ -620,26 +651,26 @@ public class PaymentManager : MonoBehaviour
         GameObject orderObj = new GameObject("OrderCodeText", typeof(RectTransform), typeof(TextMeshProUGUI));
         orderObj.transform.SetParent(dialog.transform, false);
         RectTransform orderRect = orderObj.GetComponent<RectTransform>();
-        orderRect.anchoredPosition = new Vector2(0, 265);
-        orderRect.sizeDelta = new Vector2(460, 26);
+        orderRect.anchoredPosition = new Vector2(0, 180);
+        orderRect.sizeDelta = new Vector2(420, 24);
         orderRect.localScale = Vector3.one;
 
         orderCodeText = orderObj.GetComponent<TextMeshProUGUI>();
         orderCodeText.text = "Mã đơn: #------";
-        orderCodeText.fontSize = 16;
+        orderCodeText.fontSize = 15;
         orderCodeText.color = new Color(0.7f, 0.85f, 1f);
         orderCodeText.alignment = TextAlignmentOptions.Center;
 
         GameObject amountObj = new GameObject("AmountText", typeof(RectTransform), typeof(TextMeshProUGUI));
         amountObj.transform.SetParent(dialog.transform, false);
         RectTransform amountRect = amountObj.GetComponent<RectTransform>();
-        amountRect.anchoredPosition = new Vector2(0, 235);
-        amountRect.sizeDelta = new Vector2(460, 32);
+        amountRect.anchoredPosition = new Vector2(0, 152);
+        amountRect.sizeDelta = new Vector2(420, 28);
         amountRect.localScale = Vector3.one;
 
         amountText = amountObj.GetComponent<TextMeshProUGUI>();
         amountText.text = "Số tiền: -- VNĐ";
-        amountText.fontSize = 22;
+        amountText.fontSize = 20;
         amountText.color = new Color(0.35f, 0.95f, 0.45f);
         amountText.alignment = TextAlignmentOptions.Center;
         amountText.fontStyle = FontStyles.Bold;
@@ -648,8 +679,8 @@ public class PaymentManager : MonoBehaviour
         GameObject qrBg = new GameObject("QRBackground", typeof(RectTransform), typeof(Image));
         qrBg.transform.SetParent(dialog.transform, false);
         RectTransform qrBgRect = qrBg.GetComponent<RectTransform>();
-        qrBgRect.anchoredPosition = new Vector2(0, 85);
-        qrBgRect.sizeDelta = new Vector2(250, 250);
+        qrBgRect.anchoredPosition = new Vector2(0, 15);
+        qrBgRect.sizeDelta = new Vector2(230, 230);
         qrBgRect.localScale = Vector3.one;
         Image qrBgImg = qrBg.GetComponent<Image>();
         qrBgImg.color = Color.white;
@@ -684,8 +715,8 @@ public class PaymentManager : MonoBehaviour
         GameObject statusObj = new GameObject("StatusText", typeof(RectTransform), typeof(TextMeshProUGUI));
         statusObj.transform.SetParent(dialog.transform, false);
         RectTransform statusRect = statusObj.GetComponent<RectTransform>();
-        statusRect.anchoredPosition = new Vector2(0, -60);
-        statusRect.sizeDelta = new Vector2(480, 36);
+        statusRect.anchoredPosition = new Vector2(0, -125);
+        statusRect.sizeDelta = new Vector2(440, 30);
         statusRect.localScale = Vector3.one;
 
         statusText = statusObj.GetComponent<TextMeshProUGUI>();
@@ -694,74 +725,12 @@ public class PaymentManager : MonoBehaviour
         statusText.color = new Color(0.9f, 0.9f, 0.9f);
         statusText.alignment = TextAlignmentOptions.Center;
 
-        // 7. Nút Mở Trình Duyệt Web
-        GameObject browserBtnObj = new GameObject("OpenBrowserButton", typeof(RectTransform), typeof(Image), typeof(Button));
-        browserBtnObj.transform.SetParent(dialog.transform, false);
-        RectTransform browserRect = browserBtnObj.GetComponent<RectTransform>();
-        browserRect.anchoredPosition = new Vector2(0, -115);
-        browserRect.sizeDelta = new Vector2(400, 42);
-        browserRect.localScale = Vector3.one;
-
-        Image browserImg = browserBtnObj.GetComponent<Image>();
-        browserImg.color = new Color(0.15f, 0.45f, 0.75f);
-
-        GameObject browserTxtObj = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
-        browserTxtObj.transform.SetParent(browserBtnObj.transform, false);
-        RectTransform browserTxtRect = browserTxtObj.GetComponent<RectTransform>();
-        browserTxtRect.anchorMin = Vector2.zero;
-        browserTxtRect.anchorMax = Vector2.one;
-        browserTxtRect.offsetMin = Vector2.zero;
-        browserTxtRect.offsetMax = Vector2.zero;
-        browserTxtRect.localScale = Vector3.one;
-
-        TextMeshProUGUI browserTxt = browserTxtObj.GetComponent<TextMeshProUGUI>();
-        browserTxt.text = "MỞ TRÌNH DUYỆT THANH TOÁN";
-        browserTxt.fontSize = 14;
-        browserTxt.color = Color.white;
-        browserTxt.alignment = TextAlignmentOptions.Center;
-        browserTxt.fontStyle = FontStyles.Bold;
-
-        openBrowserButton = browserBtnObj.GetComponent<Button>();
-        openBrowserButton.onClick.RemoveAllListeners();
-        openBrowserButton.onClick.AddListener(OpenPaymentInBrowser);
-
-        // 8. Nút Giả Lập Thanh Toán Thành Công (Dev Test)
-        GameObject devBtnObj = new GameObject("DevSimulateButton", typeof(RectTransform), typeof(Image), typeof(Button));
-        devBtnObj.transform.SetParent(dialog.transform, false);
-        RectTransform devRect = devBtnObj.GetComponent<RectTransform>();
-        devRect.anchoredPosition = new Vector2(0, -170);
-        devRect.sizeDelta = new Vector2(400, 42);
-        devRect.localScale = Vector3.one;
-
-        Image devImg = devBtnObj.GetComponent<Image>();
-        devImg.color = new Color(0.2f, 0.65f, 0.35f);
-
-        GameObject devTxtObj = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
-        devTxtObj.transform.SetParent(devBtnObj.transform, false);
-        RectTransform devTxtRect = devTxtObj.GetComponent<RectTransform>();
-        devTxtRect.anchorMin = Vector2.zero;
-        devTxtRect.anchorMax = Vector2.one;
-        devTxtRect.offsetMin = Vector2.zero;
-        devTxtRect.offsetMax = Vector2.zero;
-        devTxtRect.localScale = Vector3.one;
-
-        TextMeshProUGUI devTxt = devTxtObj.GetComponent<TextMeshProUGUI>();
-        devTxt.text = "TEST GIẢ LẬP THANH TOÁN (DEV)";
-        devTxt.fontSize = 14;
-        devTxt.color = Color.white;
-        devTxt.alignment = TextAlignmentOptions.Center;
-        devTxt.fontStyle = FontStyles.Bold;
-
-        devSimulateSuccessButton = devBtnObj.GetComponent<Button>();
-        devSimulateSuccessButton.onClick.RemoveAllListeners();
-        devSimulateSuccessButton.onClick.AddListener(TriggerDevSimulateSuccess);
-
-        // 9. Nút Hủy / Đóng giao dịch phía dưới
+        // 7. Nút Hủy / Đóng giao dịch phía dưới
         GameObject cancelBtnObj = new GameObject("CancelButton", typeof(RectTransform), typeof(Image), typeof(Button));
         cancelBtnObj.transform.SetParent(dialog.transform, false);
         RectTransform cancelRect = cancelBtnObj.GetComponent<RectTransform>();
-        cancelRect.anchoredPosition = new Vector2(0, -225);
-        cancelRect.sizeDelta = new Vector2(400, 40);
+        cancelRect.anchoredPosition = new Vector2(0, -190);
+        cancelRect.sizeDelta = new Vector2(360, 42);
         cancelRect.localScale = Vector3.one;
 
         Image cancelImg = cancelBtnObj.GetComponent<Image>();
