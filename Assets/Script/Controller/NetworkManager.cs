@@ -101,7 +101,7 @@ public class NetworkManager : MonoBehaviour
     // BỔ SUNG: Sự kiện đồng bộ nhặt vũ khí rơi trên sàn (groundWeaponId)
     public event Action<string> OnGroundWeaponPickedUp;
 
-    // BỔ SUNG: Sự kiện đồng bộ vứt vũ khí cũ ra sàn (weaponName, posX, posY, groundWeaponId)
+    // BỔ SUNG: Sự kiện đồng bộ khi người chơi vứt vũ khí cũ ra sàn (weaponName, posX, posY, groundWeaponId)
     public event Action<string, float, float, string> OnWeaponDropped;
 
     public string MyConnectionId => hubConnection?.ConnectionId;
@@ -266,7 +266,7 @@ public class NetworkManager : MonoBehaviour
             unityContext.Post(_ => OnGroundWeaponPickedUp?.Invoke(groundWeaponId), null);
         });
 
-        // BỔ SUNG: Lắng nghe sự kiện vứt vũ khí cũ ra sàn từ Server
+        // BỔ SUNG: Lắng nghe sự kiện vứt vũ khí cũ ra sàn từ đồng đội
         hubConnection.On<string, float, float, string>("OnWeaponDropped", (weaponName, posX, posY, groundWeaponId) =>
         {
             unityContext.Post(_ => OnWeaponDropped?.Invoke(weaponName, posX, posY, groundWeaponId), null);
@@ -690,7 +690,7 @@ public class NetworkManager : MonoBehaviour
         }
     }
 
-    // BỔ SUNG: Gửi sự kiện vứt vũ khí cũ ra sàn qua SignalR cho cả phòng cùng thấy
+    // BỔ SUNG: Gửi sự kiện vứt vũ khí cũ ra sàn qua SignalR
     public async void SendDropWeapon(string weaponName, float posX, float posY, string groundWeaponId)
     {
         try
@@ -698,7 +698,7 @@ public class NetworkManager : MonoBehaviour
             if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
             {
                 await hubConnection.InvokeAsync("SyncDropWeapon", CurrentRoomId, weaponName, posX, posY, groundWeaponId);
-                Debug.Log($"[NetworkManager] Đã gửi thông báo vứt súng '{weaponName}' ({groundWeaponId}) tại ({posX}, {posY}) lên Server.");
+                Debug.Log($"[NetworkManager] Đã gửi thông báo vứt súng '{weaponName}' (ID: {groundWeaponId}) tại ({posX}, {posY}) lên Server.");
             }
         }
         catch (Exception ex)

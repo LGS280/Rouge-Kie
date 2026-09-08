@@ -73,7 +73,7 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnPlayerRevived += HandlePlayerRevived;
             NetworkManager.Instance.OnHostDisconnectedEndGame += HandleHostDisconnectedEndGame;
 
-            // BỔ SUNG: Đăng ký sự kiện mở rương và nhặt súng dùng chung
+            // BỔ SUNG: Đăng ký sự kiện mở rương, nhặt súng dùng chung và vứt súng
             NetworkManager.Instance.OnChestOpened += HandleRemoteChestOpened;
             NetworkManager.Instance.OnGroundWeaponPickedUp += HandleRemoteGroundWeaponPickedUp;
             NetworkManager.Instance.OnWeaponDropped += HandleRemoteWeaponDropped;
@@ -102,7 +102,7 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnPlayerRevived -= HandlePlayerRevived;
             NetworkManager.Instance.OnHostDisconnectedEndGame -= HandleHostDisconnectedEndGame;
 
-            // BỔ SUNG: Hủy đăng ký sự kiện mở rương và nhặt súng dùng chung
+            // BỔ SUNG: Hủy đăng ký sự kiện mở rương, nhặt súng dùng chung và vứt súng
             NetworkManager.Instance.OnChestOpened -= HandleRemoteChestOpened;
             NetworkManager.Instance.OnGroundWeaponPickedUp -= HandleRemoteGroundWeaponPickedUp;
             NetworkManager.Instance.OnWeaponDropped -= HandleRemoteWeaponDropped;
@@ -829,12 +829,12 @@ public class MultiplayerSyncManager : MonoBehaviour
         }
     }
 
-    // BỔ SUNG: Xử lý khi đồng đội vứt súng cũ ra sàn -> Tạo súng rơi đồng bộ trên máy mình
+    // BỔ SUNG: Xử lý khi đồng đội vứt vũ khí cũ ra sàn -> Hiển thị súng trên sàn với đúng networkId
     private void HandleRemoteWeaponDropped(string weaponName, float posX, float posY, string groundWeaponId)
     {
-        Debug.Log($"[MultiplayerSyncManager] Đồng đội vứt súng '{weaponName}' ({groundWeaponId}) tại ({posX}, {posY})");
+        Debug.Log($"[MultiplayerSyncManager] Đồng đội vứt súng '{weaponName}' (ID: {groundWeaponId}) tại ({posX}, {posY})");
 
-        // Kiểm tra xem trên sàn đã có súng mang networkId này chưa để tránh tạo trùng
+        // Kiểm tra xem vũ khí này đã tồn tại trên sàn chưa để tránh trùng lặp
         GroundWeapon[] allGroundWeapons = Object.FindObjectsByType<GroundWeapon>(FindObjectsSortMode.None);
         foreach (var gw in allGroundWeapons)
         {
@@ -844,14 +844,15 @@ public class MultiplayerSyncManager : MonoBehaviour
             }
         }
 
-        GameObject prefab = FindWeaponPrefabByName(weaponName);
-        if (prefab != null)
+        GameObject weaponPrefab = FindWeaponPrefabByName(weaponName);
+        if (weaponPrefab != null)
         {
-            GroundWeapon.Create(prefab, new Vector3(posX, posY, 0), groundWeaponId);
+            Vector3 spawnPos = new Vector3(posX, posY, 0);
+            GroundWeapon.Create(weaponPrefab, spawnPos, groundWeaponId);
         }
         else
         {
-            Debug.LogWarning($"[MultiplayerSyncManager] Không tìm thấy prefab súng '{weaponName}' để rơi ra sàn!");
+            Debug.LogWarning($"[MultiplayerSyncManager] Không tìm thấy prefab vũ khí cho '{weaponName}' khi đồng đội vứt súng!");
         }
     }
 }

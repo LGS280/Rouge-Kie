@@ -261,6 +261,7 @@ public class WeaponManager : MonoBehaviour
         }
 
         GameObject currentHandWeapon = isUsingSlot1 ? weaponSlot1 : weaponSlot2;
+        bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
 
         if (currentHandWeapon != null)
         {
@@ -301,14 +302,13 @@ public class WeaponManager : MonoBehaviour
 
             if (oldWeaponPrefab != null)
             {
-                string oldWeaponName = oldWeaponPrefab.name.Replace("(Clone)", "").Trim();
-                string dropNetworkId = $"drop_{oldWeaponName}_{Mathf.RoundToInt(transform.position.x * 10)}_{Mathf.RoundToInt(transform.position.y * 10)}_{Random.Range(100, 999)}";
+                string oldCleanName = oldWeaponPrefab.name.Replace("(Clone)", "").Trim();
+                string dropNetworkId = $"drop_{oldCleanName}_{Mathf.RoundToInt(transform.position.x * 10)}_{Mathf.RoundToInt(transform.position.y * 10)}_{Random.Range(100, 999)}";
                 GroundWeapon.Create(oldWeaponPrefab, transform.position, dropNetworkId);
 
-                bool isCoop = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
-                if (isCoop)
+                if (isMultiplayer)
                 {
-                    NetworkManager.Instance.SendDropWeapon(oldWeaponName, transform.position.x, transform.position.y, dropNetworkId);
+                    NetworkManager.Instance.SendDropWeapon(oldCleanName, transform.position.x, transform.position.y, dropNetworkId);
                 }
             }
             else
@@ -338,7 +338,6 @@ public class WeaponManager : MonoBehaviour
         }
 
         // BỔ SUNG: Nếu đang trong phòng Co-op, gửi lệnh nhặt súng để xóa trên toàn bộ máy đồng đội
-        bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
         if (isMultiplayer && groundWeapon != null && !string.IsNullOrEmpty(groundWeapon.networkId))
         {
             NetworkManager.Instance.SendPickupGroundWeapon(groundWeapon.networkId);
