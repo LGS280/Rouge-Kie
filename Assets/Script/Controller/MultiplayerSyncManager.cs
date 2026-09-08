@@ -76,6 +76,7 @@ public class MultiplayerSyncManager : MonoBehaviour
             // BỔ SUNG: Đăng ký sự kiện mở rương và nhặt súng dùng chung
             NetworkManager.Instance.OnChestOpened += HandleRemoteChestOpened;
             NetworkManager.Instance.OnGroundWeaponPickedUp += HandleRemoteGroundWeaponPickedUp;
+            NetworkManager.Instance.OnWeaponDropped += HandleRemoteWeaponDropped;
         }
     }
 
@@ -104,6 +105,7 @@ public class MultiplayerSyncManager : MonoBehaviour
             // BỔ SUNG: Hủy đăng ký sự kiện mở rương và nhặt súng dùng chung
             NetworkManager.Instance.OnChestOpened -= HandleRemoteChestOpened;
             NetworkManager.Instance.OnGroundWeaponPickedUp -= HandleRemoteGroundWeaponPickedUp;
+            NetworkManager.Instance.OnWeaponDropped -= HandleRemoteWeaponDropped;
         }
     }
 
@@ -824,6 +826,32 @@ public class MultiplayerSyncManager : MonoBehaviour
                 Destroy(gw.gameObject);
                 break;
             }
+        }
+    }
+
+    // BỔ SUNG: Xử lý khi đồng đội vứt súng cũ ra sàn -> Tạo súng rơi đồng bộ trên máy mình
+    private void HandleRemoteWeaponDropped(string weaponName, float posX, float posY, string groundWeaponId)
+    {
+        Debug.Log($"[MultiplayerSyncManager] Đồng đội vứt súng '{weaponName}' ({groundWeaponId}) tại ({posX}, {posY})");
+
+        // Kiểm tra xem trên sàn đã có súng mang networkId này chưa để tránh tạo trùng
+        GroundWeapon[] allGroundWeapons = Object.FindObjectsByType<GroundWeapon>(FindObjectsSortMode.None);
+        foreach (var gw in allGroundWeapons)
+        {
+            if (gw != null && gw.networkId == groundWeaponId)
+            {
+                return;
+            }
+        }
+
+        GameObject prefab = FindWeaponPrefabByName(weaponName);
+        if (prefab != null)
+        {
+            GroundWeapon.Create(prefab, new Vector3(posX, posY, 0), groundWeaponId);
+        }
+        else
+        {
+            Debug.LogWarning($"[MultiplayerSyncManager] Không tìm thấy prefab súng '{weaponName}' để rơi ra sàn!");
         }
     }
 }

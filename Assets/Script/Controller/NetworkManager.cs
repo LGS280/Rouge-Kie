@@ -101,6 +101,9 @@ public class NetworkManager : MonoBehaviour
     // BỔ SUNG: Sự kiện đồng bộ nhặt vũ khí rơi trên sàn (groundWeaponId)
     public event Action<string> OnGroundWeaponPickedUp;
 
+    // BỔ SUNG: Sự kiện đồng bộ vứt vũ khí cũ ra sàn (weaponName, posX, posY, groundWeaponId)
+    public event Action<string, float, float, string> OnWeaponDropped;
+
     public string MyConnectionId => hubConnection?.ConnectionId;
 
     // QUYỀN HẠN TRONG TRẬN: Sẽ được Server định đoạt khi tạo hoặc vào phòng thành công
@@ -261,6 +264,12 @@ public class NetworkManager : MonoBehaviour
         hubConnection.On<string>("OnGroundWeaponPickedUp", (groundWeaponId) =>
         {
             unityContext.Post(_ => OnGroundWeaponPickedUp?.Invoke(groundWeaponId), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện vứt vũ khí cũ ra sàn từ Server
+        hubConnection.On<string, float, float, string>("OnWeaponDropped", (weaponName, posX, posY, groundWeaponId) =>
+        {
+            unityContext.Post(_ => OnWeaponDropped?.Invoke(weaponName, posX, posY, groundWeaponId), null);
         });
 
         // BỔ SUNG: Lắng nghe danh sách phòng từ Server trả về
@@ -678,6 +687,23 @@ public class NetworkManager : MonoBehaviour
         catch (Exception ex)
         {
             Debug.LogWarning($"[NetworkManager] SendPickupGroundWeapon gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi sự kiện vứt vũ khí cũ ra sàn qua SignalR cho cả phòng cùng thấy
+    public async void SendDropWeapon(string weaponName, float posX, float posY, string groundWeaponId)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncDropWeapon", CurrentRoomId, weaponName, posX, posY, groundWeaponId);
+                Debug.Log($"[NetworkManager] Đã gửi thông báo vứt súng '{weaponName}' ({groundWeaponId}) tại ({posX}, {posY}) lên Server.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendDropWeapon gián đoạn: {ex.Message}");
         }
     }
 }

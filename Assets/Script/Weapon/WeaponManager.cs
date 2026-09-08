@@ -301,9 +301,15 @@ public class WeaponManager : MonoBehaviour
 
             if (oldWeaponPrefab != null)
             {
+                string oldWeaponName = oldWeaponPrefab.name.Replace("(Clone)", "").Trim();
+                string dropNetworkId = $"drop_{oldWeaponName}_{Mathf.RoundToInt(transform.position.x * 10)}_{Mathf.RoundToInt(transform.position.y * 10)}_{Random.Range(100, 999)}";
+                GroundWeapon.Create(oldWeaponPrefab, transform.position, dropNetworkId);
 
-                GroundWeapon.Create(oldWeaponPrefab, transform.position);
-
+                bool isCoop = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+                if (isCoop)
+                {
+                    NetworkManager.Instance.SendDropWeapon(oldWeaponName, transform.position.x, transform.position.y, dropNetworkId);
+                }
             }
             else
             {
