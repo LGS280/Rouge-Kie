@@ -77,6 +77,9 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnChestOpened += HandleRemoteChestOpened;
             NetworkManager.Instance.OnGroundWeaponPickedUp += HandleRemoteGroundWeaponPickedUp;
             NetworkManager.Instance.OnWeaponDropped += HandleRemoteWeaponDropped;
+
+            // BỔ SUNG: Đăng ký sự kiện Boss tấn công từ máy Host
+            NetworkManager.Instance.OnBossAttack += HandleRemoteBossAttack;
         }
     }
 
@@ -106,6 +109,9 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnChestOpened -= HandleRemoteChestOpened;
             NetworkManager.Instance.OnGroundWeaponPickedUp -= HandleRemoteGroundWeaponPickedUp;
             NetworkManager.Instance.OnWeaponDropped -= HandleRemoteWeaponDropped;
+
+            // BỔ SUNG: Hủy đăng ký sự kiện Boss tấn công từ máy Host
+            NetworkManager.Instance.OnBossAttack -= HandleRemoteBossAttack;
         }
     }
 
@@ -853,6 +859,20 @@ public class MultiplayerSyncManager : MonoBehaviour
         else
         {
             Debug.LogWarning($"[MultiplayerSyncManager] Không tìm thấy prefab vũ khí cho '{weaponName}' khi đồng đội vứt súng!");
+        }
+    }
+
+    // BỔ SUNG: Xử lý khi nhận sự kiện Boss tấn công từ máy Host
+    private void HandleRemoteBossAttack(string bossId, float targetX, float targetY)
+    {
+        GameObject bossObj = FindEnemyByNetworkId(bossId);
+        if (bossObj != null)
+        {
+            MelogBossAI melogAI = bossObj.GetComponent<MelogBossAI>();
+            if (melogAI != null)
+            {
+                melogAI.ExecuteNetworkAttack(new Vector2(targetX, targetY));
+            }
         }
     }
 }

@@ -119,6 +119,7 @@ public class MelogBossAI : MonoBehaviour
                 if (myRoom == null && targetPlayer != null && Vector2.Distance(transform.position, targetPlayer.position) <= detectRange)
                 {
                     isRoomActivated = true;
+                    NotifyBossHealthBar();
                 }
                 else
                 {
@@ -146,21 +147,7 @@ public class MelogBossAI : MonoBehaviour
         }
         else
         {
-
             FindNearestPlayer();
-
-            if (targetPlayer != null && melogWeaponAim != null)
-            {
-                float dist = Vector2.Distance(transform.position, targetPlayer.position);
-                if (dist <= attackRange && Time.time >= nextAttackTime)
-                {
-                    if (animator != null) animator.SetTrigger("attack");
-                    melogWeaponAim.FireBothGuns(targetPlayer.position, 0);
-
-                    float dbFireRate = GetWeaponFireRateFromDb();
-                    nextAttackTime = Time.time + dbFireRate;
-                }
-            }
 
             if (hasFirstNetworkPos)
             {
@@ -372,8 +359,14 @@ public class MelogBossAI : MonoBehaviour
 
         if (melogWeaponAim != null)
         {
-
             melogWeaponAim.FireBothGuns(targetPlayer.position, 0);
+        }
+
+        // BỔ SUNG: Nếu đang trong phòng Co-op và là Host, gửi sự kiện xả đạn cho các máy Client
+        bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+        if (isMultiplayer && isHost && mobNetworkIdentity != null && !string.IsNullOrEmpty(mobNetworkIdentity.networkId))
+        {
+            NetworkManager.Instance.SendBossAttack(mobNetworkIdentity.networkId, targetPlayer.position.x, targetPlayer.position.y);
         }
 
         nextAttackTime = Time.time + GetWeaponFireRateFromDb();
@@ -442,10 +435,38 @@ public class MelogBossAI : MonoBehaviour
     public void ActivateMob()
     {
         isRoomActivated = true;
+        NotifyBossHealthBar();
+    }
+
+    private void NotifyBossHealthBar()
+    {
+        if (BossHealthBarUI.Instance != null && mobHealth != null)
+        {
+            string displayName = "MELOG - THE GATLING WARLORD";
+            int floor = 1;
+            if (GameProgressionManager.Instance != null) floor = GameProgressionManager.Instance.currentFloor;
+            if (floor >= 5) displayName = "ELITE BOSS - GOLIATH ROOT";
+            else displayName = $"MELOG - FLOOR {floor}";
+
+            BossHealthBarUI.Instance.ShowBossBar(displayName, mobHealth);
+        }
     }
 
     public bool IsCombatActivated()
     {
         return isRoomActivated;
+    }
+
+    // BỔ SUNG: Nhận lệnh mạng từ Host để xả đạn đồng bộ
+    public void ExecuteNetworkAttack(Vector2 targetPos)
+    {
+        UpdateBossFacing(targetPos.x - transform.position.x);
+
+        if (animator != null) animator.SetTrigger("attack");
+
+        if (melogWeaponAim != null)
+        {
+            melogWeaponAim.FireBothGuns(targetPos, 0);
+        }
     }
 }

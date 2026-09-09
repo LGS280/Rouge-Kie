@@ -104,6 +104,9 @@ public class NetworkManager : MonoBehaviour
     // BỔ SUNG: Sự kiện đồng bộ khi người chơi vứt vũ khí cũ ra sàn (weaponName, posX, posY, groundWeaponId)
     public event Action<string, float, float, string> OnWeaponDropped;
 
+    // BỔ SUNG: Sự kiện đồng bộ khi Boss xả đạn (bossId, targetX, targetY)
+    public event Action<string, float, float> OnBossAttack;
+
     public string MyConnectionId => hubConnection?.ConnectionId;
 
     // QUYỀN HẠN TRONG TRẬN: Sẽ được Server định đoạt khi tạo hoặc vào phòng thành công
@@ -270,6 +273,12 @@ public class NetworkManager : MonoBehaviour
         hubConnection.On<string, float, float, string>("OnWeaponDropped", (weaponName, posX, posY, groundWeaponId) =>
         {
             unityContext.Post(_ => OnWeaponDropped?.Invoke(weaponName, posX, posY, groundWeaponId), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện Boss tấn công (xả đạn) từ Server
+        hubConnection.On<string, float, float>("OnBossAttack", (bossId, targetX, targetY) =>
+        {
+            unityContext.Post(_ => OnBossAttack?.Invoke(bossId, targetX, targetY), null);
         });
 
         // BỔ SUNG: Lắng nghe danh sách phòng từ Server trả về
@@ -704,6 +713,22 @@ public class NetworkManager : MonoBehaviour
         catch (Exception ex)
         {
             Debug.LogWarning($"[NetworkManager] SendDropWeapon gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi sự kiện Boss xả đạn qua SignalR
+    public async void SendBossAttack(string bossId, float targetX, float targetY)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncBossAttack", CurrentRoomId, bossId, targetX, targetY);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendBossAttack gián đoạn: {ex.Message}");
         }
     }
 }
