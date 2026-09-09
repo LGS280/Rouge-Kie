@@ -57,6 +57,9 @@ public class WeaponInfo : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
+        if (UnityEditor.EditorApplication.isUpdating || UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+            return;
+
         if (weaponPrefab == null)
         {
             string myPath = UnityEditor.AssetDatabase.GetAssetPath(gameObject);
@@ -87,8 +90,29 @@ public class WeaponInfo : MonoBehaviour
                 if (prefab != null) list.Add(prefab);
             }
         }
-        allPlayerBulletPrefabs = list.ToArray();
-        UnityEditor.EditorUtility.SetDirty(this);
+
+        bool isChanged = false;
+        if (allPlayerBulletPrefabs == null || allPlayerBulletPrefabs.Length != list.Count)
+        {
+            isChanged = true;
+        }
+        else
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (allPlayerBulletPrefabs[i] != list[i])
+                {
+                    isChanged = true;
+                    break;
+                }
+            }
+        }
+
+        if (isChanged)
+        {
+            allPlayerBulletPrefabs = list.ToArray();
+            UnityEditor.EditorUtility.SetDirty(this);
+        }
     }
 #endif
 
