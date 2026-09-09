@@ -137,15 +137,16 @@ public class ShopUIController : MonoBehaviour
     /// </summary>
     public void BuyGemPackage(int amountVnd, string description)
     {
+
         if (PaymentManager.Instance != null)
         {
             // Lưu lại thông tin súng mua bằng VietQR để sinh ra bàn khi thanh toán xong
             string prefabPath = GetPrefabPathByDescription(description);
+            PaymentManager.Instance.pendingBoughtWeaponPrefab = prefabPath;
 
             PaymentManager.Instance.RequestPayment(amountVnd, description, "GEMS", (res) =>
             {
                 if (statusText != null) statusText.text = "VietQR Code generated! Scan to pay.";
-                PaymentManager.Instance.pendingBoughtWeaponPrefab = prefabPath;
             }, (err) =>
             {
                 if (statusText != null) statusText.text = "Payment request failed.";
@@ -442,9 +443,9 @@ public class ShopUIController : MonoBehaviour
         CreateShopCard(coinTabContent.transform, "Rocket Launcher", "1,200 Coins", "Súng Bazooka Rocket nổ diện rộng", "MUA (1.2K COINS)", "Weapons/Rocket_Launcher", () => BuyShopItem(3));
 
         // 5b. Súng VIP mua trực tiếp bằng Tiền Thật qua VietQR (PayOS)
-        CreateShopCard(gemTabContent.transform, "AK-47 Gold VIP", "50,000 VNĐ", "Thanh toán VietQR mua súng AK-47 Gold VIP", "MUA NGAY (50K VNĐ)", "Weapons/AK_47A_Gold", () => BuyGemPackage(50000, "Mua AK-47 Gold VIP"));
-        CreateShopCard(gemTabContent.transform, "Missile Launcher VIP", "100,000 VNĐ", "Thanh toán VietQR mua Súng Tên Lửa VIP", "MUA NGAY (100K VNĐ)", "Weapons/Missile_Launcher", () => BuyGemPackage(100000, "Mua Missile Launcher VIP"));
-        CreateShopCard(gemTabContent.transform, "Rocket Launcher VIP", "150,000 VNĐ", "Thanh toán VietQR mua Súng Bazooka VIP", "MUA NGAY (150K VNĐ)", "Weapons/Rocket_Launcher", () => BuyGemPackage(150000, "Mua Rocket Launcher VIP"));
+        CreateShopCard(gemTabContent.transform, "AK-47 Gold VIP", "2,000 VNĐ", "Thanh toán VietQR mua súng AK-47 Gold VIP", "MUA NGAY (2K VNĐ)", "Weapons/AK_47A_Gold", () => BuyGemPackage(2000, "Mua AK-47 Gold VIP"));
+        CreateShopCard(gemTabContent.transform, "Missile Launcher VIP", "2,000 VNĐ", "Thanh toán VietQR mua Súng Tên Lửa VIP", "MUA NGAY (2K VNĐ)", "Weapons/Missile_Launcher", () => BuyGemPackage(2000, "Mua Missile Launcher VIP"));
+        CreateShopCard(gemTabContent.transform, "Rocket Launcher VIP", "2,000 VNĐ", "Thanh toán VietQR mua Súng Bazooka VIP", "MUA NGAY (2K VNĐ)", "Weapons/Rocket_Launcher", () => BuyGemPackage(2000, "Mua Rocket Launcher VIP"));
 
         // 5c. Trang Phục Skins
         CreateShopCard(skinTabContent.transform, "Cyber Rookie", "100 Gems", "Trang phục chiến binh Rookie", "MUA (100 GEMS)", "", () => BuyShopItem(4));

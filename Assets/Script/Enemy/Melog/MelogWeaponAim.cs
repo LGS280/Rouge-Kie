@@ -119,8 +119,16 @@ public class MelogWeaponAim : MonoBehaviour
         }
     }
 
+    public void AimBothHandsTowardsTarget(Vector3 targetPos)
+    {
+        AimHandTowardsTarget(leftHandTransform, targetPos);
+        AimHandTowardsTarget(rightHandTransform, targetPos);
+    }
+
     public void FireBothGuns(Vector2 targetPosition, int damage)
     {
+        AimBothHandsTowardsTarget(targetPosition);
+
         if (leftWeaponInfo != null)
         {
             leftWeaponInfo.Shoot(targetPosition, damage);

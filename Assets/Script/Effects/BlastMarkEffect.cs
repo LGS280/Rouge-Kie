@@ -20,23 +20,23 @@ public class BlastMarkEffect : MonoBehaviour
 
     void Update()
     {
-        timer += Time.deltaTime;
+        timer += Time.deltaTime; // cộng dồn thời gian thực của vết xám
 
-        if (timer > holdDuration)
+        if (timer > holdDuration) // ktr vết cháy xám tồn tại qua 2s chưa để làm mờ
         {
             float fadeProgress = (timer - holdDuration) / fadeDuration;
 
             if (fadeProgress >= 1.0f)
             {
-                Destroy(gameObject);
+                Destroy(gameObject); // nếu fadeProgess >= 1f thì xóa nó đi
                 return;
             }
 
-            if (sr != null)
+            if (sr != null) // làm mờ màu
             {
-                Color c = sr.color;
-                c.a = Mathf.Lerp(1.0f, 0.0f, fadeProgress);
-                sr.color = c;
+                Color c = sr.color; // láy màu hiện tại
+                c.a = Mathf.Lerp(1.0f, 0.0f, fadeProgress); // hạ độ màu xuống
+                sr.color = c; // gán màu mới thành màu hiện tại
             }
         }
     }

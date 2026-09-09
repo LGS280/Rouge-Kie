@@ -40,6 +40,7 @@ public class LobbyUIController : MonoBehaviour
             NetworkManager.Instance.OnJoinRoomFailed += HandleJoinRoomFailed;
             NetworkManager.Instance.OnPlayerJoined += HandlePlayerJoined;
             NetworkManager.Instance.OnPlayerDisconnected += HandlePlayerDisconnected;
+            NetworkManager.Instance.OnHostDisconnectedEndGame += HandleHostDisconnected;
             NetworkManager.Instance.OnGameStarted += HandleGameStarted;
             NetworkManager.Instance.OnReceivePublicRooms += HandleReceivePublicRooms;
         }
@@ -74,6 +75,7 @@ public class LobbyUIController : MonoBehaviour
             NetworkManager.Instance.OnJoinRoomFailed -= HandleJoinRoomFailed;
             NetworkManager.Instance.OnPlayerJoined -= HandlePlayerJoined;
             NetworkManager.Instance.OnPlayerDisconnected -= HandlePlayerDisconnected;
+            NetworkManager.Instance.OnHostDisconnectedEndGame -= HandleHostDisconnected;
             NetworkManager.Instance.OnGameStarted -= HandleGameStarted;
             NetworkManager.Instance.OnReceivePublicRooms -= HandleReceivePublicRooms;
         }
@@ -101,6 +103,7 @@ public class LobbyUIController : MonoBehaviour
         if (!NetworkManager.Instance.IsLoggedIn)
         {
             Debug.Log("Chưa đăng nhập! Đang gọi Scene Login/Register...");
+            LoginController.PendingActionAfterLogin = "COOP";
 
             // 1. Kiểm tra xem Scene Login đã được load chưa để tránh load trùng
             if (!UnityEngine.SceneManagement.SceneManager.GetSceneByName("LoginScrene").isLoaded)
@@ -236,6 +239,22 @@ public class LobbyUIController : MonoBehaviour
         UpdatePlayerListUI();
     }
 
+    private void HandleHostDisconnected(string hostName)
+    {
+        Debug.LogWarning($"[LobbyUIController] Chủ phòng ({hostName}) đã rời phòng. Phòng đã bị giải tán!");
+
+        // Đóng sảnh chờ và tự động đưa người chơi quay về màn hình chọn phòng
+        roomLobbyPanel.SetActive(false);
+        lobbyMenuPanel.SetActive(true);
+        playMenuPanel.SetActive(false);
+
+        activePlayers.Clear();
+        ResetCopyButtonText();
+
+        // Tự động làm mới lại danh sách phòng
+        OnRefreshRoomsPressed();
+    }
+
     public void OnRefreshRoomsPressed()
     {
         if (NetworkManager.Instance != null)
@@ -317,7 +336,8 @@ public class LobbyUIController : MonoBehaviour
                         joinBtn.onClick.AddListener(() =>
                         {
                             string username = GetValidUsername();
-                            if (roomCodeInput != null) roomCodeInput.text = code;
+                            if (roomCodeInput != null && !string.IsNullOrEmpty(code)) roomCodeInput.text = code;
+                            Debug.Log($"[LobbyUIController] Đang tham gia phòng '{code}' với tên '{username}'...");
                             NetworkManager.Instance.RequestJoinRoom(code, username);
                         });
                     }

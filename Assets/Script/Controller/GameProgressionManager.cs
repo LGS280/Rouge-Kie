@@ -187,6 +187,12 @@ public class GameProgressionManager : MonoBehaviour
         {
             generator.GenerateSoulKnightMap();
             yield return new WaitForSeconds(0.2f); // Chờ gạch sàn sinh xong
+
+            // BỔ SUNG: Làm mới ID mạng cho Phòng và Quái vật của tầng mới cho Co-op
+            if (MultiplayerSyncManager.Instance != null)
+            {
+                MultiplayerSyncManager.Instance.RefreshRoomAndMobNetworkCache();
+            }
         }
 
         // 3. Dịch chuyển người chơi về tâm phòng xuất phát mới (lấy tọa độ thực tế của RoomController Start)
