@@ -115,8 +115,8 @@ public class MelogBossAI : MonoBehaviour
 
             if (!isRoomActivated)
             {
-
-                if (myRoom == null && targetPlayer != null && Vector2.Distance(transform.position, targetPlayer.position) <= detectRange)
+                if ((myRoom == null && targetPlayer != null && Vector2.Distance(transform.position, targetPlayer.position) <= detectRange)
+                    || (mobHealth != null && mobHealth.CurrentHealth < mobHealth.maxHealth))
                 {
                     isRoomActivated = true;
                     NotifyBossHealthBar();

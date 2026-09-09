@@ -5,54 +5,85 @@ using UnityEngine.UI;
 
 public class BossHealthBarUI : MonoBehaviour
 {
-    public static BossHealthBarUI Instance { get; private set; }
+    private static BossHealthBarUI _instance;
+    public static BossHealthBarUI Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindFirstObjectByType<BossHealthBarUI>(FindObjectsInactive.Include);
+            }
+            return _instance;
+        }
+        private set => _instance = value;
+    }
 
     [Header("UI Containers")]
-    [Tooltip("GameObject cha ch?a toàn b? thanh máu Boss (Panel/Container) d? b?t/t?t")]
+    [Tooltip("GameObject cha chứa toàn bộ thanh máu Boss (Panel/Container) để bật/tắt")]
     [SerializeField] private GameObject bossBarContainer;
 
     [Header("UI Components")]
-    [Tooltip("Thanh tru?t Slider hi?n th? lu?ng máu c?a Boss")]
+    [Tooltip("Thanh trượt Slider hiển thị lượng máu của Boss")]
     [SerializeField] private Slider healthSlider;
 
-    [Tooltip("Text hi?n th? tên c?a Boss (VD: MELOG - THE GATLING WARLORD)")]
+    [Tooltip("Text hiển thị tên của Boss (VD: MELOG - THE GATLING WARLORD)")]
     [SerializeField] private TextMeshProUGUI bossNameText;
 
-    [Tooltip("Text hi?n th? s? máu c? th? (VD: 500 / 500)")]
+    [Tooltip("Text hiển thị số máu cụ thể (VD: 500 / 500)")]
     [SerializeField] private TextMeshProUGUI healthNumberText;
 
-    [Header("C?u Hình Hi?u ?ng")]
-    [Tooltip("T?c d? tru?t mu?t c?a thanh máu khi nh?n sát thuong")]
+    [Header("Cấu Hình Hiệu Ứng")]
+    [Tooltip("Tốc độ trượt mượt của thanh máu khi nhận sát thương")]
     [SerializeField] private float smoothSpeed = 8f;
 
     private MobHealth trackedBossHealth;
-    private float targetFillRatio = 1f;
     private bool isBarActive = false;
 
     private void Awake()
     {
-        if (Instance == null)
+        if (_instance == null)
         {
-            Instance = this;
+            _instance = this;
         }
-        else if (Instance != this)
+        else if (_instance != this)
         {
             Destroy(gameObject);
             return;
         }
 
-        // M?c d?nh ?n thanh máu khi chua vào phòng Boss
-        if (bossBarContainer != null)
+        // Tắt bắt buộc Whole Numbers để đảm bảo trượt mượt mà
+        if (healthSlider != null)
+        {
+            healthSlider.wholeNumbers = false;
+        }
+
+        // Mặc định ẩn thanh máu khi vừa vào map nếu chưa bước vào phòng Boss
+        if (bossBarContainer != null && !isBarActive)
         {
             bossBarContainer.SetActive(false);
         }
     }
 
+    private void OnEnable()
+    {
+        // Khi bật lên, đảm bảo tắt Whole Numbers và kiểm tra kết nối Boss
+        if (healthSlider != null)
+        {
+            healthSlider.wholeNumbers = false;
+        }
+
+        if (trackedBossHealth == null)
+        {
+            TryAutoBindBoss();
+        }
+    }
+
     private void OnDestroy()
     {
-        if (Instance == this)
+        if (_instance == this)
         {
-            Instance = null;
+            _instance = null;
         }
 
         if (trackedBossHealth != null)
@@ -63,28 +94,37 @@ public class BossHealthBarUI : MonoBehaviour
 
     private void Update()
     {
+        if (isBarActive && trackedBossHealth == null)
+        {
+            TryAutoBindBoss();
+            return;
+        }
+
         if (!isBarActive || trackedBossHealth == null) return;
 
-        // N?u Boss dã ch?t ho?c b? h?y -> ?n thanh máu
+        // Nếu Boss đã chết hoặc cạn máu -> ẩn thanh máu
         if (trackedBossHealth.isDead || trackedBossHealth.CurrentHealth <= 0)
         {
             HideBossBar();
             return;
         }
 
-        // C?p nh?t t? l? máu dích
-        if (trackedBossHealth.maxHealth > 0)
-        {
-            targetFillRatio = Mathf.Clamp01((float)trackedBossHealth.CurrentHealth / trackedBossHealth.maxHealth);
-        }
-
-        // Tru?t thanh máu mu?t mà
+        // Cập nhật giá trị thanh Slider mượt mà
         if (healthSlider != null)
         {
-            healthSlider.value = Mathf.Lerp(healthSlider.value, targetFillRatio, Time.deltaTime * smoothSpeed);
+            float maxH = trackedBossHealth.maxHealth > 0 ? (float)trackedBossHealth.maxHealth : 100f;
+            if (healthSlider.maxValue != maxH)
+            {
+                healthSlider.minValue = 0f;
+                healthSlider.maxValue = maxH;
+            }
+            healthSlider.wholeNumbers = false;
+
+            float targetVal = Mathf.Clamp((float)trackedBossHealth.CurrentHealth, 0f, maxH);
+            healthSlider.value = Mathf.Lerp(healthSlider.value, targetVal, Time.deltaTime * smoothSpeed);
         }
 
-        // C?p nh?t s? máu
+        // Cập nhật số máu hiển thị
         if (healthNumberText != null)
         {
             healthNumberText.text = $"{trackedBossHealth.CurrentHealth} / {trackedBossHealth.maxHealth}";
@@ -92,13 +132,19 @@ public class BossHealthBarUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Kích ho?t hi?n th? thanh máu Boss khi ngu?i choi bu?c vào phòng chi?n d?u
+    /// Kích hoạt hiển thị thanh máu Boss khi người chơi bước vào phòng chiến đấu
     /// </summary>
     public void ShowBossBar(string bossName, MobHealth bossMob)
     {
         if (bossMob == null) return;
 
-        // H?y dang ký Boss cu n?u có
+        gameObject.SetActive(true);
+        if (bossBarContainer != null)
+        {
+            bossBarContainer.SetActive(true);
+        }
+
+        // Hủy đăng ký Boss cũ nếu có
         if (trackedBossHealth != null)
         {
             trackedBossHealth.OnDeath -= HandleBossDeath;
@@ -112,18 +158,13 @@ public class BossHealthBarUI : MonoBehaviour
             bossNameText.text = bossName;
         }
 
-        if (trackedBossHealth.maxHealth > 0)
-        {
-            targetFillRatio = Mathf.Clamp01((float)trackedBossHealth.CurrentHealth / trackedBossHealth.maxHealth);
-        }
-        else
-        {
-            targetFillRatio = 1f;
-        }
-
+        float maxH = trackedBossHealth.maxHealth > 0 ? (float)trackedBossHealth.maxHealth : 100f;
         if (healthSlider != null)
         {
-            healthSlider.value = targetFillRatio;
+            healthSlider.minValue = 0f;
+            healthSlider.maxValue = maxH;
+            healthSlider.wholeNumbers = false;
+            healthSlider.value = trackedBossHealth.CurrentHealth;
         }
 
         if (healthNumberText != null)
@@ -131,16 +172,36 @@ public class BossHealthBarUI : MonoBehaviour
             healthNumberText.text = $"{trackedBossHealth.CurrentHealth} / {trackedBossHealth.maxHealth}";
         }
 
-        if (bossBarContainer != null)
-        {
-            bossBarContainer.SetActive(true);
-        }
-
         isBarActive = true;
     }
 
     /// <summary>
-    /// ?n thanh máu Boss khi Boss b? tiêu di?t ho?c r?i phòng
+    /// Tự động tìm kiếm Boss Melog trong Scene nếu chưa được gọi từ phòng
+    /// </summary>
+    public void TryAutoBindBoss()
+    {
+        MelogBossAI melog = FindFirstObjectByType<MelogBossAI>(FindObjectsInactive.Include);
+        if (melog != null)
+        {
+            MobHealth mb = melog.GetComponent<MobHealth>();
+            // Chỉ auto-bind nếu Boss đã được kích hoạt chiến đấu hoặc đang nhận sát thương
+            if (mb != null && !mb.isDead && (melog.IsCombatActivated() || mb.CurrentHealth < mb.maxHealth))
+            {
+                string displayName = "MELOG - THE GATLING WARLORD";
+                if (GameProgressionManager.Instance != null)
+                {
+                    int floor = GameProgressionManager.Instance.currentFloor;
+                    if (floor >= 5) displayName = "ELITE BOSS - GOLIATH ROOT";
+                    else displayName = $"MELOG - FLOOR {floor}";
+                }
+
+                ShowBossBar(displayName, mb);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Ẩn thanh máu Boss khi Boss bị tiêu diệt hoặc rời phòng
     /// </summary>
     public void HideBossBar()
     {
@@ -165,7 +226,6 @@ public class BossHealthBarUI : MonoBehaviour
 
     private IEnumerator HideBossBarWithDelay(float delay)
     {
-        // Gi? thanh máu ? m?c 0 m?t chút d? ngu?i choi k?p nhìn th?y Boss c?n máu
         if (healthSlider != null) healthSlider.value = 0f;
         if (healthNumberText != null && trackedBossHealth != null)
         {
