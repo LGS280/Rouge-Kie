@@ -271,6 +271,9 @@ public class MobWeaponInfo : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
+        if (UnityEditor.EditorApplication.isUpdating || UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+            return;
+
         string folderPath = "Assets/Prefab/Mobs_Weapons/Bullets";
         if (System.IO.Directory.Exists(folderPath))
         {
@@ -284,8 +287,29 @@ public class MobWeaponInfo : MonoBehaviour
                     list.Add(prefab);
                 }
             }
-            mobBulletPrefabs = list.ToArray();
-            UnityEditor.EditorUtility.SetDirty(this);
+
+            bool isChanged = false;
+            if (mobBulletPrefabs == null || mobBulletPrefabs.Length != list.Count)
+            {
+                isChanged = true;
+            }
+            else
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    if (mobBulletPrefabs[i] != list[i])
+                    {
+                        isChanged = true;
+                        break;
+                    }
+                }
+            }
+
+            if (isChanged)
+            {
+                mobBulletPrefabs = list.ToArray();
+                UnityEditor.EditorUtility.SetDirty(this);
+            }
         }
     }
 #endif

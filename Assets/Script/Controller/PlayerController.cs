@@ -18,6 +18,8 @@ public class PlayerController : MonoBehaviour
     public enum InputMode { KeyboardMouse, Gamepad}
     public InputMode currentMode = InputMode.KeyboardMouse;
 
+    private WeaponAim weaponAim;
+
     private void Start()
     {
         if (mainCamera == null)
@@ -38,6 +40,7 @@ public class PlayerController : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
 
         animator = GetComponent<Animator>();
+        weaponAim = GetComponentInChildren<WeaponAim>();
 
         if (rb2d != null)
         {
@@ -52,6 +55,21 @@ public class PlayerController : MonoBehaviour
         if(animator != null)
         {
             animator.SetFloat("Speed", moveInput.magnitude);
+            if (weaponAim == null) weaponAim = GetComponentInChildren<WeaponAim>();
+            bool lookUp = (moveInput.y > 0.1f) || (weaponAim != null && weaponAim.isAimingUp);
+            int yInt = lookUp ? 1 : (moveInput.y < -0.1f ? -1 : 0);
+            float yFloat = lookUp ? 1f : moveInput.y;
+            foreach (var param in animator.parameters)
+            {
+                if (param.name == "MoveY")
+                {
+                    if (param.type == AnimatorControllerParameterType.Int)
+                        animator.SetInteger("MoveY", yInt);
+                    else if (param.type == AnimatorControllerParameterType.Float)
+                        animator.SetFloat("MoveY", yFloat);
+                    break;
+                }
+            }
         }
     }
 

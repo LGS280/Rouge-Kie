@@ -227,9 +227,6 @@ public class RookieHealth : MonoBehaviour
         isDead = true;
 
         // 1. Tắt di chuyển và điều khiển
-        PlayerMovement pm = GetComponent<PlayerMovement>();
-        if (pm != null) pm.enabled = false;
-
         PlayerController controller = GetComponent<PlayerController>();
         if (controller != null) controller.enabled = false;
 
@@ -333,9 +330,6 @@ public class RookieHealth : MonoBehaviour
         onHealthChanged?.Invoke();
 
         // 1. Kích hoạt lại di chuyển, điều khiển và WeaponManager
-        PlayerMovement pm = GetComponent<PlayerMovement>();
-        if (pm != null) pm.enabled = true;
-
         PlayerController controller = GetComponent<PlayerController>();
         if (controller != null) controller.enabled = true;
 
