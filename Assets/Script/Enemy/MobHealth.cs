@@ -4,6 +4,7 @@ public class MobHealth : MonoBehaviour
 {
     public int maxHealth = 100;
     private int currentHealth;
+    public int CurrentHealth => currentHealth;
     [HideInInspector] public bool isDead = false;
 
     public System.Action<MobHealth> OnDeath;

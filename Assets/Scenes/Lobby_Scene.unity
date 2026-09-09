@@ -1960,9 +1960,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.014814815
+    y: 0
     width: 1
-    height: 0.96969694
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -2205,7 +2205,7 @@ TilemapRenderer:
   m_SortingOrder: 1
   m_MaskInteraction: 0
   m_ChunkSize: {x: 32, y: 32, z: 32}
-  m_ChunkCullingBounds: {x: 1.46875, y: 2.25, z: 0}
+  m_ChunkCullingBounds: {x: 1.46875, y: 2.234375, z: 0}
   m_MaxChunkCount: 16
   m_MaxFrameAge: 16
   m_SortOrder: 2
