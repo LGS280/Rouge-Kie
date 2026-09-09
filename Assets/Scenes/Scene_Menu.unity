@@ -7410,7 +7410,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &452461605
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7449,6 +7449,7 @@ MonoBehaviour:
   historyPanel: {fileID: 452461604}
   closeButton: {fileID: 1791049881}
   refreshButton: {fileID: 0}
+  scrollRect: {fileID: 0}
   emptyHistoryText: {fileID: 1426036636}
   historyListContainer: {fileID: 0}
   historyItemPrefab: {fileID: 0}
@@ -13500,7 +13501,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 400, y: 0}
-  m_SizeDelta: {x: 800, y: 0}
+  m_SizeDelta: {x: 800, y: 33.76}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1426036635
 MonoBehaviour:
@@ -16170,7 +16171,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 33.76}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2099752641
 MonoBehaviour:

@@ -72,6 +72,14 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnTeamDefeat += HandleTeamDefeat;
             NetworkManager.Instance.OnPlayerRevived += HandlePlayerRevived;
             NetworkManager.Instance.OnHostDisconnectedEndGame += HandleHostDisconnectedEndGame;
+
+            // BỔ SUNG: Đăng ký sự kiện mở rương, nhặt súng dùng chung và vứt súng
+            NetworkManager.Instance.OnChestOpened += HandleRemoteChestOpened;
+            NetworkManager.Instance.OnGroundWeaponPickedUp += HandleRemoteGroundWeaponPickedUp;
+            NetworkManager.Instance.OnWeaponDropped += HandleRemoteWeaponDropped;
+
+            // BỔ SUNG: Đăng ký sự kiện Boss tấn công từ máy Host
+            NetworkManager.Instance.OnBossAttack += HandleRemoteBossAttack;
         }
     }
 
@@ -96,6 +104,14 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnTeamDefeat -= HandleTeamDefeat;
             NetworkManager.Instance.OnPlayerRevived -= HandlePlayerRevived;
             NetworkManager.Instance.OnHostDisconnectedEndGame -= HandleHostDisconnectedEndGame;
+
+            // BỔ SUNG: Hủy đăng ký sự kiện mở rương, nhặt súng dùng chung và vứt súng
+            NetworkManager.Instance.OnChestOpened -= HandleRemoteChestOpened;
+            NetworkManager.Instance.OnGroundWeaponPickedUp -= HandleRemoteGroundWeaponPickedUp;
+            NetworkManager.Instance.OnWeaponDropped -= HandleRemoteWeaponDropped;
+
+            // BỔ SUNG: Hủy đăng ký sự kiện Boss tấn công từ máy Host
+            NetworkManager.Instance.OnBossAttack -= HandleRemoteBossAttack;
         }
     }
 
@@ -765,5 +781,98 @@ public class MultiplayerSyncManager : MonoBehaviour
                 return enemy.gameObject;
         }
         return null;
+    }
+
+    // BỔ SUNG: Xử lý khi đồng đội trong phòng mở rương vũ khí dùng chung
+    private void HandleRemoteChestOpened(string chestId, string weaponName, float spawnX, float spawnY)
+    {
+        Debug.Log($"[MultiplayerSyncManager] Đồng đội mở rương '{chestId}' rớt súng '{weaponName}' tại ({spawnX}, {spawnY})");
+
+        Vector3 spawnPos = new Vector3(spawnX, spawnY, 0);
+
+        WeaponChest[] allChests = Object.FindObjectsByType<WeaponChest>(FindObjectsSortMode.None);
+        WeaponChest targetChest = null;
+        float minDistance = float.MaxValue;
+
+        foreach (var chest in allChests)
+        {
+            if (chest != null)
+            {
+                if (chest.chestId == chestId)
+                {
+                    targetChest = chest;
+                    break;
+                }
+
+                float dist = Vector3.Distance(chest.transform.position, spawnPos);
+                if (dist < minDistance)
+                {
+                    minDistance = dist;
+                    targetChest = chest;
+                }
+            }
+        }
+
+        if (targetChest != null)
+        {
+            targetChest.OpenChestFromNetwork(weaponName, spawnPos);
+        }
+    }
+
+    // BỔ SUNG: Xử lý khi có bất kỳ đồng đội nào nhặt súng rơi dưới sàn -> Xóa súng ngay lập tức
+    private void HandleRemoteGroundWeaponPickedUp(string groundWeaponId)
+    {
+        Debug.Log($"[MultiplayerSyncManager] Đồng đội đã nhặt súng mạng '{groundWeaponId}', tiến hành xóa khỏi sàn.");
+
+        GroundWeapon[] allGroundWeapons = Object.FindObjectsByType<GroundWeapon>(FindObjectsSortMode.None);
+        foreach (var gw in allGroundWeapons)
+        {
+            if (gw != null && gw.networkId == groundWeaponId)
+            {
+                Destroy(gw.gameObject);
+                break;
+            }
+        }
+    }
+
+    // BỔ SUNG: Xử lý khi đồng đội vứt vũ khí cũ ra sàn -> Hiển thị súng trên sàn với đúng networkId
+    private void HandleRemoteWeaponDropped(string weaponName, float posX, float posY, string groundWeaponId)
+    {
+        Debug.Log($"[MultiplayerSyncManager] Đồng đội vứt súng '{weaponName}' (ID: {groundWeaponId}) tại ({posX}, {posY})");
+
+        // Kiểm tra xem vũ khí này đã tồn tại trên sàn chưa để tránh trùng lặp
+        GroundWeapon[] allGroundWeapons = Object.FindObjectsByType<GroundWeapon>(FindObjectsSortMode.None);
+        foreach (var gw in allGroundWeapons)
+        {
+            if (gw != null && gw.networkId == groundWeaponId)
+            {
+                return;
+            }
+        }
+
+        GameObject weaponPrefab = FindWeaponPrefabByName(weaponName);
+        if (weaponPrefab != null)
+        {
+            Vector3 spawnPos = new Vector3(posX, posY, 0);
+            GroundWeapon.Create(weaponPrefab, spawnPos, groundWeaponId);
+        }
+        else
+        {
+            Debug.LogWarning($"[MultiplayerSyncManager] Không tìm thấy prefab vũ khí cho '{weaponName}' khi đồng đội vứt súng!");
+        }
+    }
+
+    // BỔ SUNG: Xử lý khi nhận sự kiện Boss tấn công từ máy Host
+    private void HandleRemoteBossAttack(string bossId, float targetX, float targetY)
+    {
+        GameObject bossObj = FindEnemyByNetworkId(bossId);
+        if (bossObj != null)
+        {
+            MelogBossAI melogAI = bossObj.GetComponent<MelogBossAI>();
+            if (melogAI != null)
+            {
+                melogAI.ExecuteNetworkAttack(new Vector2(targetX, targetY));
+            }
+        }
     }
 }

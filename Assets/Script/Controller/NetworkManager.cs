@@ -95,6 +95,18 @@ public class NetworkManager : MonoBehaviour
     // BỔ SUNG: Sự kiện đồng bộ khi Host ngắt kết nối/out game (hostName)
     public event Action<string> OnHostDisconnectedEndGame;
 
+    // BỔ SUNG: Sự kiện đồng bộ mở rương vũ khí dùng chung (chestId, weaponName, spawnX, spawnY)
+    public event Action<string, string, float, float> OnChestOpened;
+
+    // BỔ SUNG: Sự kiện đồng bộ nhặt vũ khí rơi trên sàn (groundWeaponId)
+    public event Action<string> OnGroundWeaponPickedUp;
+
+    // BỔ SUNG: Sự kiện đồng bộ khi người chơi vứt vũ khí cũ ra sàn (weaponName, posX, posY, groundWeaponId)
+    public event Action<string, float, float, string> OnWeaponDropped;
+
+    // BỔ SUNG: Sự kiện đồng bộ khi Boss xả đạn (bossId, targetX, targetY)
+    public event Action<string, float, float> OnBossAttack;
+
     public string MyConnectionId => hubConnection?.ConnectionId;
 
     // QUYỀN HẠN TRONG TRẬN: Sẽ được Server định đoạt khi tạo hoặc vào phòng thành công
@@ -243,6 +255,30 @@ public class NetworkManager : MonoBehaviour
         hubConnection.On<string>("OnHostDisconnectedEndGame", (hostName) =>
         {
             unityContext.Post(_ => OnHostDisconnectedEndGame?.Invoke(hostName), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện mở rương vũ khí dùng chung từ Server
+        hubConnection.On<string, string, float, float>("OnChestOpened", (chestId, weaponName, spawnX, spawnY) =>
+        {
+            unityContext.Post(_ => OnChestOpened?.Invoke(chestId, weaponName, spawnX, spawnY), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện nhặt vũ khí rơi trên sàn từ Server
+        hubConnection.On<string>("OnGroundWeaponPickedUp", (groundWeaponId) =>
+        {
+            unityContext.Post(_ => OnGroundWeaponPickedUp?.Invoke(groundWeaponId), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện vứt vũ khí cũ ra sàn từ đồng đội
+        hubConnection.On<string, float, float, string>("OnWeaponDropped", (weaponName, posX, posY, groundWeaponId) =>
+        {
+            unityContext.Post(_ => OnWeaponDropped?.Invoke(weaponName, posX, posY, groundWeaponId), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện Boss tấn công (xả đạn) từ Server
+        hubConnection.On<string, float, float>("OnBossAttack", (bossId, targetX, targetY) =>
+        {
+            unityContext.Post(_ => OnBossAttack?.Invoke(bossId, targetX, targetY), null);
         });
 
         // BỔ SUNG: Lắng nghe danh sách phòng từ Server trả về
@@ -626,6 +662,73 @@ public class NetworkManager : MonoBehaviour
         catch (Exception ex)
         {
             Debug.LogWarning($"[NetworkManager] SendPlayerRevive gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi sự kiện mở rương vũ khí dùng chung qua SignalR
+    public async void SendOpenChest(string chestId, string weaponName, float spawnX, float spawnY)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncOpenChest", CurrentRoomId, chestId, weaponName, spawnX, spawnY);
+                Debug.Log($"[NetworkManager] Đã gửi thông báo mở rương '{chestId}' rớt súng '{weaponName}' lên Server.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendOpenChest gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi sự kiện nhặt vũ khí rơi trên sàn qua SignalR
+    public async void SendPickupGroundWeapon(string groundWeaponId)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncPickupGroundWeapon", CurrentRoomId, groundWeaponId);
+                Debug.Log($"[NetworkManager] Đã gửi thông báo nhặt súng '{groundWeaponId}' lên Server.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendPickupGroundWeapon gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi sự kiện vứt vũ khí cũ ra sàn qua SignalR
+    public async void SendDropWeapon(string weaponName, float posX, float posY, string groundWeaponId)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncDropWeapon", CurrentRoomId, weaponName, posX, posY, groundWeaponId);
+                Debug.Log($"[NetworkManager] Đã gửi thông báo vứt súng '{weaponName}' (ID: {groundWeaponId}) tại ({posX}, {posY}) lên Server.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendDropWeapon gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi sự kiện Boss xả đạn qua SignalR
+    public async void SendBossAttack(string bossId, float targetX, float targetY)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncBossAttack", CurrentRoomId, bossId, targetX, targetY);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendBossAttack gián đoạn: {ex.Message}");
         }
     }
 }
