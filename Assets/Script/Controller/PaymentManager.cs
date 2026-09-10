@@ -366,9 +366,9 @@ public class PaymentManager : MonoBehaviour
             qrModalPanel.transform.SetAsLastSibling();
         }
 
-        if (amountText != null) amountText.text = $"Số tiền: {res.amount:N0} VNĐ";
-        if (orderCodeText != null) orderCodeText.text = $"Mã đơn: #{res.orderCode}";
-        if (statusText != null) statusText.text = "Quét mã VietQR bằng App Ngân hàng / MoMo...";
+        if (amountText != null) amountText.text = $"Amount: {res.amount:N0} VND";
+        if (orderCodeText != null) orderCodeText.text = $"Order: #{res.orderCode}";
+        if (statusText != null) statusText.text = "Scan VietQR with Banking App / MoMo...";
 
         if (qrImageDisplay != null)
         {
@@ -408,7 +408,7 @@ public class PaymentManager : MonoBehaviour
                 Debug.LogWarning($"[PaymentManager] Không thể tải ảnh VietQR: {www.error}");
                 if (statusText != null)
                 {
-                    statusText.text = "<color=yellow>Không thể tải mã QR. Vui lòng đóng và thử lại!</color>";
+                    statusText.text = "<color=yellow>Failed to load QR code. Please close and try again!</color>";
                 }
             }
         }
@@ -467,7 +467,7 @@ public class PaymentManager : MonoBehaviour
     private void OnPaymentCompletedSuccessfully(long orderCode)
     {
         Debug.Log($"[PaymentManager] Giao dịch OrderCode {orderCode} đã được THANH TOÁN thành công!");
-        if (statusText != null) statusText.text = "<color=green>Thanh toán thành công! Súng đã xuất hiện trên bàn!</color>";
+        if (statusText != null) statusText.text = "<color=green>Payment Successful! Weapon spawned on table!</color>";
 
         // Gọi Backend để đồng bộ trạng thái đơn hàng sang PAID trong Database
         string token = PlayerPrefs.GetString("jwt_token", "");
@@ -612,7 +612,7 @@ public class PaymentManager : MonoBehaviour
         headerRect.localScale = Vector3.one;
 
         TextMeshProUGUI headerTxt = headerObj.GetComponent<TextMeshProUGUI>();
-        headerTxt.text = "THANH TOÁN VIETQR";
+        headerTxt.text = "VIETQR PAYMENT";
         headerTxt.fontSize = 22;
         headerTxt.color = new Color(1f, 0.85f, 0.3f);
         headerTxt.alignment = TextAlignmentOptions.Center;
@@ -658,7 +658,7 @@ public class PaymentManager : MonoBehaviour
         orderRect.localScale = Vector3.one;
 
         orderCodeText = orderObj.GetComponent<TextMeshProUGUI>();
-        orderCodeText.text = "Mã đơn: #------";
+        orderCodeText.text = "Order: #------";
         orderCodeText.fontSize = 15;
         orderCodeText.color = new Color(0.7f, 0.85f, 1f);
         orderCodeText.alignment = TextAlignmentOptions.Center;
@@ -671,7 +671,7 @@ public class PaymentManager : MonoBehaviour
         amountRect.localScale = Vector3.one;
 
         amountText = amountObj.GetComponent<TextMeshProUGUI>();
-        amountText.text = "Số tiền: -- VNĐ";
+        amountText.text = "Amount: -- VND";
         amountText.fontSize = 20;
         amountText.color = new Color(0.35f, 0.95f, 0.45f);
         amountText.alignment = TextAlignmentOptions.Center;
@@ -697,7 +697,7 @@ public class PaymentManager : MonoBehaviour
         qrLoadingRect.offsetMax = Vector2.zero;
         qrLoadingRect.localScale = Vector3.one;
         TextMeshProUGUI qrLoadingTxt = qrLoadingObj.GetComponent<TextMeshProUGUI>();
-        qrLoadingTxt.text = "Đang tải mã VietQR...";
+        qrLoadingTxt.text = "Loading VietQR code...";
         qrLoadingTxt.fontSize = 15;
         qrLoadingTxt.color = new Color(0.3f, 0.3f, 0.3f);
         qrLoadingTxt.alignment = TextAlignmentOptions.Center;
@@ -722,7 +722,7 @@ public class PaymentManager : MonoBehaviour
         statusRect.localScale = Vector3.one;
 
         statusText = statusObj.GetComponent<TextMeshProUGUI>();
-        statusText.text = "Quét mã VietQR bằng App Ngân hàng / MoMo...";
+        statusText.text = "Scan VietQR with Banking App / MoMo...";
         statusText.fontSize = 15;
         statusText.color = new Color(0.9f, 0.9f, 0.9f);
         statusText.alignment = TextAlignmentOptions.Center;
@@ -748,7 +748,7 @@ public class PaymentManager : MonoBehaviour
         devTxtRect.localScale = Vector3.one;
 
         TextMeshProUGUI devTxt = devTxtObj.GetComponent<TextMeshProUGUI>();
-        devTxt.text = "TEST GIẢ LẬP THANH TOÁN (DEV)";
+        devTxt.text = "SIMULATE PAYMENT (DEV TEST)";
         devTxt.fontSize = 14;
         devTxt.color = Color.white;
         devTxt.alignment = TextAlignmentOptions.Center;
@@ -779,7 +779,7 @@ public class PaymentManager : MonoBehaviour
         cancelTxtRect.localScale = Vector3.one;
 
         TextMeshProUGUI cancelTxt = cancelTxtObj.GetComponent<TextMeshProUGUI>();
-        cancelTxt.text = "ĐÓNG / HỦY GIAO DỊCH";
+        cancelTxt.text = "CLOSE / CANCEL TRANSACTION";
         cancelTxt.fontSize = 14;
         cancelTxt.color = Color.white;
         cancelTxt.alignment = TextAlignmentOptions.Center;

@@ -13,7 +13,7 @@ public class LobbyNPCInteraction : MonoBehaviour
 {
     [Header("Interaction Settings")]
     public string entityName = "Armory Merchant";
-    public string promptText = "Bấm [E] mở Shop Vũ Khí";
+    public string promptText = "Press [E] to Open Armory Shop";
     public LobbyInteractionType interactionType = LobbyInteractionType.ShopMerchant;
 
     [Header("UI References")]
@@ -155,7 +155,7 @@ public class LobbyNPCInteraction : MonoBehaviour
         textRect.anchoredPosition = Vector2.zero;
 
         TextMeshProUGUI tmp = textObj.GetComponent<TextMeshProUGUI>();
-        tmp.text = string.IsNullOrEmpty(promptText) ? "Bấm [E] mở Shop" : promptText;
+        tmp.text = string.IsNullOrEmpty(promptText) ? "Press [E] to Open Shop" : promptText;
         tmp.fontSize = 28; // Tăng cỡ chữ to nổi bật hơn chút xíu
         tmp.color = Color.white;
         tmp.alignment = TextAlignmentOptions.Center;
