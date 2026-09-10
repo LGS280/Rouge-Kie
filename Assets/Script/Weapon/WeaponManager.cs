@@ -570,6 +570,9 @@ public class WeaponManager : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
+        if (UnityEditor.EditorApplication.isUpdating || UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+            return;
+
         string folderPath = "Assets/Prefab/Weapons";
         if (System.IO.Directory.Exists(folderPath))
         {
@@ -584,8 +587,29 @@ public class WeaponManager : MonoBehaviour
                     list.Add(prefab);
                 }
             }
-            allWeaponPrefabs = list.ToArray();
-            UnityEditor.EditorUtility.SetDirty(this);
+
+            bool isChanged = false;
+            if (allWeaponPrefabs == null || allWeaponPrefabs.Length != list.Count)
+            {
+                isChanged = true;
+            }
+            else
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    if (allWeaponPrefabs[i] != list[i])
+                    {
+                        isChanged = true;
+                        break;
+                    }
+                }
+            }
+
+            if (isChanged)
+            {
+                allWeaponPrefabs = list.ToArray();
+                UnityEditor.EditorUtility.SetDirty(this);
+            }
         }
     }
 #endif
