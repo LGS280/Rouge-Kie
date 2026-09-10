@@ -200,7 +200,7 @@ public class ShopUIController : MonoBehaviour
         }, (err) =>
         {
             Debug.LogWarning($"[ShopUIController] API Buy Item Error (chuyển chế độ Offline Test): {err}");
-            if (statusText != null) statusText.text = "<color=green>Offline Purchase Success! Súng đã lên bàn!</color>";
+            if (statusText != null) statusText.text = "<color=green>Offline Purchase Success! Weapon spawned on table!</color>";
             // Offline / Dev Mode Fallback: Tự động sinh súng ngay lên bàn để test mượt mà
             SpawnBoughtWeaponOnTable(prefabPath);
         });
@@ -389,7 +389,7 @@ public class ShopUIController : MonoBehaviour
         headerRect.sizeDelta = new Vector2(600, 50);
 
         TextMeshProUGUI headerTxt = headerObj.GetComponent<TextMeshProUGUI>();
-        headerTxt.text = "CỬA HÀNG VŨ KHÍ & DỊCH VỤ";
+        headerTxt.text = "ARMORY & WEAPON SHOP";
         headerTxt.fontSize = 28;
         headerTxt.color = new Color(1f, 0.85f, 0.3f);
         headerTxt.alignment = TextAlignmentOptions.Center;
@@ -428,9 +428,9 @@ public class ShopUIController : MonoBehaviour
         tabBarRect.anchoredPosition = new Vector2(0, 195);
         tabBarRect.sizeDelta = new Vector2(840, 50);
 
-        coinTabButton = CreateTabButton(tabBar.transform, new Vector2(-280, 0), "SÚNG (COINS GAME)");
-        gemTabButton = CreateTabButton(tabBar.transform, new Vector2(0, 0), "SÚNG VIP (VietQR)");
-        skinTabButton = CreateTabButton(tabBar.transform, new Vector2(280, 0), "TRANG PHỤC (SKINS)");
+        coinTabButton = CreateTabButton(tabBar.transform, new Vector2(-280, 0), "COIN WEAPONS");
+        gemTabButton = CreateTabButton(tabBar.transform, new Vector2(0, 0), "VIP WEAPONS (VietQR)");
+        skinTabButton = CreateTabButton(tabBar.transform, new Vector2(280, 0), "SKINS");
 
         // 5. Khung chứa Nội dung 3 Tab (Tab Contents)
         coinTabContent = CreateTabContent(dialog.transform, "CoinTabContent");
@@ -438,18 +438,18 @@ public class ShopUIController : MonoBehaviour
         skinTabContent = CreateTabContent(dialog.transform, "SkinTabContent");
 
         // 5a. Súng mua bằng Xu trong Game (In-Game Coins)
-        CreateShopCard(coinTabContent.transform, "AK-47 Gold", "500 Coins", "Súng trường mạ vàng sát thương cao", "MUA (500 COINS)", "Weapons/AK_47A_Gold", () => BuyShopItem(1));
-        CreateShopCard(coinTabContent.transform, "Missile Launcher", "800 Coins", "Súng bắn Tên Lửa tầm xa định vị", "MUA (800 COINS)", "Weapons/Missile_Launcher", () => BuyShopItem(2));
-        CreateShopCard(coinTabContent.transform, "Rocket Launcher", "1,200 Coins", "Súng Bazooka Rocket nổ diện rộng", "MUA (1.2K COINS)", "Weapons/Rocket_Launcher", () => BuyShopItem(3));
+        CreateShopCard(coinTabContent.transform, "AK-47 Gold", "500 Coins", "High-damage gold-plated assault rifle", "BUY (500 COINS)", "Weapons/AK_47A_Gold", () => BuyShopItem(1));
+        CreateShopCard(coinTabContent.transform, "Missile Launcher", "800 Coins", "Long-range homing missile launcher", "BUY (800 COINS)", "Weapons/Missile_Launcher", () => BuyShopItem(2));
+        CreateShopCard(coinTabContent.transform, "Rocket Launcher", "1,200 Coins", "Heavy rocket launcher with wide AoE", "BUY (1.2K COINS)", "Weapons/Rocket_Launcher", () => BuyShopItem(3));
 
         // 5b. Súng VIP mua trực tiếp bằng Tiền Thật qua VietQR (PayOS)
-        CreateShopCard(gemTabContent.transform, "AK-47 Gold VIP", "2,000 VNĐ", "Thanh toán VietQR mua súng AK-47 Gold VIP", "MUA NGAY (2K VNĐ)", "Weapons/AK_47A_Gold", () => BuyGemPackage(2000, "Mua AK-47 Gold VIP"));
-        CreateShopCard(gemTabContent.transform, "Missile Launcher VIP", "2,000 VNĐ", "Thanh toán VietQR mua Súng Tên Lửa VIP", "MUA NGAY (2K VNĐ)", "Weapons/Missile_Launcher", () => BuyGemPackage(2000, "Mua Missile Launcher VIP"));
-        CreateShopCard(gemTabContent.transform, "Rocket Launcher VIP", "2,000 VNĐ", "Thanh toán VietQR mua Súng Bazooka VIP", "MUA NGAY (2K VNĐ)", "Weapons/Rocket_Launcher", () => BuyGemPackage(2000, "Mua Rocket Launcher VIP"));
+        CreateShopCard(gemTabContent.transform, "AK-47 Gold VIP", "2,000 VND", "Pay via VietQR to unlock AK-47 Gold VIP", "BUY NOW (2K VND)", "Weapons/AK_47A_Gold", () => BuyGemPackage(2000, "Buy AK-47 Gold VIP"));
+        CreateShopCard(gemTabContent.transform, "Missile Launcher VIP", "2,000 VND", "Pay via VietQR to unlock Missile Launcher VIP", "BUY NOW (2K VND)", "Weapons/Missile_Launcher", () => BuyGemPackage(2000, "Buy Missile Launcher VIP"));
+        CreateShopCard(gemTabContent.transform, "Rocket Launcher VIP", "2,000 VND", "Pay via VietQR to unlock Rocket Launcher VIP", "BUY NOW (2K VND)", "Weapons/Rocket_Launcher", () => BuyGemPackage(2000, "Buy Rocket Launcher VIP"));
 
         // 5c. Trang Phục Skins
-        CreateShopCard(skinTabContent.transform, "Cyber Rookie", "100 Gems", "Trang phục chiến binh Rookie", "MUA (100 GEMS)", "", () => BuyShopItem(4));
-        CreateShopCard(skinTabContent.transform, "Hero Zero", "200 Gems", "Trang phục siêu anh hùng Zero", "MUA (200 GEMS)", "", () => BuyShopItem(5));
+        CreateShopCard(skinTabContent.transform, "Cyber Rookie", "100 Gems", "Rookie warrior battle suit", "BUY (100 GEMS)", "", () => BuyShopItem(4));
+        CreateShopCard(skinTabContent.transform, "Hero Zero", "200 Gems", "Zero superhero battle suit", "BUY (200 GEMS)", "", () => BuyShopItem(5));
 
         // 6. Dòng trạng thái (Status Text)
         GameObject statusObj = new GameObject("StatusText", typeof(RectTransform), typeof(TextMeshProUGUI));
@@ -459,7 +459,7 @@ public class ShopUIController : MonoBehaviour
         statusRect.sizeDelta = new Vector2(800, 40);
 
         statusText = statusObj.GetComponent<TextMeshProUGUI>();
-        statusText.text = "Cửa hàng sẵn sàng!";
+        statusText.text = "Shop Ready!";
         statusText.fontSize = 18;
         statusText.color = new Color(0.4f, 0.9f, 0.4f);
         statusText.alignment = TextAlignmentOptions.Center;
@@ -608,7 +608,7 @@ public class ShopUIController : MonoBehaviour
         btRect.anchorMax = Vector2.one;
         btRect.sizeDelta = Vector2.zero;
         TextMeshProUGUI btTxt = btObj.GetComponent<TextMeshProUGUI>();
-        btTxt.text = string.IsNullOrEmpty(buttonText) ? "MUA NGAY" : buttonText;
+        btTxt.text = string.IsNullOrEmpty(buttonText) ? "BUY NOW" : buttonText;
         btTxt.fontSize = 15;
         btTxt.color = Color.white;
         btTxt.alignment = TextAlignmentOptions.Center;
