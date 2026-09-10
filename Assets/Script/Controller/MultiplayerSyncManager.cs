@@ -24,6 +24,25 @@ public class MultiplayerSyncManager : MonoBehaviour
         if (Instance == null) Instance = this;
     }
 
+    /// <summary>
+    /// Trả về màu vòng tròn chân nhân vật cố định theo Slot toàn cục (Đồng nhất trên mọi góc nhìn POV):
+    /// Slot 0 (Host / P1): Xanh Lá Cây (#00FF00)
+    /// Slot 1 (Player 2): Xanh Dương / Cyan (#00BFFF)
+    /// Slot 2 (Player 3): Vàng Hoàng Gia (#FFD700)
+    /// Slot 3 (Player 4): Tím Quyến Rũ (#BA55D3)
+    /// </summary>
+    public static Color GetRingColorBySlot(int slotIndex)
+    {
+        switch (slotIndex)
+        {
+            case 0: return Color.green;                  // Slot 0 (Host / P1): Xanh Lá Cây
+            case 1: return new Color(0f, 0.75f, 1f, 1f); // Slot 1 (P2): Xanh Dương
+            case 2: return new Color(1f, 0.85f, 0f, 1f); // Slot 2 (P3): Vàng Hoàng Gia
+            case 3: return new Color(0.8f, 0.2f, 1f, 1f); // Slot 3 (P4): Tím Quyến Rũ
+            default: return Color.green;
+        }
+    }
+
     private void Start()
     {
         bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
@@ -41,6 +60,9 @@ public class MultiplayerSyncManager : MonoBehaviour
             if (playerObj != null) localPlayer = playerObj.transform;
         }
 
+        // BỔ SUNG: Áp dụng màu vòng chân cho Local Player theo Slot cố định
+        ApplyLocalPlayerRingColor();
+
         // Tự động gắn TeammateReviveArea để quản lý giữ phím [E] 2.5s hồi sinh đồng đội
         if (GetComponent<Assets.Script.Characters.Rookie.TeammateReviveArea>() == null)
         {
@@ -56,6 +78,9 @@ public class MultiplayerSyncManager : MonoBehaviour
         // Đăng ký lắng nghe gói tin mạng từ NetworkManager
         if (NetworkManager.Instance != null)
         {
+            NetworkManager.Instance.OnSyncPlayerOrder += HandleSyncPlayerOrder;
+            NetworkManager.Instance.RequestSyncPlayerOrder();
+
             NetworkManager.Instance.OnReceivePosition += UpdateRemotePlayerPosition;
             NetworkManager.Instance.OnPlayerDisconnected += RemoveRemotePlayer;
             NetworkManager.Instance.OnRemotePlayerShoot += HandleRemotePlayerShoot;
@@ -88,6 +113,7 @@ public class MultiplayerSyncManager : MonoBehaviour
         // Hủy đăng ký tất cả sự kiện để tránh lỗi rò rỉ bộ nhớ (Memory Leak)
         if (NetworkManager.Instance != null)
         {
+            NetworkManager.Instance.OnSyncPlayerOrder -= HandleSyncPlayerOrder;
             NetworkManager.Instance.OnReceivePosition -= UpdateRemotePlayerPosition;
             NetworkManager.Instance.OnPlayerDisconnected -= RemoveRemotePlayer;
             NetworkManager.Instance.OnRemotePlayerShoot -= HandleRemotePlayerShoot;
@@ -347,7 +373,7 @@ public class MultiplayerSyncManager : MonoBehaviour
             {
                 ringPos.gameObject.SetActive(true);
                 SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
-                if (ringSr != null) ringSr.color = (rpc != null) ? rpc.assignedRingColor : new Color(0f, 0.75f, 1f, 1f);
+                if (ringSr != null) ringSr.color = (rpc != null) ? rpc.assignedRingColor : GetRingColorBySlot(1);
             }
         }
     }
@@ -431,11 +457,9 @@ public class MultiplayerSyncManager : MonoBehaviour
 
             remotePlayers.Add(connId, newRemote);
 
-            // BỔ SUNG: Gán màu vòng chân phân biệt 4 người chơi (Player 2: Xanh Dương, Player 3: Vàng, Player 4: Tím)
-            int playerIndex = remotePlayers.Count; // 1, 2, 3
-            Color ringColor = new Color(0f, 0.75f, 1f, 1f); // Mặc định Xanh Dương (P2)
-            if (playerIndex == 2) ringColor = new Color(1f, 0.85f, 0f, 1f); // Vàng (P3)
-            else if (playerIndex >= 3) ringColor = new Color(0.8f, 0.2f, 1f, 1f); // Tím (P4)
+            // BỔ SUNG: Gán màu vòng chân chuẩn xác dựa trên Global Slot (P1: Xanh lá, P2: Xanh dương, P3: Vàng, P4: Tím)
+            int slot = NetworkManager.Instance != null ? NetworkManager.Instance.GetPlayerSlotIndex(connId) : remotePlayers.Count;
+            Color ringColor = GetRingColorBySlot(slot);
 
             rpc.assignedRingColor = ringColor;
 
@@ -871,6 +895,88 @@ public class MultiplayerSyncManager : MonoBehaviour
             if (melogAI != null)
             {
                 melogAI.ExecuteNetworkAttack(new Vector2(targetX, targetY));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Đồng bộ lại màu vòng chân toàn thể người chơi khi nhận danh sách Slot từ Server
+    /// </summary>
+    private void HandleSyncPlayerOrder(List<string> orderedConnIds)
+    {
+        ApplyPlayerRingColors();
+    }
+
+    /// <summary>
+    /// Gán màu vòng chân của Local Player theo Slot cố định được chỉ định bởi Server
+    /// </summary>
+    public void ApplyLocalPlayerRingColor()
+    {
+        if (localPlayer == null)
+        {
+            GameObject pObj = GameObject.FindGameObjectWithTag("Player");
+            if (pObj != null) localPlayer = pObj.transform;
+        }
+
+        if (localPlayer != null)
+        {
+            int mySlot = 0;
+            if (NetworkManager.Instance != null)
+            {
+                mySlot = NetworkManager.Instance.GetPlayerSlotIndex(NetworkManager.Instance.MyConnectionId);
+            }
+            Color myColor = GetRingColorBySlot(mySlot);
+
+            RookieHealth rh = localPlayer.GetComponent<RookieHealth>();
+            if (rh != null)
+            {
+                rh.SetRingColor(myColor);
+            }
+            else
+            {
+                Transform ringPos = localPlayer.Find("Player_Ring");
+                if (ringPos == null) ringPos = localPlayer.Find("Ring");
+                if (ringPos == null) ringPos = localPlayer.Find("PlayerRing");
+                if (ringPos != null)
+                {
+                    SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
+                    if (ringSr != null) ringSr.color = myColor;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Áp dụng màu vòng chân chuẩn xác nhất quán cho toàn bộ Local Player và Remote Players (Đồng nhất trên mọi POV)
+    /// </summary>
+    public void ApplyPlayerRingColors()
+    {
+        // 1. Cập nhật màu Local Player
+        ApplyLocalPlayerRingColor();
+
+        // 2. Cập nhật màu tất cả Remote Players
+        foreach (var kvp in remotePlayers)
+        {
+            string connId = kvp.Key;
+            GameObject remoteObj = kvp.Value;
+            if (remoteObj == null) continue;
+
+            int slot = NetworkManager.Instance != null ? NetworkManager.Instance.GetPlayerSlotIndex(connId) : 1;
+            Color slotColor = GetRingColorBySlot(slot);
+
+            RemotePlayerController rpc = remoteObj.GetComponent<RemotePlayerController>();
+            if (rpc != null)
+            {
+                rpc.assignedRingColor = slotColor;
+            }
+
+            Transform ringPos = remoteObj.transform.Find("Player_Ring");
+            if (ringPos == null) ringPos = remoteObj.transform.Find("Ring");
+            if (ringPos == null) ringPos = remoteObj.transform.Find("PlayerRing");
+            if (ringPos != null)
+            {
+                SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
+                if (ringSr != null) ringSr.color = slotColor;
             }
         }
     }
