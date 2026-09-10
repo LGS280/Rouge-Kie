@@ -386,6 +386,9 @@ public class WeaponChest : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
+        if (UnityEditor.EditorApplication.isUpdating || UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+            return;
+
         string folderPath = "Assets/Prefab/Weapons";
         if (System.IO.Directory.Exists(folderPath))
         {
@@ -400,8 +403,29 @@ public class WeaponChest : MonoBehaviour
                     list.Add(prefab);
                 }
             }
-            weaponPrefabs = list.ToArray();
-            UnityEditor.EditorUtility.SetDirty(this);
+
+            bool isChanged = false;
+            if (weaponPrefabs == null || weaponPrefabs.Length != list.Count)
+            {
+                isChanged = true;
+            }
+            else
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    if (weaponPrefabs[i] != list[i])
+                    {
+                        isChanged = true;
+                        break;
+                    }
+                }
+            }
+
+            if (isChanged)
+            {
+                weaponPrefabs = list.ToArray();
+                UnityEditor.EditorUtility.SetDirty(this);
+            }
         }
     }
 #endif

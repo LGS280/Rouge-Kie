@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -20,6 +20,8 @@ public class WeaponAim : MonoBehaviour
 
     private float currentGamepadAngle = 0f;
     private Transform previousTarget;
+
+    public bool isAimingUp { get; private set; } = false;
 
     void Start()
     {
@@ -124,6 +126,8 @@ public class WeaponAim : MonoBehaviour
             angle += 360f;
         }
 
+        isAimingUp = (angle > 25f && angle < 155f);
+
         if (playerRenderer != null)
         {
             if (angle > 90f || angle < -90f)
@@ -136,6 +140,17 @@ public class WeaponAim : MonoBehaviour
                 playerRenderer.flipX = false;
                 transform.localScale = new Vector3(1f, 1f, 1f);
             }
+        }
+
+        if (currentWeapon == null)
+        {
+            currentWeapon = GetComponentInChildren<WeaponInfo>();
+        }
+
+        if (currentWeapon != null)
+        {
+            float upFactor = Mathf.Clamp01(1f - Mathf.Abs(angle - 90f) / 45f);
+            currentWeapon.transform.localPosition = Vector3.Lerp(currentWeapon.customHandPosition, Vector3.zero, upFactor);
         }
 
         HandleShooting();

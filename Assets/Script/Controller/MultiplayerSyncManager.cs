@@ -392,7 +392,6 @@ public class MultiplayerSyncManager : MonoBehaviour
 
             // Xóa các script của local player trên bản sao này để tránh xung đột
             Destroy(newRemote.GetComponent<PlayerController>());
-            Destroy(newRemote.GetComponent<PlayerMovement>());
             Destroy(newRemote.GetComponent<UnityEngine.InputSystem.PlayerInput>());
 
             // Đảm bảo Collider của Remote Player không làm kẹt/chắn đường di chuyển của Local Player

@@ -165,12 +165,12 @@ public class GameProgressionManager : MonoBehaviour
     {
         // 1. Tìm và vô hiệu hoá di chuyển + TẤT CẢ Collider của người chơi (bao gồm cả các object con)
         GameObject player = GameObject.FindWithTag("Player");
-        PlayerMovement movement = null;
+        PlayerController movement = null;
         Collider2D[] playerColliders = null;
 
         if (player != null)
         {
-            movement = player.GetComponent<PlayerMovement>();
+            movement = player.GetComponent<PlayerController>();
             if (movement != null) movement.enabled = false;
 
             playerColliders = player.GetComponentsInChildren<Collider2D>();

@@ -193,10 +193,10 @@ public class RunStatsTracker : MonoBehaviour
             GameObject player = GameObject.FindWithTag("Player");
             if (player != null)
             {
-                PlayerMovement pm = player.GetComponent<PlayerMovement>();
-                if (pm != null)
+                PlayerController pc = player.GetComponent<PlayerController>();
+                if (pc != null)
                 {
-                    pm.enabled = false;
+                    pc.enabled = false;
                     // Dừng hoạt ảnh di chuyển
                     Animator anim = player.GetComponent<Animator>();
                     if (anim != null) anim.SetFloat("Speed", 0f);
