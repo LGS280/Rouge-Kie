@@ -60,6 +60,32 @@ public class LoadingScreenUI : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        // Tự động tắt màn hình chờ mượt mà khi vào Sảnh Chờ (Lobby_Scene)
+        if (scene.name == "Lobby_Scene" && isShowing)
+        {
+            StartCoroutine(AutoHideLobbyLoadingRoutine());
+        }
+    }
+
+    private IEnumerator AutoHideLobbyLoadingRoutine()
+    {
+        // Chờ 0.5 giây để Scene nạp mượt mà, sau đó làm mờ dần trong 0.4s
+        yield return new WaitForSecondsRealtime(0.5f);
+        HideLoading(0.4f);
+    }
+
     private void Update()
     {
         // Hiệu ứng xoay mượt cho icon Spinner khi đang hiện màn hình chờ
