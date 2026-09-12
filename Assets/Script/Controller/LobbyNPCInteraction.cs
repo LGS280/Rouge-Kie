@@ -6,15 +6,24 @@ public enum LobbyInteractionType
     ShopMerchant,       // Shop bán đồ / vũ khí
     DungeonPortal,      // Cổng vào Dungeon / Bắt đầu trận
     LeaderboardBoard,   // Bảng xếp hạng
-    PlayerProfile       // Xem trang phục / thông tin người chơi
+    PlayerProfile,      // Xem trang phục / thông tin người chơi
+    WeaponVault         // Kho vũ khí đã mở khóa (Hangar)
 }
 
 public class LobbyNPCInteraction : MonoBehaviour
 {
     [Header("Interaction Settings")]
     public string entityName = "Armory Merchant";
-    public string promptText = "Bấm [E] mở Shop Vũ Khí";
+    public string promptText = "Press [E] to Open Armory Shop";
     public LobbyInteractionType interactionType = LobbyInteractionType.ShopMerchant;
+
+    [Header("Prompt Text Customization")]
+    [Tooltip("Vị trí lệch của chữ so với tâm Trigger (X: ngang, Y: cao/thấp)")]
+    public Vector2 textOffset = new Vector2(0f, 1.2f);
+    [Tooltip("Cỡ chữ hiển thị")]
+    public float fontSize = 24f;
+    [Tooltip("Màu chữ hiển thị")]
+    public Color textColor = Color.white;
 
     [Header("UI References")]
     public GameObject floatingCanvas;
@@ -27,6 +36,12 @@ public class LobbyNPCInteraction : MonoBehaviour
 
     private void Start()
     {
+        if (interactionType == LobbyInteractionType.ShopMerchant && textOffset == new Vector2(0f, 1.2f))
+        {
+            textOffset = new Vector2(0f, 0.65f);
+            fontSize = 28f;
+        }
+
         if (interactionType == LobbyInteractionType.DungeonPortal)
         {
             EnsurePortalVisual();
@@ -39,10 +54,7 @@ public class LobbyNPCInteraction : MonoBehaviour
                 CreateAutoFloatingCanvas();
             }
 
-            if (promptTextUI != null)
-            {
-                promptTextUI.text = promptText;
-            }
+            ApplyTextSettings();
 
             if (floatingCanvas != null)
             {
@@ -141,9 +153,9 @@ public class LobbyNPCInteraction : MonoBehaviour
         canvas.sortingOrder = 50;
 
         RectTransform canvasRect = canvasObj.GetComponent<RectTransform>();
-        canvasRect.sizeDelta = new Vector2(300, 60);
+        canvasRect.sizeDelta = (interactionType == LobbyInteractionType.WeaponVault) ? new Vector2(700, 70) : new Vector2(300, 60);
         canvasRect.localScale = new Vector3(0.005f, 0.005f, 1f); // Tỷ lệ chuẩn nét căng không bị méo chữ
-        canvasRect.anchoredPosition = new Vector2(0f, 0.65f); // Vị trí chuẩn sát ngay trên đầu NPC Shop Merchant
+        canvasRect.anchoredPosition = textOffset;
 
         GameObject textObj = new GameObject("PromptText", typeof(RectTransform), typeof(TextMeshProUGUI));
         textObj.transform.SetParent(canvasObj.transform, false);
@@ -155,15 +167,45 @@ public class LobbyNPCInteraction : MonoBehaviour
         textRect.anchoredPosition = Vector2.zero;
 
         TextMeshProUGUI tmp = textObj.GetComponent<TextMeshProUGUI>();
-        tmp.text = string.IsNullOrEmpty(promptText) ? "Bấm [E] mở Shop" : promptText;
-        tmp.fontSize = 28; // Tăng cỡ chữ to nổi bật hơn chút xíu
-        tmp.color = Color.white;
+        tmp.text = string.IsNullOrEmpty(promptText) ? "Press [E]" : promptText;
+        tmp.fontSize = fontSize;
+        tmp.color = textColor;
         tmp.alignment = TextAlignmentOptions.Center;
+        tmp.enableWordWrapping = false;
         tmp.enableAutoSizing = false;
 
         promptTextUI = tmp;
         floatingCanvas = canvasObj;
     }
+
+    /// <summary>
+    /// Áp dụng các thiết lập chỉnh sửa vị trí, cỡ chữ, màu sắc trực tiếp từ Inspector
+    /// </summary>
+    public void ApplyTextSettings()
+    {
+        if (floatingCanvas != null)
+        {
+            RectTransform canvasRect = floatingCanvas.GetComponent<RectTransform>();
+            if (canvasRect != null)
+            {
+                canvasRect.anchoredPosition = textOffset;
+            }
+        }
+
+        if (promptTextUI != null)
+        {
+            promptTextUI.text = promptText;
+            promptTextUI.fontSize = fontSize;
+            promptTextUI.color = textColor;
+        }
+    }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        ApplyTextSettings();
+    }
+#endif
 
     private void Update()
     {
@@ -229,6 +271,11 @@ public class LobbyNPCInteraction : MonoBehaviour
             case LobbyInteractionType.DungeonPortal:
                 Debug.Log("[LobbyNPCInteraction] Chuyển tới Dungeon (SampleScene)...");
 
+                if (WeaponManager.Instance != null)
+                {
+                    WeaponManager.Instance.SaveEquippedWeapons();
+                }
+
                 if (LoadingScreenUI.Instance != null)
                 {
                     LoadingScreenUI.Instance.ShowLoading("TẦNG 1 - 1", "Đang kết nối và khởi tạo hầm ngục mới...");
@@ -256,6 +303,40 @@ public class LobbyNPCInteraction : MonoBehaviour
                     profile.RefreshProfile();
                 }
                 break;
+
+            case LobbyInteractionType.WeaponVault:
+                WeaponVaultUIController vault = WeaponVaultUIController.Instance;
+                if (vault == null) vault = Object.FindFirstObjectByType<WeaponVaultUIController>();
+
+                if (vault == null)
+                {
+                    GameObject vaultObj = new GameObject("WeaponVaultUIController");
+                    vault = vaultObj.AddComponent<WeaponVaultUIController>();
+                }
+                vault.OpenVault();
+                break;
         }
     }
+
+#if UNITY_EDITOR
+    private void OnDrawGizmos()
+    {
+        if (interactionType == LobbyInteractionType.WeaponVault)
+        {
+            BoxCollider2D col = GetComponent<BoxCollider2D>();
+            if (col != null)
+            {
+                Gizmos.matrix = transform.localToWorldMatrix;
+                Gizmos.color = new Color(0.2f, 0.8f, 0.4f, 0.25f);
+                Gizmos.DrawCube(col.offset, col.size);
+                Gizmos.color = new Color(0.1f, 1f, 0.5f, 0.9f);
+                Gizmos.DrawWireCube(col.offset, col.size);
+
+                // Vẽ điểm màu vàng đánh dấu chính xác vị trí dòng chữ nổi Text
+                Gizmos.color = Color.yellow;
+                Gizmos.DrawSphere(textOffset, 0.12f);
+            }
+        }
+    }
+#endif
 }
