@@ -49,7 +49,7 @@ public class PaymentManager : MonoBehaviour
     [Serializable]
     public class CreatePaymentRequestData
     {
-        public int? shopItemId;
+        public int shopItemId;
         public int amount;
         public string description;
         public string currencyType;
@@ -168,7 +168,7 @@ public class PaymentManager : MonoBehaviour
     /// <summary>
     /// Tạo yêu cầu nạp tiền / mua gói Gem qua PayOS VietQR
     /// </summary>
-    public void RequestPayment(int amount, string description = "Nap Gem RogueKie", string currencyType = "GEMS", Action<PaymentResponseData> onSuccess = null, Action<string> onError = null)
+    public void RequestPayment(int amount, string description = "Nap Gem RogueKie", string currencyType = "GEMS", int shopItemId = 0, Action<PaymentResponseData> onSuccess = null, Action<string> onError = null)
     {
         string token = PlayerPrefs.GetString("jwt_token", "");
 
@@ -177,6 +177,7 @@ public class PaymentManager : MonoBehaviour
         {
             var req = new CreatePaymentRequestData
             {
+                shopItemId = shopItemId,
                 amount = amount,
                 description = description,
                 currencyType = currencyType
@@ -482,13 +483,19 @@ public class PaymentManager : MonoBehaviour
             PlayerProfileUI.Instance.RefreshProfile();
         }
 
-        // Tự động sinh súng vừa mua bằng VietQR lên Bàn Trưng Bày
+        // Tự động sinh súng vừa mua bằng VietQR lên Bàn Trưng Bày và mở khóa vĩnh viễn vào Kho
         ShopUIController shop = ShopUIController.Instance;
         if (shop == null) shop = UnityEngine.Object.FindFirstObjectByType<ShopUIController>();
 
-        if (!string.IsNullOrEmpty(pendingBoughtWeaponPrefab) && shop != null)
+        if (!string.IsNullOrEmpty(pendingBoughtWeaponPrefab))
         {
-            shop.SpawnBoughtWeaponOnTable(pendingBoughtWeaponPrefab);
+            ShopUIController.RegisterUnlockSafely(pendingBoughtWeaponPrefab);
+
+            if (shop != null)
+            {
+                shop.SpawnBoughtWeaponOnTable(pendingBoughtWeaponPrefab);
+                shop.RefreshAllTabs();
+            }
             pendingBoughtWeaponPrefab = "";
         }
 

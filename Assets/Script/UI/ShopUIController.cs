@@ -82,6 +82,7 @@ public class ShopUIController : MonoBehaviour
             BuildAutoShopUI();
         }
         if (shopPanel != null) shopPanel.SetActive(true);
+        RefreshAllTabs();
         FetchShopItems();
     }
 
@@ -132,19 +133,50 @@ public class ShopUIController : MonoBehaviour
         });
     }
 
+    public static void RegisterUnlockSafely(string prefabPath)
+    {
+        if (string.IsNullOrEmpty(prefabPath)) return;
+        string clean = prefabPath.Replace("Weapons/", "").Replace(".prefab", "").Replace("(Clone)", "").Trim();
+
+        WeaponVaultUIController vault = WeaponVaultUIController.Instance;
+        if (vault == null) vault = UnityEngine.Object.FindFirstObjectByType<WeaponVaultUIController>();
+        if (vault != null)
+        {
+            vault.RegisterUnlockedWeapon(clean);
+        }
+        else
+        {
+            string saved = PlayerPrefs.GetString("unlocked_weapons", "");
+            if (string.IsNullOrEmpty(saved))
+            {
+                PlayerPrefs.SetString("unlocked_weapons", clean);
+            }
+            else
+            {
+                var set = new HashSet<string>(saved.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries));
+                if (!set.Contains(clean))
+                {
+                    set.Add(clean);
+                    PlayerPrefs.SetString("unlocked_weapons", string.Join(",", set));
+                }
+            }
+            PlayerPrefs.Save();
+            Debug.Log($"[ShopUIController] Đã lưu offline fallback vũ khí '{clean}' vào PlayerPrefs!");
+        }
+    }
+
     /// <summary>
     /// Bấm Mua Súng trực tiếp bằng Tiền thật qua PayOS VietQR
     /// </summary>
-    public void BuyGemPackage(int amountVnd, string description)
+    public void BuyGemPackage(int amountVnd, string description, int shopItemId = 0, string weaponPrefab = "")
     {
-
         if (PaymentManager.Instance != null)
         {
             // Lưu lại thông tin súng mua bằng VietQR để sinh ra bàn khi thanh toán xong
-            string prefabPath = GetPrefabPathByDescription(description);
+            string prefabPath = !string.IsNullOrEmpty(weaponPrefab) ? weaponPrefab : GetPrefabPathByDescription(description);
             PaymentManager.Instance.pendingBoughtWeaponPrefab = prefabPath;
 
-            PaymentManager.Instance.RequestPayment(amountVnd, description, "GEMS", (res) =>
+            PaymentManager.Instance.RequestPayment(amountVnd, description, "GEMS", shopItemId, (res) =>
             {
                 if (statusText != null) statusText.text = "VietQR Code generated! Scan to pay.";
             }, (err) =>
@@ -177,6 +209,9 @@ public class ShopUIController : MonoBehaviour
                     Debug.Log($"[ShopUIController] {res.message}");
                     if (statusText != null) statusText.text = $"<color=green>{res.message}</color>";
 
+                    // Đăng ký mở khóa vĩnh viễn vào Kho Vũ Khí
+                    RegisterUnlockSafely(prefabPath);
+
                     // Làm mới giao diện hiển thị Coins/Gems của người chơi
                     if (PlayerProfileUI.Instance != null)
                     {
@@ -185,6 +220,9 @@ public class ShopUIController : MonoBehaviour
 
                     // Tự động sinh súng vừa mua lên Bàn Trưng Bày
                     SpawnBoughtWeaponOnTable(prefabPath);
+
+                    // Làm mới giao diện thẻ Shop (chuyển sang trạng thái ĐÃ MỞ KHÓA)
+                    RefreshAllTabs();
                 }
                 else
                 {
@@ -194,15 +232,17 @@ public class ShopUIController : MonoBehaviour
             catch (Exception ex)
             {
                 Debug.LogError($"[ShopUIController] Parse error: {ex.Message}");
-                // Offline fallback cho dev test
+                RegisterUnlockSafely(prefabPath);
                 SpawnBoughtWeaponOnTable(prefabPath);
+                RefreshAllTabs();
             }
         }, (err) =>
         {
             Debug.LogWarning($"[ShopUIController] API Buy Item Error (chuyển chế độ Offline Test): {err}");
             if (statusText != null) statusText.text = "<color=green>Offline Purchase Success! Weapon spawned on table!</color>";
-            // Offline / Dev Mode Fallback: Tự động sinh súng ngay lên bàn để test mượt mà
+            RegisterUnlockSafely(prefabPath);
             SpawnBoughtWeaponOnTable(prefabPath);
+            RefreshAllTabs();
         });
     }
 
@@ -437,19 +477,7 @@ public class ShopUIController : MonoBehaviour
         gemTabContent = CreateTabContent(dialog.transform, "GemTabContent");
         skinTabContent = CreateTabContent(dialog.transform, "SkinTabContent");
 
-        // 5a. Súng mua bằng Xu trong Game (In-Game Coins)
-        CreateShopCard(coinTabContent.transform, "AK-47 Gold", "500 Coins", "High-damage gold-plated assault rifle", "BUY (500 COINS)", "Weapons/AK_47A_Gold", () => BuyShopItem(1));
-        CreateShopCard(coinTabContent.transform, "Missile Launcher", "800 Coins", "Long-range homing missile launcher", "BUY (800 COINS)", "Weapons/Missile_Launcher", () => BuyShopItem(2));
-        CreateShopCard(coinTabContent.transform, "Rocket Launcher", "1,200 Coins", "Heavy rocket launcher with wide AoE", "BUY (1.2K COINS)", "Weapons/Rocket_Launcher", () => BuyShopItem(3));
-
-        // 5b. Súng VIP mua trực tiếp bằng Tiền Thật qua VietQR (PayOS)
-        CreateShopCard(gemTabContent.transform, "AK-47 Gold VIP", "2,000 VND", "Pay via VietQR to unlock AK-47 Gold VIP", "BUY NOW (2K VND)", "Weapons/AK_47A_Gold", () => BuyGemPackage(2000, "Buy AK-47 Gold VIP"));
-        CreateShopCard(gemTabContent.transform, "Missile Launcher VIP", "2,000 VND", "Pay via VietQR to unlock Missile Launcher VIP", "BUY NOW (2K VND)", "Weapons/Missile_Launcher", () => BuyGemPackage(2000, "Buy Missile Launcher VIP"));
-        CreateShopCard(gemTabContent.transform, "Rocket Launcher VIP", "2,000 VND", "Pay via VietQR to unlock Rocket Launcher VIP", "BUY NOW (2K VND)", "Weapons/Rocket_Launcher", () => BuyGemPackage(2000, "Buy Rocket Launcher VIP"));
-
-        // 5c. Trang Phục Skins
-        CreateShopCard(skinTabContent.transform, "Cyber Rookie", "100 Gems", "Rookie warrior battle suit", "BUY (100 GEMS)", "", () => BuyShopItem(4));
-        CreateShopCard(skinTabContent.transform, "Hero Zero", "200 Gems", "Zero superhero battle suit", "BUY (200 GEMS)", "", () => BuyShopItem(5));
+        RefreshAllTabs();
 
         // 6. Dòng trạng thái (Status Text)
         GameObject statusObj = new GameObject("StatusText", typeof(RectTransform), typeof(TextMeshProUGUI));
@@ -465,6 +493,33 @@ public class ShopUIController : MonoBehaviour
         statusText.alignment = TextAlignmentOptions.Center;
 
         shopPanel.SetActive(false);
+    }
+
+    /// <summary>
+    /// Làm mới nội dung các thẻ vật phẩm trong cả 3 Tab, tự động nhận biết vũ khí đã mở khóa
+    /// </summary>
+    public void RefreshAllTabs()
+    {
+        if (coinTabContent == null || gemTabContent == null || skinTabContent == null) return;
+
+        // Dọn sạch các card cũ
+        foreach (Transform child in coinTabContent.transform) Destroy(child.gameObject);
+        foreach (Transform child in gemTabContent.transform) Destroy(child.gameObject);
+        foreach (Transform child in skinTabContent.transform) Destroy(child.gameObject);
+
+        // 5a. Súng mua bằng Xu trong Game (In-Game Coins)
+        CreateShopCard(coinTabContent.transform, "AK-47 Gold", "500 Coins", "High-damage gold-plated assault rifle", "BUY (500 COINS)", "Weapons/AK_47A_Gold", () => BuyShopItem(1));
+        CreateShopCard(coinTabContent.transform, "Missile Launcher", "800 Coins", "Long-range homing missile launcher", "BUY (800 COINS)", "Weapons/Missile_Launcher", () => BuyShopItem(2));
+        CreateShopCard(coinTabContent.transform, "Rocket Launcher", "1,200 Coins", "Heavy rocket launcher with wide AoE", "BUY (1.2K COINS)", "Weapons/Rocket_Launcher", () => BuyShopItem(3));
+
+        // 5b. Súng VIP mua trực tiếp bằng Tiền Thật qua VietQR (PayOS)
+        CreateShopCard(gemTabContent.transform, "AK-47 Gold VIP", "2,000 VND", "Pay via VietQR to unlock AK-47 Gold VIP", "BUY NOW (2K VND)", "Weapons/AK_47A_Gold", () => BuyGemPackage(2000, "Buy AK-47 Gold VIP", 1, "AK_47A_Gold"));
+        CreateShopCard(gemTabContent.transform, "Missile Launcher VIP", "2,000 VND", "Pay via VietQR to unlock Missile Launcher VIP", "BUY NOW (2K VND)", "Weapons/Missile_Launcher", () => BuyGemPackage(2000, "Buy Missile Launcher VIP", 2, "Missile_Launcher"));
+        CreateShopCard(gemTabContent.transform, "Rocket Launcher VIP", "2,000 VND", "Pay via VietQR to unlock Rocket Launcher VIP", "BUY NOW (2K VND)", "Weapons/Rocket_Launcher", () => BuyGemPackage(2000, "Buy Rocket Launcher VIP", 3, "Rocket_Launcher"));
+
+        // 5c. Trang Phục Skins
+        CreateShopCard(skinTabContent.transform, "Cyber Rookie", "100 Gems", "Rookie warrior battle suit", "BUY (100 GEMS)", "", () => BuyShopItem(4));
+        CreateShopCard(skinTabContent.transform, "Hero Zero", "200 Gems", "Zero superhero battle suit", "BUY (200 GEMS)", "", () => BuyShopItem(5));
     }
 
     private Button CreateTabButton(Transform parent, Vector2 pos, string label)
@@ -517,6 +572,26 @@ public class ShopUIController : MonoBehaviour
 
     private void CreateShopCard(Transform parent, string title, string price, string desc, string buttonText, string spritePath, UnityEngine.Events.UnityAction onClickAction)
     {
+        // Kiểm tra xem vũ khí này đã được người chơi mở khóa vĩnh viễn chưa
+        bool isUnlocked = false;
+        if (!string.IsNullOrEmpty(spritePath))
+        {
+            string clean = spritePath.Replace("Weapons/", "").Replace(".prefab", "").Trim();
+            if (WeaponVaultUIController.Instance != null)
+            {
+                isUnlocked = WeaponVaultUIController.Instance.IsWeaponUnlocked(clean);
+            }
+            else
+            {
+                string saved = PlayerPrefs.GetString("unlocked_weapons", "");
+                if (!string.IsNullOrEmpty(saved))
+                {
+                    var items = saved.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    isUnlocked = Array.Exists(items, item => item.Trim().Equals(clean, StringComparison.OrdinalIgnoreCase));
+                }
+            }
+        }
+
         GameObject card = new GameObject("Card_" + title, typeof(RectTransform), typeof(Image));
         card.transform.SetParent(parent, false);
 
@@ -524,7 +599,7 @@ public class ShopUIController : MonoBehaviour
         rect.sizeDelta = new Vector2(250, 320);
 
         Image img = card.GetComponent<Image>();
-        img.color = new Color(0.15f, 0.19f, 0.28f);
+        img.color = isUnlocked ? new Color(0.11f, 0.14f, 0.20f, 0.95f) : new Color(0.15f, 0.19f, 0.28f);
 
         // Title
         GameObject tObj = new GameObject("Title", typeof(RectTransform), typeof(TextMeshProUGUI));
@@ -579,27 +654,27 @@ public class ShopUIController : MonoBehaviour
         dTxt.color = new Color(0.8f, 0.85f, 0.9f);
         dTxt.alignment = TextAlignmentOptions.Center;
 
-        // Price
+        // Price / Status
         GameObject pObj = new GameObject("Price", typeof(RectTransform), typeof(TextMeshProUGUI));
         pObj.transform.SetParent(card.transform, false);
         RectTransform pRect = pObj.GetComponent<RectTransform>();
         pRect.anchoredPosition = new Vector2(0, -65);
         pRect.sizeDelta = new Vector2(220, 25);
         TextMeshProUGUI pTxt = pObj.GetComponent<TextMeshProUGUI>();
-        pTxt.text = price;
+        pTxt.text = isUnlocked ? "<color=#40ff40>[ĐÃ MUA]</color>" : price;
         pTxt.fontSize = 17;
-        pTxt.color = new Color(0.4f, 0.9f, 0.5f);
+        pTxt.color = isUnlocked ? new Color(0.3f, 1f, 0.4f) : new Color(0.4f, 0.9f, 0.5f);
         pTxt.alignment = TextAlignmentOptions.Center;
         pTxt.fontStyle = FontStyles.Bold;
 
-        // Buy Button
+        // Buy / Equip Button
         GameObject bObj = new GameObject("BuyBtn", typeof(RectTransform), typeof(Image), typeof(Button));
         bObj.transform.SetParent(card.transform, false);
         RectTransform bRect = bObj.GetComponent<RectTransform>();
         bRect.anchoredPosition = new Vector2(0, -115);
         bRect.sizeDelta = new Vector2(200, 45);
         Image bImg = bObj.GetComponent<Image>();
-        bImg.color = new Color(0.2f, 0.65f, 0.35f);
+        bImg.color = isUnlocked ? new Color(0.22f, 0.26f, 0.32f) : new Color(0.2f, 0.65f, 0.35f);
 
         GameObject btObj = new GameObject("Txt", typeof(RectTransform), typeof(TextMeshProUGUI));
         btObj.transform.SetParent(bObj.transform, false);
@@ -608,13 +683,22 @@ public class ShopUIController : MonoBehaviour
         btRect.anchorMax = Vector2.one;
         btRect.sizeDelta = Vector2.zero;
         TextMeshProUGUI btTxt = btObj.GetComponent<TextMeshProUGUI>();
-        btTxt.text = string.IsNullOrEmpty(buttonText) ? "BUY NOW" : buttonText;
+        btTxt.text = isUnlocked ? "ĐÃ SỞ HỮU" : (string.IsNullOrEmpty(buttonText) ? "BUY NOW" : buttonText);
         btTxt.fontSize = 15;
-        btTxt.color = Color.white;
+        btTxt.color = isUnlocked ? new Color(0.6f, 0.65f, 0.7f) : Color.white;
         btTxt.alignment = TextAlignmentOptions.Center;
         btTxt.fontStyle = FontStyles.Bold;
 
         Button btn = bObj.GetComponent<Button>();
-        btn.onClick.AddListener(onClickAction);
+        if (isUnlocked)
+        {
+            // Đã mua: Khóa nút bấm (disable) để chống spam sinh hàng loạt súng ra bàn
+            btn.interactable = false;
+        }
+        else
+        {
+            btn.interactable = true;
+            btn.onClick.AddListener(onClickAction);
+        }
     }
 }
