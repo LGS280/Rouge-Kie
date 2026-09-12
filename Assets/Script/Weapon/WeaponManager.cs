@@ -345,6 +345,34 @@ public class WeaponManager : MonoBehaviour
         return null;
     }
 
+    /// <summary>
+    /// Trang bị trực tiếp vũ khí từ Kho Vũ Khí (Armory Vault) hoặc Shop vào tay người chơi
+    /// </summary>
+    public bool EquipWeaponDirectly(GameObject weaponPrefab)
+    {
+        if (weaponPrefab == null) return false;
+
+        // Trang bị vũ khí trực tiếp vào vị trí tay cầm (Active Hand Weapon)
+        if (isUsingSlot1)
+        {
+            if (weaponSlot1 != null) Destroy(weaponSlot1);
+            weaponSlot1 = Instantiate(weaponPrefab, handPosition.position, Quaternion.identity);
+            UpdateWeaponParent(weaponSlot1, handPosition, true);
+            if (weaponSlot2 != null) UpdateWeaponParent(weaponSlot2, backPosition, false);
+        }
+        else
+        {
+            if (weaponSlot2 != null) Destroy(weaponSlot2);
+            weaponSlot2 = Instantiate(weaponPrefab, handPosition.position, Quaternion.identity);
+            UpdateWeaponParent(weaponSlot2, handPosition, true);
+            if (weaponSlot1 != null) UpdateWeaponParent(weaponSlot1, backPosition, false);
+        }
+
+        SaveEquippedWeapons();
+        SyncActiveWeaponToNetwork();
+        return true;
+    }
+
     public void PickupWeapon(GroundWeapon groundWeapon)
     {
         GameObject newWeaponPrefab = groundWeapon.weaponPrefab;
