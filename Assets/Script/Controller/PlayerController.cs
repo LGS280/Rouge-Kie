@@ -78,8 +78,9 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // Chỉ thêm điều kiện dừng di chuyển nếu Shop UI đang mở
-        if (ShopUIController.Instance != null && ShopUIController.Instance.IsShopOpen())
+        // Chú ý: thêm điều kiện dừng di chuyển nếu Shop UI hoặc Kho Vũ Khí (Weapon Vault) đang mở
+        if ((ShopUIController.Instance != null && ShopUIController.Instance.IsShopOpen()) ||
+            (WeaponVaultUIController.Instance != null && WeaponVaultUIController.Instance.IsVaultOpen()))
         {
             return;
         }

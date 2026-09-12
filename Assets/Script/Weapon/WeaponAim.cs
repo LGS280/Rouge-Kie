@@ -44,7 +44,8 @@ public class WeaponAim : MonoBehaviour
             return;
         }
 
-        if (ShopUIController.Instance != null && ShopUIController.Instance.IsShopOpen())
+        if ((ShopUIController.Instance != null && ShopUIController.Instance.IsShopOpen()) ||
+            (WeaponVaultUIController.Instance != null && WeaponVaultUIController.Instance.IsVaultOpen()))
         {
             return;
         }

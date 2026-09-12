@@ -7,6 +7,7 @@ public class RookieHealth : MonoBehaviour
     public int maxHealth = 5;
     private int currentHealth;
     [HideInInspector] public bool isDead = false;
+    [HideInInspector] public Color assignedRingColor = Color.green;
     private Animator animator;
     private Collider2D playerCollider;
     private Rigidbody2D rb;
@@ -401,14 +402,30 @@ public class RookieHealth : MonoBehaviour
             if (sr != null) sr.color = Color.white;
         }
 
-        // 7. Ép vòng chọn chân Player_Ring xuất hiện trở lại và có đúng màu XANH LÁ CÂY (Color.green)
+        // 7. Ép vòng chọn chân Player_Ring xuất hiện trở lại và khôi phục đúng màu assignedRingColor
         if (ringPos != null)
         {
             ringPos.gameObject.SetActive(true);
             SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
-            if (ringSr != null) ringSr.color = Color.green;
+            if (ringSr != null) ringSr.color = assignedRingColor;
         }
 
         Debug.Log($"[RookieHealth] Người chơi đã được HỒI SINH hoàn toàn với {currentHealth} Máu và {currentArmor} Giáp!");
+    }
+
+    /// <summary>
+    /// Thiết lập màu vòng chân Player_Ring theo Global Slot được cấp phát từ mạng (POV Sync)
+    /// </summary>
+    public void SetRingColor(Color color)
+    {
+        assignedRingColor = color;
+        Transform ringPos = transform.Find("Player_Ring");
+        if (ringPos == null) ringPos = transform.Find("Ring");
+        if (ringPos == null) ringPos = transform.Find("PlayerRing");
+        if (ringPos != null)
+        {
+            SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
+            if (ringSr != null) ringSr.color = color;
+        }
     }
 }

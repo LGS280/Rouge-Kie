@@ -112,6 +112,9 @@ public class InGameMenuController : MonoBehaviour
             await NetworkManager.Instance.DisconnectAndReconnect();
         }
 
+        // Reset vũ khí đã lưu của lượt chơi cũ
+        WeaponManager.ResetSavedWeapons();
+
         // Chuyển về Scene Menu chính
         UnityEngine.SceneManagement.SceneManager.LoadScene("Scene_Menu");
     }

@@ -107,6 +107,11 @@ public class NetworkManager : MonoBehaviour
     // BỔ SUNG: Sự kiện đồng bộ khi Boss xả đạn (bossId, targetX, targetY)
     public event Action<string, float, float> OnBossAttack;
 
+    // BỔ SUNG: Sự kiện đồng bộ thứ tự người chơi toàn cục trong phòng (Global Player Slot Order)
+    public event Action<List<string>> OnSyncPlayerOrder;
+
+    public List<string> OrderedRoomPlayerIds { get; private set; } = new List<string>();
+
     public string MyConnectionId => hubConnection?.ConnectionId;
 
     // QUYỀN HẠN TRONG TRẬN: Sẽ được Server định đoạt khi tạo hoặc vào phòng thành công
@@ -157,9 +162,25 @@ public class NetworkManager : MonoBehaviour
         {
             CurrentRoomId = roomCode;
             UserRole = isHost ? "Host" : "Client";
+            OrderedRoomPlayerIds.Clear();
+            if (!string.IsNullOrEmpty(MyConnectionId))
+            {
+                OrderedRoomPlayerIds.Add(MyConnectionId);
+            }
             Debug.Log($"Đã tạo phòng thành công! RoomCode: {roomCode} | Quyền của bạn: {UserRole}");
 
             unityContext.Post(_ => OnRoomCreated?.Invoke(roomCode), null);
+        });
+
+        // BỔ SUNG: Lắng nghe danh sách thứ tự người chơi cố định từ Server (Global Player Slot Order)
+        hubConnection.On<List<string>>("OnSyncPlayerOrder", (orderedIds) =>
+        {
+            if (orderedIds != null)
+            {
+                OrderedRoomPlayerIds = new List<string>(orderedIds);
+                Debug.Log($"[NetworkManager] Đã đồng bộ thứ tự {OrderedRoomPlayerIds.Count} người chơi trong phòng: {string.Join(", ", OrderedRoomPlayerIds)}");
+            }
+            unityContext.Post(_ => OnSyncPlayerOrder?.Invoke(orderedIds), null);
         });
 
         // CẬP NHẬT CÁCH 1: Hứng thêm biến bool isHost từ Server gửi về khi vào phòng thành công
@@ -327,6 +348,7 @@ public class NetworkManager : MonoBehaviour
             {
                 await hubConnection.InvokeAsync("LeaveRoom");
             }
+            OrderedRoomPlayerIds.Clear();
             CurrentRoomId = null;
         }
         catch (Exception ex)
@@ -396,6 +418,43 @@ public class NetworkManager : MonoBehaviour
         {
             Debug.LogWarning($"[NetworkManager] RequestStartGame gián đoạn: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// Yêu cầu Server gửi lại danh sách thứ tự người chơi trong phòng (phục vụ đồng bộ màu khi load Scene)
+    /// </summary>
+    public async void RequestSyncPlayerOrder()
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("GetPlayerOrder");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] RequestSyncPlayerOrder gián đoạn: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Lấy chỉ số Slot người chơi toàn cục (0: Host / P1, 1: P2, 2: P3, 3: P4)
+    /// </summary>
+    public int GetPlayerSlotIndex(string connId)
+    {
+        if (string.IsNullOrEmpty(connId)) return 0;
+
+        int idx = OrderedRoomPlayerIds.IndexOf(connId);
+        if (idx >= 0) return idx;
+
+        // Fallback dự phòng nếu danh sách chưa kịp đồng bộ:
+        if (connId == MyConnectionId)
+        {
+            return UserRole == "Host" ? 0 : 1;
+        }
+
+        return 1;
     }
 
     // CÁC PHƯƠNG THỨC GỬI SỰ KIỆN ROOM LÊN SERVER
