@@ -25,10 +25,16 @@ public class RookieHealth : MonoBehaviour
     public int maxMana = 200;
     private int currentMana;
 
+    [HideInInspector]
+    public string characterName = "";
+
     public UnityEvent onHealthChanged;
 
     void Start()
     {
+        ApplyCharacterConfig();
+        GameConfigManager.OnConfigLoaded += ApplyCharacterConfig;
+
         currentHealth = maxHealth;
         currentArmor = maxArmor;
         currentMana = maxMana;
@@ -37,6 +43,44 @@ public class RookieHealth : MonoBehaviour
         playerCollider = GetComponent<Collider2D>();
         rb = GetComponent<Rigidbody2D>();
         onHealthChanged?.Invoke();
+    }
+
+    private void OnDestroy()
+    {
+        GameConfigManager.OnConfigLoaded -= ApplyCharacterConfig;
+    }
+
+    private bool hasInitializedStats = false;
+
+    public void ApplyCharacterConfig()
+    {
+        if (GameConfigManager.Instance == null) return;
+        string key = !string.IsNullOrEmpty(characterName) ? characterName : gameObject.name.Replace("(Clone)", "").Trim();
+        if (string.IsNullOrEmpty(key) || key == "Player") key = "Rookie";
+        CharacterConfig config = GameConfigManager.Instance.GetCharacterConfig(key);
+        if (config == null) config = GameConfigManager.Instance.GetCharacterConfig("Rookie");
+        if (config != null)
+        {
+            if (config.baseHealth > 0) maxHealth = config.baseHealth;
+            if (config.baseArmor >= 0) maxArmor = config.baseArmor;
+            if (config.baseMana > 0) maxMana = config.baseMana;
+
+            if (!hasInitializedStats)
+            {
+                currentHealth = maxHealth;
+                currentArmor = maxArmor;
+                currentMana = maxMana;
+                hasInitializedStats = true;
+            }
+            else
+            {
+                currentHealth = Mathf.Min(currentHealth, maxHealth);
+                currentArmor = Mathf.Min(currentArmor, maxArmor);
+                currentMana = Mathf.Min(currentMana, maxMana);
+            }
+
+            onHealthChanged?.Invoke();
+        }
     }
 
     void Update()

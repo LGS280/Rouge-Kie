@@ -19,6 +19,10 @@ public class GameConfigManager : MonoBehaviour
     public Dictionary<int, WeaponConfig> WeaponDb = new Dictionary<int, WeaponConfig>();
     public Dictionary<string, WeaponConfig> WeaponDbByName = new Dictionary<string, WeaponConfig>(System.StringComparer.OrdinalIgnoreCase);
     public List<BuffConfig> BuffDb = new List<BuffConfig>();
+    public Dictionary<int, CharacterConfig> CharacterDb = new Dictionary<int, CharacterConfig>();
+    public Dictionary<string, CharacterConfig> CharacterDbByName = new Dictionary<string, CharacterConfig>(System.StringComparer.OrdinalIgnoreCase);
+    public Dictionary<int, EnemyConfig> EnemyDb = new Dictionary<int, EnemyConfig>();
+    public Dictionary<string, EnemyConfig> EnemyDbByName = new Dictionary<string, EnemyConfig>(System.StringComparer.OrdinalIgnoreCase);
 
     private void Awake()
     {
@@ -153,7 +157,103 @@ public class GameConfigManager : MonoBehaviour
             }
         }));
 
+        yield return StartCoroutine(FetchData($"{baseUrl}/characters", (json) => {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(json)) throw new Exception("Empty response");
+                string wrappedJson = "{\"data\":" + json + "}";
+                var wrapper = JsonUtility.FromJson<CharacterArrayWrapper>(wrappedJson);
+                if (wrapper != null && wrapper.data != null)
+                {
+                    foreach (var c in wrapper.data)
+                    {
+                        CharacterDb[c.GetId()] = c;
+                        if (!string.IsNullOrEmpty(c.prefabName))
+                        {
+                            CharacterDbByName[c.prefabName.Trim()] = c;
+                        }
+                        if (!string.IsNullOrEmpty(c.name))
+                        {
+                            CharacterDbByName[c.name.Trim()] = c;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }));
+
+        yield return StartCoroutine(FetchData($"{baseUrl}/enemies", (json) => {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(json)) throw new Exception("Empty response");
+                string wrappedJson = "{\"data\":" + json + "}";
+                var wrapper = JsonUtility.FromJson<EnemyArrayWrapper>(wrappedJson);
+                if (wrapper != null && wrapper.data != null)
+                {
+                    foreach (var e in wrapper.data)
+                    {
+                        EnemyDb[e.id] = e;
+                        if (!string.IsNullOrEmpty(e.prefabName))
+                        {
+                            EnemyDbByName[e.prefabName.Trim()] = e;
+                        }
+                        if (!string.IsNullOrEmpty(e.enemyName))
+                        {
+                            EnemyDbByName[e.enemyName.Trim()] = e;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }));
+
         OnConfigLoaded?.Invoke();
+    }
+
+    public CharacterConfig GetCharacterConfig(string identifier)
+    {
+        if (string.IsNullOrEmpty(identifier)) return null;
+        string cleanKey = identifier.Replace("(Clone)", "").Trim();
+        if (CharacterDbByName.TryGetValue(cleanKey, out var config))
+        {
+            return config;
+        }
+        return null;
+    }
+
+    public CharacterConfig GetCharacterConfig(int id)
+    {
+        if (CharacterDb.TryGetValue(id, out var config))
+        {
+            return config;
+        }
+        return null;
+    }
+
+    public EnemyConfig GetEnemyConfig(string identifier)
+    {
+        if (string.IsNullOrEmpty(identifier)) return null;
+        string cleanKey = identifier.Replace("(Clone)", "").Trim();
+        if (EnemyDbByName.TryGetValue(cleanKey, out var config))
+        {
+            return config;
+        }
+        return null;
+    }
+
+    public EnemyConfig GetEnemyConfig(int id)
+    {
+        if (EnemyDb.TryGetValue(id, out var config))
+        {
+            return config;
+        }
+        return null;
     }
 
     private IEnumerator FetchData(string url, Action<string> onSuccess)
