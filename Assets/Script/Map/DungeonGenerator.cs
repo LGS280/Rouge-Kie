@@ -178,10 +178,10 @@ public class DungeonGenerator : MonoBehaviour
     [ContextMenu("Generate Soul Knight Map")]
     public void GenerateSoulKnightMap()
     {
-        if (GameConfigManager.Instance != null)
-        {
-            GameConfigManager.Instance.ReloadConfigs();
-        }
+        //if (GameConfigManager.Instance != null)
+        //{
+        //    GameConfigManager.Instance.ReloadConfigs();
+        //}
 
         // 1. Nạp Hạt giống ngẫu nhiên đồng bộ cho Co-op
         InitMapSeed();
@@ -1522,7 +1522,16 @@ public class DungeonGenerator : MonoBehaviour
                     MobHealth mobHealth = mobObj.GetComponent<MobHealth>();
                     if (mobHealth != null)
                     {
-                        mobHealth.maxHealth = 1500; // Đặt máu khủng cho Boss cuối
+                        EnemyConfig bossCfg = GameConfigManager.Instance != null ? (GameConfigManager.Instance.GetEnemyConfig("Dragon") ?? GameConfigManager.Instance.GetEnemyConfig("DragonPrefab")) : null;
+                        if (bossCfg != null && bossCfg.baseHealth > 0)
+                        {
+                            mobHealth.maxHealth = bossCfg.baseHealth;
+                        }
+                        else
+                        {
+                            mobHealth.maxHealth = 1500; // Đặt máu khủng cho Boss cuối
+                        }
+                        mobHealth.ApplyEnemyConfig();
                     }
                 }
                 else
@@ -1534,7 +1543,17 @@ public class DungeonGenerator : MonoBehaviour
                     MobHealth mobHealth = mobObj.GetComponent<MobHealth>();
                     if (mobHealth != null)
                     {
-                        mobHealth.maxHealth = 400 + (floor * 100); // Máu tăng dần qua các tầng
+                        EnemyConfig melogCfg = GameConfigManager.Instance != null ? GameConfigManager.Instance.GetEnemyConfig("Melog") : null;
+                        int baseHp = (melogCfg != null && melogCfg.baseHealth > 0) ? melogCfg.baseHealth : 400;
+                        if (floor > 1)
+                        {
+                            mobHealth.maxHealth = baseHp + ((floor - 1) * 100);
+                        }
+                        else
+                        {
+                            mobHealth.maxHealth = baseHp;
+                        }
+                        mobHealth.ApplyEnemyConfig();
                     }
                 }
             }

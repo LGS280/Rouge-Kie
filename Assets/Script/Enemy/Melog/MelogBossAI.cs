@@ -12,8 +12,9 @@ public class MelogBossAI : MonoBehaviour
     [Header("Chỉ số di chuyển & Tầm quét")]
     public float wanderSpeed = 1.5f;
     public float chaseSpeed = 2.8f;
-    public float detectRange = 7.0f;
+    public float detectRange = 10.0f;
     public float attackRange = 5.0f;
+    public float attackCooldown = 3.0f;
     private float nextAttackTime = 0f;
 
     [Header("Liên kết Component")]
@@ -75,6 +76,23 @@ public class MelogBossAI : MonoBehaviour
         if (!isHost && rb != null)
         {
             rb.bodyType = RigidbodyType2D.Kinematic;
+        }
+
+        if (GameConfigManager.Instance != null)
+        {
+            EnemyConfig eConfig = GameConfigManager.Instance.GetEnemyConfig(gameObject.name);
+            if (eConfig == null) eConfig = GameConfigManager.Instance.GetEnemyConfig("Melog");
+            if (eConfig != null)
+            {
+                if (eConfig.moveSpeed > 0)
+                {
+                    chaseSpeed = eConfig.moveSpeed;
+                }
+                if (eConfig.attackSpeed > 0)
+                {
+                    attackCooldown = eConfig.attackSpeed;
+                }
+            }
         }
 
         FindNearestPlayer(); // tìm người chơi gần nhất
@@ -369,12 +387,24 @@ public class MelogBossAI : MonoBehaviour
             NetworkManager.Instance.SendBossAttack(mobNetworkIdentity.networkId, targetPlayer.position.x, targetPlayer.position.y);
         }
 
-        nextAttackTime = Time.time + GetWeaponFireRateFromDb();
+        nextAttackTime = Time.time + GetAttackCooldown();
         currentState = BossState.Chase;
     }
 
-    private float GetWeaponFireRateFromDb()
+    private float GetAttackCooldown()
     {
+        // 1. Ưu tiên số 1: AttackSpeed từ EnemyConfig của Melog trong DB
+        if (GameConfigManager.Instance != null)
+        {
+            EnemyConfig eConfig = GameConfigManager.Instance.GetEnemyConfig(gameObject.name);
+            if (eConfig == null) eConfig = GameConfigManager.Instance.GetEnemyConfig("Melog");
+            if (eConfig != null && eConfig.attackSpeed > 0)
+            {
+                return eConfig.attackSpeed;
+            }
+        }
+
+        // 2. Fallback: Nếu DB chưa có hoặc attackSpeed <= 0, lấy FireRate của súng Gatling bên trái
         if (melogWeaponAim != null && melogWeaponAim.leftWeaponInfo != null)
         {
             WeaponConfig config = melogWeaponAim.leftWeaponInfo.GetWeaponConfig();
@@ -383,7 +413,8 @@ public class MelogBossAI : MonoBehaviour
                 return config.fireRate;
             }
         }
-        return 3.0f;
+
+        return attackCooldown > 0 ? attackCooldown : 3.0f;
     }
 
     private Vector2 GetSeparationForce()
