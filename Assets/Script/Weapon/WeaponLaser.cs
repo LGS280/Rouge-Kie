@@ -55,6 +55,9 @@ public class WeaponLaser : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
+        if (UnityEditor.EditorApplication.isUpdating || UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+            return;
+
         if (weaponPrefab == null)
         {
             string myPath = UnityEditor.AssetDatabase.GetAssetPath(gameObject);

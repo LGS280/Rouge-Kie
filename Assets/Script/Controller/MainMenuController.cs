@@ -74,6 +74,25 @@ public class MainMenuController : MonoBehaviour
 
     public void OnSingleplayerPressed()
     {
+        // Kiểm tra xem người chơi đã đăng nhập hay chưa (giống như chế độ Co-op)
+        bool loggedIn = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn;
+        if (!loggedIn)
+        {
+            Debug.Log("[MainMenuController] Chưa đăng nhập! Đang gọi Scene Login/Register...");
+            LoginController.PendingActionAfterLogin = "SINGLEPLAYER";
+
+            if (!SceneManager.GetSceneByName("LoginScrene").isLoaded)
+            {
+                SceneManager.LoadScene("LoginScrene", LoadSceneMode.Additive);
+            }
+            return;
+        }
+
+        ProceedToSingleplayer();
+    }
+
+    public void ProceedToSingleplayer()
+    {
         Debug.Log("Chạy chế độ chơi đơn...");
 
         if (LoadingScreenUI.Instance != null)

@@ -24,6 +24,25 @@ public class MultiplayerSyncManager : MonoBehaviour
         if (Instance == null) Instance = this;
     }
 
+    /// <summary>
+    /// Trả về màu vòng tròn chân nhân vật cố định theo Slot toàn cục (Đồng nhất trên mọi góc nhìn POV):
+    /// Slot 0 (Host / P1): Xanh Lá Cây (#00FF00)
+    /// Slot 1 (Player 2): Xanh Dương / Cyan (#00BFFF)
+    /// Slot 2 (Player 3): Vàng Hoàng Gia (#FFD700)
+    /// Slot 3 (Player 4): Tím Quyến Rũ (#BA55D3)
+    /// </summary>
+    public static Color GetRingColorBySlot(int slotIndex)
+    {
+        switch (slotIndex)
+        {
+            case 0: return Color.green;                  // Slot 0 (Host / P1): Xanh Lá Cây
+            case 1: return new Color(0f, 0.75f, 1f, 1f); // Slot 1 (P2): Xanh Dương
+            case 2: return new Color(1f, 0.85f, 0f, 1f); // Slot 2 (P3): Vàng Hoàng Gia
+            case 3: return new Color(0.8f, 0.2f, 1f, 1f); // Slot 3 (P4): Tím Quyến Rũ
+            default: return Color.green;
+        }
+    }
+
     private void Start()
     {
         bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
@@ -41,6 +60,9 @@ public class MultiplayerSyncManager : MonoBehaviour
             if (playerObj != null) localPlayer = playerObj.transform;
         }
 
+        // BỔ SUNG: Áp dụng màu vòng chân cho Local Player theo Slot cố định
+        ApplyLocalPlayerRingColor();
+
         // Tự động gắn TeammateReviveArea để quản lý giữ phím [E] 2.5s hồi sinh đồng đội
         if (GetComponent<Assets.Script.Characters.Rookie.TeammateReviveArea>() == null)
         {
@@ -56,6 +78,9 @@ public class MultiplayerSyncManager : MonoBehaviour
         // Đăng ký lắng nghe gói tin mạng từ NetworkManager
         if (NetworkManager.Instance != null)
         {
+            NetworkManager.Instance.OnSyncPlayerOrder += HandleSyncPlayerOrder;
+            NetworkManager.Instance.RequestSyncPlayerOrder();
+
             NetworkManager.Instance.OnReceivePosition += UpdateRemotePlayerPosition;
             NetworkManager.Instance.OnPlayerDisconnected += RemoveRemotePlayer;
             NetworkManager.Instance.OnRemotePlayerShoot += HandleRemotePlayerShoot;
@@ -72,6 +97,14 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnTeamDefeat += HandleTeamDefeat;
             NetworkManager.Instance.OnPlayerRevived += HandlePlayerRevived;
             NetworkManager.Instance.OnHostDisconnectedEndGame += HandleHostDisconnectedEndGame;
+
+            // BỔ SUNG: Đăng ký sự kiện mở rương, nhặt súng dùng chung và vứt súng
+            NetworkManager.Instance.OnChestOpened += HandleRemoteChestOpened;
+            NetworkManager.Instance.OnGroundWeaponPickedUp += HandleRemoteGroundWeaponPickedUp;
+            NetworkManager.Instance.OnWeaponDropped += HandleRemoteWeaponDropped;
+
+            // BỔ SUNG: Đăng ký sự kiện Boss tấn công từ máy Host
+            NetworkManager.Instance.OnBossAttack += HandleRemoteBossAttack;
         }
     }
 
@@ -80,6 +113,7 @@ public class MultiplayerSyncManager : MonoBehaviour
         // Hủy đăng ký tất cả sự kiện để tránh lỗi rò rỉ bộ nhớ (Memory Leak)
         if (NetworkManager.Instance != null)
         {
+            NetworkManager.Instance.OnSyncPlayerOrder -= HandleSyncPlayerOrder;
             NetworkManager.Instance.OnReceivePosition -= UpdateRemotePlayerPosition;
             NetworkManager.Instance.OnPlayerDisconnected -= RemoveRemotePlayer;
             NetworkManager.Instance.OnRemotePlayerShoot -= HandleRemotePlayerShoot;
@@ -96,6 +130,14 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.OnTeamDefeat -= HandleTeamDefeat;
             NetworkManager.Instance.OnPlayerRevived -= HandlePlayerRevived;
             NetworkManager.Instance.OnHostDisconnectedEndGame -= HandleHostDisconnectedEndGame;
+
+            // BỔ SUNG: Hủy đăng ký sự kiện mở rương, nhặt súng dùng chung và vứt súng
+            NetworkManager.Instance.OnChestOpened -= HandleRemoteChestOpened;
+            NetworkManager.Instance.OnGroundWeaponPickedUp -= HandleRemoteGroundWeaponPickedUp;
+            NetworkManager.Instance.OnWeaponDropped -= HandleRemoteWeaponDropped;
+
+            // BỔ SUNG: Hủy đăng ký sự kiện Boss tấn công từ máy Host
+            NetworkManager.Instance.OnBossAttack -= HandleRemoteBossAttack;
         }
     }
 
@@ -331,7 +373,7 @@ public class MultiplayerSyncManager : MonoBehaviour
             {
                 ringPos.gameObject.SetActive(true);
                 SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
-                if (ringSr != null) ringSr.color = Color.green;
+                if (ringSr != null) ringSr.color = (rpc != null) ? rpc.assignedRingColor : GetRingColorBySlot(1);
             }
         }
     }
@@ -376,7 +418,6 @@ public class MultiplayerSyncManager : MonoBehaviour
 
             // Xóa các script của local player trên bản sao này để tránh xung đột
             Destroy(newRemote.GetComponent<PlayerController>());
-            Destroy(newRemote.GetComponent<PlayerMovement>());
             Destroy(newRemote.GetComponent<UnityEngine.InputSystem.PlayerInput>());
 
             // Đảm bảo Collider của Remote Player không làm kẹt/chắn đường di chuyển của Local Player
@@ -415,6 +456,21 @@ public class MultiplayerSyncManager : MonoBehaviour
             }
 
             remotePlayers.Add(connId, newRemote);
+
+            // BỔ SUNG: Gán màu vòng chân chuẩn xác dựa trên Global Slot (P1: Xanh lá, P2: Xanh dương, P3: Vàng, P4: Tím)
+            int slot = NetworkManager.Instance != null ? NetworkManager.Instance.GetPlayerSlotIndex(connId) : remotePlayers.Count;
+            Color ringColor = GetRingColorBySlot(slot);
+
+            rpc.assignedRingColor = ringColor;
+
+            Transform ringPos = newRemote.transform.Find("Player_Ring");
+            if (ringPos == null) ringPos = newRemote.transform.Find("Ring");
+            if (ringPos == null) ringPos = newRemote.transform.Find("PlayerRing");
+            if (ringPos != null)
+            {
+                SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
+                if (ringSr != null) ringSr.color = ringColor;
+            }
 
             // BỔ SUNG: Phát tín hiệu súng của chính mình lên mạng ngay khi xuất hiện đồng đội mới
             if (WeaponManager.Instance != null)
@@ -748,5 +804,180 @@ public class MultiplayerSyncManager : MonoBehaviour
                 return enemy.gameObject;
         }
         return null;
+    }
+
+    // BỔ SUNG: Xử lý khi đồng đội trong phòng mở rương vũ khí dùng chung
+    private void HandleRemoteChestOpened(string chestId, string weaponName, float spawnX, float spawnY)
+    {
+        Debug.Log($"[MultiplayerSyncManager] Đồng đội mở rương '{chestId}' rớt súng '{weaponName}' tại ({spawnX}, {spawnY})");
+
+        Vector3 spawnPos = new Vector3(spawnX, spawnY, 0);
+
+        WeaponChest[] allChests = Object.FindObjectsByType<WeaponChest>(FindObjectsSortMode.None);
+        WeaponChest targetChest = null;
+        float minDistance = float.MaxValue;
+
+        foreach (var chest in allChests)
+        {
+            if (chest != null)
+            {
+                if (chest.chestId == chestId)
+                {
+                    targetChest = chest;
+                    break;
+                }
+
+                float dist = Vector3.Distance(chest.transform.position, spawnPos);
+                if (dist < minDistance)
+                {
+                    minDistance = dist;
+                    targetChest = chest;
+                }
+            }
+        }
+
+        if (targetChest != null)
+        {
+            targetChest.OpenChestFromNetwork(weaponName, spawnPos);
+        }
+    }
+
+    // BỔ SUNG: Xử lý khi có bất kỳ đồng đội nào nhặt súng rơi dưới sàn -> Xóa súng ngay lập tức
+    private void HandleRemoteGroundWeaponPickedUp(string groundWeaponId)
+    {
+        Debug.Log($"[MultiplayerSyncManager] Đồng đội đã nhặt súng mạng '{groundWeaponId}', tiến hành xóa khỏi sàn.");
+
+        GroundWeapon[] allGroundWeapons = Object.FindObjectsByType<GroundWeapon>(FindObjectsSortMode.None);
+        foreach (var gw in allGroundWeapons)
+        {
+            if (gw != null && gw.networkId == groundWeaponId)
+            {
+                Destroy(gw.gameObject);
+                break;
+            }
+        }
+    }
+
+    // BỔ SUNG: Xử lý khi đồng đội vứt vũ khí cũ ra sàn -> Hiển thị súng trên sàn với đúng networkId
+    private void HandleRemoteWeaponDropped(string weaponName, float posX, float posY, string groundWeaponId)
+    {
+        Debug.Log($"[MultiplayerSyncManager] Đồng đội vứt súng '{weaponName}' (ID: {groundWeaponId}) tại ({posX}, {posY})");
+
+        // Kiểm tra xem vũ khí này đã tồn tại trên sàn chưa để tránh trùng lặp
+        GroundWeapon[] allGroundWeapons = Object.FindObjectsByType<GroundWeapon>(FindObjectsSortMode.None);
+        foreach (var gw in allGroundWeapons)
+        {
+            if (gw != null && gw.networkId == groundWeaponId)
+            {
+                return;
+            }
+        }
+
+        GameObject weaponPrefab = FindWeaponPrefabByName(weaponName);
+        if (weaponPrefab != null)
+        {
+            Vector3 spawnPos = new Vector3(posX, posY, 0);
+            GroundWeapon.Create(weaponPrefab, spawnPos, groundWeaponId);
+        }
+        else
+        {
+            Debug.LogWarning($"[MultiplayerSyncManager] Không tìm thấy prefab vũ khí cho '{weaponName}' khi đồng đội vứt súng!");
+        }
+    }
+
+    // BỔ SUNG: Xử lý khi nhận sự kiện Boss tấn công từ máy Host
+    private void HandleRemoteBossAttack(string bossId, float targetX, float targetY)
+    {
+        GameObject bossObj = FindEnemyByNetworkId(bossId);
+        if (bossObj != null)
+        {
+            MelogBossAI melogAI = bossObj.GetComponent<MelogBossAI>();
+            if (melogAI != null)
+            {
+                melogAI.ExecuteNetworkAttack(new Vector2(targetX, targetY));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Đồng bộ lại màu vòng chân toàn thể người chơi khi nhận danh sách Slot từ Server
+    /// </summary>
+    private void HandleSyncPlayerOrder(List<string> orderedConnIds)
+    {
+        ApplyPlayerRingColors();
+    }
+
+    /// <summary>
+    /// Gán màu vòng chân của Local Player theo Slot cố định được chỉ định bởi Server
+    /// </summary>
+    public void ApplyLocalPlayerRingColor()
+    {
+        if (localPlayer == null)
+        {
+            GameObject pObj = GameObject.FindGameObjectWithTag("Player");
+            if (pObj != null) localPlayer = pObj.transform;
+        }
+
+        if (localPlayer != null)
+        {
+            int mySlot = 0;
+            if (NetworkManager.Instance != null)
+            {
+                mySlot = NetworkManager.Instance.GetPlayerSlotIndex(NetworkManager.Instance.MyConnectionId);
+            }
+            Color myColor = GetRingColorBySlot(mySlot);
+
+            RookieHealth rh = localPlayer.GetComponent<RookieHealth>();
+            if (rh != null)
+            {
+                rh.SetRingColor(myColor);
+            }
+            else
+            {
+                Transform ringPos = localPlayer.Find("Player_Ring");
+                if (ringPos == null) ringPos = localPlayer.Find("Ring");
+                if (ringPos == null) ringPos = localPlayer.Find("PlayerRing");
+                if (ringPos != null)
+                {
+                    SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
+                    if (ringSr != null) ringSr.color = myColor;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Áp dụng màu vòng chân chuẩn xác nhất quán cho toàn bộ Local Player và Remote Players (Đồng nhất trên mọi POV)
+    /// </summary>
+    public void ApplyPlayerRingColors()
+    {
+        // 1. Cập nhật màu Local Player
+        ApplyLocalPlayerRingColor();
+
+        // 2. Cập nhật màu tất cả Remote Players
+        foreach (var kvp in remotePlayers)
+        {
+            string connId = kvp.Key;
+            GameObject remoteObj = kvp.Value;
+            if (remoteObj == null) continue;
+
+            int slot = NetworkManager.Instance != null ? NetworkManager.Instance.GetPlayerSlotIndex(connId) : 1;
+            Color slotColor = GetRingColorBySlot(slot);
+
+            RemotePlayerController rpc = remoteObj.GetComponent<RemotePlayerController>();
+            if (rpc != null)
+            {
+                rpc.assignedRingColor = slotColor;
+            }
+
+            Transform ringPos = remoteObj.transform.Find("Player_Ring");
+            if (ringPos == null) ringPos = remoteObj.transform.Find("Ring");
+            if (ringPos == null) ringPos = remoteObj.transform.Find("PlayerRing");
+            if (ringPos != null)
+            {
+                SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
+                if (ringSr != null) ringSr.color = slotColor;
+            }
+        }
     }
 }

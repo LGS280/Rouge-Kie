@@ -5,10 +5,13 @@ public class GroundWeapon : MonoBehaviour
     [Header("prefab Vũ khí tương ứng")]
     public GameObject weaponPrefab;
 
+    [Header("Network Identity")]
+    public string networkId = "";
+
     private bool isPlayerInside = false;
     private Transform nameTagTrans;
 
-    public static GameObject Create(GameObject weaponPrefab, Vector3 position)
+    public static GameObject Create(GameObject weaponPrefab, Vector3 position, string networkId = "")
     {
         if (weaponPrefab == null) return null;
 
@@ -35,6 +38,14 @@ public class GroundWeapon : MonoBehaviour
 
         GroundWeapon gw = go.AddComponent<GroundWeapon>();
         gw.weaponPrefab = weaponPrefab;
+        if (!string.IsNullOrEmpty(networkId))
+        {
+            gw.networkId = networkId;
+        }
+        else
+        {
+            gw.networkId = $"gw_{Mathf.RoundToInt(position.x * 10)}_{Mathf.RoundToInt(position.y * 10)}_{Random.Range(100, 999)}";
+        }
 
         return go;
     }

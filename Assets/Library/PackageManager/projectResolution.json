@@ -1,18 +1,18 @@
 {
   "context": {
-    "projectPath": "D:/SEP/Unity_Data/Rouge-Kie/Assets/Packages",
+    "projectPath": "D:/DoAnTotNghiep/GSU26SE14_Rouge_kie/Rouge-Kie/Assets/Packages",
     "unityVersion": "6000.3.15f1"
   },
   "inputs": [
-    "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Packages\\manifest.json",
-    "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Packages\\packages-lock.json",
-    "D:\\Unity\\InstallUnity\\6000.3.15f1\\Editor\\Data\\Resources\\PackageManager\\BuiltInPackages\\BuiltInPackagesCombined.sha1"
+    "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Packages\\manifest.json",
+    "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Packages\\packages-lock.json",
+    "C:\\Program Files\\Unity\\Hub\\Editor\\6000.3.15f1\\Editor\\Data\\Resources\\PackageManager\\BuiltInPackages\\BuiltInPackagesCombined.sha1"
   ],
   "outputs": {
     "com.unity.multiplayer.center@1.0.1": {
       "name": "com.unity.multiplayer.center",
       "displayName": "Multiplayer Center",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.multiplayer.center@f01f4ba8d00a",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.multiplayer.center@f01f4ba8d00a",
       "fingerprint": "f01f4ba8d00afa4e957bddf0fcd1612a564401ff",
       "editorCompatibility": "6000.0.0a1",
       "version": "1.0.1",
@@ -22,7 +22,7 @@
     "com.unity.modules.accessibility@1.0.0": {
       "name": "com.unity.modules.accessibility",
       "displayName": "Accessibility",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.accessibility",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.accessibility",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -30,7 +30,7 @@
     "com.unity.modules.adaptiveperformance@1.0.0": {
       "name": "com.unity.modules.adaptiveperformance",
       "displayName": "Adaptive Performance",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.adaptiveperformance",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.adaptiveperformance",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -38,7 +38,7 @@
     "com.unity.modules.ai@1.0.0": {
       "name": "com.unity.modules.ai",
       "displayName": "AI",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.ai",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.ai",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -46,7 +46,7 @@
     "com.unity.modules.androidjni@1.0.0": {
       "name": "com.unity.modules.androidjni",
       "displayName": "Android JNI",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.androidjni",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.androidjni",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -54,7 +54,7 @@
     "com.unity.modules.animation@1.0.0": {
       "name": "com.unity.modules.animation",
       "displayName": "Animation",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.animation",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.animation",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -62,7 +62,7 @@
     "com.unity.modules.assetbundle@1.0.0": {
       "name": "com.unity.modules.assetbundle",
       "displayName": "Asset Bundle",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.assetbundle",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.assetbundle",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -70,7 +70,7 @@
     "com.unity.modules.audio@1.0.0": {
       "name": "com.unity.modules.audio",
       "displayName": "Audio",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.audio",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.audio",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -78,7 +78,7 @@
     "com.unity.modules.cloth@1.0.0": {
       "name": "com.unity.modules.cloth",
       "displayName": "Cloth",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.cloth",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.cloth",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -86,7 +86,7 @@
     "com.unity.modules.director@1.0.0": {
       "name": "com.unity.modules.director",
       "displayName": "Director",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.director",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.director",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -94,7 +94,7 @@
     "com.unity.modules.imageconversion@1.0.0": {
       "name": "com.unity.modules.imageconversion",
       "displayName": "Image Conversion",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.imageconversion",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.imageconversion",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -102,7 +102,7 @@
     "com.unity.modules.imgui@1.0.0": {
       "name": "com.unity.modules.imgui",
       "displayName": "IMGUI",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.imgui",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.imgui",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -110,7 +110,7 @@
     "com.unity.modules.jsonserialize@1.0.0": {
       "name": "com.unity.modules.jsonserialize",
       "displayName": "JSONSerialize",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.jsonserialize",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.jsonserialize",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -118,7 +118,7 @@
     "com.unity.modules.particlesystem@1.0.0": {
       "name": "com.unity.modules.particlesystem",
       "displayName": "Particle System",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.particlesystem",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.particlesystem",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -126,7 +126,7 @@
     "com.unity.modules.physics@1.0.0": {
       "name": "com.unity.modules.physics",
       "displayName": "Physics",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.physics",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.physics",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -134,7 +134,7 @@
     "com.unity.modules.physics2d@1.0.0": {
       "name": "com.unity.modules.physics2d",
       "displayName": "Physics 2D",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.physics2d",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.physics2d",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -142,7 +142,7 @@
     "com.unity.modules.screencapture@1.0.0": {
       "name": "com.unity.modules.screencapture",
       "displayName": "Screen Capture",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.screencapture",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.screencapture",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -150,7 +150,7 @@
     "com.unity.modules.terrain@1.0.0": {
       "name": "com.unity.modules.terrain",
       "displayName": "Terrain",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.terrain",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.terrain",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -158,7 +158,7 @@
     "com.unity.modules.terrainphysics@1.0.0": {
       "name": "com.unity.modules.terrainphysics",
       "displayName": "Terrain Physics",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.terrainphysics",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.terrainphysics",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -166,7 +166,7 @@
     "com.unity.modules.tilemap@1.0.0": {
       "name": "com.unity.modules.tilemap",
       "displayName": "Tilemap",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.tilemap",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.tilemap",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -174,7 +174,7 @@
     "com.unity.modules.ui@1.0.0": {
       "name": "com.unity.modules.ui",
       "displayName": "UI",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.ui",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.ui",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -182,7 +182,7 @@
     "com.unity.modules.uielements@1.0.0": {
       "name": "com.unity.modules.uielements",
       "displayName": "UIElements",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.uielements",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.uielements",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -190,7 +190,7 @@
     "com.unity.modules.umbra@1.0.0": {
       "name": "com.unity.modules.umbra",
       "displayName": "Umbra",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.umbra",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.umbra",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -198,7 +198,7 @@
     "com.unity.modules.unityanalytics@1.0.0": {
       "name": "com.unity.modules.unityanalytics",
       "displayName": "Unity Analytics",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.unityanalytics",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.unityanalytics",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -206,7 +206,7 @@
     "com.unity.modules.unitywebrequest@1.0.0": {
       "name": "com.unity.modules.unitywebrequest",
       "displayName": "Unity Web Request",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.unitywebrequest",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.unitywebrequest",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -214,7 +214,7 @@
     "com.unity.modules.unitywebrequestassetbundle@1.0.0": {
       "name": "com.unity.modules.unitywebrequestassetbundle",
       "displayName": "Unity Web Request Asset Bundle",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.unitywebrequestassetbundle",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.unitywebrequestassetbundle",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -222,7 +222,7 @@
     "com.unity.modules.unitywebrequestaudio@1.0.0": {
       "name": "com.unity.modules.unitywebrequestaudio",
       "displayName": "Unity Web Request Audio",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.unitywebrequestaudio",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.unitywebrequestaudio",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -230,7 +230,7 @@
     "com.unity.modules.unitywebrequesttexture@1.0.0": {
       "name": "com.unity.modules.unitywebrequesttexture",
       "displayName": "Unity Web Request Texture",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.unitywebrequesttexture",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.unitywebrequesttexture",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -238,7 +238,7 @@
     "com.unity.modules.unitywebrequestwww@1.0.0": {
       "name": "com.unity.modules.unitywebrequestwww",
       "displayName": "Unity Web Request WWW",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.unitywebrequestwww",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.unitywebrequestwww",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -246,7 +246,7 @@
     "com.unity.modules.vectorgraphics@1.0.0": {
       "name": "com.unity.modules.vectorgraphics",
       "displayName": "Vector Graphics",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.vectorgraphics",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.vectorgraphics",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -254,7 +254,7 @@
     "com.unity.modules.vehicles@1.0.0": {
       "name": "com.unity.modules.vehicles",
       "displayName": "Vehicles",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.vehicles",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.vehicles",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -262,7 +262,7 @@
     "com.unity.modules.video@1.0.0": {
       "name": "com.unity.modules.video",
       "displayName": "Video",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.video",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.video",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -270,7 +270,7 @@
     "com.unity.modules.vr@1.0.0": {
       "name": "com.unity.modules.vr",
       "displayName": "VR",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.vr",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.vr",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -278,7 +278,7 @@
     "com.unity.modules.wind@1.0.0": {
       "name": "com.unity.modules.wind",
       "displayName": "Wind",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.wind",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.wind",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -286,7 +286,7 @@
     "com.unity.modules.xr@1.0.0": {
       "name": "com.unity.modules.xr",
       "displayName": "XR",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.xr",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.xr",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -294,7 +294,7 @@
     "com.unity.modules.subsystems@1.0.0": {
       "name": "com.unity.modules.subsystems",
       "displayName": "Subsystems",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.subsystems",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.subsystems",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false
@@ -302,7 +302,7 @@
     "com.unity.modules.hierarchycore@1.0.0": {
       "name": "com.unity.modules.hierarchycore",
       "displayName": "Hierarchy Core",
-      "resolvedPath": "D:\\SEP\\Unity_Data\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.hierarchycore",
+      "resolvedPath": "D:\\DoAnTotNghiep\\GSU26SE14_Rouge_kie\\Rouge-Kie\\Assets\\Library\\PackageCache\\com.unity.modules.hierarchycore",
       "version": "1.0.0",
       "source": "builtin",
       "testable": false

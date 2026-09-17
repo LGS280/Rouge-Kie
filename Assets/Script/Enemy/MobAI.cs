@@ -11,7 +11,7 @@ public class MobAI : MonoBehaviour
 
     [Header("Thông Số Di Chuyển")]
     public float chaseSpeed = 3.0f;
-    public float detectRange = 7.0f;
+    public float detectRange = 9.0f;
     public float attackRange = 4.5f;
     public float attackCooldown = 2.0f;
     public int attackDamage = 10;
@@ -75,6 +75,22 @@ public class MobAI : MonoBehaviour
         {
             detectRange = 7.0f;
             attackRange = 4.0f;
+        }
+
+        if (GameConfigManager.Instance != null)
+        {
+            EnemyConfig eConfig = GameConfigManager.Instance.GetEnemyConfig(gameObject.name);
+            if (eConfig != null)
+            {
+                if (eConfig.moveSpeed > 0)
+                {
+                    chaseSpeed = eConfig.moveSpeed;
+                }
+                if (eConfig.attackSpeed > 0)
+                {
+                    attackCooldown = eConfig.attackSpeed;
+                }
+            }
         }
 
         bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);

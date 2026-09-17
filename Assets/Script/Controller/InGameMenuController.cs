@@ -76,13 +76,11 @@ public class InGameMenuController : MonoBehaviour
         GameObject player = GameObject.FindWithTag("Player");
         if (player != null)
         {
-            PlayerMovement movement = player.GetComponent<PlayerMovement>();
             PlayerController controller = player.GetComponent<PlayerController>();
 
             // THÊM MỚI: Tìm kiếm component ngắm/bắn súng trên Rookie hoặc các GameObject con của nó
             WeaponAim weaponAim = player.GetComponentInChildren<WeaponAim>();
 
-            if (movement != null) movement.enabled = enable;
             if (controller != null) controller.enabled = enable;
             if (weaponAim != null) weaponAim.enabled = enable; // Bật/tắt súng đồng bộ
 
@@ -113,6 +111,9 @@ public class InGameMenuController : MonoBehaviour
         {
             await NetworkManager.Instance.DisconnectAndReconnect();
         }
+
+        // Reset vũ khí đã lưu của lượt chơi cũ
+        WeaponManager.ResetSavedWeapons();
 
         // Chuyển về Scene Menu chính
         UnityEngine.SceneManagement.SceneManager.LoadScene("Scene_Menu");

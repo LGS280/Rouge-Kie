@@ -26,28 +26,61 @@ public class WeaponManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null) Instance = this;
+        Instance = this;
     }
 
     void Start()
     {
         handWeaponAim = handPosition.GetComponent<WeaponAim>();
 
-        if (weaponSlot1 != null)
+        string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+
+        // Nếu ở Lobby_Scene: Luôn dùng 2 vũ khí mặc định được cấu hình trong Inspector cho run mới
+        if (currentScene == "Lobby_Scene")
         {
-            GameObject instance1 = Instantiate(weaponSlot1, handPosition.position, Quaternion.identity);
-            Destroy(weaponSlot1);
-            weaponSlot1 = instance1;
+            ResetSavedWeapons();
+
+            if (weaponSlot1 != null)
+            {
+                GameObject instance1 = Instantiate(weaponSlot1, handPosition.position, Quaternion.identity);
+                if (weaponSlot1.scene.IsValid()) Destroy(weaponSlot1);
+                weaponSlot1 = instance1;
+            }
+
+            if (weaponSlot2 != null)
+            {
+                GameObject instance2 = Instantiate(weaponSlot2, backPosition.position, Quaternion.identity);
+                if (weaponSlot2.scene.IsValid()) Destroy(weaponSlot2);
+                weaponSlot2 = instance2;
+            }
+
+            ResetWeaponsStatus();
+            SaveEquippedWeapons();
+            return;
         }
 
-        if (weaponSlot2 != null)
-        {
-            GameObject instance2 = Instantiate(weaponSlot2, backPosition.position, Quaternion.identity);
-            Destroy(weaponSlot2);
-            weaponSlot2 = instance2;
-        }
+        // Nếu ở Dungeon (SampleScene hoặc các map chiến đấu): Khôi phục súng mà người chơi mang từ Lobby sang
+        bool restored = RestoreSavedEquippedWeapons();
 
-        ResetWeaponsStatus();
+        if (!restored)
+        {
+            // Dự phòng nếu không có dữ liệu lưu (ví dụ mở thẳng SampleScene trong Editor để test)
+            if (weaponSlot1 != null)
+            {
+                GameObject instance1 = Instantiate(weaponSlot1, handPosition.position, Quaternion.identity);
+                if (weaponSlot1.scene.IsValid()) Destroy(weaponSlot1);
+                weaponSlot1 = instance1;
+            }
+
+            if (weaponSlot2 != null)
+            {
+                GameObject instance2 = Instantiate(weaponSlot2, backPosition.position, Quaternion.identity);
+                if (weaponSlot2.scene.IsValid()) Destroy(weaponSlot2);
+                weaponSlot2 = instance2;
+            }
+
+            ResetWeaponsStatus();
+        }
     }
 
     private static string savedSlot1PrefabName = "";
@@ -60,21 +93,26 @@ public class WeaponManager : MonoBehaviour
         PlayerPrefs.DeleteKey("Lobby_Slot1_Weapon");
         PlayerPrefs.DeleteKey("Lobby_Slot2_Weapon");
         PlayerPrefs.Save();
-
+        Debug.Log("[WeaponManager] Đã reset bộ nhớ vũ khí lưu cho lượt chơi mới.");
     }
 
     public void SaveEquippedWeapons()
     {
-        string s1Name = GetCleanWeaponPrefabName(weaponSlot1);
-        string s2Name = GetCleanWeaponPrefabName(weaponSlot2);
+        // Luôn lưu khẩu súng đang cầm trên tay vào Slot 1, và súng đeo trên lưng vào Slot 2
+        GameObject handWeapon = isUsingSlot1 ? weaponSlot1 : weaponSlot2;
+        GameObject backWeapon = isUsingSlot1 ? weaponSlot2 : weaponSlot1;
+
+        string s1Name = GetCleanWeaponPrefabName(handWeapon);
+        string s2Name = GetCleanWeaponPrefabName(backWeapon);
 
         savedSlot1PrefabName = s1Name;
         savedSlot2PrefabName = s2Name;
 
-        if (!string.IsNullOrEmpty(s1Name)) PlayerPrefs.SetString("Lobby_Slot1_Weapon", s1Name);
-        if (!string.IsNullOrEmpty(s2Name)) PlayerPrefs.SetString("Lobby_Slot2_Weapon", s2Name);
+        PlayerPrefs.SetString("Lobby_Slot1_Weapon", s1Name ?? "");
+        PlayerPrefs.SetString("Lobby_Slot2_Weapon", s2Name ?? "");
         PlayerPrefs.Save();
 
+        Debug.Log($"[WeaponManager] Đã lưu vũ khí: Cầm trên tay (Slot 1) = '{s1Name}', Đeo sau lưng (Slot 2) = '{s2Name}'");
     }
 
     private string GetCleanWeaponPrefabName(GameObject weaponObj)
@@ -90,22 +128,61 @@ public class WeaponManager : MonoBehaviour
         return weaponObj.name.Replace("(Clone)", "").Trim();
     }
 
-    private void RestoreSavedEquippedWeapons()
+    private bool RestoreSavedEquippedWeapons()
     {
         string s1Name = !string.IsNullOrEmpty(savedSlot1PrefabName) ? savedSlot1PrefabName : PlayerPrefs.GetString("Lobby_Slot1_Weapon", "");
         string s2Name = !string.IsNullOrEmpty(savedSlot2PrefabName) ? savedSlot2PrefabName : PlayerPrefs.GetString("Lobby_Slot2_Weapon", "");
 
-        if (string.IsNullOrEmpty(s1Name) && string.IsNullOrEmpty(s2Name)) return;
+        if (string.IsNullOrEmpty(s1Name) && string.IsNullOrEmpty(s2Name)) return false;
+
+        Debug.Log($"[WeaponManager] Khôi phục vũ khí đã lưu từ Lobby: Slot 1 = '{s1Name}', Slot 2 = '{s2Name}'");
+
+        // Dọn sạch các vũ khí mặc định cũ nếu có trong Scene
+        if (weaponSlot1 != null && weaponSlot1.scene.IsValid())
+        {
+            Destroy(weaponSlot1);
+            weaponSlot1 = null;
+        }
+        if (weaponSlot2 != null && weaponSlot2.scene.IsValid())
+        {
+            Destroy(weaponSlot2);
+            weaponSlot2 = null;
+        }
+
+        if (handPosition != null)
+        {
+            foreach (Transform child in handPosition)
+            {
+                if (child != null && child.gameObject != null) Destroy(child.gameObject);
+            }
+        }
+        if (backPosition != null)
+        {
+            foreach (Transform child in backPosition)
+            {
+                if (child != null && child.gameObject != null) Destroy(child.gameObject);
+            }
+        }
+
+        bool restoredAny = false;
 
         if (!string.IsNullOrEmpty(s1Name))
         {
             GameObject p1 = FindWeaponPrefabByName(s1Name);
             if (p1 != null)
             {
-                if (weaponSlot1 != null) Destroy(weaponSlot1);
                 weaponSlot1 = Instantiate(p1, handPosition.position, Quaternion.identity);
                 UpdateWeaponParent(weaponSlot1, handPosition, true);
+                restoredAny = true;
             }
+            else
+            {
+                Debug.LogWarning($"[WeaponManager] Không tìm thấy Prefab cho Slot 1: '{s1Name}'");
+            }
+        }
+        else
+        {
+            weaponSlot1 = null;
         }
 
         if (!string.IsNullOrEmpty(s2Name))
@@ -113,14 +190,28 @@ public class WeaponManager : MonoBehaviour
             GameObject p2 = FindWeaponPrefabByName(s2Name);
             if (p2 != null)
             {
-                if (weaponSlot2 != null) Destroy(weaponSlot2);
                 weaponSlot2 = Instantiate(p2, backPosition.position, Quaternion.identity);
                 UpdateWeaponParent(weaponSlot2, backPosition, false);
+                restoredAny = true;
+            }
+            else
+            {
+                Debug.LogWarning($"[WeaponManager] Không tìm thấy Prefab cho Slot 2: '{s2Name}'");
             }
         }
+        else
+        {
+            weaponSlot2 = null;
+        }
 
-        isUsingSlot1 = true;
-        ResetWeaponsStatus();
+        if (restoredAny)
+        {
+            isUsingSlot1 = true;
+            ResetWeaponsStatus();
+            return true;
+        }
+
+        return false;
     }
 
     void Update()
@@ -210,15 +301,14 @@ public class WeaponManager : MonoBehaviour
     public GameObject FindWeaponPrefabByName(string weaponName)
     {
         if (string.IsNullOrEmpty(weaponName)) return null;
-        string cleanName = weaponName.Replace("(Clone)", "").Trim();
+        string cleanName = weaponName.Replace("Weapons/", "").Replace("(Clone)", "").Trim();
 
         if (allWeaponPrefabs != null && allWeaponPrefabs.Length > 0)
         {
             foreach (var prefab in allWeaponPrefabs)
             {
-                if (prefab != null && prefab.name == cleanName)
+                if (prefab != null && prefab.name.Equals(cleanName, System.StringComparison.OrdinalIgnoreCase))
                 {
-
                     return prefab;
                 }
             }
@@ -231,9 +321,8 @@ public class WeaponManager : MonoBehaviour
             {
                 foreach (var prefab in chest.weaponPrefabs)
                 {
-                    if (prefab != null && prefab.name == cleanName)
+                    if (prefab != null && prefab.name.Equals(cleanName, System.StringComparison.OrdinalIgnoreCase))
                     {
-
                         return prefab;
                     }
                 }
@@ -244,11 +333,44 @@ public class WeaponManager : MonoBehaviour
         if (resPrefab == null) resPrefab = Resources.Load<GameObject>(cleanName);
         if (resPrefab != null)
         {
-
             return resPrefab;
         }
 
+#if UNITY_EDITOR
+        string editorPath = $"Assets/Prefab/Weapons/{cleanName}.prefab";
+        GameObject edPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(editorPath);
+        if (edPrefab != null) return edPrefab;
+#endif
+
         return null;
+    }
+
+    /// <summary>
+    /// Trang bị trực tiếp vũ khí từ Kho Vũ Khí (Armory Vault) hoặc Shop vào tay người chơi
+    /// </summary>
+    public bool EquipWeaponDirectly(GameObject weaponPrefab)
+    {
+        if (weaponPrefab == null) return false;
+
+        // Trang bị vũ khí trực tiếp vào vị trí tay cầm (Active Hand Weapon)
+        if (isUsingSlot1)
+        {
+            if (weaponSlot1 != null) Destroy(weaponSlot1);
+            weaponSlot1 = Instantiate(weaponPrefab, handPosition.position, Quaternion.identity);
+            UpdateWeaponParent(weaponSlot1, handPosition, true);
+            if (weaponSlot2 != null) UpdateWeaponParent(weaponSlot2, backPosition, false);
+        }
+        else
+        {
+            if (weaponSlot2 != null) Destroy(weaponSlot2);
+            weaponSlot2 = Instantiate(weaponPrefab, handPosition.position, Quaternion.identity);
+            UpdateWeaponParent(weaponSlot2, handPosition, true);
+            if (weaponSlot1 != null) UpdateWeaponParent(weaponSlot1, backPosition, false);
+        }
+
+        SaveEquippedWeapons();
+        SyncActiveWeaponToNetwork();
+        return true;
     }
 
     public void PickupWeapon(GroundWeapon groundWeapon)
@@ -261,6 +383,7 @@ public class WeaponManager : MonoBehaviour
         }
 
         GameObject currentHandWeapon = isUsingSlot1 ? weaponSlot1 : weaponSlot2;
+        bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
 
         if (currentHandWeapon != null)
         {
@@ -301,9 +424,14 @@ public class WeaponManager : MonoBehaviour
 
             if (oldWeaponPrefab != null)
             {
+                string oldCleanName = oldWeaponPrefab.name.Replace("(Clone)", "").Trim();
+                string dropNetworkId = $"drop_{oldCleanName}_{Mathf.RoundToInt(transform.position.x * 10)}_{Mathf.RoundToInt(transform.position.y * 10)}_{Random.Range(100, 999)}";
+                GroundWeapon.Create(oldWeaponPrefab, transform.position, dropNetworkId);
 
-                GroundWeapon.Create(oldWeaponPrefab, transform.position);
-
+                if (isMultiplayer)
+                {
+                    NetworkManager.Instance.SendDropWeapon(oldCleanName, transform.position.x, transform.position.y, dropNetworkId);
+                }
             }
             else
             {
@@ -330,9 +458,19 @@ public class WeaponManager : MonoBehaviour
         {
             nearbyWeapons.Remove(groundWeapon);
         }
+
+        // BỔ SUNG: Nếu đang trong phòng Co-op, gửi lệnh nhặt súng để xóa trên toàn bộ máy đồng đội
+        if (isMultiplayer && groundWeapon != null && !string.IsNullOrEmpty(groundWeapon.networkId))
+        {
+            NetworkManager.Instance.SendPickupGroundWeapon(groundWeapon.networkId);
+        }
+
         Destroy(groundWeapon.gameObject);
 
         SaveEquippedWeapons();
+
+        // BỔ SUNG: Đồng bộ ngay lập tức súng mới trên tay mình cho toàn bộ đồng đội thấy
+        SyncActiveWeaponToNetwork();
     }
 
     void SwapWeapon()
@@ -369,6 +507,7 @@ public class WeaponManager : MonoBehaviour
         }
 
         SyncActiveWeaponToNetwork();
+        SaveEquippedWeapons();
     }
 
     void UpdateWeaponParent(GameObject weapon, Transform newParent, bool isTargetHand)
@@ -459,6 +598,9 @@ public class WeaponManager : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
+        if (UnityEditor.EditorApplication.isUpdating || UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+            return;
+
         string folderPath = "Assets/Prefab/Weapons";
         if (System.IO.Directory.Exists(folderPath))
         {
@@ -473,8 +615,29 @@ public class WeaponManager : MonoBehaviour
                     list.Add(prefab);
                 }
             }
-            allWeaponPrefabs = list.ToArray();
-            UnityEditor.EditorUtility.SetDirty(this);
+
+            bool isChanged = false;
+            if (allWeaponPrefabs == null || allWeaponPrefabs.Length != list.Count)
+            {
+                isChanged = true;
+            }
+            else
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    if (allWeaponPrefabs[i] != list[i])
+                    {
+                        isChanged = true;
+                        break;
+                    }
+                }
+            }
+
+            if (isChanged)
+            {
+                allWeaponPrefabs = list.ToArray();
+                UnityEditor.EditorUtility.SetDirty(this);
+            }
         }
     }
 #endif

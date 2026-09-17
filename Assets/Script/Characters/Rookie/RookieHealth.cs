@@ -3,15 +3,16 @@ using UnityEngine.Events;
 
 public class RookieHealth : MonoBehaviour
 {
-    [Header("THI?T L?P M�U PLAYER")]
+    [Header("THIẾT LẬP MÁU PLAYER")]
     public int maxHealth = 5;
     private int currentHealth;
     [HideInInspector] public bool isDead = false;
+    [HideInInspector] public Color assignedRingColor = Color.green;
     private Animator animator;
     private Collider2D playerCollider;
     private Rigidbody2D rb;
 
-    [Header("THI?T L?P GI�P")]
+    [Header("THIẾT LẬP GIÁP")]
     public int maxArmor = 4;
     private int currentArmor;
     private float armorRegenDelayTimer = 0f;
@@ -20,14 +21,20 @@ public class RookieHealth : MonoBehaviour
     public float armorRegenDelay = 2f;
     public float armorRegenTick = 1f;
 
-    [Header("THI?T L?P MANA")]
+    [Header("THIẾT LẬP MANA")]
     public int maxMana = 200;
     private int currentMana;
+
+    [HideInInspector]
+    public string characterName = "";
 
     public UnityEvent onHealthChanged;
 
     void Start()
     {
+        ApplyCharacterConfig();
+        GameConfigManager.OnConfigLoaded += ApplyCharacterConfig;
+
         currentHealth = maxHealth;
         currentArmor = maxArmor;
         currentMana = maxMana;
@@ -38,13 +45,52 @@ public class RookieHealth : MonoBehaviour
         onHealthChanged?.Invoke();
     }
 
+    private void OnDestroy()
+    {
+        GameConfigManager.OnConfigLoaded -= ApplyCharacterConfig;
+    }
+
+    private bool hasInitializedStats = false;
+
+    public void ApplyCharacterConfig()
+    {
+        if (GameConfigManager.Instance == null) return;
+        string key = !string.IsNullOrEmpty(characterName) ? characterName : gameObject.name.Replace("(Clone)", "").Trim();
+        if (string.IsNullOrEmpty(key) || key == "Player") key = "Rookie";
+        CharacterConfig config = GameConfigManager.Instance.GetCharacterConfig(key);
+        if (config == null) config = GameConfigManager.Instance.GetCharacterConfig("Rookie");
+        if (config != null)
+        {
+            if (config.baseHealth > 0) maxHealth = config.baseHealth;
+            if (config.baseArmor >= 0) maxArmor = config.baseArmor;
+            if (config.baseMana > 0) maxMana = config.baseMana;
+
+            if (!hasInitializedStats)
+            {
+                currentHealth = maxHealth;
+                currentArmor = maxArmor;
+                currentMana = maxMana;
+                hasInitializedStats = true;
+            }
+            else
+            {
+                currentHealth = Mathf.Min(currentHealth, maxHealth);
+                currentArmor = Mathf.Min(currentArmor, maxArmor);
+                currentMana = Mathf.Min(currentMana, maxMana);
+            }
+
+            onHealthChanged?.Invoke();
+        }
+    }
+
     void Update()
     {
-
         if (Input.GetKeyDown(KeyCode.T))
         {
             TakeDamage(1);
         }
+
+        // Hồi giáp
         if (currentArmor < maxArmor && !isDead)
         {
             if (!armorRegenStarted)
@@ -213,7 +259,6 @@ public class RookieHealth : MonoBehaviour
 
         onHealthChanged?.Invoke();
     }
-
     public int GetCurrentHealth() => currentHealth;
     public int GetMaxHealth() => maxHealth;
     public int GetCurrentArmor() => currentArmor;
@@ -227,9 +272,6 @@ public class RookieHealth : MonoBehaviour
         isDead = true;
 
         // 1. Tắt di chuyển và điều khiển
-        PlayerMovement pm = GetComponent<PlayerMovement>();
-        if (pm != null) pm.enabled = false;
-
         PlayerController controller = GetComponent<PlayerController>();
         if (controller != null) controller.enabled = false;
 
@@ -333,9 +375,6 @@ public class RookieHealth : MonoBehaviour
         onHealthChanged?.Invoke();
 
         // 1. Kích hoạt lại di chuyển, điều khiển và WeaponManager
-        PlayerMovement pm = GetComponent<PlayerMovement>();
-        if (pm != null) pm.enabled = true;
-
         PlayerController controller = GetComponent<PlayerController>();
         if (controller != null) controller.enabled = true;
 
@@ -407,14 +446,30 @@ public class RookieHealth : MonoBehaviour
             if (sr != null) sr.color = Color.white;
         }
 
-        // 7. Ép vòng chọn chân Player_Ring xuất hiện trở lại và có đúng màu XANH LÁ CÂY (Color.green)
+        // 7. Ép vòng chọn chân Player_Ring xuất hiện trở lại và khôi phục đúng màu assignedRingColor
         if (ringPos != null)
         {
             ringPos.gameObject.SetActive(true);
             SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
-            if (ringSr != null) ringSr.color = Color.green;
+            if (ringSr != null) ringSr.color = assignedRingColor;
         }
 
         Debug.Log($"[RookieHealth] Người chơi đã được HỒI SINH hoàn toàn với {currentHealth} Máu và {currentArmor} Giáp!");
+    }
+
+    /// <summary>
+    /// Thiết lập màu vòng chân Player_Ring theo Global Slot được cấp phát từ mạng (POV Sync)
+    /// </summary>
+    public void SetRingColor(Color color)
+    {
+        assignedRingColor = color;
+        Transform ringPos = transform.Find("Player_Ring");
+        if (ringPos == null) ringPos = transform.Find("Ring");
+        if (ringPos == null) ringPos = transform.Find("PlayerRing");
+        if (ringPos != null)
+        {
+            SpriteRenderer ringSr = ringPos.GetComponent<SpriteRenderer>();
+            if (ringSr != null) ringSr.color = color;
+        }
     }
 }

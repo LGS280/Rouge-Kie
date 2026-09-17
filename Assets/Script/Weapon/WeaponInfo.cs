@@ -26,11 +26,12 @@ public class WeaponInfo : MonoBehaviour
 
     [HideInInspector] public GameObject bulletPrefab;
     [HideInInspector] public float fireRate;
-    [HideInInspector] public int manaCostPerShot;
+    [HideInInspector] public int manaCostPerShot = 2;
 
-    private float recoilDistance = 0.15f;
-    private float recoilDuration = 0.05f;
-    private float returnDuration = 0.1f;
+    [Header("RECOIL")]
+    [SerializeField] private float recoilDistance = 0.15f;
+    [SerializeField] private float recoilDuration = 0.05f;
+    [SerializeField] private float returnDuration = 0.1f;
 
     Vector3 originalLocalPos;
     bool positionSaved = false;
@@ -56,6 +57,9 @@ public class WeaponInfo : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
+        if (UnityEditor.EditorApplication.isUpdating || UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+            return;
+
         if (weaponPrefab == null)
         {
             string myPath = UnityEditor.AssetDatabase.GetAssetPath(gameObject);
@@ -86,8 +90,29 @@ public class WeaponInfo : MonoBehaviour
                 if (prefab != null) list.Add(prefab);
             }
         }
-        allPlayerBulletPrefabs = list.ToArray();
-        UnityEditor.EditorUtility.SetDirty(this);
+
+        bool isChanged = false;
+        if (allPlayerBulletPrefabs == null || allPlayerBulletPrefabs.Length != list.Count)
+        {
+            isChanged = true;
+        }
+        else
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (allPlayerBulletPrefabs[i] != list[i])
+                {
+                    isChanged = true;
+                    break;
+                }
+            }
+        }
+
+        if (isChanged)
+        {
+            allPlayerBulletPrefabs = list.ToArray();
+            UnityEditor.EditorUtility.SetDirty(this);
+        }
     }
 #endif
 
@@ -252,6 +277,11 @@ public class WeaponInfo : MonoBehaviour
             positionSaved = true;
         }
 
+        // Kiểm tra mana trước khi bắn
+        RookieHealth playerHealth = GetComponentInParent<RookieHealth>();
+        if (playerHealth != null && !playerHealth.UseMana(manaCostPerShot))
+            return; // hết mana, không bắn
+
         WeaponConfig wConfig = GetWeaponConfig();
         Transform spawnPoint = (firePoint != null) ? firePoint : transform;
 
@@ -261,13 +291,8 @@ public class WeaponInfo : MonoBehaviour
 
         if (targetBulletPrefab == null)
         {
-
             return;
         }
-
-        RookieHealth playerHealth = GetComponentInParent<RookieHealth>();
-        if (playerHealth != null && !playerHealth.UseMana(manaCostPerShot))
-            return;
 
         if (targetBulletPrefab != null && spawnPoint != null)
         {
