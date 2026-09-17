@@ -401,6 +401,9 @@ public class WeaponVaultUIController : MonoBehaviour
 
             // Làm mới các nút thẻ
             RefreshCardsDisplay();
+
+            // Tự động đóng cửa sổ Kho Vũ Khí để người chơi thấy súng đã được lấy ra và trang bị lên tay
+            CloseVault();
         }
     }
 
