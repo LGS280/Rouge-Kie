@@ -39,11 +39,11 @@ public class LoadingScreenUI : MonoBehaviour
 
     private readonly string[] gameTips = new string[]
     {
-        "Mẹo: Hãy di chuyển vòng quanh các vật cản để né đạn của quái vật!",
-        "Mẹo: Vũ khí chất lượng cao hơn sẽ tiêu tốn nhiều Mana hơn cho mỗi phát bắn.",
-        "Mẹo: Tiêu diệt Miniboss ở cuối mỗi tầng để nhận Rương Thưởng và mở Cổng Dịch Chuyển.",
-        "Mẹo: Bấm Q hoặc lăn chuột để đổi linh hoạt giữa súng chính và súng phụ.",
-        "Mẹo: Chọn Buff phù hợp sau mỗi tầng sẽ giúp bạn sống sót lâu hơn ở các tầng cao!"
+        "Tip: Move around obstacles to dodge incoming enemy projectiles!",
+        "Tip: Higher tier weapons consume more Mana per shot.",
+        "Tip: Defeat the Miniboss at the end of each sector to claim the Reward Chest and unlock the Teleport Portal.",
+        "Tip: Press Q or scroll the mouse wheel to switch between primary and secondary weapons.",
+        "Tip: Select strategic Buffs between sectors to enhance survivability in deeper levels!"
     };
 
     private void Awake()
@@ -143,7 +143,7 @@ public class LoadingScreenUI : MonoBehaviour
         titleText.fontStyle = FontStyle.Bold;
         titleText.alignment = TextAnchor.MiddleCenter;
         titleText.color = new Color(1f, 0.85f, 0.3f, 1f); // Màu vàng hoàng kim phát sáng
-        titleText.text = "ĐANG KHỞI TẠO HẦM NGỤC...";
+        titleText.text = "INITIALIZING DUNGEON SECTOR...";
 
         // 4. Phụ đề (Subtitle)
         GameObject subObj = new GameObject("SubText", typeof(RectTransform), typeof(Text));
@@ -158,7 +158,7 @@ public class LoadingScreenUI : MonoBehaviour
         subText.fontSize = 26;
         subText.alignment = TextAnchor.MiddleCenter;
         subText.color = new Color(0.8f, 0.85f, 0.9f, 0.9f);
-        subText.text = "Vui lòng chờ trong giây lát...";
+        subText.text = "Please wait a moment...";
 
         // 5. Spinner Icon tải dữ liệu
         GameObject spinnerObj = new GameObject("LoadingSpinner", typeof(RectTransform), typeof(Image));
@@ -193,14 +193,14 @@ public class LoadingScreenUI : MonoBehaviour
     /// <summary>
     /// Hiển thị màn hình chờ mờ dần kèm tiêu đề và phụ đề tùy chỉnh
     /// </summary>
-    public void ShowLoading(string title = "ĐANG TẢI DỮ LIỆU...", string subtitle = "", float duration = 0.3f)
+    public void ShowLoading(string title = "LOADING DATA...", string subtitle = "", float duration = 0.3f)
     {
         gameObject.SetActive(true);
         if (loadingCanvas != null) loadingCanvas.gameObject.SetActive(true);
         if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
 
         if (titleText != null) titleText.text = title;
-        if (subText != null) subText.text = string.IsNullOrEmpty(subtitle) ? "Vui lòng chờ trong giây lát..." : subtitle;
+        if (subText != null) subText.text = string.IsNullOrEmpty(subtitle) ? "Please wait a moment..." : subtitle;
         
         if (tipText != null && gameTips.Length > 0)
         {

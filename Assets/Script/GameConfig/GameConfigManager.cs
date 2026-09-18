@@ -23,6 +23,7 @@ public class GameConfigManager : MonoBehaviour
     public Dictionary<string, CharacterConfig> CharacterDbByName = new Dictionary<string, CharacterConfig>(System.StringComparer.OrdinalIgnoreCase);
     public Dictionary<int, EnemyConfig> EnemyDb = new Dictionary<int, EnemyConfig>();
     public Dictionary<string, EnemyConfig> EnemyDbByName = new Dictionary<string, EnemyConfig>(System.StringComparer.OrdinalIgnoreCase);
+    public Dictionary<int, LevelConfig> LevelDb = new Dictionary<int, LevelConfig>();
 
     private void Awake()
     {
@@ -209,7 +210,26 @@ public class GameConfigManager : MonoBehaviour
             }
             catch (Exception ex)
             {
+            }
+        }));
 
+        yield return StartCoroutine(FetchData($"{baseUrl}/levels", (json) => {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(json)) throw new Exception("Empty response");
+                string wrappedJson = "{\"data\":" + json + "}";
+                var wrapper = JsonUtility.FromJson<LevelArrayWrapper>(wrappedJson);
+                if (wrapper != null && wrapper.data != null)
+                {
+                    LevelDb.Clear();
+                    foreach (var l in wrapper.data)
+                    {
+                        LevelDb[l.floorNumber] = l;
+                    }
+                }
+            }
+            catch (Exception)
+            {
             }
         }));
 
@@ -274,16 +294,40 @@ public class GameConfigManager : MonoBehaviour
         }
     }
 
+    public float GetDifficultyMultiplier(int floor, int stage = 1)
+    {
+        if (LevelDb.TryGetValue(floor, out var config) && config.difficultyMultiplier > 0f)
+        {
+            return config.difficultyMultiplier;
+        }
+        // Hệ số dự phòng nếu chưa tải xong dữ liệu từ server
+        return 1.0f + (floor - 1) * 0.3f;
+    }
+
+    public int GetMaxFloor(int defaultMax = 5)
+    {
+        if (LevelDb != null && LevelDb.Count > 0)
+        {
+            int max = 0;
+            foreach (var k in LevelDb.Keys)
+            {
+                if (k > max) max = k;
+            }
+            return max > 0 ? max : defaultMax;
+        }
+        return defaultMax;
+    }
+
     public void PopulateDefaultBuffsFallback()
     {
         if (BuffDb == null) BuffDb = new List<BuffConfig>();
         if (BuffDb.Count > 0) return;
 
-        BuffDb.Add(new BuffConfig { id = 1, buffName = "Tăng Máu Tối Đa", description = "+20 Máu tối đa", buffType = "HP", value = 20, rarity = "Common" });
-        BuffDb.Add(new BuffConfig { id = 2, buffName = "Tăng Giáp Tối Đa", description = "+2 Giáp tối đa", buffType = "Armor", value = 2, rarity = "Common" });
-        BuffDb.Add(new BuffConfig { id = 3, buffName = "Tăng Năng Lượng Tối Đa", description = "+30 Năng lượng tối đa", buffType = "Mana", value = 30, rarity = "Common" });
-        BuffDb.Add(new BuffConfig { id = 4, buffName = "Sức Mạnh Toàn Diện", description = "+10 Máu tối đa", buffType = "HP", value = 10, rarity = "Rare" });
-
+        // Dữ liệu Buffs dự phòng (Tiếng Anh trên UI, comment giữ nguyên tiếng Việt)
+        BuffDb.Add(new BuffConfig { id = 1, buffName = "Max HP Boost", description = "+20 Max Health", buffType = "HP", value = 20, rarity = "Common" });
+        BuffDb.Add(new BuffConfig { id = 2, buffName = "Max Armor Boost", description = "+2 Max Armor", buffType = "Armor", value = 2, rarity = "Common" });
+        BuffDb.Add(new BuffConfig { id = 3, buffName = "Max Mana Boost", description = "+30 Max Energy", buffType = "Mana", value = 30, rarity = "Common" });
+        BuffDb.Add(new BuffConfig { id = 4, buffName = "All-Around Boost", description = "+10 Max Health", buffType = "HP", value = 10, rarity = "Rare" });
     }
 }
 

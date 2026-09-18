@@ -134,7 +134,7 @@ namespace Assets.Script.Characters.Rookie
             progressText.fontSize = 22;
             progressText.alignment = TextAlignmentOptions.Center;
             progressText.color = Color.white;
-            progressText.text = "Giữ [E] 2.5s để Hồi Sinh Đồng Đội";
+            progressText.text = "Hold [E] 2.5s to Revive Teammate";
             RectTransform textRect = textObj.GetComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;
             textRect.anchorMax = Vector2.one;

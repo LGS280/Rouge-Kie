@@ -77,7 +77,7 @@ public class GroundWeapon : MonoBehaviour
             textObj.transform.localPosition = new Vector3(0f, 0.22f, 0f);
 
             TextMesh textMesh = textObj.AddComponent<TextMesh>();
-            textMesh.text = "Vũ Khí Vô Danh";
+            textMesh.text = "Unnamed Weapon";
             textMesh.fontSize = 32;
             textMesh.characterSize = 0.07f;
             textMesh.anchor = TextAnchor.MiddleCenter;
@@ -130,7 +130,7 @@ public class GroundWeapon : MonoBehaviour
         if (tm != null)
         {
             tm.color = Color.green;
-            string sName = (weaponPrefab != null) ? weaponPrefab.name : "Vũ Khí";
+            string sName = (weaponPrefab != null) ? weaponPrefab.name : "Weapon";
             string cleanName = sName.Replace("(Clone)", "").Replace("_", " ");
 
             string keyName = InputDeviceHelper.GetInteractKeyDisplayString();

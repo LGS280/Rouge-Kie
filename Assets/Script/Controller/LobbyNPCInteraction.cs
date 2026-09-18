@@ -278,7 +278,7 @@ public class LobbyNPCInteraction : MonoBehaviour
 
                 if (LoadingScreenUI.Instance != null)
                 {
-                    LoadingScreenUI.Instance.ShowLoading("TẦNG 1 - 1", "Đang kết nối và khởi tạo hầm ngục mới...");
+                    LoadingScreenUI.Instance.ShowLoading("SECTOR 1 - 1", "Connecting and initializing new dungeon sector...");
                 }
 
                 UnityEngine.SceneManagement.SceneManager.LoadScene("SampleScene");
