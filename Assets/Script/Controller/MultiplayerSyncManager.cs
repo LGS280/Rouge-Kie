@@ -383,7 +383,7 @@ public class MultiplayerSyncManager : MonoBehaviour
         Debug.LogWarning($"[MultiplayerSyncManager] Chủ phòng {hostName} đã thoát game! Trận đấu kết thúc.");
         if (LoadingScreenUI.Instance != null)
         {
-            LoadingScreenUI.Instance.ShowLoading("TRẬN ĐẤU KẾT THÚC", $"Chủ phòng {hostName} đã rời trận đấu.");
+            LoadingScreenUI.Instance.ShowLoading("MATCH ENDED", $"Host {hostName} has left the match.");
         }
         if (RunStatsTracker.Instance != null)
         {

@@ -572,7 +572,7 @@ public class LoginController : MonoBehaviour
             {
                 if (LoadingScreenUI.Instance != null)
                 {
-                    LoadingScreenUI.Instance.ShowLoading("SẢNH CHỜ", "Đang di chuyển tới Sảnh Chờ...");
+                    LoadingScreenUI.Instance.ShowLoading("MAIN LOBBY", "Transitioning to Main Lobby...");
                 }
                 UnityEngine.SceneManagement.SceneManager.LoadScene("Lobby_Scene");
             }

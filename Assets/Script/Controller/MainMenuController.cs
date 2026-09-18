@@ -97,7 +97,7 @@ public class MainMenuController : MonoBehaviour
 
         if (LoadingScreenUI.Instance != null)
         {
-            LoadingScreenUI.Instance.ShowLoading("SẢNH CHỜ", "Đang di chuyển tới Sảnh Chờ...");
+            LoadingScreenUI.Instance.ShowLoading("MAIN LOBBY", "Transitioning to Main Lobby...");
         }
 
         // Lệnh chuyển sang Sảnh Chờ (Lobby) trước khi vào trận đấu

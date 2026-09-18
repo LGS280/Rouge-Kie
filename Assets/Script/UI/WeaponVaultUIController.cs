@@ -191,7 +191,7 @@ public class WeaponVaultUIController : MonoBehaviour
             return;
         }
 
-        if (statusText != null) statusText.text = "Đang đồng bộ Kho Vũ Khí...";
+        if (statusText != null) statusText.text = "Syncing Weapon Vault...";
 
         ApiClient.Instance.Get("/PlayerWeapons/my-weapons", (json) =>
         {
@@ -216,7 +216,7 @@ public class WeaponVaultUIController : MonoBehaviour
                     Debug.Log($"[WeaponVaultUI] Đã đồng bộ thành công {wrapper.items.Count} vũ khí từ Server.");
                 }
 
-                if (statusText != null) statusText.text = "Kho Vũ Khí sẵn sàng!";
+                if (statusText != null) statusText.text = "Weapon Vault Ready!";
                 RefreshCardsDisplay();
             }
             catch (Exception ex)
@@ -227,7 +227,7 @@ public class WeaponVaultUIController : MonoBehaviour
         }, (err) =>
         {
             Debug.LogWarning($"[WeaponVaultUI] Không thể kết nối tới server (chuyển sang Offline Cache): {err}");
-            if (statusText != null) statusText.text = "Chế độ Kho Offline";
+            if (statusText != null) statusText.text = "Offline Vault Mode";
             RefreshCardsDisplay();
         });
     }
@@ -322,7 +322,7 @@ public class WeaponVaultUIController : MonoBehaviour
         tagRect.anchoredPosition = new Vector2(0, -30);
         tagRect.sizeDelta = new Vector2(200, 25);
         TextMeshProUGUI tagTxt = tagObj.GetComponent<TextMeshProUGUI>();
-        tagTxt.text = "<color=#40ff40>✓ ĐÃ MỞ KHÓA</color>";
+        tagTxt.text = "<color=#40ff40>✓ UNLOCKED</color>";
         tagTxt.fontSize = 13;
         tagTxt.alignment = TextAlignmentOptions.Center;
         tagTxt.fontStyle = FontStyles.Bold;
@@ -389,7 +389,7 @@ public class WeaponVaultUIController : MonoBehaviour
         if (prefab == null)
         {
             Debug.LogError($"[WeaponVaultUI] Không tìm thấy Prefab cho súng: {prefabName}");
-            if (statusText != null) statusText.text = $"<color=red>Lỗi: Không tìm thấy Prefab {prefabName}!</color>";
+            if (statusText != null) statusText.text = $"<color=red>Error: Prefab not found for weapon {displayName}!</color>";
             return;
         }
 
@@ -397,7 +397,7 @@ public class WeaponVaultUIController : MonoBehaviour
         if (success)
         {
             Debug.Log($"[WeaponVaultUI] Đã trang bị thành công '{displayName}' vào tay nhân vật!");
-            if (statusText != null) statusText.text = $"<color=green>Đã trang bị {displayName}!</color>";
+            if (statusText != null) statusText.text = $"<color=green>Equipped {displayName} successfully!</color>";
 
             // Làm mới các nút thẻ
             RefreshCardsDisplay();
@@ -550,7 +550,7 @@ public class WeaponVaultUIController : MonoBehaviour
         subRect.anchoredPosition = new Vector2(0, 210);
         subRect.sizeDelta = new Vector2(700, 30);
         TextMeshProUGUI subTxt = subObj.GetComponent<TextMeshProUGUI>();
-        subTxt.text = "Chọn vũ khí đã mở khóa vĩnh viễn để trang bị cho chuyến thám hiểm!";
+        subTxt.text = "Select an unlocked weapon to equip for your expedition.";
         subTxt.fontSize = 14;
         subTxt.color = new Color(0.75f, 0.82f, 0.9f);
         subTxt.alignment = TextAlignmentOptions.Center;
@@ -602,7 +602,7 @@ public class WeaponVaultUIController : MonoBehaviour
         emptyRect.anchoredPosition = new Vector2(0, 30);
         emptyRect.sizeDelta = new Vector2(650, 70);
         emptyNoticeText = emptyObj.GetComponent<TextMeshProUGUI>();
-        emptyNoticeText.text = "Kho Vũ Khí hiện đang trống!\nHãy ghé Cửa Hàng (Shop) mua súng để mở khóa vĩnh viễn.";
+        emptyNoticeText.text = "Weapon Vault is currently empty!\nVisit the Shop to unlock legendary weapons.";
         emptyNoticeText.fontSize = 18;
         emptyNoticeText.color = new Color(0.9f, 0.7f, 0.3f);
         emptyNoticeText.alignment = TextAlignmentOptions.Center;
@@ -624,7 +624,7 @@ public class WeaponVaultUIController : MonoBehaviour
         shopBtnTxtRect.anchorMax = Vector2.one;
         shopBtnTxtRect.sizeDelta = Vector2.zero;
         TextMeshProUGUI shopBtnTxt = shopBtnTxtObj.GetComponent<TextMeshProUGUI>();
-        shopBtnTxt.text = "ĐẾN CỬA HÀNG SHOP";
+        shopBtnTxt.text = "VISIT SHOP";
         shopBtnTxt.fontSize = 15;
         shopBtnTxt.color = Color.white;
         shopBtnTxt.alignment = TextAlignmentOptions.Center;
