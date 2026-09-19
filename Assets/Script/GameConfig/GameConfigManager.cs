@@ -24,6 +24,8 @@ public class GameConfigManager : MonoBehaviour
     public Dictionary<int, EnemyConfig> EnemyDb = new Dictionary<int, EnemyConfig>();
     public Dictionary<string, EnemyConfig> EnemyDbByName = new Dictionary<string, EnemyConfig>(System.StringComparer.OrdinalIgnoreCase);
     public Dictionary<int, LevelConfig> LevelDb = new Dictionary<int, LevelConfig>();
+    public MaintenanceStatus CurrentMaintenance { get; private set; } = new MaintenanceStatus();
+    public bool IsUnderMaintenance => CurrentMaintenance != null && CurrentMaintenance.isUnderMaintenance;
 
     private void Awake()
     {
@@ -233,7 +235,51 @@ public class GameConfigManager : MonoBehaviour
             }
         }));
 
+        // Tự động kiểm tra trạng thái bảo trì hệ thống từ server
+        yield return StartCoroutine(FetchData($"{baseUrl}/maintenance/current", (json) => {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(json))
+                {
+                    CurrentMaintenance = JsonUtility.FromJson<MaintenanceStatus>(json);
+                    if (CurrentMaintenance != null && CurrentMaintenance.isUnderMaintenance)
+                    {
+                        Debug.LogWarning($"[GameConfigManager] Máy chủ đang bảo trì: {CurrentMaintenance.title} - {CurrentMaintenance.message}");
+                    }
+                }
+            }
+            catch (Exception)
+            {
+            }
+        }));
+
         OnConfigLoaded?.Invoke();
+    }
+
+    /// <summary>
+    /// Kiểm tra trạng thái bảo trì máy chủ trực tiếp theo thời gian thực
+    /// </summary>
+    public IEnumerator CheckMaintenanceStatus(Action<MaintenanceStatus> onResult = null)
+    {
+        if (string.IsNullOrEmpty(baseUrl))
+        {
+            onResult?.Invoke(CurrentMaintenance);
+            yield break;
+        }
+
+        yield return StartCoroutine(FetchData($"{baseUrl}/maintenance/current", (json) => {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(json))
+                {
+                    CurrentMaintenance = JsonUtility.FromJson<MaintenanceStatus>(json);
+                }
+            }
+            catch (Exception)
+            {
+            }
+            onResult?.Invoke(CurrentMaintenance);
+        }));
     }
 
     public CharacterConfig GetCharacterConfig(string identifier)

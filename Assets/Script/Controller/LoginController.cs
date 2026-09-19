@@ -142,6 +142,42 @@ public class LoginController : MonoBehaviour
 
         // Chặn tương tác của các scene khác (Menu) khi Login scene đang mở
         BlockOtherScenesInput();
+
+        // Kiểm tra xem máy chủ có đang trong thời gian bảo trì hay không
+        StartCoroutine(CheckMaintenanceOnStartup());
+    }
+
+    /// <summary>
+    /// Tự động kiểm tra trạng thái bảo trì khi mở màn hình đăng nhập
+    /// </summary>
+    private IEnumerator CheckMaintenanceOnStartup()
+    {
+        using (UnityWebRequest req = UnityWebRequest.Get(GetApiUrl("/maintenance/current")))
+        {
+            req.certificateHandler = new AcceptAllCerts();
+            yield return req.SendWebRequest();
+
+            if (req.result == UnityWebRequest.Result.Success && !string.IsNullOrWhiteSpace(req.downloadHandler.text))
+            {
+                try
+                {
+                    MaintenanceStatus status = JsonUtility.FromJson<MaintenanceStatus>(req.downloadHandler.text);
+                    if (status != null && status.isUnderMaintenance)
+                    {
+                        string header = !string.IsNullOrWhiteSpace(status.title) ? status.title : "SERVER UNDER MAINTENANCE";
+                        string msg = $"[MAINTENANCE] {header}\n{status.message}";
+                        if (!string.IsNullOrWhiteSpace(status.endTime))
+                        {
+                            msg += $"\nExpected end: {status.endTime}";
+                        }
+                        ShowLoginMessage(msg, Color.yellow);
+                    }
+                }
+                catch (Exception)
+                {
+                }
+            }
+        }
     }
 
     private void LoadGoogleSecrets()
@@ -310,6 +346,15 @@ public class LoginController : MonoBehaviour
     // Bắt sự kiện Click nút bấm "Đăng nhập Google"
     public void OnGoogleLoginClick()
     {
+        // Chặn đăng nhập nếu máy chủ đang bảo trì
+        if (GameConfigManager.Instance != null && GameConfigManager.Instance.IsUnderMaintenance)
+        {
+            var m = GameConfigManager.Instance.CurrentMaintenance;
+            string header = !string.IsNullOrWhiteSpace(m.title) ? m.title : "SERVER UNDER MAINTENANCE";
+            ShowLoginMessage($"[MAINTENANCE] {header}: {m.message}", Color.yellow);
+            return;
+        }
+
         try
         {
             if (string.IsNullOrEmpty(googleClientId))
@@ -504,6 +549,15 @@ public class LoginController : MonoBehaviour
 
     private IEnumerator LoginRoutine()
     {
+        // Chặn đăng nhập nếu máy chủ đang bảo trì
+        if (GameConfigManager.Instance != null && GameConfigManager.Instance.IsUnderMaintenance)
+        {
+            var m = GameConfigManager.Instance.CurrentMaintenance;
+            string header = !string.IsNullOrWhiteSpace(m.title) ? m.title : "SERVER UNDER MAINTENANCE";
+            ShowLoginMessage($"[MAINTENANCE] {header}\n{m.message}", Color.yellow);
+            yield break;
+        }
+
         var data = new UserData
         {
             username = loginUsernameInput.text.Trim(),
@@ -595,6 +649,15 @@ public class LoginController : MonoBehaviour
 
     private IEnumerator RegisterRoutine()
     {
+        // Chặn đăng ký nếu máy chủ đang bảo trì
+        if (GameConfigManager.Instance != null && GameConfigManager.Instance.IsUnderMaintenance)
+        {
+            var m = GameConfigManager.Instance.CurrentMaintenance;
+            string header = !string.IsNullOrWhiteSpace(m.title) ? m.title : "SERVER UNDER MAINTENANCE";
+            ShowRegisterMessage($"[MAINTENANCE] {header}\n{m.message}", Color.yellow);
+            yield break;
+        }
+
         var data = new UserData
         {
             username = regUsernameInput.text.Trim(),
