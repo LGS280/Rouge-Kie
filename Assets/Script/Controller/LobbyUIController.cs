@@ -91,6 +91,20 @@ public class LobbyUIController : MonoBehaviour
             return; 
         }
 
+        // Chặn vào sảnh Co-op nếu máy chủ đang bảo trì (ngoại trừ Developer và Admin)
+        if (MaintenanceManager.Instance != null && MaintenanceManager.Instance.IsUnderMaintenance)
+        {
+            string role = NetworkManager.Instance.AccountRole;
+            if (role != "Developer" && role != "Admin")
+            {
+                if (MaintenancePopupUI.Instance != null && MaintenanceManager.Instance.CurrentStatus != null)
+                {
+                    MaintenancePopupUI.Instance.Show(MaintenanceManager.Instance.CurrentStatus);
+                }
+                return;
+            }
+        }
+
         // TẠM THỜI: Tự động đăng nhập Guest nếu chưa đăng nhập khi test Co-op
         //if (!NetworkManager.Instance.IsLoggedIn)
         //{

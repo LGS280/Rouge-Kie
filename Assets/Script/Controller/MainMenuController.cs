@@ -43,6 +43,12 @@ public class MainMenuController : MonoBehaviour
     private void Start()
     {
         ShowMainMenu();
+
+        // Tự động kiểm tra trạng thái bảo trì hệ thống ngay khi vào game
+        if (MaintenanceManager.Instance != null)
+        {
+            MaintenanceManager.Instance.CheckMaintenanceStatus(null, showPopupIfMaintenance: true);
+        }
     }
 
     // --- LOGIC CHUYỂN ĐỔI GIỮA CÁC PANEL CHÍNH ---
@@ -66,6 +72,25 @@ public class MainMenuController : MonoBehaviour
 
     public void OnPlayButtonPressed()
     {
+        // Kiểm tra xem người chơi đã đăng nhập hay chưa ngay khi bấm nút Play
+        bool loggedIn = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn;
+        if (!loggedIn)
+        {
+            Debug.Log("[MainMenuController] Chưa đăng nhập! Mở Scene Login/Register khi bấm nút Play...");
+            LoginController.PendingActionAfterLogin = "PLAY_MENU";
+
+            if (!SceneManager.GetSceneByName("LoginScrene").isLoaded)
+            {
+                SceneManager.LoadScene("LoginScrene", LoadSceneMode.Additive);
+            }
+            return;
+        }
+
+        OpenPlayMenu();
+    }
+
+    public void OpenPlayMenu()
+    {
         mainMenuPanel.SetActive(false);
         playMenuPanel.SetActive(true);
         settingsPanel.SetActive(false);
@@ -74,6 +99,20 @@ public class MainMenuController : MonoBehaviour
 
     public void OnSingleplayerPressed()
     {
+        // Chặn vào chơi nếu máy chủ đang bảo trì (ngoại trừ Developer và Admin)
+        if (MaintenanceManager.Instance != null && MaintenanceManager.Instance.IsUnderMaintenance)
+        {
+            string role = NetworkManager.Instance != null ? NetworkManager.Instance.AccountRole : "Guest";
+            if (role != "Developer" && role != "Admin")
+            {
+                if (MaintenancePopupUI.Instance != null && MaintenanceManager.Instance.CurrentStatus != null)
+                {
+                    MaintenancePopupUI.Instance.Show(MaintenanceManager.Instance.CurrentStatus);
+                }
+                return;
+            }
+        }
+
         // Kiểm tra xem người chơi đã đăng nhập hay chưa (giống như chế độ Co-op)
         bool loggedIn = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn;
         if (!loggedIn)
