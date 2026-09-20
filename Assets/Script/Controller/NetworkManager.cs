@@ -117,6 +117,9 @@ public class NetworkManager : MonoBehaviour
     // QUYỀN HẠN TRONG TRẬN: Sẽ được Server định đoạt khi tạo hoặc vào phòng thành công
     public string UserRole = "Guest";
 
+    // QUYỀN HẠN TÀI KHOẢN (Developer, Admin, User, etc.)
+    public string AccountRole = "User";
+
     private void Awake()
     {
         if (_instance == null)
@@ -132,8 +135,9 @@ public class NetworkManager : MonoBehaviour
             {
                 IsLoggedIn = true;
                 LoggedInUsername = savedUsername;
+                AccountRole = PlayerPrefs.GetString("account_role", "User");
                 UserRole = "Player";
-                Debug.Log($"[NetworkManager] Tự động đăng nhập người dùng: {LoggedInUsername}");
+                Debug.Log($"[NetworkManager] Tự động đăng nhập người dùng: {LoggedInUsername} (Role: {AccountRole})");
             }
         }
         else if (_instance != this)
