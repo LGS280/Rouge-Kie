@@ -16,6 +16,9 @@ public class MobHealth : MonoBehaviour
 
     private int originalMaxHealth = 0;
 
+    [HideInInspector]
+    public string enemyConfigName = "";
+
     private void Awake()
     {
         originalMaxHealth = maxHealth;
@@ -28,9 +31,18 @@ public class MobHealth : MonoBehaviour
 
     private void ScaleHealthByProgression()
     {
-
-        if (gameObject.name.Contains("BOSS"))
+        if (gameObject.name.Contains("BOSS") || GetComponent<MelogBossAI>() != null)
         {
+            int floor = 1;
+            if (GameProgressionManager.Instance != null) floor = GameProgressionManager.Instance.currentFloor;
+            if (floor > 1)
+            {
+                maxHealth = originalMaxHealth + ((floor - 1) * 100);
+            }
+            else
+            {
+                maxHealth = originalMaxHealth;
+            }
             return;
         }
 
@@ -39,10 +51,43 @@ public class MobHealth : MonoBehaviour
             float mult = GameProgressionManager.Instance.GetMonsterHPMultiplier();
             maxHealth = Mathf.RoundToInt(originalMaxHealth * mult);
         }
+        else
+        {
+            maxHealth = originalMaxHealth;
+        }
+    }
+
+    public void ApplyEnemyConfig()
+    {
+        if (GameConfigManager.Instance == null) return;
+        string key = !string.IsNullOrEmpty(enemyConfigName) ? enemyConfigName : gameObject.name;
+        key = key.Replace("(Clone)", "").Trim();
+
+        // Tự động nhận diện nếu là Boss Melog (kể cả khi tên bị đổi thành MINI BOSS - FLOOR X)
+        if (GetComponent<MelogBossAI>() != null || key.Contains("BOSS"))
+        {
+            key = "Melog";
+        }
+
+        EnemyConfig config = GameConfigManager.Instance.GetEnemyConfig(key);
+        if (config == null && GetComponent<MelogBossAI>() != null)
+        {
+            config = GameConfigManager.Instance.GetEnemyConfig("Melog");
+        }
+
+        if (config != null && config.baseHealth > 0)
+        {
+            originalMaxHealth = config.baseHealth;
+            ScaleHealthByProgression();
+            currentHealth = maxHealth;
+        }
     }
 
     void Start()
     {
+        ApplyEnemyConfig();
+        GameConfigManager.OnConfigLoaded += ApplyEnemyConfig;
+
         ScaleHealthByProgression();
         currentHealth = maxHealth;
         isDead = false;
@@ -52,8 +97,14 @@ public class MobHealth : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
     }
 
+    private void OnDestroy()
+    {
+        GameConfigManager.OnConfigLoaded -= ApplyEnemyConfig;
+    }
+
     void OnEnable()
     {
+        ApplyEnemyConfig();
         ScaleHealthByProgression();
         currentHealth = maxHealth;
         isDead = false;

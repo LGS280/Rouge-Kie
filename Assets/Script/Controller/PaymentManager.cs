@@ -184,7 +184,7 @@ public class PaymentManager : MonoBehaviour
             };
 
             string json = JsonUtility.ToJson(req);
-            if (statusText != null) statusText.text = "Đang kết nối Backend tạo mã VietQR...";
+            if (statusText != null) statusText.text = "Connecting to server to generate VietQR code...";
 
             ApiClient.Instance.Post("/Payment/create-payment-link", json, (responseJson) =>
             {
@@ -221,7 +221,7 @@ public class PaymentManager : MonoBehaviour
     /// </summary>
     private IEnumerator CreatePayOSOrderDirectly(int amount, string description, Action<PaymentResponseData> onSuccess, Action<string> onError)
     {
-        if (statusText != null) statusText.text = "Đang kết nối cổng PayOS tạo mã VietQR...";
+        if (statusText != null) statusText.text = "Connecting to PayOS gateway to generate VietQR code...";
 
         long orderCode = (long)(DateTimeOffset.UtcNow.ToUnixTimeSeconds() % 100000000);
         if (orderCode < 100000) orderCode += 100000;
