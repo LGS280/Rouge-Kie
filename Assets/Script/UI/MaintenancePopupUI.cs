@@ -39,6 +39,10 @@ public class MaintenancePopupUI : MonoBehaviour
     private Button retryButton;
     private Button closeButton;
     private bool isShowing = false;
+    private bool isUpcomingNoticeMode = false;
+    public UpcomingMaintenanceInfo CurrentUpcomingInfo { get; private set; }
+
+    public static event Action OnPopupClosed;
 
     private void Awake()
     {
@@ -64,10 +68,96 @@ public class MaintenancePopupUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Hiển thị Hộp thoại thông báo bảo trì với các thông số chi tiết
+    /// Hiển thị Hộp thoại thông báo bảo trì sắp tới (Upcoming Maintenance Notice - Không block chơi game)
+    /// </summary>
+    public void ShowUpcomingNotice(UpcomingMaintenanceInfo upcoming)
+    {
+        if (upcoming == null) return;
+        CurrentUpcomingInfo = upcoming;
+        isUpcomingNoticeMode = true;
+
+        if (popupCanvas == null)
+        {
+            BuildMaintenancePopupCanvas();
+        }
+
+        if (headerTagText != null)
+        {
+            headerTagText.text = "[UPCOMING MAINTENANCE NOTICE]";
+            headerTagText.color = new Color(0.3f, 0.85f, 1f, 1f); // Xanh Cyan sáng
+        }
+
+        if (titleText != null)
+        {
+            titleText.text = string.IsNullOrWhiteSpace(upcoming.title) ? "Upcoming Scheduled Maintenance" : upcoming.title;
+        }
+
+        if (messageText != null)
+        {
+            string msg = string.IsNullOrWhiteSpace(upcoming.message)
+                ? "The game server is scheduled for maintenance. Please finish your battles and save progress before the maintenance begins."
+                : upcoming.message;
+            messageText.text = msg;
+        }
+
+        if (timeText != null)
+        {
+            string timeStr = "";
+            bool hasParsedStart = DateTimeOffset.TryParse(upcoming.startTime, out var parsedStart);
+            bool hasParsedEnd = DateTimeOffset.TryParse(upcoming.endTime, out var parsedEnd);
+
+            if (hasParsedStart && hasParsedEnd)
+            {
+                timeStr = $"Scheduled Period: {parsedStart:yyyy-MM-dd HH:mm} ~ {parsedEnd:HH:mm} (UTC+7)";
+            }
+            else if (hasParsedStart)
+            {
+                timeStr = $"Starts: {parsedStart:yyyy-MM-dd HH:mm} (UTC+7)";
+            }
+            else
+            {
+                timeStr = $"Starts: {upcoming.startTime}";
+            }
+
+            if (upcoming.hoursUntilStart > 0)
+            {
+                timeStr += $"\n(Starts in approximately ~{upcoming.hoursUntilStart} hours)";
+            }
+            else if (upcoming.minutesUntilStart > 0)
+            {
+                timeStr += $"\n(Starts in approximately ~{upcoming.minutesUntilStart} minutes)";
+            }
+
+            timeText.text = timeStr;
+            timeText.color = new Color(1f, 0.82f, 0.25f, 1f); // Vàng cam ấm
+        }
+
+        if (retryBtnText != null)
+        {
+            retryBtnText.text = "Continue";
+        }
+
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = 1f;
+            canvasGroup.interactable = true;
+            canvasGroup.blocksRaycasts = true;
+        }
+
+        isShowing = true;
+        if (popupCanvas != null)
+        {
+            popupCanvas.gameObject.SetActive(true);
+        }
+    }
+
+    /// <summary>
+    /// Hiển thị Hộp thoại thông báo bảo trì với các thông số chi tiết (Chế độ chặn máy chủ)
     /// </summary>
     public void Show(string title, string message, int remainingMinutes, string endTime = null)
     {
+        isUpcomingNoticeMode = false;
+
         // Không hiển thị Popup bảo trì nếu người chơi hiện tại là Admin hoặc Developer
         if (NetworkManager.Instance != null && 
             (NetworkManager.Instance.AccountRole == "Developer" || NetworkManager.Instance.AccountRole == "Admin"))
@@ -79,6 +169,12 @@ public class MaintenancePopupUI : MonoBehaviour
         if (popupCanvas == null)
         {
             BuildMaintenancePopupCanvas();
+        }
+
+        if (headerTagText != null)
+        {
+            headerTagText.text = "[SERVER UNDER MAINTENANCE]";
+            headerTagText.color = new Color(1f, 0.72f, 0.2f, 1f); // Cam vàng cảnh báo
         }
 
         if (titleText != null)
@@ -150,6 +246,19 @@ public class MaintenancePopupUI : MonoBehaviour
         {
             popupCanvas.gameObject.SetActive(false);
         }
+
+        OnPopupClosed?.Invoke();
+    }
+
+    private void OnPrimaryButtonClicked()
+    {
+        if (isUpcomingNoticeMode)
+        {
+            Hide();
+            return;
+        }
+
+        OnRetryClicked();
     }
 
     private void OnRetryClicked()
@@ -329,7 +438,7 @@ public class MaintenancePopupUI : MonoBehaviour
         retryImg.color = new Color(0.18f, 0.58f, 0.68f, 1f); // Nút màu Cyan đậm hiện đại
 
         retryButton = retryBtnObj.GetComponent<Button>();
-        retryButton.onClick.AddListener(OnRetryClicked);
+        retryButton.onClick.AddListener(OnPrimaryButtonClicked);
 
         GameObject retryTextObj = new GameObject("Text", typeof(RectTransform), typeof(Text));
         retryTextObj.transform.SetParent(retryBtnObj.transform, false);

@@ -2061,6 +2061,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MobHealth
   maxHealth: 100
   isDead: 0
+  enemyConfigName: 
   coinPrefabOverride: {fileID: 0}
   manaPrefabOverride: {fileID: 0}
   lootDropChance: 0.2
@@ -6353,6 +6354,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MobHealth
   maxHealth: 100
   isDead: 0
+  enemyConfigName: 
   coinPrefabOverride: {fileID: 0}
   manaPrefabOverride: {fileID: 0}
   lootDropChance: 0.2
@@ -22797,6 +22799,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MobHealth
   maxHealth: 100
   isDead: 0
+  enemyConfigName: 
   coinPrefabOverride: {fileID: 0}
   manaPrefabOverride: {fileID: 0}
   lootDropChance: 0.2
@@ -28490,9 +28493,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.014814815
+    y: 0
     width: 1
-    height: 0.96969694
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -31749,6 +31752,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MobHealth
   maxHealth: 100
   isDead: 0
+  enemyConfigName: 
   coinPrefabOverride: {fileID: 0}
   manaPrefabOverride: {fileID: 0}
   lootDropChance: 0.2
@@ -32723,6 +32727,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MobHealth
   maxHealth: 100
   isDead: 0
+  enemyConfigName: 
   coinPrefabOverride: {fileID: 0}
   manaPrefabOverride: {fileID: 0}
   lootDropChance: 0.2

@@ -30,6 +30,9 @@ public class MaintenanceManager : MonoBehaviour
 
     public bool IsUnderMaintenance { get; private set; } = false;
     public CurrentMaintenanceStatus CurrentStatus { get; private set; }
+    public bool HasUpcomingMaintenance => CurrentStatus != null && CurrentStatus.hasUpcomingMaintenance && CurrentStatus.upcomingMaintenance != null;
+
+    public static bool HasAutoShownUpcomingNoticeThisSession { get; set; } = false;
 
     public static event Action<CurrentMaintenanceStatus> OnMaintenanceChecked;
 
@@ -95,6 +98,11 @@ public class MaintenanceManager : MonoBehaviour
                             {
                                 MaintenancePopupUI.Instance.Show(status);
                             }
+                        }
+                        else if (HasUpcomingMaintenance && !HasAutoShownUpcomingNoticeThisSession)
+                        {
+                            HasAutoShownUpcomingNoticeThisSession = true;
+                            MaintenancePopupUI.Instance.ShowUpcomingNotice(status.upcomingMaintenance);
                         }
 
                         OnMaintenanceChecked?.Invoke(status);
