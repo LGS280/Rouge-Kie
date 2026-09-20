@@ -68,6 +68,14 @@ public class MaintenancePopupUI : MonoBehaviour
     /// </summary>
     public void Show(string title, string message, int remainingMinutes, string endTime = null)
     {
+        // Không hiển thị Popup bảo trì nếu người chơi hiện tại là Admin hoặc Developer
+        if (NetworkManager.Instance != null && 
+            (NetworkManager.Instance.AccountRole == "Developer" || NetworkManager.Instance.AccountRole == "Admin"))
+        {
+            Hide();
+            return;
+        }
+
         if (popupCanvas == null)
         {
             BuildMaintenancePopupCanvas();

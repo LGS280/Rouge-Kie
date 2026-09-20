@@ -61,11 +61,15 @@ public class GameProgressionManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Lấy hệ số nhân máu của quái vật cho tầng hiện tại
+    /// Lấy hệ số nhân máu của quái vật cho tầng hiện tại (ưu tiên lấy từ GameConfigManager theo cấu hình Backend)
     /// </summary>
     public float GetMonsterHPMultiplier()
     {
-        // Công thức: 1.0 + (Tầng - 1) * hệ số tăng thêm
+        if (GameConfigManager.Instance != null)
+        {
+            return GameConfigManager.Instance.GetDifficultyMultiplier(currentFloor);
+        }
+        // Công thức dự phòng: 1.0 + (Tầng - 1) * hệ số tăng thêm
         return 1.0f + (currentFloor - 1) * hpMultiplierPerFloor;
     }
 
@@ -134,19 +138,20 @@ public class GameProgressionManager : MonoBehaviour
             return;
         }
 
+        int activeMaxFloor = GameConfigManager.Instance != null ? GameConfigManager.Instance.GetMaxFloor(maxFloor) : maxFloor;
         isTransitioning = true;
         currentFloor = targetFloor;
-        Debug.Log($"[GameProgressionManager] Đang chuyển sang Tầng {currentFloor}/{maxFloor}...");
+        Debug.Log($"[GameProgressionManager] Đang chuyển sang Tầng {currentFloor}/{activeMaxFloor}...");
 
-        // Hiển thị Màn hình Chờ Tải Tầng mới
+        // Hiển thị Màn hình Chờ Tải Tầng mới (Giao diện Tiếng Anh, comment Tiếng Việt)
         if (LoadingScreenUI.Instance != null)
         {
-            LoadingScreenUI.Instance.ShowLoading($"TẦNG {currentFloor} - 1", "Đang khởi tạo cấu trúc hầm ngục mới...");
+            LoadingScreenUI.Instance.ShowLoading($"SECTOR {currentFloor} - 1", "Generating new dungeon sector...");
         }
 
-        if (currentFloor > maxFloor)
+        if (currentFloor > activeMaxFloor)
         {
-            // Nếu đã vượt qua tầng 5 -> Chiến thắng game!
+            // Nếu đã vượt qua tầng cuối cùng -> Chiến thắng game!
             Debug.Log("[GameProgressionManager] Đã vượt qua tầng cuối cùng! Chiến thắng trận đấu!");
             isTransitioning = false;
             if (LoadingScreenUI.Instance != null) LoadingScreenUI.Instance.HideLoading();

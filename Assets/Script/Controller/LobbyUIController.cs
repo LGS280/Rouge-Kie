@@ -388,7 +388,7 @@ public class LobbyUIController : MonoBehaviour
         Debug.Log("Trận đấu bắt đầu! Đang tải màn chơi...");
         if (LoadingScreenUI.Instance != null)
         {
-            LoadingScreenUI.Instance.ShowLoading("TẦNG 1 - 1", "Đang kết nối và khởi tạo phòng chơi Co-op...");
+            LoadingScreenUI.Instance.ShowLoading("SECTOR 1 - 1", "Connecting and initializing Co-op chamber...");
         }
         // Tải Scene chơi game thực tế của bạn
         UnityEngine.SceneManagement.SceneManager.LoadScene("SampleScene");

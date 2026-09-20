@@ -949,7 +949,7 @@ public class ShopUIController : MonoBehaviour
         pRect.anchoredPosition = new Vector2(0, -65);
         pRect.sizeDelta = new Vector2(220, 25);
         TextMeshProUGUI pTxt = pObj.GetComponent<TextMeshProUGUI>();
-        pTxt.text = isUnlocked ? "<color=#40ff40>[ĐÃ MUA]</color>" : price;
+        pTxt.text = isUnlocked ? "<color=#40ff40>[PURCHASED]</color>" : price;
         pTxt.fontSize = 17;
         pTxt.color = isUnlocked ? new Color(0.3f, 1f, 0.4f) : new Color(0.4f, 0.9f, 0.5f);
         pTxt.alignment = TextAlignmentOptions.Center;
@@ -971,7 +971,7 @@ public class ShopUIController : MonoBehaviour
         btRect.anchorMax = Vector2.one;
         btRect.sizeDelta = Vector2.zero;
         TextMeshProUGUI btTxt = btObj.GetComponent<TextMeshProUGUI>();
-        btTxt.text = isUnlocked ? "ĐÃ SỞ HỮU" : (string.IsNullOrEmpty(buttonText) ? "BUY NOW" : buttonText);
+        btTxt.text = isUnlocked ? "OWNED" : (string.IsNullOrEmpty(buttonText) ? "BUY NOW" : buttonText);
         btTxt.fontSize = 15;
         btTxt.color = isUnlocked ? new Color(0.6f, 0.65f, 0.7f) : Color.white;
         btTxt.alignment = TextAlignmentOptions.Center;

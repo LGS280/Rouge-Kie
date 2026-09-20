@@ -72,6 +72,25 @@ public class MainMenuController : MonoBehaviour
 
     public void OnPlayButtonPressed()
     {
+        // Kiểm tra xem người chơi đã đăng nhập hay chưa ngay khi bấm nút Play
+        bool loggedIn = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn;
+        if (!loggedIn)
+        {
+            Debug.Log("[MainMenuController] Chưa đăng nhập! Mở Scene Login/Register khi bấm nút Play...");
+            LoginController.PendingActionAfterLogin = "PLAY_MENU";
+
+            if (!SceneManager.GetSceneByName("LoginScrene").isLoaded)
+            {
+                SceneManager.LoadScene("LoginScrene", LoadSceneMode.Additive);
+            }
+            return;
+        }
+
+        OpenPlayMenu();
+    }
+
+    public void OpenPlayMenu()
+    {
         mainMenuPanel.SetActive(false);
         playMenuPanel.SetActive(true);
         settingsPanel.SetActive(false);
@@ -117,7 +136,7 @@ public class MainMenuController : MonoBehaviour
 
         if (LoadingScreenUI.Instance != null)
         {
-            LoadingScreenUI.Instance.ShowLoading("SẢNH CHỜ", "Đang di chuyển tới Sảnh Chờ...");
+            LoadingScreenUI.Instance.ShowLoading("MAIN LOBBY", "Transitioning to Main Lobby...");
         }
 
         // Lệnh chuyển sang Sảnh Chờ (Lobby) trước khi vào trận đấu

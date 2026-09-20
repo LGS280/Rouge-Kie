@@ -316,6 +316,15 @@ public class LoginController : MonoBehaviour
     // Bắt sự kiện Click nút bấm "Đăng nhập Google"
     public void OnGoogleLoginClick()
     {
+        // Chặn đăng nhập nếu máy chủ đang bảo trì
+        if (GameConfigManager.Instance != null && GameConfigManager.Instance.IsUnderMaintenance)
+        {
+            var m = GameConfigManager.Instance.CurrentMaintenance;
+            string header = !string.IsNullOrWhiteSpace(m.title) ? m.title : "SERVER UNDER MAINTENANCE";
+            ShowLoginMessage($"[MAINTENANCE] {header}: {m.message}", Color.yellow);
+            return;
+        }
+
         try
         {
             if (string.IsNullOrEmpty(googleClientId))
@@ -512,6 +521,15 @@ public class LoginController : MonoBehaviour
 
     private IEnumerator LoginRoutine()
     {
+        // Chặn đăng nhập nếu máy chủ đang bảo trì
+        if (GameConfigManager.Instance != null && GameConfigManager.Instance.IsUnderMaintenance)
+        {
+            var m = GameConfigManager.Instance.CurrentMaintenance;
+            string header = !string.IsNullOrWhiteSpace(m.title) ? m.title : "SERVER UNDER MAINTENANCE";
+            ShowLoginMessage($"[MAINTENANCE] {header}\n{m.message}", Color.yellow);
+            yield break;
+        }
+
         var data = new UserData
         {
             username = loginUsernameInput.text.Trim(),
@@ -565,6 +583,15 @@ public class LoginController : MonoBehaviour
         NetworkManager.Instance.UserRole = "Player";
         NetworkManager.Instance.AccountRole = accountRole;
 
+        // Nếu là Developer hoặc Admin thì lập tức ẩn Popup thông báo bảo trì (nếu đang mở)
+        if (accountRole == "Developer" || accountRole == "Admin")
+        {
+            if (MaintenancePopupUI.Instance != null)
+            {
+                MaintenancePopupUI.Instance.Hide();
+            }
+        }
+
         // Tải lại cấu hình súng/đạn vì giờ đã có token (Cập nhật từ dev)
         GameConfigManager.Instance?.ReloadConfigs();
 
@@ -584,7 +611,7 @@ public class LoginController : MonoBehaviour
             {
                 if (LoadingScreenUI.Instance != null)
                 {
-                    LoadingScreenUI.Instance.ShowLoading("SẢNH CHỜ", "Đang di chuyển tới Sảnh Chờ...");
+                    LoadingScreenUI.Instance.ShowLoading("MAIN LOBBY", "Transitioning to Main Lobby...");
                 }
                 UnityEngine.SceneManagement.SceneManager.LoadScene("Lobby_Scene");
             }
@@ -594,6 +621,15 @@ public class LoginController : MonoBehaviour
             PendingActionAfterLogin = "";
             LobbyUIController lobbyUI = UnityEngine.Object.FindFirstObjectByType<LobbyUIController>();
             if (lobbyUI != null) lobbyUI.OnCoOpButtonPressed();
+        }
+        else if (PendingActionAfterLogin == "PLAY_MENU")
+        {
+            PendingActionAfterLogin = "";
+            MainMenuController mainMenu = UnityEngine.Object.FindFirstObjectByType<MainMenuController>();
+            if (mainMenu != null)
+            {
+                mainMenu.OpenPlayMenu();
+            }
         }
 
         ShowLoginMessage("Đăng nhập thành công!", Color.green);
@@ -607,6 +643,15 @@ public class LoginController : MonoBehaviour
 
     private IEnumerator RegisterRoutine()
     {
+        // Chặn đăng ký nếu máy chủ đang bảo trì
+        if (GameConfigManager.Instance != null && GameConfigManager.Instance.IsUnderMaintenance)
+        {
+            var m = GameConfigManager.Instance.CurrentMaintenance;
+            string header = !string.IsNullOrWhiteSpace(m.title) ? m.title : "SERVER UNDER MAINTENANCE";
+            ShowRegisterMessage($"[MAINTENANCE] {header}\n{m.message}", Color.yellow);
+            yield break;
+        }
+
         var data = new UserData
         {
             username = regUsernameInput.text.Trim(),

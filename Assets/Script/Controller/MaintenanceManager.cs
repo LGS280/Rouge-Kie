@@ -88,7 +88,13 @@ public class MaintenanceManager : MonoBehaviour
 
                         if (IsUnderMaintenance && showPopupIfMaintenance)
                         {
-                            MaintenancePopupUI.Instance.Show(status);
+                            bool isAdminOrDev = NetworkManager.Instance != null && 
+                                (NetworkManager.Instance.AccountRole == "Developer" || NetworkManager.Instance.AccountRole == "Admin");
+
+                            if (!isAdminOrDev)
+                            {
+                                MaintenancePopupUI.Instance.Show(status);
+                            }
                         }
 
                         OnMaintenanceChecked?.Invoke(status);
