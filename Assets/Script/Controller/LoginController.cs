@@ -40,8 +40,11 @@ public class LoginResponse
     public string message;
     public int userId;
     public string username;
+    public string role;
     public string token;
     public string refreshToken;
+    public bool isMaintenance;
+    public CurrentMaintenanceStatus maintenance;
 }
 
 // Model nhận cấu hình bảo mật Google từ file JSON cục bộ
@@ -142,6 +145,9 @@ public class LoginController : MonoBehaviour
 
         // Chặn tương tác của các scene khác (Menu) khi Login scene đang mở
         BlockOtherScenesInput();
+
+        // Kiểm tra trạng thái bảo trì máy chủ ngay khi mở màn hình Login
+        CheckServerMaintenanceOnStart();
     }
 
     private void LoadGoogleSecrets()
@@ -422,6 +428,7 @@ public class LoginController : MonoBehaviour
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
+            request.certificateHandler = new AcceptAllCerts();
 
             yield return request.SendWebRequest();
 
@@ -439,7 +446,7 @@ public class LoginController : MonoBehaviour
             }
             else
             {
-                ShowLoginMessage(GetErrorMessage(request, "Lỗi đăng nhập Google"), Color.red);
+                HandleMaintenanceError(request, "Lỗi đăng nhập Google", isRegister: false);
             }
         }
     }
@@ -487,6 +494,7 @@ public class LoginController : MonoBehaviour
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
+            request.certificateHandler = new AcceptAllCerts();
 
             yield return request.SendWebRequest();
 
@@ -497,7 +505,7 @@ public class LoginController : MonoBehaviour
             }
             else
             {
-                ShowRegisterMessage(GetErrorMessage(request, "Lỗi gửi OTP"), Color.red);
+                HandleMaintenanceError(request, "Lỗi gửi OTP", isRegister: true);
             }
         }
     }
@@ -518,6 +526,7 @@ public class LoginController : MonoBehaviour
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
+            request.certificateHandler = new AcceptAllCerts();
 
             yield return request.SendWebRequest();
 
@@ -535,7 +544,7 @@ public class LoginController : MonoBehaviour
             }
             else
             {
-                ShowLoginMessage(GetErrorMessage(request, "Lỗi đăng nhập"), Color.red);
+                HandleMaintenanceError(request, "Lỗi đăng nhập", isRegister: false);
             }
         }
     }
@@ -547,11 +556,14 @@ public class LoginController : MonoBehaviour
         PlayerPrefs.SetString("refresh_token", resp.refreshToken); // Lưu refresh token từ dev
         PlayerPrefs.SetString("username", resp.username);
         PlayerPrefs.SetInt("user_id", resp.userId);
+        string accountRole = !string.IsNullOrEmpty(resp.role) ? resp.role : "User";
+        PlayerPrefs.SetString("account_role", accountRole);
         PlayerPrefs.Save();
 
         NetworkManager.Instance.IsLoggedIn = true;
         NetworkManager.Instance.LoggedInUsername = resp.username;
         NetworkManager.Instance.UserRole = "Player";
+        NetworkManager.Instance.AccountRole = accountRole;
 
         // Tải lại cấu hình súng/đạn vì giờ đã có token (Cập nhật từ dev)
         GameConfigManager.Instance?.ReloadConfigs();
@@ -612,6 +624,7 @@ public class LoginController : MonoBehaviour
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
+            request.certificateHandler = new AcceptAllCerts();
 
             yield return request.SendWebRequest();
 
@@ -624,7 +637,7 @@ public class LoginController : MonoBehaviour
             }
             else
             {
-                ShowRegisterMessage(GetErrorMessage(request, "Lỗi đăng ký"), Color.red);
+                HandleMaintenanceError(request, "Lỗi đăng ký", isRegister: true);
             }
         }
     }
@@ -641,6 +654,7 @@ public class LoginController : MonoBehaviour
             }
 
             req.downloadHandler = new DownloadHandlerBuffer();
+            req.certificateHandler = new AcceptAllCerts();
             yield return req.SendWebRequest();
         }
     }
@@ -681,5 +695,55 @@ public class LoginController : MonoBehaviour
         }
 
         return fallback + ": " + request.error;
+    }
+
+    private void CheckServerMaintenanceOnStart()
+    {
+        if (MaintenanceManager.Instance != null)
+        {
+            MaintenanceManager.Instance.CheckMaintenanceStatus((status) =>
+            {
+                if (status != null && status.isUnderMaintenance)
+                {
+                    ShowLoginMessage($"[MAINTENANCE] {status.title}: {status.message}", new Color(1f, 0.72f, 0.2f));
+                }
+            }, showPopupIfMaintenance: true);
+        }
+    }
+
+    private void HandleMaintenanceError(UnityWebRequest request, string fallback, bool isRegister = false)
+    {
+        if (request.responseCode == 503)
+        {
+            try
+            {
+                var mResp = JsonUtility.FromJson<MaintenanceApiResponse>(request.downloadHandler.text);
+                if (mResp != null && mResp.isMaintenance && mResp.maintenance != null)
+                {
+                    if (MaintenancePopupUI.Instance != null)
+                    {
+                        MaintenancePopupUI.Instance.Show(mResp.maintenance);
+                    }
+                    string msg = !string.IsNullOrWhiteSpace(mResp.message) ? mResp.message : mResp.maintenance.message;
+                    if (isRegister) ShowRegisterMessage(msg, Color.red);
+                    else ShowLoginMessage(msg, Color.red);
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[LoginController] Lỗi phân tích phản hồi bảo trì 503: {ex.Message}");
+            }
+        }
+
+        string errMsg = GetErrorMessage(request, fallback);
+        if (isRegister)
+        {
+            ShowRegisterMessage(errMsg, Color.red);
+        }
+        else
+        {
+            ShowLoginMessage(errMsg, Color.red);
+        }
     }
 }
