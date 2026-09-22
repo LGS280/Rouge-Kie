@@ -922,6 +922,7 @@ MonoBehaviour:
   IsLoggedIn: 0
   LoggedInUsername: Guest
   UserRole: Guest
+  AccountRole: User
 --- !u!4 &210628576
 Transform:
   m_ObjectHideFlags: 0
