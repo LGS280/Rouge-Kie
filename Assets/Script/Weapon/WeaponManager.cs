@@ -543,6 +543,11 @@ public class WeaponManager : MonoBehaviour
         {
             weapon.transform.localPosition = Vector3.zero;
 
+            if (info != null)
+            {
+                info.CancelBowCharge();
+            }
+
             if (laserScript != null)
             {
                 laserScript.StopLaser();

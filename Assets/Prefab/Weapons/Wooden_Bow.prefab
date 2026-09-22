@@ -136,6 +136,7 @@ MonoBehaviour:
   recoilDistance: 0.15
   recoilDuration: 0.05
   returnDuration: 0.1
+  isBow: 1
 --- !u!1 &7720013465286283729
 GameObject:
   m_ObjectHideFlags: 0
