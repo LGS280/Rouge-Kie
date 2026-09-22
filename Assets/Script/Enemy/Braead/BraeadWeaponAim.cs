@@ -129,22 +129,57 @@ public class BraeadWeaponAim : MonoBehaviour
         transform.localScale = localScale;
     }
 
+    private Coroutine currentBarrageCoroutine;
+    private bool sweepLeftToRight = true;
+
+    public WeaponConfig GetWeaponConfig()
+    {
+        if (GameConfigManager.Instance == null) return null;
+
+        // Lấy tên Prefab sạch (bỏ (Clone) nếu có), đồng bộ chuẩn 100% với MobWeaponInfo và WeaponInfo
+        string cleanName = gameObject.name.Replace("(Clone)", "").Trim();
+
+        // 1. Tìm trực tiếp theo tên Prefab hiện tại trong WeaponDbByName
+        if (GameConfigManager.Instance.WeaponDbByName.TryGetValue(cleanName, out WeaponConfig config))
+        {
+            return config;
+        }
+
+        // 2. Fallback nếu tên GameObject có biến thể khác nhưng map về Braead_Weapon
+        if (GameConfigManager.Instance.WeaponDbByName.TryGetValue("Braead_Weapon", out config))
+        {
+            return config;
+        }
+
+        return null;
+    }
+
     /// <summary>
-    /// Bắn đạn thường 10 viên (Phase 1: bắn chùm hình nón; Phase 2: bung tỏa tròn 360 độ)
+    /// Bắn đạn thường (Phase 1: xả liên thanh giống Gatling của Melog; Phase 2: bung tỏa tròn 360 độ)
+    /// Lấy chỉ số linh hoạt từ Database (bulletsPerShot và spreadAngle của Weapon ID 22)
     /// </summary>
-    public void ShootNormalBarrage(Vector2 targetPosition, bool isEnraged)
+    public void ShootNormalBarrage(Transform targetTransform, Vector2 fallbackTargetPos, bool isEnraged)
     {
         if (isLaserActive) return;
 
-        Vector3 spawnPos = (firePoint != null) ? firePoint.position : transform.position;
-        Vector2 baseDir = (targetPosition - (Vector2)spawnPos).normalized;
-        float baseAngle = Mathf.Atan2(baseDir.y, baseDir.x) * Mathf.Rad2Deg;
+        WeaponConfig wConfig = GetWeaponConfig();
+        int bulletCount = (wConfig != null && wConfig.bulletsPerShot > 0) ? wConfig.bulletsPerShot : 20;
+        float spreadAngle = (wConfig != null && wConfig.spreadAngle > 0) ? wConfig.spreadAngle : 18f;
 
-        int bulletCount = 10;
+        Vector3 spawnPos = (firePoint != null) ? firePoint.position : transform.position;
+        Vector2 targetPos = (targetTransform != null) ? (Vector2)targetTransform.position : fallbackTargetPos;
+        Vector2 baseDir = (targetPos - (Vector2)spawnPos).normalized;
+        float baseAngle = Mathf.Atan2(baseDir.y, baseDir.x) * Mathf.Rad2Deg;
 
         if (isEnraged)
         {
-            // Phase 2 (Hóa nộ): Bắn 10 viên tỏa tròn đều 360 độ (Nova Bullet Hell)
+            // Phase 2 (Hóa nộ): Bắn tỏa tròn đều 360 độ (Nova Bullet Hell)
+            if (currentBarrageCoroutine != null)
+            {
+                StopCoroutine(currentBarrageCoroutine);
+                currentBarrageCoroutine = null;
+            }
+
             float stepAngle = 360f / bulletCount;
             for (int i = 0; i < bulletCount; i++)
             {
@@ -154,17 +189,42 @@ public class BraeadWeaponAim : MonoBehaviour
         }
         else
         {
-            // Phase 1: Bắn chùm 10 viên hình nón (Cone Spread) nhắm về phía Player
-            float spreadAngle = 50f; // Tổng góc mở hình nón
-            float halfSpread = spreadAngle / 2f;
-            float stepAngle = spreadAngle / (bulletCount - 1);
-
-            for (int i = 0; i < bulletCount; i++)
+            // Phase 1 (Xả liên thanh Gatling giống Melog):
+            // Bắn lần lượt bulletCount viên (mỗi viên có độ lệch ngẫu nhiên Random.Range(-spreadAngle, spreadAngle))
+            if (currentBarrageCoroutine != null)
             {
-                float finalAngle = (baseAngle - halfSpread) + (i * stepAngle);
-                FireSingleBullet(spawnPos, finalAngle);
+                StopCoroutine(currentBarrageCoroutine);
             }
+            currentBarrageCoroutine = StartCoroutine(GatlingBurstRoutine(targetTransform, fallbackTargetPos, bulletCount, spreadAngle));
         }
+    }
+
+    public void ShootNormalBarrage(Vector2 targetPosition, bool isEnraged)
+    {
+        ShootNormalBarrage(null, targetPosition, isEnraged);
+    }
+
+    private IEnumerator GatlingBurstRoutine(Transform targetTransform, Vector2 fallbackTargetPos, int bulletCount, float spreadAngle)
+    {
+        for (int i = 0; i < bulletCount; i++)
+        {
+            if (isLaserActive) yield break;
+
+            Vector3 currentSpawn = (firePoint != null) ? firePoint.position : transform.position;
+            Vector2 currentTargetPos = (targetTransform != null) ? (Vector2)targetTransform.position : fallbackTargetPos;
+            Vector2 baseDir = (currentTargetPos - (Vector2)currentSpawn).normalized;
+            float baseAngle = Mathf.Atan2(baseDir.y, baseDir.x) * Mathf.Rad2Deg;
+
+            // Cơ chế giống hệt Gatling của Melog: mỗi viên đạn bắn nhắm về Player kèm góc lệch ngẫu nhiên trong khoảng [-spreadAngle, +spreadAngle]
+            float randomSpread = UnityEngine.Random.Range(-spreadAngle, spreadAngle);
+            float finalAngle = baseAngle + randomSpread;
+
+            FireSingleBullet(currentSpawn, finalAngle);
+
+            yield return new WaitForSeconds(0.05f); // Nhịp bắn liên thanh 0.05s giống súng Gatling của Melog
+        }
+
+        currentBarrageCoroutine = null;
     }
 
     private void FireSingleBullet(Vector3 spawnPos, float angleDeg)
@@ -185,7 +245,7 @@ public class BraeadWeaponAim : MonoBehaviour
             bullet.layer = enemyBulletLayer;
         }
 
-        // Khởi tạo chỉ số từ Database (Bullet ID 24)
+        // Khởi tạo chỉ số từ Database dựa theo cấu hình súng (không fix cứng ID)
         MobBullet mobBullet = bullet.GetComponent<MobBullet>();
         if (mobBullet == null)
         {
@@ -194,7 +254,11 @@ public class BraeadWeaponAim : MonoBehaviour
 
         if (mobBullet != null)
         {
-            mobBullet.InitFromDb(24);
+            WeaponConfig wConfig = GetWeaponConfig();
+            if (wConfig != null && wConfig.bulletId > 0)
+            {
+                mobBullet.InitFromDb(wConfig.bulletId);
+            }
         }
     }
 
@@ -204,6 +268,12 @@ public class BraeadWeaponAim : MonoBehaviour
     public IEnumerator LaserSweepRoutine(float sweepDuration, Action onComplete = null)
     {
         isLaserActive = true;
+        if (currentBarrageCoroutine != null)
+        {
+            StopCoroutine(currentBarrageCoroutine);
+            currentBarrageCoroutine = null;
+        }
+
         hitPlayerIds.Clear();
 
         PrepareLaserLineRenderer();
@@ -234,21 +304,32 @@ public class BraeadWeaponAim : MonoBehaviour
 
             Vector3 startPos = (firePoint != null) ? firePoint.position : transform.position;
             Vector3 endPos = startPos + (Vector3)(laserDir * laserMaxDistance);
-
-            // 1. Raycast kiểm tra va chạm với Tường / Chướng ngại vật để tia laser bị chắn thực tế
-            RaycastHit2D obstacleHit = Physics2D.Raycast(startPos, laserDir, laserMaxDistance, obstacleLayerMask);
             float actualDistance = laserMaxDistance;
-            if (obstacleHit.collider != null && (obstacleHit.collider.CompareTag("Obstacle") || obstacleHit.collider.CompareTag("Door") || obstacleHit.collider.gameObject.layer == LayerMask.NameToLayer("Obstacle")))
+
+            // 1. Raycast quét tất cả vật thể để chặn tia laser tại tường / cửa / chướng ngại vật đầu tiên
+            RaycastHit2D[] hits = Physics2D.RaycastAll(startPos, laserDir, laserMaxDistance);
+            foreach (var hit in hits)
             {
-                actualDistance = obstacleHit.distance;
-                endPos = obstacleHit.point;
+                if (hit.collider == null) continue;
+                if (hit.collider.isTrigger) continue; // Bỏ qua trigger vùng phòng, teleport, item...
+                if (hit.collider.transform.IsChildOf(transform.root)) continue; // Bỏ qua bản thân boss
+
+                // Kiểm tra xem có phải vật cản (Tilemap Tường, Cửa phòng, Chướng ngại vật)
+                if (hit.collider.CompareTag("Obstacle") || hit.collider.CompareTag("Door") ||
+                    hit.collider.gameObject.name.Contains("Wall") || hit.collider.gameObject.name.Contains("Door") || hit.collider.gameObject.name.Contains("Obstacle"))
+                {
+                    actualDistance = hit.distance;
+                    endPos = hit.point;
+                    break; // Tia laser dừng lại ngay tại vật cản đầu tiên gặp phải
+                }
             }
 
-            // 2. Raycast quét người chơi trong tầm tia laser (những người không đứng nấp sau cột/tường)
+            // 2. Raycast quét người chơi trong tầm tia laser (chỉ trong khoảng actualDistance trước vật cản)
             RaycastHit2D[] playerHits = Physics2D.RaycastAll(startPos, laserDir, actualDistance);
             foreach (var hit in playerHits)
             {
                 if (hit.collider == null) continue;
+                if (hit.distance > actualDistance) continue; // Nấp sau tường thì không bị trúng
 
                 // Kiểm tra Player cục bộ (RookieHealth)
                 RookieHealth rookie = hit.collider.GetComponent<RookieHealth>();
@@ -260,11 +341,14 @@ public class BraeadWeaponAim : MonoBehaviour
                     if (!hitPlayerIds.Contains(id))
                     {
                         hitPlayerIds.Add(id);
-                        // Gây sát thương -50% tổng máu và giáp của người chơi
-                        int totalHpAndArmor = rookie.maxHealth + rookie.maxArmor;
-                        int laserDamage = Mathf.Max(1, Mathf.RoundToInt(totalHpAndArmor * 0.5f));
+
+                        // Sát thương: -50% sinh lực HIỆN TẠI (Máu + Giáp), lấy phần nguyên máu còn lại
+                        int currentPool = rookie.GetCurrentHealth() + rookie.GetCurrentArmor();
+                        int remainingPool = Mathf.FloorToInt(currentPool * 0.5f);
+                        int laserDamage = Mathf.Max(1, currentPool - remainingPool);
+
                         rookie.TakeDamage(laserDamage);
-                        Debug.Log($"[Braead Laser] Quét trúng Player! Gây {laserDamage} sát thương (-50% HP + Giáp)");
+                        Debug.Log($"[Braead Laser] Quét trúng Player! Hiện tại: {currentPool} (HP:{rookie.GetCurrentHealth()}, Giáp:{rookie.GetCurrentArmor()}) -> Gây {laserDamage} sát thương");
                     }
                 }
 
@@ -342,6 +426,21 @@ public class BraeadWeaponAim : MonoBehaviour
 
         activeLaserLine.positionCount = 2;
         activeLaserLine.enabled = false;
+    }
+
+    private void OnDisable()
+    {
+        if (currentBarrageCoroutine != null)
+        {
+            StopCoroutine(currentBarrageCoroutine);
+            currentBarrageCoroutine = null;
+        }
+
+        if (activeLaserLine != null)
+        {
+            activeLaserLine.enabled = false;
+        }
+        isLaserActive = false;
     }
 
     private void OnDestroy()

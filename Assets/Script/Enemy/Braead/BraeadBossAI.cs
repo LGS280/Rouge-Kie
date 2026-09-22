@@ -100,7 +100,21 @@ public class BraeadBossAI : MonoBehaviour
         // 2. Nạp chỉ số từ Database (EnemyConfig của Braead)
         ApplyConfigFromDb();
 
-        // 3. Khóa ngay mục tiêu người chơi
+        // 3. Tự động tìm phòng chứa Boss nếu chưa được gán
+        if (myRoom == null)
+        {
+            RoomController[] rooms = Object.FindObjectsByType<RoomController>(FindObjectsSortMode.None);
+            foreach (var room in rooms)
+            {
+                if (room.RoomCollider != null && room.RoomCollider.bounds.Contains(transform.position))
+                {
+                    SetRoom(room);
+                    break;
+                }
+            }
+        }
+
+        // 4. Khóa ngay mục tiêu người chơi
         FindNearestPlayer();
     }
 
@@ -118,10 +132,11 @@ public class BraeadBossAI : MonoBehaviour
         }
         else
         {
-            // Fallback: Lấy FireRate từ vũ khí ID 22
-            if (GameConfigManager.Instance.WeaponDb.TryGetValue(22, out WeaponConfig wConfig))
+            // Fallback: Lấy FireRate từ vũ khí (tra cứu theo prefabName)
+            if (weaponAim != null)
             {
-                if (wConfig.fireRate > 0) attackCooldown = wConfig.fireRate;
+                WeaponConfig wConfig = weaponAim.GetWeaponConfig();
+                if (wConfig != null && wConfig.fireRate > 0) attackCooldown = wConfig.fireRate;
             }
         }
     }
@@ -178,6 +193,9 @@ public class BraeadBossAI : MonoBehaviour
         {
             HandleCombatMovementAndAttack();
         }
+
+        // 8. Đảm bảo Boss luôn ở trong ranh giới phòng chiến đấu (không đi lọt ra ngoài cửa)
+        ClampPositionToRoom();
     }
 
     /// <summary>
@@ -237,7 +255,7 @@ public class BraeadBossAI : MonoBehaviour
             animator.SetBool("isMoving", finalMoveDir.sqrMagnitude > 0.01f);
         }
 
-        // Xử lý bắn đạn thường 10 viên
+        // Xử lý bắn đạn thường
         if (Time.time >= nextAttackTime)
         {
             PerformNormalAttack();
@@ -250,7 +268,7 @@ public class BraeadBossAI : MonoBehaviour
 
         if (weaponAim != null)
         {
-            weaponAim.ShootNormalBarrage(targetPlayer.position, isEnraged);
+            weaponAim.ShootNormalBarrage(targetPlayer, targetPlayer.position, isEnraged);
         }
 
         // Đồng bộ mạng trong chế độ Co-op
@@ -312,12 +330,46 @@ public class BraeadBossAI : MonoBehaviour
 
     private Vector2 GetObstacleAvoidanceForce(Vector2 currentDir)
     {
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, currentDir, 1.2f, LayerMask.GetMask("Obstacle", "Wall", "Door"));
-        if (hit.collider != null)
+        RaycastHit2D[] hits = Physics2D.CircleCastAll(transform.position, 0.7f, currentDir, 1.5f);
+        foreach (var hit in hits)
         {
-            return Vector2.Reflect(currentDir, hit.normal) * 0.6f;
+            if (hit.collider == null || hit.collider.isTrigger || hit.collider.transform.IsChildOf(transform)) continue;
+
+            if (hit.collider.CompareTag("Obstacle") || hit.collider.CompareTag("Door") ||
+                hit.collider.gameObject.name.Contains("Wall") || hit.collider.gameObject.name.Contains("Door") || hit.collider.gameObject.name.Contains("Obstacle"))
+            {
+                return Vector2.Reflect(currentDir, hit.normal) * 0.8f;
+            }
         }
         return Vector2.zero;
+    }
+
+    private void ClampPositionToRoom()
+    {
+        if (myRoom == null || myRoom.RoomCollider == null) return;
+
+        Bounds bounds = myRoom.RoomCollider.bounds;
+        float padding = 1.0f; // Khoảng cách an toàn cách mép tường phòng
+
+        float minX = bounds.min.x + padding;
+        float maxX = bounds.max.x - padding;
+        float minY = bounds.min.y + padding;
+        float maxY = bounds.max.y - padding;
+
+        Vector3 pos = transform.position;
+        if (pos.x < minX || pos.x > maxX || pos.y < minY || pos.y > maxY)
+        {
+            float clampedX = Mathf.Clamp(pos.x, minX, maxX);
+            float clampedY = Mathf.Clamp(pos.y, minY, maxY);
+            if (rb != null)
+            {
+                rb.position = new Vector2(clampedX, clampedY);
+            }
+            else
+            {
+                transform.position = new Vector3(clampedX, clampedY, pos.z);
+            }
+        }
     }
 
     private void UpdateBossFacing(float dirX)

@@ -172,3 +172,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   isLaserActive: 0
+  enableBobbing: 1
+  idleBobSpeed: 5
+  idleBobAmount: 0.025
+  moveBobSpeed: 8
+  moveBobAmount: 0.09
+  moveSwayAmount: 0.012
