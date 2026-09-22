@@ -172,6 +172,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MobHealth
   maxHealth: 100
   isDead: 0
+  enemyConfigName: 
   coinPrefabOverride: {fileID: 5135757895966900724, guid: cc04880d9ca75264a8c00200bb996385, type: 3}
   manaPrefabOverride: {fileID: 499877432794843320, guid: 37ed24bef8ff4eb4aa62a61cda0fdad4, type: 3}
   lootDropChance: 0.2
@@ -520,6 +521,26 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7053059745324720290, guid: 6c7724726f9279b4e8820228442c832e, type: 3}
+      propertyPath: mobBulletPrefabs.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7053059745324720290, guid: 6c7724726f9279b4e8820228442c832e, type: 3}
+      propertyPath: 'mobBulletPrefabs.Array.data[0]'
+      value: 
+      objectReference: {fileID: 5024438798865966711, guid: 261705a40271edb4aa4153d4b79eda59, type: 3}
+    - target: {fileID: 7053059745324720290, guid: 6c7724726f9279b4e8820228442c832e, type: 3}
+      propertyPath: 'mobBulletPrefabs.Array.data[1]'
+      value: 
+      objectReference: {fileID: 4961830840616290143, guid: 32d5c2b03917d1040b269800f9442b80, type: 3}
+    - target: {fileID: 7053059745324720290, guid: 6c7724726f9279b4e8820228442c832e, type: 3}
+      propertyPath: 'mobBulletPrefabs.Array.data[2]'
+      value: 
+      objectReference: {fileID: 4961830840616290143, guid: 27667d7329bb487498d8c7ce2e046852, type: 3}
+    - target: {fileID: 7053059745324720290, guid: 6c7724726f9279b4e8820228442c832e, type: 3}
+      propertyPath: 'mobBulletPrefabs.Array.data[3]'
+      value: 
+      objectReference: {fileID: 1395929543879269571, guid: 07a711cc05fa5ec4ba48cdbdaa465f68, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

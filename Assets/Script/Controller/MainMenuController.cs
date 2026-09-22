@@ -49,6 +49,12 @@ public class MainMenuController : MonoBehaviour
         {
             MaintenanceManager.Instance.CheckMaintenanceStatus(null, showPopupIfMaintenance: true);
         }
+
+        // Tự động gắn bộ quản lý nút icon thông báo lịch bảo trì sắp tới (chấm than vàng kế bên nút Logout)
+        if (GetComponent<UpcomingMaintenanceNoticeButton>() == null)
+        {
+            gameObject.AddComponent<UpcomingMaintenanceNoticeButton>();
+        }
     }
 
     // --- LOGIC CHUYỂN ĐỔI GIỮA CÁC PANEL CHÍNH ---
