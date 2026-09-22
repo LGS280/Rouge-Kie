@@ -3,23 +3,23 @@ guid: dfd62864fc644094494a5bd27b8a9d9f
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6744857873960700464
-    second: Brahead_Walk_0
+      213: 1780239482903690712
+    second: Braead_Walk_0
   - first:
-      213: -6147462766867291557
-    second: Brahead_Walk_1
+      213: 5209501828853357695
+    second: Braead_Walk_1
   - first:
-      213: 475985121007471090
-    second: Brahead_Walk_2
+      213: -6173199011621174177
+    second: Braead_Walk_2
   - first:
-      213: -670569183841155726
-    second: Brahead_Walk_3
+      213: 6891744139925288214
+    second: Braead_Walk_3
   - first:
-      213: 6926713354959511517
-    second: Brahead_Walk_4
+      213: 5727219227374388160
+    second: Braead_Walk_4
   - first:
-      213: 7541172292899939930
-    second: Brahead_Walk_5
+      213: 3081186984567187960
+    second: Braead_Walk_5
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -66,7 +66,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 32
+  spritePixelsToUnits: 27
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -128,13 +128,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Brahead_Walk_0
+      name: Braead_Walk_0
       rect:
         serializedVersion: 2
-        x: 1
-        y: 7
+        x: 33
+        y: 39
         width: 62
-        height: 50
+        height: 69
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -143,20 +143,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0d5731adf737562a0800000000000000
-      internalID: -6744857873960700464
+      spriteID: 8dd7999a06ea4b810800000000000000
+      internalID: 1780239482903690712
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Brahead_Walk_1
+      name: Braead_Walk_1
       rect:
         serializedVersion: 2
-        x: 65
-        y: 5
+        x: 161
+        y: 37
         width: 63
-        height: 52
+        height: 71
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -165,20 +165,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b526fe62f23dfaaa0800000000000000
-      internalID: -6147462766867291557
+      spriteID: f7c5d8def4edb4840800000000000000
+      internalID: 5209501828853357695
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Brahead_Walk_2
+      name: Braead_Walk_2
       rect:
         serializedVersion: 2
-        x: 130
-        y: 5
+        x: 290
+        y: 37
         width: 61
-        height: 53
+        height: 72
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -187,20 +187,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 2f9850812f90b9600800000000000000
-      internalID: 475985121007471090
+      spriteID: f540788b434645aa0800000000000000
+      internalID: -6173199011621174177
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Brahead_Walk_3
+      name: Braead_Walk_3
       rect:
         serializedVersion: 2
-        x: 195
-        y: 5
+        x: 419
+        y: 37
         width: 61
-        height: 54
+        height: 72
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -209,20 +209,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 27503df41e8a1b6f0800000000000000
-      internalID: -670569183841155726
+      spriteID: 615702ff7c464af50800000000000000
+      internalID: 6891744139925288214
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Brahead_Walk_4
+      name: Braead_Walk_4
       rect:
         serializedVersion: 2
-        x: 257
-        y: 5
+        x: 545
+        y: 37
         width: 61
-        height: 53
+        height: 71
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -231,20 +231,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: ddfd057d811a02060800000000000000
-      internalID: 6926713354959511517
+      spriteID: 0c3007e0b8b2b7f40800000000000000
+      internalID: 5727219227374388160
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Brahead_Walk_5
+      name: Braead_Walk_5
       rect:
         serializedVersion: 2
-        x: 320
-        y: 5
+        x: 672
+        y: 37
         width: 61
-        height: 53
+        height: 72
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -253,8 +253,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a56a15cde30a7a860800000000000000
-      internalID: 7541172292899939930
+      spriteID: 8f92fa5dc3392ca20800000000000000
+      internalID: 3081186984567187960
       vertices: []
       indices: 
       edges: []
@@ -263,7 +263,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: a46ea466e176ed242882df219a0ddd7e
+    spriteID: ae8f77c2d108a624dad54183ddd9503e
     internalID: 0
     vertices: []
     indices: 
@@ -275,12 +275,12 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      Brahead_Walk_0: -6744857873960700464
-      Brahead_Walk_1: -6147462766867291557
-      Brahead_Walk_2: 475985121007471090
-      Brahead_Walk_3: -670569183841155726
-      Brahead_Walk_4: 6926713354959511517
-      Brahead_Walk_5: 7541172292899939930
+      Braead_Walk_0: 1780239482903690712
+      Braead_Walk_1: 5209501828853357695
+      Braead_Walk_2: -6173199011621174177
+      Braead_Walk_3: 6891744139925288214
+      Braead_Walk_4: 5727219227374388160
+      Braead_Walk_5: 3081186984567187960
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

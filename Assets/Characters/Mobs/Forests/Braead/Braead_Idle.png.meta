@@ -3,17 +3,17 @@ guid: 8f55de8ff919d224e89c96f611c1bc65
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8365301068825783189
-    second: Brahead_Idle_0
+      213: 5837677742917891937
+    second: Braead_Idle_0
   - first:
-      213: 6040890074686271034
-    second: Brahead_Idle_1
+      213: -4732788379430487312
+    second: Braead_Idle_1
   - first:
-      213: 5942254866988776125
-    second: Brahead_Idle_2
+      213: -45662014204872465
+    second: Braead_Idle_2
   - first:
-      213: -4871135194835824024
-    second: Brahead_Idle_3
+      213: 1924781633752848838
+    second: Braead_Idle_3
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -60,7 +60,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 32
+  spritePixelsToUnits: 27
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -122,13 +122,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Brahead_Idle_0
+      name: Braead_Idle_0
       rect:
         serializedVersion: 2
-        x: 3
-        y: 5
+        x: 35
+        y: 37
         width: 58
-        height: 53
+        height: 71
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -137,20 +137,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b649179cffa78eb80800000000000000
-      internalID: -8365301068825783189
+      spriteID: 16733d35af8930150800000000000000
+      internalID: 5837677742917891937
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Brahead_Idle_1
+      name: Braead_Idle_1
       rect:
         serializedVersion: 2
-        x: 67
-        y: 5
+        x: 163
+        y: 37
         width: 58
-        height: 49
+        height: 67
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -159,20 +159,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a3eabd4548d85d350800000000000000
-      internalID: 6040890074686271034
+      spriteID: 0faf2f65b02c15eb0800000000000000
+      internalID: -4732788379430487312
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Brahead_Idle_2
+      name: Braead_Idle_2
       rect:
         serializedVersion: 2
-        x: 131
-        y: 5
+        x: 291
+        y: 37
         width: 58
-        height: 44
+        height: 62
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -181,20 +181,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: dbab3bf6151277250800000000000000
-      internalID: 5942254866988776125
+      spriteID: fe8f697d3a6cd5ff0800000000000000
+      internalID: -45662014204872465
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Brahead_Idle_3
+      name: Braead_Idle_3
       rect:
         serializedVersion: 2
-        x: 195
-        y: 5
+        x: 419
+        y: 37
         width: 58
-        height: 48
+        height: 66
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -203,8 +203,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 86258e24950466cb0800000000000000
-      internalID: -4871135194835824024
+      spriteID: 6c9d80ea2b236ba10800000000000000
+      internalID: 1924781633752848838
       vertices: []
       indices: 
       edges: []
@@ -213,7 +213,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: a1667d7422889f34dbe4904efab65114
+    spriteID: 3610a45a7669ec44bb82e7b552ded1c0
     internalID: 0
     vertices: []
     indices: 
@@ -225,10 +225,10 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      Brahead_Idle_0: -8365301068825783189
-      Brahead_Idle_1: 6040890074686271034
-      Brahead_Idle_2: 5942254866988776125
-      Brahead_Idle_3: -4871135194835824024
+      Braead_Idle_0: 5837677742917891937
+      Braead_Idle_1: -4732788379430487312
+      Braead_Idle_2: -45662014204872465
+      Braead_Idle_3: 1924781633752848838
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

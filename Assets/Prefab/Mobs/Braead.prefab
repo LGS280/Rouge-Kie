@@ -58,8 +58,8 @@ Transform:
   m_GameObject: {fileID: 866462173141357403}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.004, y: -0.4584, z: 0}
-  m_LocalScale: {x: 3.034662, y: 5.3234, z: 1}
+  m_LocalPosition: {x: -0.013, y: -0.586, z: 0}
+  m_LocalScale: {x: 3.69, y: 8.09, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 9115133224414603381}
@@ -213,12 +213,12 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 10
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -8365301068825783189, guid: 8f55de8ff919d224e89c96f611c1bc65, type: 3}
+  m_Sprite: {fileID: 5837677742917891937, guid: 8f55de8ff919d224e89c96f611c1bc65, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1.8125, y: 1.65625}
+  m_Size: {x: 1.8125, y: 2.21875}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -389,8 +389,8 @@ Transform:
   m_GameObject: {fileID: 8359025356971502910}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.004, y: -0.4359, z: 0}
-  m_LocalScale: {x: 3.0346625, y: 7.3454, z: 1}
+  m_LocalPosition: {x: -0.013, y: -0.586, z: 0}
+  m_LocalScale: {x: 3.69, y: 8.09, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 9115133224414603381}
@@ -462,6 +462,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5330214401308843809}
     m_Modifications:
+    - target: {fileID: 405249978778593040, guid: ba090db479e48984b9531a14290be358, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.055
+      objectReference: {fileID: 0}
+    - target: {fileID: 405249978778593040, guid: ba090db479e48984b9531a14290be358, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.268
+      objectReference: {fileID: 0}
     - target: {fileID: 2487237527695826326, guid: ba090db479e48984b9531a14290be358, type: 3}
       propertyPath: m_Layer
       value: 6
@@ -546,7 +554,8 @@ PrefabInstance:
       propertyPath: 'mobBulletPrefabs.Array.data[4]'
       value: 
       objectReference: {fileID: 1395929543879269571, guid: 07a711cc05fa5ec4ba48cdbdaa465f68, type: 3}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 4703114136289561281, guid: ba090db479e48984b9531a14290be358, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
