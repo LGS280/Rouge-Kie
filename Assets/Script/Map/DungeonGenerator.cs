@@ -255,7 +255,10 @@ public class DungeonGenerator : MonoBehaviour
 
         int safeLoop = 0;
 
-        while (roomsByGrid.Count < maxRooms && safeLoop < 500)
+        int currentFloor = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.currentFloor : 1;
+        int targetRooms = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.GetRoomCountForFloor(currentFloor) : maxRooms;
+
+        while (roomsByGrid.Count < targetRooms && safeLoop < 500)
         {
             safeLoop++;
 
@@ -1469,10 +1472,9 @@ public class DungeonGenerator : MonoBehaviour
         // Kiểm tra xem phòng hiện tại có phải là phòng Boss hay không
         bool isBossRoom = room.controller != null && room.controller.roomType == RoomType.Boss;
 
-        int mobCount = isBossRoom ? 1 : Random.Range(
-            currentTheme.minMobPerRoom,
-            currentTheme.maxMobPerRoom + 1
-        );
+        int mobCount = isBossRoom ? 1 : (GameProgressionManager.Instance != null 
+            ? GameProgressionManager.Instance.GetMobCountPerRoom(currentTheme.minMobPerRoom, currentTheme.maxMobPerRoom) 
+            : Random.Range(currentTheme.minMobPerRoom, currentTheme.maxMobPerRoom + 1));
 
         for (int i = 0; i < mobCount; i++)
         {

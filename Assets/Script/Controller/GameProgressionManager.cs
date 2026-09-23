@@ -61,16 +61,79 @@ public class GameProgressionManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Lấy hệ số nhân máu của quái vật cho tầng hiện tại (ưu tiên lấy từ GameConfigManager theo cấu hình Backend)
+    /// Lấy số lượng người chơi trong phòng (Solo: 1, Co-op: 2-4)
+    /// </summary>
+    public int GetPlayerCount()
+    {
+        return NetworkManager.Instance != null ? NetworkManager.Instance.GetCoopPlayerCount() : 1;
+    }
+
+    /// <summary>
+    /// Lấy hệ số nhân máu của quái vật thường cho tầng hiện tại (Kết hợp độ khó tầng và Co-op Scaling từ Database)
     /// </summary>
     public float GetMonsterHPMultiplier()
     {
-        if (GameConfigManager.Instance != null)
-        {
-            return GameConfigManager.Instance.GetDifficultyMultiplier(currentFloor);
-        }
-        // Công thức dự phòng: 1.0 + (Tầng - 1) * hệ số tăng thêm
-        return 1.0f + (currentFloor - 1) * hpMultiplierPerFloor;
+        int players = GetPlayerCount();
+        LevelConfig levelCfg = GameConfigManager.Instance != null ? GameConfigManager.Instance.GetLevelConfig(currentFloor) : null;
+
+        float floorMult = (levelCfg != null && levelCfg.difficultyMultiplier > 0f)
+            ? levelCfg.difficultyMultiplier
+            : (1.0f + (currentFloor - 1) * hpMultiplierPerFloor);
+
+        float coopScalingFactor = (levelCfg != null) ? levelCfg.coopMobHPMultiplier : 0.4f;
+        float coopMult = 1.0f + Mathf.Max(0, players - 1) * coopScalingFactor;
+
+        return floorMult * coopMult;
+    }
+
+    /// <summary>
+    /// Lấy hệ số nhân máu của Boss / Mini-Boss trong chế độ Co-op (Lấy tỉ lệ từ Database)
+    /// </summary>
+    public float GetBossHPMultiplier()
+    {
+        int players = GetPlayerCount();
+        if (players <= 1) return 1.0f;
+
+        LevelConfig levelCfg = GameConfigManager.Instance != null ? GameConfigManager.Instance.GetLevelConfig(currentFloor) : null;
+        float coopBossScaling = (levelCfg != null) ? levelCfg.coopBossHPMultiplier : 0.6f;
+
+        return 1.0f + (players - 1) * coopBossScaling;
+    }
+
+    /// <summary>
+    /// Lấy số lượng phòng cần sinh cho tầng dựa theo cấu hình Database và số lượng người chơi Co-op
+    /// </summary>
+    public int GetRoomCountForFloor(int floor)
+    {
+        int players = GetPlayerCount();
+        LevelConfig levelCfg = GameConfigManager.Instance != null ? GameConfigManager.Instance.GetLevelConfig(floor) : null;
+
+        int baseRooms = (levelCfg != null && levelCfg.baseRoomCount > 0)
+            ? levelCfg.baseRoomCount
+            : (7 + (floor - 1)); // Fallback dự phòng: Tầng 1: 7, Tầng 2: 8, Tầng 3: 9...
+
+        int extraCoopRooms = (players > 1)
+            ? ((levelCfg != null && levelCfg.coopExtraRooms >= 0) ? levelCfg.coopExtraRooms : 2)
+            : 0;
+
+        return baseRooms + extraCoopRooms;
+    }
+
+    /// <summary>
+    /// Lấy số lượng quái thường cần sinh trong phòng (Tăng thêm dựa theo số lượng người chơi Co-op từ Database)
+    /// </summary>
+    public int GetMobCountPerRoom(int baseMin, int baseMax)
+    {
+        int players = GetPlayerCount();
+        LevelConfig levelCfg = GameConfigManager.Instance != null ? GameConfigManager.Instance.GetLevelConfig(currentFloor) : null;
+
+        int extraMobsPerPlayer = (levelCfg != null) ? levelCfg.coopExtraMobsPerRoom : 1;
+        int extraMobs = Mathf.Max(0, players - 1) * extraMobsPerPlayer;
+
+        int min = baseMin + extraMobs;
+        int max = baseMax + extraMobs;
+
+        return UnityEngine.Random.Range(min, max + 1);
     }
 
     private void Start()

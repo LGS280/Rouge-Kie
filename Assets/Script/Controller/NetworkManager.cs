@@ -461,6 +461,27 @@ public class NetworkManager : MonoBehaviour
         return 1;
     }
 
+    /// <summary>
+    /// Lấy tổng số lượng người chơi thực tế trong phòng (Solo: 1, Co-op: số người chơi đang kết nối)
+    /// </summary>
+    public int GetCoopPlayerCount()
+    {
+        bool isMultiplayer = IsLoggedIn && !string.IsNullOrEmpty(CurrentRoomId);
+        if (!isMultiplayer) return 1;
+
+        if (OrderedRoomPlayerIds != null && OrderedRoomPlayerIds.Count > 0)
+        {
+            return Mathf.Max(1, OrderedRoomPlayerIds.Count);
+        }
+
+        if (MultiplayerSyncManager.Instance != null && MultiplayerSyncManager.Instance.remotePlayers != null)
+        {
+            return Mathf.Max(1, 1 + MultiplayerSyncManager.Instance.remotePlayers.Count);
+        }
+
+        return 2; // Dự phòng tối thiểu cho co-op nếu chưa nạp kịp danh sách
+    }
+
     // CÁC PHƯƠNG THỨC GỬI SỰ KIỆN ROOM LÊN SERVER
 
     // Gọi khi có bất kỳ ai bước vào một phòng combat (Gửi vị trí người kích hoạt thay vì tâm phòng)
