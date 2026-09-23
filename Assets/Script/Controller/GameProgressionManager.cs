@@ -120,6 +120,26 @@ public class GameProgressionManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Lấy số lượng phòng rương cần sinh cho tầng dựa theo cấu hình Database và số lượng người chơi Co-op
+    /// Solo: 1 phòng rương. Co-op: Tầng 1, 2 là 1 phòng rương, Tầng 3+ là 2 phòng rương (hoặc theo cấu hình Database)
+    /// </summary>
+    public int GetChestRoomCountForFloor(int floor)
+    {
+        int players = GetPlayerCount();
+        LevelConfig levelCfg = GameConfigManager.Instance != null ? GameConfigManager.Instance.GetLevelConfig(floor) : null;
+
+        int baseChest = (levelCfg != null && levelCfg.chestRoomCount > 0)
+            ? levelCfg.chestRoomCount
+            : 1;
+
+        int extraChest = (players > 1)
+            ? ((levelCfg != null && levelCfg.coopExtraChestRooms >= 0) ? levelCfg.coopExtraChestRooms : (floor >= 3 ? 1 : 0))
+            : 0;
+
+        return baseChest + extraChest;
+    }
+
+    /// <summary>
     /// Lấy số lượng quái thường cần sinh trong phòng (Tăng thêm dựa theo số lượng người chơi Co-op từ Database)
     /// </summary>
     public int GetMobCountPerRoom(int baseMin, int baseMax)

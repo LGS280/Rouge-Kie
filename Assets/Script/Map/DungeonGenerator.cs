@@ -1849,22 +1849,89 @@ public class DungeonGenerator : MonoBehaviour
             }
         }
 
-        MapRoom chestRoom = null;
-        if (deadEnds.Count > 0)
+        // Sắp xếp xác định để Host và Client chọn phòng rương giống hệt nhau khi dùng chung mapSeed
+        deadEnds.Sort((a, b) => (a.gridPos.x * 1000 + a.gridPos.y).CompareTo(b.gridPos.x * 1000 + b.gridPos.y));
+        otherCandidates.Sort((a, b) => (a.gridPos.x * 1000 + a.gridPos.y).CompareTo(b.gridPos.x * 1000 + b.gridPos.y));
+
+        int currentFloor = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.currentFloor : 1;
+        int targetChestRooms = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.GetChestRoomCountForFloor(currentFloor) : 1;
+
+        // Giới hạn an toàn: Số phòng rương không vượt quá 50% số phòng thông thường
+        int nonSpecialCount = deadEnds.Count + otherCandidates.Count;
+        int maxAllowedChest = Mathf.Max(1, nonSpecialCount / 2);
+        int finalChestCount = Mathf.Clamp(targetChestRooms, 1, maxAllowedChest);
+
+        List<MapRoom> chosenChestRooms = new List<MapRoom>();
+
+        // Hàm kiểm tra xem phòng có nằm sát (liền kề) với bất kỳ phòng rương đã chọn nào không
+        bool IsAdjacentToChosen(MapRoom candidate)
         {
-            chestRoom = deadEnds[UnityEngine.Random.Range(0, deadEnds.Count)];
-        }
-        else if (otherCandidates.Count > 0)
-        {
-            chestRoom = otherCandidates[UnityEngine.Random.Range(0, otherCandidates.Count)];
+            foreach (var chosen in chosenChestRooms)
+            {
+                int manhattanDist = Mathf.Abs(candidate.gridPos.x - chosen.gridPos.x) + Mathf.Abs(candidate.gridPos.y - chosen.gridPos.y);
+                if (manhattanDist <= 1) return true;
+            }
+            return false;
         }
 
-        if (chestRoom != null && chestRoom.controller != null)
+        // Danh sách gộp ưu tiên: Ngõ cụt trước, các phòng khác sau
+        List<MapRoom> pool = new List<MapRoom>();
+        // Shuffle ngẫu nhiên có hạt giống theo mapSeed hiện tại
+        List<MapRoom> shuffledDeadEnds = new List<MapRoom>(deadEnds);
+        for (int i = shuffledDeadEnds.Count - 1; i > 0; i--)
         {
-            if (chestRoom.controller.roomType == RoomType.Normal)
+            int r = UnityEngine.Random.Range(0, i + 1);
+            var tmp = shuffledDeadEnds[i];
+            shuffledDeadEnds[i] = shuffledDeadEnds[r];
+            shuffledDeadEnds[r] = tmp;
+        }
+
+        List<MapRoom> shuffledOther = new List<MapRoom>(otherCandidates);
+        for (int i = shuffledOther.Count - 1; i > 0; i--)
+        {
+            int r = UnityEngine.Random.Range(0, i + 1);
+            var tmp = shuffledOther[i];
+            shuffledOther[i] = shuffledOther[r];
+            shuffledOther[r] = tmp;
+        }
+
+        pool.AddRange(shuffledDeadEnds);
+        pool.AddRange(shuffledOther);
+
+        // Lần 1: Chọn các phòng thỏa mãn điều kiện luân phiên (không nằm sát nhau)
+        foreach (MapRoom cand in pool)
+        {
+            if (chosenChestRooms.Count >= finalChestCount) break;
+
+            if (!IsAdjacentToChosen(cand))
             {
-                chestRoom.controller.roomType = RoomType.Chest;
-                Debug.Log($"[DungeonGenerator] Đã gán phòng Rương báu tại tọa độ lưới: {chestRoom.gridPos}");
+                chosenChestRooms.Add(cand);
+            }
+        }
+
+        // Lần 2 (Dự phòng nếu layout ngục tối quá hẹp): Điền nốt nếu chưa đủ finalChestCount
+        if (chosenChestRooms.Count < finalChestCount)
+        {
+            foreach (MapRoom cand in pool)
+            {
+                if (chosenChestRooms.Count >= finalChestCount) break;
+                if (!chosenChestRooms.Contains(cand))
+                {
+                    chosenChestRooms.Add(cand);
+                }
+            }
+        }
+
+        // 5. Gán loại phòng Chest cho các phòng đã chọn
+        foreach (MapRoom chestRoom in chosenChestRooms)
+        {
+            if (chestRoom != null && chestRoom.controller != null)
+            {
+                if (chestRoom.controller.roomType == RoomType.Normal)
+                {
+                    chestRoom.controller.roomType = RoomType.Chest;
+                    Debug.Log($"[DungeonGenerator] Đã gán phòng Rương báu tại tọa độ lưới: {chestRoom.gridPos} (Tầng {currentFloor}, Tổng rương: {chosenChestRooms.Count})");
+                }
             }
         }
     }
