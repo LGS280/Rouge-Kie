@@ -340,6 +340,15 @@ public class GameConfigManager : MonoBehaviour
         }
     }
 
+    public LevelConfig GetLevelConfig(int floor)
+    {
+        if (LevelDb != null && LevelDb.TryGetValue(floor, out var config))
+        {
+            return config;
+        }
+        return null;
+    }
+
     public float GetDifficultyMultiplier(int floor, int stage = 1)
     {
         if (LevelDb.TryGetValue(floor, out var config) && config.difficultyMultiplier > 0f)

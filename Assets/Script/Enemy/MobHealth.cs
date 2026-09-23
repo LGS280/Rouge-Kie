@@ -31,26 +31,23 @@ public class MobHealth : MonoBehaviour
 
     private void ScaleHealthByProgression()
     {
-        // 1. Final Boss (Braead hoặc Boss tầng cuối): Máu lấy thẳng BaseHealth từ Database, không cộng dồn theo tầng
+        // 1. Final Boss (Braead hoặc Boss tầng cuối): Máu lấy BaseHealth từ Database, nhân hệ số Co-op nếu có nhiều người chơi
         if (GetComponent<BraeadBossAI>() != null || gameObject.name.ToUpper().Contains("BRAEAD"))
         {
-            maxHealth = originalMaxHealth;
+            float bossMult = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.GetBossHPMultiplier() : 1.0f;
+            maxHealth = Mathf.RoundToInt(originalMaxHealth * bossMult);
             return;
         }
 
-        // 2. Mini-Boss (Melog): GIỮ NGUYÊN 100% CÔNG THỨC GỐC: BaseHealth từ DB + ((floor - 1) * 100)
+        // 2. Mini-Boss (Melog): GIỮ NGUYÊN 100% CÔNG THỨC GỐC: (BaseHealth từ DB + ((floor - 1) * 100)) x Hệ số Co-op
         if (GetComponent<MelogBossAI>() != null || gameObject.name.ToUpper().Contains("MELOG") || gameObject.name.ToUpper().Contains("BOSS"))
         {
             int floor = 1;
             if (GameProgressionManager.Instance != null) floor = GameProgressionManager.Instance.currentFloor;
-            if (floor > 1)
-            {
-                maxHealth = originalMaxHealth + ((floor - 1) * 100);
-            }
-            else
-            {
-                maxHealth = originalMaxHealth;
-            }
+            int baseFloorHp = (floor > 1) ? (originalMaxHealth + ((floor - 1) * 100)) : originalMaxHealth;
+
+            float bossMult = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.GetBossHPMultiplier() : 1.0f;
+            maxHealth = Mathf.RoundToInt(baseFloorHp * bossMult);
             return;
         }
 
