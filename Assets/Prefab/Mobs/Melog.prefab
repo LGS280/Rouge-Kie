@@ -460,9 +460,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 080e54e2c20dc034893e2ebfd7a1b8ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MobHealth
-  maxHealth: 100
+  maxHealth: 500
   isDead: 0
-  enemyConfigName: 
+  enemyConfigName: Melog
   coinPrefabOverride: {fileID: 499877432794843320, guid: 37ed24bef8ff4eb4aa62a61cda0fdad4, type: 3}
   manaPrefabOverride: {fileID: 5135757895966900724, guid: cc04880d9ca75264a8c00200bb996385, type: 3}
   lootDropChance: 0.2
