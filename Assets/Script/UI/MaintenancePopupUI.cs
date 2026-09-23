@@ -39,6 +39,10 @@ public class MaintenancePopupUI : MonoBehaviour
     private Button retryButton;
     private Button closeButton;
     private bool isShowing = false;
+    private bool isUpcomingNoticeMode = false;
+    public UpcomingMaintenanceInfo CurrentUpcomingInfo { get; private set; }
+
+    public static event Action OnPopupClosed;
 
     private void Awake()
     {
@@ -64,10 +68,84 @@ public class MaintenancePopupUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Hiển thị Hộp thoại thông báo bảo trì với các thông số chi tiết
+    /// Hiển thị Hộp thoại thông báo bảo trì sắp tới (Upcoming Maintenance Notice - Không block chơi game)
+    /// </summary>
+    public void ShowUpcomingNotice(UpcomingMaintenanceInfo upcoming)
+    {
+        if (upcoming == null) return;
+        CurrentUpcomingInfo = upcoming;
+        isUpcomingNoticeMode = true;
+
+        if (popupCanvas == null)
+        {
+            BuildMaintenancePopupCanvas();
+        }
+
+        if (headerTagText != null)
+        {
+            headerTagText.text = "[UPCOMING MAINTENANCE NOTICE]";
+            headerTagText.color = new Color(0.3f, 0.85f, 1f, 1f); // Xanh Cyan sáng
+        }
+
+        if (titleText != null)
+        {
+            titleText.text = string.IsNullOrWhiteSpace(upcoming.title) ? "Upcoming Scheduled Maintenance" : upcoming.title;
+        }
+
+        if (messageText != null)
+        {
+            messageText.gameObject.SetActive(false);
+        }
+
+        if (timeText != null)
+        {
+            string timeStr = "";
+            bool hasParsedStart = DateTimeOffset.TryParse(upcoming.startTime, out var parsedStart);
+            bool hasParsedEnd = DateTimeOffset.TryParse(upcoming.endTime, out var parsedEnd);
+
+            if (hasParsedStart && hasParsedEnd)
+            {
+                timeStr = $"Scheduled Period: {parsedStart:yyyy-MM-dd HH:mm} ~ {parsedEnd:HH:mm} (UTC+7)";
+            }
+            else if (hasParsedStart)
+            {
+                timeStr = $"Scheduled Period: {parsedStart:yyyy-MM-dd HH:mm} (UTC+7)";
+            }
+            else
+            {
+                timeStr = $"Scheduled Period: {upcoming.startTime}";
+            }
+
+            timeText.text = timeStr;
+            timeText.color = new Color(1f, 0.82f, 0.25f, 1f); // Vàng cam ấm
+        }
+
+        if (retryBtnText != null)
+        {
+            retryBtnText.text = "Continue";
+        }
+
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = 1f;
+            canvasGroup.interactable = true;
+            canvasGroup.blocksRaycasts = true;
+        }
+
+        isShowing = true;
+        if (popupCanvas != null)
+        {
+            popupCanvas.gameObject.SetActive(true);
+        }
+    }
+
+    /// <summary>
+    /// Hiển thị Hộp thoại thông báo bảo trì với các thông số chi tiết (Chế độ chặn máy chủ)
     /// </summary>
     public void Show(string title, string message, int remainingMinutes, string endTime = null)
     {
+        isUpcomingNoticeMode = false;
+
         // Không hiển thị Popup bảo trì nếu người chơi hiện tại là Admin hoặc Developer
         if (NetworkManager.Instance != null && 
             (NetworkManager.Instance.AccountRole == "Developer" || NetworkManager.Instance.AccountRole == "Admin"))
@@ -81,6 +159,12 @@ public class MaintenancePopupUI : MonoBehaviour
             BuildMaintenancePopupCanvas();
         }
 
+        if (headerTagText != null)
+        {
+            headerTagText.text = "[SERVER UNDER MAINTENANCE]";
+            headerTagText.color = new Color(1f, 0.72f, 0.2f, 1f); // Cam vàng cảnh báo
+        }
+
         if (titleText != null)
         {
             titleText.text = string.IsNullOrWhiteSpace(title) ? "Server Under Maintenance" : title;
@@ -88,26 +172,21 @@ public class MaintenancePopupUI : MonoBehaviour
 
         if (messageText != null)
         {
-            messageText.text = string.IsNullOrWhiteSpace(message) 
-                ? "The server is currently undergoing maintenance for system updates and optimizations. Please check back later." 
-                : message;
+            messageText.gameObject.SetActive(false);
         }
 
         if (timeText != null)
         {
-            string timeStr = remainingMinutes > 1 
-                ? $"Estimated remaining time: ~{remainingMinutes} minutes" 
-                : $"Estimated remaining time: ~{remainingMinutes} minute";
-
+            string timeStr = "";
             if (!string.IsNullOrWhiteSpace(endTime))
             {
                 if (DateTimeOffset.TryParse(endTime, out var parsedEnd))
                 {
-                    timeStr += $"\nScheduled end time: {parsedEnd:yyyy-MM-dd HH:mm} (UTC+7)";
+                    timeStr = $"Scheduled end time: {parsedEnd:yyyy-MM-dd HH:mm} (UTC+7)";
                 }
                 else
                 {
-                    timeStr += $"\nScheduled end time: {endTime}";
+                    timeStr = $"Scheduled end time: {endTime}";
                 }
             }
             timeText.text = timeStr;
@@ -150,6 +229,19 @@ public class MaintenancePopupUI : MonoBehaviour
         {
             popupCanvas.gameObject.SetActive(false);
         }
+
+        OnPopupClosed?.Invoke();
+    }
+
+    private void OnPrimaryButtonClicked()
+    {
+        if (isUpcomingNoticeMode)
+        {
+            Hide();
+            return;
+        }
+
+        OnRetryClicked();
     }
 
     private void OnRetryClicked()
@@ -248,7 +340,7 @@ public class MaintenancePopupUI : MonoBehaviour
         RectTransform modalRect = modalBox.GetComponent<RectTransform>();
         modalRect.anchorMin = new Vector2(0.5f, 0.5f);
         modalRect.anchorMax = new Vector2(0.5f, 0.5f);
-        modalRect.sizeDelta = new Vector2(850, 520); // Kích thước khung đẹp chuẩn
+        modalRect.sizeDelta = new Vector2(850, 420); // Kích thước gọn gàng vừa vặn khi đã bỏ message
 
         Image modalImg = modalBox.GetComponent<Image>();
         modalImg.color = new Color(0.11f, 0.13f, 0.18f, 0.98f); // Màu xanh đêm Dark Slate hiện đại
@@ -257,9 +349,9 @@ public class MaintenancePopupUI : MonoBehaviour
         GameObject tagObj = new GameObject("HeaderTagText", typeof(RectTransform), typeof(Text));
         tagObj.transform.SetParent(modalBox.transform, false);
         RectTransform tagRect = tagObj.GetComponent<RectTransform>();
-        tagRect.anchorMin = new Vector2(0.5f, 0.88f);
-        tagRect.anchorMax = new Vector2(0.5f, 0.88f);
-        tagRect.sizeDelta = new Vector2(750, 50);
+        tagRect.anchorMin = new Vector2(0.5f, 0.86f);
+        tagRect.anchorMax = new Vector2(0.5f, 0.86f);
+        tagRect.sizeDelta = new Vector2(750, 45);
 
         headerTagText = tagObj.GetComponent<Text>();
         headerTagText.font = uiFont;
@@ -273,9 +365,9 @@ public class MaintenancePopupUI : MonoBehaviour
         GameObject titleObj = new GameObject("TitleText", typeof(RectTransform), typeof(Text));
         titleObj.transform.SetParent(modalBox.transform, false);
         RectTransform titleRectObj = titleObj.GetComponent<RectTransform>();
-        titleRectObj.anchorMin = new Vector2(0.5f, 0.76f);
-        titleRectObj.anchorMax = new Vector2(0.5f, 0.76f);
-        titleRectObj.sizeDelta = new Vector2(750, 60);
+        titleRectObj.anchorMin = new Vector2(0.5f, 0.65f);
+        titleRectObj.anchorMax = new Vector2(0.5f, 0.65f);
+        titleRectObj.sizeDelta = new Vector2(750, 50);
 
         titleText = titleObj.GetComponent<Text>();
         titleText.font = uiFont;
@@ -285,51 +377,50 @@ public class MaintenancePopupUI : MonoBehaviour
         titleText.color = Color.white;
         titleText.text = "Server Under Maintenance";
 
-        // 6. Nội dung thông báo chi tiết (Message)
+        // 6. Nội dung thông báo chi tiết (Message - đã ẩn theo yêu cầu)
         GameObject msgObj = new GameObject("MessageText", typeof(RectTransform), typeof(Text));
         msgObj.transform.SetParent(modalBox.transform, false);
         RectTransform msgRect = msgObj.GetComponent<RectTransform>();
         msgRect.anchorMin = new Vector2(0.5f, 0.52f);
         msgRect.anchorMax = new Vector2(0.5f, 0.52f);
-        msgRect.sizeDelta = new Vector2(750, 140);
+        msgRect.sizeDelta = new Vector2(750, 60);
 
         messageText = msgObj.GetComponent<Text>();
         messageText.font = uiFont;
         messageText.fontSize = 22;
         messageText.alignment = TextAnchor.MiddleCenter;
         messageText.color = new Color(0.85f, 0.88f, 0.93f, 1f);
-        messageText.lineSpacing = 1.25f;
-        messageText.text = "The server is currently undergoing maintenance for system updates and optimizations. Please check back later.";
+        msgObj.SetActive(false);
 
         // 7. Thông tin thời gian dự kiến (Time Info)
         GameObject timeObj = new GameObject("TimeText", typeof(RectTransform), typeof(Text));
         timeObj.transform.SetParent(modalBox.transform, false);
         RectTransform timeRect = timeObj.GetComponent<RectTransform>();
-        timeRect.anchorMin = new Vector2(0.5f, 0.30f);
-        timeRect.anchorMax = new Vector2(0.5f, 0.30f);
-        timeRect.sizeDelta = new Vector2(750, 70);
+        timeRect.anchorMin = new Vector2(0.5f, 0.44f);
+        timeRect.anchorMax = new Vector2(0.5f, 0.44f);
+        timeRect.sizeDelta = new Vector2(750, 55);
 
         timeText = timeObj.GetComponent<Text>();
         timeText.font = uiFont;
-        timeText.fontSize = 20;
+        timeText.fontSize = 21;
         timeText.fontStyle = FontStyle.Italic;
         timeText.alignment = TextAnchor.MiddleCenter;
         timeText.color = new Color(0.4f, 0.85f, 1f, 1f); // Màu xanh lơ dịu mát
-        timeText.text = "Estimated remaining time: ~15 minutes";
+        timeText.text = "";
 
         // 8. Nút Bấm "Retry" (Retry Button)
         GameObject retryBtnObj = new GameObject("RetryButton", typeof(RectTransform), typeof(Image), typeof(Button));
         retryBtnObj.transform.SetParent(modalBox.transform, false);
         RectTransform retryRect = retryBtnObj.GetComponent<RectTransform>();
-        retryRect.anchorMin = new Vector2(0.33f, 0.12f);
-        retryRect.anchorMax = new Vector2(0.33f, 0.12f);
-        retryRect.sizeDelta = new Vector2(220, 60);
+        retryRect.anchorMin = new Vector2(0.33f, 0.18f);
+        retryRect.anchorMax = new Vector2(0.33f, 0.18f);
+        retryRect.sizeDelta = new Vector2(220, 55);
 
         Image retryImg = retryBtnObj.GetComponent<Image>();
         retryImg.color = new Color(0.18f, 0.58f, 0.68f, 1f); // Nút màu Cyan đậm hiện đại
 
         retryButton = retryBtnObj.GetComponent<Button>();
-        retryButton.onClick.AddListener(OnRetryClicked);
+        retryButton.onClick.AddListener(OnPrimaryButtonClicked);
 
         GameObject retryTextObj = new GameObject("Text", typeof(RectTransform), typeof(Text));
         retryTextObj.transform.SetParent(retryBtnObj.transform, false);
@@ -350,9 +441,9 @@ public class MaintenancePopupUI : MonoBehaviour
         GameObject closeBtnObj = new GameObject("CloseButton", typeof(RectTransform), typeof(Image), typeof(Button));
         closeBtnObj.transform.SetParent(modalBox.transform, false);
         RectTransform closeRect = closeBtnObj.GetComponent<RectTransform>();
-        closeRect.anchorMin = new Vector2(0.67f, 0.12f);
-        closeRect.anchorMax = new Vector2(0.67f, 0.12f);
-        closeRect.sizeDelta = new Vector2(220, 60);
+        closeRect.anchorMin = new Vector2(0.67f, 0.18f);
+        closeRect.anchorMax = new Vector2(0.67f, 0.18f);
+        closeRect.sizeDelta = new Vector2(220, 55);
 
         Image closeImg = closeBtnObj.GetComponent<Image>();
         closeImg.color = new Color(0.32f, 0.36f, 0.42f, 1f); // Màu xám tối sang trọng

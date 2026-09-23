@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using TMPro;
 
 [System.Serializable]
@@ -111,12 +113,42 @@ public class LoginController : MonoBehaviour
     // BỔ SUNG: Hàm lấy URL API động từ appsettings.json nếu có, tránh fix cứng đường dẫn Azure
     private string GetApiUrl(string path)
     {
-        string apiBase = backendBase + "/api";
+        string apiBase = "";
         if (GameConfigManager.Instance != null && !string.IsNullOrEmpty(GameConfigManager.Instance.BaseUrl))
         {
             apiBase = GameConfigManager.Instance.BaseUrl;
         }
+        else
+        {
+            apiBase = LoadBaseUrlFromStreamingAssets();
+        }
+
+        if (string.IsNullOrEmpty(apiBase))
+        {
+            apiBase = backendBase + "/api";
+        }
+
         return $"{apiBase}{path}";
+    }
+
+    private string LoadBaseUrlFromStreamingAssets()
+    {
+        try
+        {
+            string filePath = Path.Combine(Application.streamingAssetsPath, "appsettings.json");
+            if (File.Exists(filePath))
+            {
+                string jsonText = File.ReadAllText(filePath);
+                jsonText = System.Text.RegularExpressions.Regex.Replace(jsonText, @"^\s*//.*", "", System.Text.RegularExpressions.RegexOptions.Multiline);
+                ConfigData config = JsonUtility.FromJson<ConfigData>(jsonText);
+                if (config != null && !string.IsNullOrEmpty(config.baseUrl))
+                {
+                    return config.baseUrl;
+                }
+            }
+        }
+        catch { }
+        return null;
     }
 
     [Header("Google OAuth 2.0 Settings (PC)")]
@@ -182,6 +214,83 @@ public class LoginController : MonoBehaviour
             string code = authCodeToExchange;
             authCodeToExchange = null; // Clear flag
             StartCoroutine(ExchangeGoogleCodeForToken(code));
+        }
+
+        HandleTabNavigation();
+    }
+
+    /// <summary>
+    /// Chuyển đổi con trỏ giữa các trường nhập liệu khi nhấn phím Tab (hoặc Shift+Tab để đi lùi)
+    /// </summary>
+    private void HandleTabNavigation()
+    {
+        bool tabPressed = false;
+        bool isShift = false;
+
+        if (Keyboard.current != null)
+        {
+            tabPressed = Keyboard.current.tabKey.wasPressedThisFrame;
+            isShift = Keyboard.current.shiftKey.isPressed;
+        }
+
+        if (!tabPressed)
+        {
+            tabPressed = Input.GetKeyDown(KeyCode.Tab);
+            isShift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        }
+
+        if (!tabPressed) return;
+
+        if (loginPanel != null && loginPanel.activeSelf)
+        {
+            NavigateInputs(new TMP_InputField[] { loginUsernameInput, loginPasswordInput }, isShift);
+        }
+        else if (registerPanel != null && registerPanel.activeSelf)
+        {
+            NavigateInputs(new TMP_InputField[] { regUsernameInput, regPasswordInput, regConfirmPasswordInput, regEmailInput, regOtpInput }, isShift);
+        }
+    }
+
+    private void NavigateInputs(TMP_InputField[] fields, bool isShift)
+    {
+        if (fields == null || fields.Length == 0) return;
+
+        int currentIndex = -1;
+        var currentSelected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+
+        for (int i = 0; i < fields.Length; i++)
+        {
+            if (fields[i] == null) continue;
+
+            if (fields[i].isFocused || (currentSelected != null && currentSelected == fields[i].gameObject))
+            {
+                currentIndex = i;
+                break;
+            }
+        }
+
+        int nextIndex;
+        if (currentIndex == -1)
+        {
+            nextIndex = isShift ? fields.Length - 1 : 0;
+        }
+        else
+        {
+            if (isShift)
+            {
+                nextIndex = (currentIndex - 1 + fields.Length) % fields.Length;
+            }
+            else
+            {
+                nextIndex = (currentIndex + 1) % fields.Length;
+            }
+        }
+
+        TMP_InputField target = fields[nextIndex];
+        if (target != null && target.gameObject.activeInHierarchy)
+        {
+            target.Select();
+            target.ActivateInputField();
         }
     }
 
@@ -316,15 +425,6 @@ public class LoginController : MonoBehaviour
     // Bắt sự kiện Click nút bấm "Đăng nhập Google"
     public void OnGoogleLoginClick()
     {
-        // Chặn đăng nhập nếu máy chủ đang bảo trì
-        if (GameConfigManager.Instance != null && GameConfigManager.Instance.IsUnderMaintenance)
-        {
-            var m = GameConfigManager.Instance.CurrentMaintenance;
-            string header = !string.IsNullOrWhiteSpace(m.title) ? m.title : "SERVER UNDER MAINTENANCE";
-            ShowLoginMessage($"[MAINTENANCE] {header}: {m.message}", Color.yellow);
-            return;
-        }
-
         try
         {
             if (string.IsNullOrEmpty(googleClientId))
@@ -521,15 +621,6 @@ public class LoginController : MonoBehaviour
 
     private IEnumerator LoginRoutine()
     {
-        // Chặn đăng nhập nếu máy chủ đang bảo trì
-        if (GameConfigManager.Instance != null && GameConfigManager.Instance.IsUnderMaintenance)
-        {
-            var m = GameConfigManager.Instance.CurrentMaintenance;
-            string header = !string.IsNullOrWhiteSpace(m.title) ? m.title : "SERVER UNDER MAINTENANCE";
-            ShowLoginMessage($"[MAINTENANCE] {header}\n{m.message}", Color.yellow);
-            yield break;
-        }
-
         var data = new UserData
         {
             username = loginUsernameInput.text.Trim(),

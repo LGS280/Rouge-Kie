@@ -47,11 +47,19 @@ public class WeaponAim : MonoBehaviour
         if ((ShopUIController.Instance != null && ShopUIController.Instance.IsShopOpen()) ||
             (WeaponVaultUIController.Instance != null && WeaponVaultUIController.Instance.IsVaultOpen()))
         {
+            if (currentWeapon != null && currentWeapon.IsBowCharging())
+            {
+                currentWeapon.CancelBowCharge();
+            }
             return;
         }
 
         if (UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
         {
+            if (currentWeapon != null && currentWeapon.IsBowCharging())
+            {
+                currentWeapon.CancelBowCharge();
+            }
             return;
         }
 
@@ -143,15 +151,24 @@ public class WeaponAim : MonoBehaviour
             }
         }
 
-        if (currentWeapon == null)
+        WeaponInfo detectedWeapon = GetComponentInChildren<WeaponInfo>();
+        if (detectedWeapon != currentWeapon)
         {
-            currentWeapon = GetComponentInChildren<WeaponInfo>();
+            if (currentWeapon != null && currentWeapon.IsBowCharging())
+            {
+                currentWeapon.CancelBowCharge();
+            }
+            currentWeapon = detectedWeapon;
         }
 
         if (currentWeapon != null)
         {
             float upFactor = Mathf.Clamp01(1f - Mathf.Abs(angle - 90f) / 45f);
-            currentWeapon.transform.localPosition = Vector3.Lerp(currentWeapon.customHandPosition, Vector3.zero, upFactor);
+            Vector3 targetUpPos = currentWeapon.IsBowWeapon()
+                ? new Vector3(currentWeapon.upAimOffset, 0f, 0f)
+                : Vector3.zero;
+            Vector3 handPos = Vector3.Lerp(currentWeapon.customHandPosition, targetUpPos, upFactor);
+            currentWeapon.transform.localPosition = handPos + currentWeapon.GetDrawBackOffset();
         }
 
         HandleShooting();
@@ -184,8 +201,14 @@ public class WeaponAim : MonoBehaviour
 
     void HandleShooting()
     {
-
-        if (weaponManager != null && weaponManager.nearbyWeapons.Count > 0) return;
+        if (weaponManager != null && weaponManager.nearbyWeapons.Count > 0)
+        {
+            if (currentWeapon != null && currentWeapon.IsBowCharging())
+            {
+                currentWeapon.CancelBowCharge();
+            }
+            return;
+        }
 
         if (currentWeapon == null) return;
 
@@ -198,29 +221,75 @@ public class WeaponAim : MonoBehaviour
             currentFireRate *= PlayerBuffManager.Instance.fireRateMultiplier;
         }
 
-        if (Time.time >= nextFireTime)
-        {
-            bool isShooting = false;
-            bool isNewClick = false;
+        bool isHoldingFire = false;
+        bool wasFirePressedThisFrame = false;
+        bool wasFireReleasedThisFrame = false;
 
-            if (playerController != null && playerController.currentMode == PlayerController.InputMode.Gamepad)
+        if (playerController != null && playerController.currentMode == PlayerController.InputMode.Gamepad)
+        {
+            if (Gamepad.current != null)
             {
-                if (Gamepad.current != null && Gamepad.current.xButton.isPressed)
+                isHoldingFire = Gamepad.current.xButton.isPressed;
+                wasFirePressedThisFrame = Gamepad.current.xButton.wasPressedThisFrame;
+                wasFireReleasedThisFrame = Gamepad.current.xButton.wasReleasedThisFrame;
+            }
+        }
+        else
+        {
+            if (Mouse.current != null)
+            {
+                isHoldingFire = Mouse.current.leftButton.isPressed;
+                wasFirePressedThisFrame = Mouse.current.leftButton.wasPressedThisFrame;
+                wasFireReleasedThisFrame = Mouse.current.leftButton.wasReleasedThisFrame;
+            }
+            else
+            {
+                isHoldingFire = Input.GetMouseButton(0);
+                wasFirePressedThisFrame = Input.GetMouseButtonDown(0);
+                wasFireReleasedThisFrame = Input.GetMouseButtonUp(0);
+            }
+        }
+
+        // --- BOW WEAPON MECHANIC (Charge & Release) ---
+        if (currentWeapon.IsBowWeapon())
+        {
+            if (isHoldingFire)
+            {
+                if (!currentWeapon.IsBowCharging())
                 {
-                    isShooting = true;
-                    isNewClick = Gamepad.current.xButton.wasPressedThisFrame;
+                    if (Time.time >= nextFireTime)
+                    {
+                        currentWeapon.StartBowCharge();
+                    }
+                }
+                else
+                {
+                    currentWeapon.UpdateBowCharge(Time.deltaTime);
                 }
             }
             else
             {
-                if (Mouse.current != null && Mouse.current.leftButton.isPressed)
+                if (currentWeapon.IsBowCharging())
                 {
-                    isShooting = true;
-                    isNewClick = Mouse.current.leftButton.wasPressedThisFrame;
+                    currentWeapon.ReleaseBowCharge();
+                    nextFireTime = Time.time + Mathf.Max(0.12f, currentFireRate * 0.4f);
+
+                    if (NetworkManager.Instance != null && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId))
+                    {
+                        Vector3 shootPos = currentWeapon.firePoint != null ? currentWeapon.firePoint.position : transform.position;
+                        Vector3 shootDir = currentWeapon.firePoint != null ? currentWeapon.firePoint.right : transform.right;
+
+                        NetworkManager.Instance.SendShootEvent(currentWeapon.name, shootPos, shootDir);
+                    }
                 }
             }
+            return;
+        }
 
-            if (isShooting)
+        // --- STANDARD WEAPONS (Guns / Melee) ---
+        if (Time.time >= nextFireTime)
+        {
+            if (isHoldingFire)
             {
                 nextFireTime = Time.time + currentFireRate;
 
@@ -272,6 +341,10 @@ public class WeaponAim : MonoBehaviour
 
     private void OnDisable()
     {
+        if (currentWeapon != null && currentWeapon.IsBowCharging())
+        {
+            currentWeapon.CancelBowCharge();
+        }
 
         if (currentTarget != null)
         {

@@ -25,6 +25,16 @@ public class ShopUIController : MonoBehaviour
     [Header("Gem Currency Display")]
     public TextMeshProUGUI gemBalanceText;
 
+    [Header("Purchase Confirmation Dialog")]
+    public GameObject confirmationOverlay;
+    public TextMeshProUGUI confirmTitleText;
+    public TextMeshProUGUI confirmMessageText;
+    public Image confirmItemIcon;
+    public Button confirmYesButton;
+    public Button confirmNoButton;
+    public Button confirmCloseButton;
+    private UnityEngine.Events.UnityAction pendingConfirmAction;
+
     [Header("Dynamic Shop Items")]
     public List<ShopItemData> dynamicShopItems = new List<ShopItemData>();
 
@@ -68,6 +78,11 @@ public class ShopUIController : MonoBehaviour
             BuildAutoShopUI();
         }
 
+        if (confirmationOverlay == null && shopPanel != null)
+        {
+            BuildConfirmationDialog(shopPanel.transform);
+        }
+
         if (closeShopButton != null)
         {
             closeShopButton.onClick.AddListener(CloseShop);
@@ -88,6 +103,11 @@ public class ShopUIController : MonoBehaviour
         {
             BuildAutoShopUI();
         }
+        if (confirmationOverlay == null && shopPanel != null)
+        {
+            BuildConfirmationDialog(shopPanel.transform);
+        }
+        HidePurchaseConfirmation();
         if (shopPanel != null) shopPanel.SetActive(true);
         UpdateGemDisplay();
         RefreshAllTabs();
@@ -129,6 +149,7 @@ public class ShopUIController : MonoBehaviour
 
     public void CloseShop()
     {
+        HidePurchaseConfirmation();
         if (shopPanel != null) shopPanel.SetActive(false);
     }
 
@@ -142,6 +163,7 @@ public class ShopUIController : MonoBehaviour
 
     public void SwitchTab(int tabIndex)
     {
+        HidePurchaseConfirmation();
         if (coinTabContent != null)
         {
             Transform t = coinTabContent.transform.parent != null && coinTabContent.transform.parent.name.EndsWith("_ScrollView") ? coinTabContent.transform.parent : coinTabContent.transform;
@@ -550,6 +572,268 @@ public class ShopUIController : MonoBehaviour
     }
 
     /// <summary>
+    /// Hiển thị hộp thoại Popup xác nhận (Double Check) trước khi thực hiện mua vật phẩm
+    /// </summary>
+    public void ShowPurchaseConfirmation(string itemName, string priceText, string spritePath, UnityEngine.Events.UnityAction onConfirmAction)
+    {
+        if (confirmationOverlay == null && shopPanel != null)
+        {
+            BuildConfirmationDialog(shopPanel.transform);
+        }
+
+        if (confirmationOverlay == null)
+        {
+            // Dự phòng nếu không khởi tạo được modal xác nhận thì thực thi trực tiếp
+            onConfirmAction?.Invoke();
+            return;
+        }
+
+        pendingConfirmAction = onConfirmAction;
+
+        if (confirmTitleText != null)
+        {
+            confirmTitleText.text = "CONFIRM PURCHASE";
+        }
+
+        if (confirmMessageText != null)
+        {
+            confirmMessageText.text = $"Are you sure you want to purchase\n<color=#FFD700><b>{itemName}</b></color> for <color=#40FF40><b>{priceText}</b></color>?";
+        }
+
+        if (confirmItemIcon != null)
+        {
+            Sprite itemSprite = null;
+            if (!string.IsNullOrEmpty(spritePath))
+            {
+                itemSprite = GetWeaponSpriteFromPrefab(spritePath);
+            }
+            if (itemSprite == null && (itemName.ToLower().Contains("gem") || priceText.ToLower().Contains("gem")))
+            {
+                itemSprite = GetGemSprite();
+            }
+
+            if (itemSprite != null)
+            {
+                confirmItemIcon.sprite = itemSprite;
+                confirmItemIcon.color = Color.white;
+                if (confirmItemIcon.transform.parent != null)
+                {
+                    confirmItemIcon.transform.parent.gameObject.SetActive(true);
+                }
+                else
+                {
+                    confirmItemIcon.gameObject.SetActive(true);
+                }
+            }
+            else
+            {
+                if (confirmItemIcon.transform.parent != null && confirmItemIcon.transform.parent.name == "IconFrame")
+                {
+                    confirmItemIcon.transform.parent.gameObject.SetActive(false);
+                }
+                else
+                {
+                    confirmItemIcon.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        confirmationOverlay.transform.SetAsLastSibling();
+        confirmationOverlay.SetActive(true);
+    }
+
+    /// <summary>
+    /// Đóng popup xác nhận mua hàng và hủy hành động đang chờ
+    /// </summary>
+    public void HidePurchaseConfirmation()
+    {
+        pendingConfirmAction = null;
+        if (confirmationOverlay != null)
+        {
+            confirmationOverlay.SetActive(false);
+        }
+    }
+
+    /// <summary>
+    /// Tự động xây dựng Popup xác nhận mua hàng (Double Check Confirmation Dialog)
+    /// </summary>
+    private void BuildConfirmationDialog(Transform parent)
+    {
+        if (confirmationOverlay != null || parent == null) return;
+
+        // 1. Overlay nền làm mờ và chặn tương tác với phần còn lại của Shop
+        confirmationOverlay = new GameObject("ConfirmationOverlay", typeof(RectTransform), typeof(Image), typeof(Button));
+        confirmationOverlay.transform.SetParent(parent, false);
+
+        RectTransform overlayRect = confirmationOverlay.GetComponent<RectTransform>();
+        overlayRect.anchorMin = Vector2.zero;
+        overlayRect.anchorMax = Vector2.one;
+        overlayRect.sizeDelta = Vector2.zero;
+
+        Image overlayImg = confirmationOverlay.GetComponent<Image>();
+        overlayImg.color = new Color(0.01f, 0.02f, 0.05f, 0.88f);
+
+        Button overlayBtn = confirmationOverlay.GetComponent<Button>();
+        overlayBtn.transition = Selectable.Transition.None;
+        overlayBtn.onClick.AddListener(HidePurchaseConfirmation);
+
+        // 2. Khung hộp thoại chính (Confirm Box)
+        GameObject box = new GameObject("ConfirmBox", typeof(RectTransform), typeof(Image));
+        box.transform.SetParent(confirmationOverlay.transform, false);
+
+        RectTransform boxRect = box.GetComponent<RectTransform>();
+        boxRect.sizeDelta = new Vector2(520, 350);
+        boxRect.anchoredPosition = Vector2.zero;
+
+        Image boxImg = box.GetComponent<Image>();
+        boxImg.color = new Color(0.09f, 0.13f, 0.20f, 0.98f);
+
+        // 3. Thanh tiêu đề trên cùng (Header Bar)
+        GameObject headerBar = new GameObject("HeaderBar", typeof(RectTransform), typeof(Image));
+        headerBar.transform.SetParent(box.transform, false);
+        RectTransform headerBarRect = headerBar.GetComponent<RectTransform>();
+        headerBarRect.anchoredPosition = new Vector2(0, 148);
+        headerBarRect.sizeDelta = new Vector2(520, 54);
+        Image headerBarImg = headerBar.GetComponent<Image>();
+        headerBarImg.color = new Color(0.14f, 0.19f, 0.30f, 1f);
+
+        // Tiêu đề chữ
+        GameObject titleObj = new GameObject("Title", typeof(RectTransform), typeof(TextMeshProUGUI));
+        titleObj.transform.SetParent(headerBar.transform, false);
+        RectTransform titleRect = titleObj.GetComponent<RectTransform>();
+        titleRect.anchoredPosition = Vector2.zero;
+        titleRect.sizeDelta = new Vector2(400, 40);
+
+        confirmTitleText = titleObj.GetComponent<TextMeshProUGUI>();
+        confirmTitleText.text = "CONFIRM PURCHASE";
+        confirmTitleText.fontSize = 20;
+        confirmTitleText.color = new Color(1f, 0.85f, 0.3f);
+        confirmTitleText.alignment = TextAlignmentOptions.Center;
+        confirmTitleText.fontStyle = FontStyles.Bold;
+
+        // Nút Đóng [X] góc trên bên phải
+        GameObject closeObj = new GameObject("CloseBtn", typeof(RectTransform), typeof(Image), typeof(Button));
+        closeObj.transform.SetParent(headerBar.transform, false);
+        RectTransform closeRect = closeObj.GetComponent<RectTransform>();
+        closeRect.anchoredPosition = new Vector2(230, 0);
+        closeRect.sizeDelta = new Vector2(34, 34);
+
+        Image closeImg = closeObj.GetComponent<Image>();
+        closeImg.color = new Color(0.8f, 0.2f, 0.2f);
+
+        GameObject closeTxtObj = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        closeTxtObj.transform.SetParent(closeObj.transform, false);
+        RectTransform closeTxtRect = closeTxtObj.GetComponent<RectTransform>();
+        closeTxtRect.anchorMin = Vector2.zero;
+        closeTxtRect.anchorMax = Vector2.one;
+        closeTxtRect.sizeDelta = Vector2.zero;
+
+        TextMeshProUGUI closeTxt = closeTxtObj.GetComponent<TextMeshProUGUI>();
+        closeTxt.text = "X";
+        closeTxt.fontSize = 18;
+        closeTxt.color = Color.white;
+        closeTxt.alignment = TextAlignmentOptions.Center;
+        closeTxt.fontStyle = FontStyles.Bold;
+
+        confirmCloseButton = closeObj.GetComponent<Button>();
+        confirmCloseButton.onClick.AddListener(HidePurchaseConfirmation);
+
+        // 4. Khung và Icon hình ảnh xem trước của vật phẩm (Icon Preview Frame)
+        GameObject iconFrame = new GameObject("IconFrame", typeof(RectTransform), typeof(Image));
+        iconFrame.transform.SetParent(box.transform, false);
+        RectTransform iconFrameRect = iconFrame.GetComponent<RectTransform>();
+        iconFrameRect.anchoredPosition = new Vector2(0, 60);
+        iconFrameRect.sizeDelta = new Vector2(150, 85);
+
+        Image iconFrameImg = iconFrame.GetComponent<Image>();
+        iconFrameImg.color = new Color(0.06f, 0.08f, 0.13f, 0.85f);
+
+        GameObject iconObj = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+        iconObj.transform.SetParent(iconFrame.transform, false);
+        RectTransform iconRect = iconObj.GetComponent<RectTransform>();
+        iconRect.anchorMin = Vector2.zero;
+        iconRect.anchorMax = Vector2.one;
+        iconRect.sizeDelta = new Vector2(-12, -12);
+
+        confirmItemIcon = iconObj.GetComponent<Image>();
+        confirmItemIcon.preserveAspect = true;
+
+        // 5. Nội dung thông báo xác nhận (Message Text)
+        GameObject msgObj = new GameObject("MessageText", typeof(RectTransform), typeof(TextMeshProUGUI));
+        msgObj.transform.SetParent(box.transform, false);
+        RectTransform msgRect = msgObj.GetComponent<RectTransform>();
+        msgRect.anchoredPosition = new Vector2(0, -25);
+        msgRect.sizeDelta = new Vector2(460, 65);
+
+        confirmMessageText = msgObj.GetComponent<TextMeshProUGUI>();
+        confirmMessageText.text = "Are you sure you want to purchase this item?";
+        confirmMessageText.fontSize = 16;
+        confirmMessageText.color = Color.white;
+        confirmMessageText.alignment = TextAlignmentOptions.Center;
+
+        // 6. Nút HỦY BỎ (CANCEL) - Bên trái màu đỏ/xám
+        GameObject cancelObj = new GameObject("CancelBtn", typeof(RectTransform), typeof(Image), typeof(Button));
+        cancelObj.transform.SetParent(box.transform, false);
+        RectTransform cancelRect = cancelObj.GetComponent<RectTransform>();
+        cancelRect.anchoredPosition = new Vector2(-110, -115);
+        cancelRect.sizeDelta = new Vector2(170, 46);
+
+        Image cancelImg = cancelObj.GetComponent<Image>();
+        cancelImg.color = new Color(0.55f, 0.22f, 0.22f);
+
+        GameObject cancelTxtObj = new GameObject("Txt", typeof(RectTransform), typeof(TextMeshProUGUI));
+        cancelTxtObj.transform.SetParent(cancelObj.transform, false);
+        RectTransform cancelTxtRect = cancelTxtObj.GetComponent<RectTransform>();
+        cancelTxtRect.anchorMin = Vector2.zero;
+        cancelTxtRect.anchorMax = Vector2.one;
+        cancelTxtRect.sizeDelta = Vector2.zero;
+
+        TextMeshProUGUI cancelTxt = cancelTxtObj.GetComponent<TextMeshProUGUI>();
+        cancelTxt.text = "CANCEL";
+        cancelTxt.fontSize = 16;
+        cancelTxt.color = Color.white;
+        cancelTxt.alignment = TextAlignmentOptions.Center;
+        cancelTxt.fontStyle = FontStyles.Bold;
+
+        confirmNoButton = cancelObj.GetComponent<Button>();
+        confirmNoButton.onClick.AddListener(HidePurchaseConfirmation);
+
+        // 7. Nút ĐỒNG Ý MUA (CONFIRM) - Bên phải màu xanh lá cây
+        GameObject yesObj = new GameObject("ConfirmBtn", typeof(RectTransform), typeof(Image), typeof(Button));
+        yesObj.transform.SetParent(box.transform, false);
+        RectTransform yesRect = yesObj.GetComponent<RectTransform>();
+        yesRect.anchoredPosition = new Vector2(110, -115);
+        yesRect.sizeDelta = new Vector2(170, 46);
+
+        Image yesImg = yesObj.GetComponent<Image>();
+        yesImg.color = new Color(0.20f, 0.65f, 0.35f);
+
+        GameObject yesTxtObj = new GameObject("Txt", typeof(RectTransform), typeof(TextMeshProUGUI));
+        yesTxtObj.transform.SetParent(yesObj.transform, false);
+        RectTransform yesTxtRect = yesTxtObj.GetComponent<RectTransform>();
+        yesTxtRect.anchorMin = Vector2.zero;
+        yesTxtRect.anchorMax = Vector2.one;
+        yesTxtRect.sizeDelta = Vector2.zero;
+
+        TextMeshProUGUI yesTxt = yesTxtObj.GetComponent<TextMeshProUGUI>();
+        yesTxt.text = "CONFIRM";
+        yesTxt.fontSize = 16;
+        yesTxt.color = Color.white;
+        yesTxt.alignment = TextAlignmentOptions.Center;
+        yesTxt.fontStyle = FontStyles.Bold;
+
+        confirmYesButton = yesObj.GetComponent<Button>();
+        confirmYesButton.onClick.AddListener(() =>
+        {
+            var action = pendingConfirmAction;
+            HidePurchaseConfirmation();
+            action?.Invoke();
+        });
+
+        confirmationOverlay.SetActive(false);
+    }
+
+    /// <summary>
     /// Tự động xây dựng giao diện Cửa Hàng mua Súng trực tiếp bằng Xu trong game hoặc Tiền thật VietQR
     /// </summary>
     private void BuildAutoShopUI()
@@ -705,6 +989,9 @@ public class ShopUIController : MonoBehaviour
         statusText.color = new Color(0.4f, 0.9f, 0.4f);
         statusText.alignment = TextAlignmentOptions.Center;
 
+        // 7. Hộp thoại xác nhận mua hàng (Double Check Confirmation Dialog)
+        BuildConfirmationDialog(shopPanel.transform);
+
         shopPanel.SetActive(false);
     }
 
@@ -735,7 +1022,12 @@ public class ShopUIController : MonoBehaviour
                     string priceText = $"{item.price:N0} Gems";
                     string btnText = $"BUY ({FormatNumberShort(item.price)} GEMS)";
                     int itemId = item.shopItemId;
-                    CreateShopCard(coinTabContent.transform, item.name, priceText, item.description, btnText, prefabPath, () => BuyShopItem(itemId, prefabPath));
+                    string itemName = item.name;
+                    string targetPrefab = prefabPath;
+                    CreateShopCard(coinTabContent.transform, itemName, priceText, item.description, btnText, targetPrefab, () =>
+                    {
+                        ShowPurchaseConfirmation(itemName, priceText, targetPrefab, () => BuyShopItem(itemId, targetPrefab));
+                    });
                 }
                 else if (itemType == "WEAPON_VIP" || currencyType == "VND")
                 {
@@ -744,8 +1036,13 @@ public class ShopUIController : MonoBehaviour
                     string btnText = $"BUY NOW ({FormatNumberShort(item.price)} VND)";
                     int itemId = item.shopItemId;
                     int price = item.price;
+                    string itemName = item.name;
+                    string targetPrefab = prefabPath;
                     string desc = !string.IsNullOrEmpty(item.description) ? item.description : $"Buy {item.name}";
-                    CreateShopCard(gemTabContent.transform, item.name, priceText, item.description, btnText, prefabPath, () => BuyGemPackage(price, desc, itemId, prefabPath));
+                    CreateShopCard(gemTabContent.transform, itemName, priceText, item.description, btnText, targetPrefab, () =>
+                    {
+                        ShowPurchaseConfirmation(itemName, priceText, targetPrefab, () => BuyGemPackage(price, desc, itemId, targetPrefab));
+                    });
                 }
                 else if (itemType == "SKIN")
                 {
@@ -753,7 +1050,11 @@ public class ShopUIController : MonoBehaviour
                     string priceText = $"{item.price:N0} Gems";
                     string btnText = $"BUY ({FormatNumberShort(item.price)} GEMS)";
                     int itemId = item.shopItemId;
-                    CreateShopCard(skinTabContent.transform, item.name, priceText, item.description, btnText, "", () => BuyShopItem(itemId, ""));
+                    string itemName = item.name;
+                    CreateShopCard(skinTabContent.transform, itemName, priceText, item.description, btnText, "", () =>
+                    {
+                        ShowPurchaseConfirmation(itemName, priceText, "", () => BuyShopItem(itemId, ""));
+                    });
                 }
             }
         }
@@ -761,18 +1062,26 @@ public class ShopUIController : MonoBehaviour
         {
             // Fallback tĩnh phòng khi chưa kết nối được Backend
             // 5a. Súng mua bằng Gem trong Game (In-Game Gems)
-            CreateShopCard(coinTabContent.transform, "AK-47 Gold", "500 Gems", "High-damage gold-plated assault rifle", "BUY (500 GEMS)", "Weapons/AK_47A_Gold", () => BuyShopItem(1, "AK_47A_Gold"));
-            CreateShopCard(coinTabContent.transform, "Missile Launcher", "800 Gems", "Long-range homing missile launcher", "BUY (800 GEMS)", "Weapons/Missile_Launcher", () => BuyShopItem(2, "Missile_Launcher"));
-            CreateShopCard(coinTabContent.transform, "Rocket Launcher", "1,200 Gems", "Heavy rocket launcher with wide AoE", "BUY (1.2K GEMS)", "Weapons/Rocket_Launcher", () => BuyShopItem(3, "Rocket_Launcher"));
+            CreateShopCard(coinTabContent.transform, "AK-47 Gold", "500 Gems", "High-damage gold-plated assault rifle", "BUY (500 GEMS)", "Weapons/AK_47A_Gold", () =>
+                ShowPurchaseConfirmation("AK-47 Gold", "500 Gems", "Weapons/AK_47A_Gold", () => BuyShopItem(1, "AK_47A_Gold")));
+            CreateShopCard(coinTabContent.transform, "Missile Launcher", "800 Gems", "Long-range homing missile launcher", "BUY (800 GEMS)", "Weapons/Missile_Launcher", () =>
+                ShowPurchaseConfirmation("Missile Launcher", "800 Gems", "Weapons/Missile_Launcher", () => BuyShopItem(2, "Missile_Launcher")));
+            CreateShopCard(coinTabContent.transform, "Rocket Launcher", "1,200 Gems", "Heavy rocket launcher with wide AoE", "BUY (1.2K GEMS)", "Weapons/Rocket_Launcher", () =>
+                ShowPurchaseConfirmation("Rocket Launcher", "1,200 Gems", "Weapons/Rocket_Launcher", () => BuyShopItem(3, "Rocket_Launcher")));
 
             // 5b. Súng VIP mua trực tiếp bằng Tiền Thật qua VietQR (PayOS)
-            CreateShopCard(gemTabContent.transform, "AK-47 Gold VIP", "2,000 VND", "Pay via VietQR to unlock AK-47 Gold VIP", "BUY NOW (2K VND)", "Weapons/AK_47A_Gold", () => BuyGemPackage(2000, "Buy AK-47 Gold VIP", 1, "AK_47A_Gold"));
-            CreateShopCard(gemTabContent.transform, "Missile Launcher VIP", "2,000 VND", "Pay via VietQR to unlock Missile Launcher VIP", "BUY NOW (2K VND)", "Weapons/Missile_Launcher", () => BuyGemPackage(2000, "Buy Missile Launcher VIP", 2, "Missile_Launcher"));
-            CreateShopCard(gemTabContent.transform, "Rocket Launcher VIP", "2,000 VND", "Pay via VietQR to unlock Rocket Launcher VIP", "BUY NOW (2K VND)", "Weapons/Rocket_Launcher", () => BuyGemPackage(2000, "Buy Rocket Launcher VIP", 3, "Rocket_Launcher"));
+            CreateShopCard(gemTabContent.transform, "AK-47 Gold VIP", "2,000 VND", "Pay via VietQR to unlock AK-47 Gold VIP", "BUY NOW (2K VND)", "Weapons/AK_47A_Gold", () =>
+                ShowPurchaseConfirmation("AK-47 Gold VIP", "2,000 VND", "Weapons/AK_47A_Gold", () => BuyGemPackage(2000, "Buy AK-47 Gold VIP", 1, "AK_47A_Gold")));
+            CreateShopCard(gemTabContent.transform, "Missile Launcher VIP", "2,000 VND", "Pay via VietQR to unlock Missile Launcher VIP", "BUY NOW (2K VND)", "Weapons/Missile_Launcher", () =>
+                ShowPurchaseConfirmation("Missile Launcher VIP", "2,000 VND", "Weapons/Missile_Launcher", () => BuyGemPackage(2000, "Buy Missile Launcher VIP", 2, "Missile_Launcher")));
+            CreateShopCard(gemTabContent.transform, "Rocket Launcher VIP", "2,000 VND", "Pay via VietQR to unlock Rocket Launcher VIP", "BUY NOW (2K VND)", "Weapons/Rocket_Launcher", () =>
+                ShowPurchaseConfirmation("Rocket Launcher VIP", "2,000 VND", "Weapons/Rocket_Launcher", () => BuyGemPackage(2000, "Buy Rocket Launcher VIP", 3, "Rocket_Launcher")));
 
             // 5c. Trang Phục Skins
-            CreateShopCard(skinTabContent.transform, "Cyber Rookie", "100 Gems", "Rookie warrior battle suit", "BUY (100 GEMS)", "", () => BuyShopItem(4, ""));
-            CreateShopCard(skinTabContent.transform, "Hero Zero", "200 Gems", "Zero superhero battle suit", "BUY (200 GEMS)", "", () => BuyShopItem(5, ""));
+            CreateShopCard(skinTabContent.transform, "Cyber Rookie", "100 Gems", "Rookie warrior battle suit", "BUY (100 GEMS)", "", () =>
+                ShowPurchaseConfirmation("Cyber Rookie", "100 Gems", "", () => BuyShopItem(4, "")));
+            CreateShopCard(skinTabContent.transform, "Hero Zero", "200 Gems", "Zero superhero battle suit", "BUY (200 GEMS)", "", () =>
+                ShowPurchaseConfirmation("Hero Zero", "200 Gems", "", () => BuyShopItem(5, "")));
         }
     }
 
