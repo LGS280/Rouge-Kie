@@ -26,8 +26,11 @@ public class DungeonGenerator : MonoBehaviour
     public GameObject chestPrefab;
     public GameObject weaponChestPrefab;
 
-    [Header("Boss Prefab")]
+    [Header("Boss Prefabs")]
+    [Tooltip("Prefab Mini-Boss xuất hiện ở các tầng 1 - 4 (Melog)")]
     public GameObject miniBossPrefab;
+    [Tooltip("Prefab Boss cuối xuất hiện ở tầng cuối cùng (Braead)")]
+    public GameObject finalBossPrefab;
 
     [Header("Door Tilemap")]
     public Tilemap doorTilemap;
@@ -1477,16 +1480,39 @@ public class DungeonGenerator : MonoBehaviour
 
             if (isBossRoom)
             {
-                if (miniBossPrefab != null)
+                int floor = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.currentFloor : 1;
+                int maxFloor = GameConfigManager.Instance != null ? GameConfigManager.Instance.GetMaxFloor(5) : 5;
+                bool isFinalFloor = (floor >= maxFloor);
+
+                if (isFinalFloor)
                 {
-                    mobPrefab = miniBossPrefab;
-                }
+                    if (finalBossPrefab != null)
+                    {
+                        mobPrefab = finalBossPrefab;
+                    }
 #if UNITY_EDITOR
+                    else
+                    {
+                        mobPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/Mobs/Braead.prefab");
+                    }
+#endif
+                    if (mobPrefab == null) mobPrefab = miniBossPrefab;
+                }
                 else
                 {
-                    mobPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/Mobs/Melog.prefab");
-                }
+                    if (miniBossPrefab != null)
+                    {
+                        mobPrefab = miniBossPrefab;
+                    }
+#if UNITY_EDITOR
+                    else
+                    {
+                        mobPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/Mobs/Melog.prefab");
+                    }
 #endif
+                    if (mobPrefab == null) mobPrefab = finalBossPrefab;
+                }
+
                 if (mobPrefab == null) mobPrefab = GetRandomMobPrefabFromTheme();
             }
             else
@@ -1507,54 +1533,28 @@ public class DungeonGenerator : MonoBehaviour
             // Cấu hình Boss hoặc Mini-Boss nếu là phòng Boss
             if (isBossRoom)
             {
-                int floor = 1;
-                if (GameProgressionManager.Instance != null)
-                {
-                    floor = GameProgressionManager.Instance.currentFloor;
-                }
+                int floor = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.currentFloor : 1;
+                int maxFloor = GameConfigManager.Instance != null ? GameConfigManager.Instance.GetMaxFloor(5) : 5;
+                bool isFinalFloor = (floor >= maxFloor);
 
-                // Nếu là tầng 5 -> Boss cuối Goliath Root khổng lồ
-                if (floor >= 5)
+                if (isFinalFloor)
                 {
-                    mobObj.name = "ELITE BOSS - GOLIATH ROOT";
-                    mobObj.transform.localScale = new Vector3(2.5f, 2.5f, 1f);
-
-                    MobHealth mobHealth = mobObj.GetComponent<MobHealth>();
-                    if (mobHealth != null)
-                    {
-                        EnemyConfig bossCfg = GameConfigManager.Instance != null ? (GameConfigManager.Instance.GetEnemyConfig("Dragon") ?? GameConfigManager.Instance.GetEnemyConfig("DragonPrefab")) : null;
-                        if (bossCfg != null && bossCfg.baseHealth > 0)
-                        {
-                            mobHealth.maxHealth = bossCfg.baseHealth;
-                        }
-                        else
-                        {
-                            mobHealth.maxHealth = 1500; // Đặt máu khủng cho Boss cuối
-                        }
-                        mobHealth.ApplyEnemyConfig();
-                    }
+                    mobObj.name = "FINAL BOSS - BRAEAD";
+                    mobObj.transform.localScale = Vector3.one;
                 }
                 else
                 {
-                    // Mini-Boss ở các tầng dưới
                     mobObj.name = $"MINI BOSS - FLOOR {floor}";
                     mobObj.transform.localScale = new Vector3(1.7f, 1.7f, 1f);
+                }
 
-                    MobHealth mobHealth = mobObj.GetComponent<MobHealth>();
-                    if (mobHealth != null)
-                    {
-                        EnemyConfig melogCfg = GameConfigManager.Instance != null ? GameConfigManager.Instance.GetEnemyConfig("Melog") : null;
-                        int baseHp = (melogCfg != null && melogCfg.baseHealth > 0) ? melogCfg.baseHealth : 400;
-                        if (floor > 1)
-                        {
-                            mobHealth.maxHealth = baseHp + ((floor - 1) * 100);
-                        }
-                        else
-                        {
-                            mobHealth.maxHealth = baseHp;
-                        }
-                        mobHealth.ApplyEnemyConfig();
-                    }
+                MobHealth mobHealth = mobObj.GetComponent<MobHealth>();
+                if (mobHealth != null)
+                {
+                    // Gán enemyConfigName theo tên prefab gốc (ví dụ: "Melog", "Braead" hoặc bất kỳ Boss nào thay thế sau này)
+                    // để MobHealth nạp trực tiếp BaseHealth từ Database qua GameConfigManager
+                    mobHealth.enemyConfigName = mobPrefab.name;
+                    mobHealth.ApplyEnemyConfig();
                 }
             }
 
@@ -1566,8 +1566,16 @@ public class DungeonGenerator : MonoBehaviour
                 MobAI mobAI = mobObj.GetComponent<MobAI>();
                 if (mobAI != null) mobAI.SetRoom(room.controller);
 
-                MelogBossAI melogAI = mobObj.GetComponent<MelogBossAI>();
-                if (melogAI != null) melogAI.SetRoom(room.controller);
+                IBossAI bossAI = mobObj.GetComponent<IBossAI>();
+                if (bossAI != null)
+                {
+                    bossAI.SetRoom(room.controller);
+                }
+                else
+                {
+                    MelogBossAI melogAI = mobObj.GetComponent<MelogBossAI>();
+                    if (melogAI != null) melogAI.SetRoom(room.controller);
+                }
             }
             else
             {

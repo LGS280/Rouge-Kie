@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -176,26 +176,33 @@ public class BossHealthBarUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Tự động tìm kiếm Boss Melog trong Scene nếu chưa được gọi từ phòng
+    /// Tự động tìm kiếm Boss trong Scene nếu chưa được gọi từ phòng
     /// </summary>
     public void TryAutoBindBoss()
     {
+        // 1. Tìm bất kỳ Boss nào triển khai IBossAI (Braead, Melog và các Boss sau này)
+        MonoBehaviour[] allScripts = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var script in allScripts)
+        {
+            if (script is IBossAI bossAI)
+            {
+                MobHealth mb = script.GetComponent<MobHealth>();
+                if (mb != null && !mb.isDead && (bossAI.IsCombatActivated() || mb.CurrentHealth < mb.maxHealth))
+                {
+                    ShowBossBar(bossAI.GetBossDisplayName(), mb);
+                    return;
+                }
+            }
+        }
+
+        // 2. Fallback kiểm tra MelogBossAI nếu có
         MelogBossAI melog = FindFirstObjectByType<MelogBossAI>(FindObjectsInactive.Include);
         if (melog != null)
         {
             MobHealth mb = melog.GetComponent<MobHealth>();
-            // Chỉ auto-bind nếu Boss đã được kích hoạt chiến đấu hoặc đang nhận sát thương
             if (mb != null && !mb.isDead && (melog.IsCombatActivated() || mb.CurrentHealth < mb.maxHealth))
             {
-                string displayName = "MELOG - THE GATLING WARLORD";
-                if (GameProgressionManager.Instance != null)
-                {
-                    int floor = GameProgressionManager.Instance.currentFloor;
-                    if (floor >= 5) displayName = "ELITE BOSS - GOLIATH ROOT";
-                    else displayName = $"MELOG - FLOOR {floor}";
-                }
-
-                ShowBossBar(displayName, mb);
+                ShowBossBar(melog.GetBossDisplayName(), mb);
             }
         }
     }

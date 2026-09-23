@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MelogBossAI : MonoBehaviour
+public class MelogBossAI : MonoBehaviour, IBossAI
 {
     public enum BossState { Idle, Wander, Chase, Attack } // 4 trạng thái của boss
 
@@ -469,17 +469,18 @@ public class MelogBossAI : MonoBehaviour
         NotifyBossHealthBar();
     }
 
+    public string GetBossDisplayName()
+    {
+        int floor = 1;
+        if (GameProgressionManager.Instance != null) floor = GameProgressionManager.Instance.currentFloor;
+        return $"MINI BOSS - MELOG (FLOOR {floor})";
+    }
+
     private void NotifyBossHealthBar()
     {
         if (BossHealthBarUI.Instance != null && mobHealth != null)
         {
-            string displayName = "MELOG - THE GATLING WARLORD";
-            int floor = 1;
-            if (GameProgressionManager.Instance != null) floor = GameProgressionManager.Instance.currentFloor;
-            if (floor >= 5) displayName = "ELITE BOSS - GOLIATH ROOT";
-            else displayName = $"MELOG - FLOOR {floor}";
-
-            BossHealthBarUI.Instance.ShowBossBar(displayName, mobHealth);
+            BossHealthBarUI.Instance.ShowBossBar(GetBossDisplayName(), mobHealth);
         }
     }
 

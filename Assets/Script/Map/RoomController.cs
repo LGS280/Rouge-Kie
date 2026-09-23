@@ -455,10 +455,18 @@ public class RoomController : MonoBehaviour
                     mobAI.ActivateMob();
                 }
 
-                MelogBossAI melogBossAI = mob.GetComponent<MelogBossAI>();
-                if (melogBossAI != null)
+                IBossAI bossAI = mob.GetComponent<IBossAI>();
+                if (bossAI != null)
                 {
-                    melogBossAI.ActivateMob();
+                    bossAI.ActivateMob();
+                }
+                else
+                {
+                    MelogBossAI melogBossAI = mob.GetComponent<MelogBossAI>();
+                    if (melogBossAI != null)
+                    {
+                        melogBossAI.ActivateMob();
+                    }
                 }
             }
         }
