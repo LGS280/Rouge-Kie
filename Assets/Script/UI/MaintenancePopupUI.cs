@@ -94,10 +94,7 @@ public class MaintenancePopupUI : MonoBehaviour
 
         if (messageText != null)
         {
-            string msg = string.IsNullOrWhiteSpace(upcoming.message)
-                ? "The game server is scheduled for maintenance. Please finish your battles and save progress before the maintenance begins."
-                : upcoming.message;
-            messageText.text = msg;
+            messageText.gameObject.SetActive(false);
         }
 
         if (timeText != null)
@@ -112,20 +109,11 @@ public class MaintenancePopupUI : MonoBehaviour
             }
             else if (hasParsedStart)
             {
-                timeStr = $"Starts: {parsedStart:yyyy-MM-dd HH:mm} (UTC+7)";
+                timeStr = $"Scheduled Period: {parsedStart:yyyy-MM-dd HH:mm} (UTC+7)";
             }
             else
             {
-                timeStr = $"Starts: {upcoming.startTime}";
-            }
-
-            if (upcoming.hoursUntilStart > 0)
-            {
-                timeStr += $"\n(Starts in approximately ~{upcoming.hoursUntilStart} hours)";
-            }
-            else if (upcoming.minutesUntilStart > 0)
-            {
-                timeStr += $"\n(Starts in approximately ~{upcoming.minutesUntilStart} minutes)";
+                timeStr = $"Scheduled Period: {upcoming.startTime}";
             }
 
             timeText.text = timeStr;
@@ -184,26 +172,21 @@ public class MaintenancePopupUI : MonoBehaviour
 
         if (messageText != null)
         {
-            messageText.text = string.IsNullOrWhiteSpace(message) 
-                ? "The server is currently undergoing maintenance for system updates and optimizations. Please check back later." 
-                : message;
+            messageText.gameObject.SetActive(false);
         }
 
         if (timeText != null)
         {
-            string timeStr = remainingMinutes > 1 
-                ? $"Estimated remaining time: ~{remainingMinutes} minutes" 
-                : $"Estimated remaining time: ~{remainingMinutes} minute";
-
+            string timeStr = "";
             if (!string.IsNullOrWhiteSpace(endTime))
             {
                 if (DateTimeOffset.TryParse(endTime, out var parsedEnd))
                 {
-                    timeStr += $"\nScheduled end time: {parsedEnd:yyyy-MM-dd HH:mm} (UTC+7)";
+                    timeStr = $"Scheduled end time: {parsedEnd:yyyy-MM-dd HH:mm} (UTC+7)";
                 }
                 else
                 {
-                    timeStr += $"\nScheduled end time: {endTime}";
+                    timeStr = $"Scheduled end time: {endTime}";
                 }
             }
             timeText.text = timeStr;
@@ -357,7 +340,7 @@ public class MaintenancePopupUI : MonoBehaviour
         RectTransform modalRect = modalBox.GetComponent<RectTransform>();
         modalRect.anchorMin = new Vector2(0.5f, 0.5f);
         modalRect.anchorMax = new Vector2(0.5f, 0.5f);
-        modalRect.sizeDelta = new Vector2(850, 520); // Kích thước khung đẹp chuẩn
+        modalRect.sizeDelta = new Vector2(850, 420); // Kích thước gọn gàng vừa vặn khi đã bỏ message
 
         Image modalImg = modalBox.GetComponent<Image>();
         modalImg.color = new Color(0.11f, 0.13f, 0.18f, 0.98f); // Màu xanh đêm Dark Slate hiện đại
@@ -366,9 +349,9 @@ public class MaintenancePopupUI : MonoBehaviour
         GameObject tagObj = new GameObject("HeaderTagText", typeof(RectTransform), typeof(Text));
         tagObj.transform.SetParent(modalBox.transform, false);
         RectTransform tagRect = tagObj.GetComponent<RectTransform>();
-        tagRect.anchorMin = new Vector2(0.5f, 0.88f);
-        tagRect.anchorMax = new Vector2(0.5f, 0.88f);
-        tagRect.sizeDelta = new Vector2(750, 50);
+        tagRect.anchorMin = new Vector2(0.5f, 0.86f);
+        tagRect.anchorMax = new Vector2(0.5f, 0.86f);
+        tagRect.sizeDelta = new Vector2(750, 45);
 
         headerTagText = tagObj.GetComponent<Text>();
         headerTagText.font = uiFont;
@@ -382,9 +365,9 @@ public class MaintenancePopupUI : MonoBehaviour
         GameObject titleObj = new GameObject("TitleText", typeof(RectTransform), typeof(Text));
         titleObj.transform.SetParent(modalBox.transform, false);
         RectTransform titleRectObj = titleObj.GetComponent<RectTransform>();
-        titleRectObj.anchorMin = new Vector2(0.5f, 0.76f);
-        titleRectObj.anchorMax = new Vector2(0.5f, 0.76f);
-        titleRectObj.sizeDelta = new Vector2(750, 60);
+        titleRectObj.anchorMin = new Vector2(0.5f, 0.65f);
+        titleRectObj.anchorMax = new Vector2(0.5f, 0.65f);
+        titleRectObj.sizeDelta = new Vector2(750, 50);
 
         titleText = titleObj.GetComponent<Text>();
         titleText.font = uiFont;
@@ -394,45 +377,44 @@ public class MaintenancePopupUI : MonoBehaviour
         titleText.color = Color.white;
         titleText.text = "Server Under Maintenance";
 
-        // 6. Nội dung thông báo chi tiết (Message)
+        // 6. Nội dung thông báo chi tiết (Message - đã ẩn theo yêu cầu)
         GameObject msgObj = new GameObject("MessageText", typeof(RectTransform), typeof(Text));
         msgObj.transform.SetParent(modalBox.transform, false);
         RectTransform msgRect = msgObj.GetComponent<RectTransform>();
         msgRect.anchorMin = new Vector2(0.5f, 0.52f);
         msgRect.anchorMax = new Vector2(0.5f, 0.52f);
-        msgRect.sizeDelta = new Vector2(750, 140);
+        msgRect.sizeDelta = new Vector2(750, 60);
 
         messageText = msgObj.GetComponent<Text>();
         messageText.font = uiFont;
         messageText.fontSize = 22;
         messageText.alignment = TextAnchor.MiddleCenter;
         messageText.color = new Color(0.85f, 0.88f, 0.93f, 1f);
-        messageText.lineSpacing = 1.25f;
-        messageText.text = "The server is currently undergoing maintenance for system updates and optimizations. Please check back later.";
+        msgObj.SetActive(false);
 
         // 7. Thông tin thời gian dự kiến (Time Info)
         GameObject timeObj = new GameObject("TimeText", typeof(RectTransform), typeof(Text));
         timeObj.transform.SetParent(modalBox.transform, false);
         RectTransform timeRect = timeObj.GetComponent<RectTransform>();
-        timeRect.anchorMin = new Vector2(0.5f, 0.30f);
-        timeRect.anchorMax = new Vector2(0.5f, 0.30f);
-        timeRect.sizeDelta = new Vector2(750, 70);
+        timeRect.anchorMin = new Vector2(0.5f, 0.44f);
+        timeRect.anchorMax = new Vector2(0.5f, 0.44f);
+        timeRect.sizeDelta = new Vector2(750, 55);
 
         timeText = timeObj.GetComponent<Text>();
         timeText.font = uiFont;
-        timeText.fontSize = 20;
+        timeText.fontSize = 21;
         timeText.fontStyle = FontStyle.Italic;
         timeText.alignment = TextAnchor.MiddleCenter;
         timeText.color = new Color(0.4f, 0.85f, 1f, 1f); // Màu xanh lơ dịu mát
-        timeText.text = "Estimated remaining time: ~15 minutes";
+        timeText.text = "";
 
         // 8. Nút Bấm "Retry" (Retry Button)
         GameObject retryBtnObj = new GameObject("RetryButton", typeof(RectTransform), typeof(Image), typeof(Button));
         retryBtnObj.transform.SetParent(modalBox.transform, false);
         RectTransform retryRect = retryBtnObj.GetComponent<RectTransform>();
-        retryRect.anchorMin = new Vector2(0.33f, 0.12f);
-        retryRect.anchorMax = new Vector2(0.33f, 0.12f);
-        retryRect.sizeDelta = new Vector2(220, 60);
+        retryRect.anchorMin = new Vector2(0.33f, 0.18f);
+        retryRect.anchorMax = new Vector2(0.33f, 0.18f);
+        retryRect.sizeDelta = new Vector2(220, 55);
 
         Image retryImg = retryBtnObj.GetComponent<Image>();
         retryImg.color = new Color(0.18f, 0.58f, 0.68f, 1f); // Nút màu Cyan đậm hiện đại
@@ -459,9 +441,9 @@ public class MaintenancePopupUI : MonoBehaviour
         GameObject closeBtnObj = new GameObject("CloseButton", typeof(RectTransform), typeof(Image), typeof(Button));
         closeBtnObj.transform.SetParent(modalBox.transform, false);
         RectTransform closeRect = closeBtnObj.GetComponent<RectTransform>();
-        closeRect.anchorMin = new Vector2(0.67f, 0.12f);
-        closeRect.anchorMax = new Vector2(0.67f, 0.12f);
-        closeRect.sizeDelta = new Vector2(220, 60);
+        closeRect.anchorMin = new Vector2(0.67f, 0.18f);
+        closeRect.anchorMax = new Vector2(0.67f, 0.18f);
+        closeRect.sizeDelta = new Vector2(220, 55);
 
         Image closeImg = closeBtnObj.GetComponent<Image>();
         closeImg.color = new Color(0.32f, 0.36f, 0.42f, 1f); // Màu xám tối sang trọng
