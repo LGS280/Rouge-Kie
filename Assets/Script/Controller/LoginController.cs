@@ -192,17 +192,17 @@ public class LoginController : MonoBehaviour
                 GoogleSecrets secrets = JsonUtility.FromJson<GoogleSecrets>(secretFile.text);
                 googleClientId = secrets.clientId;
                 googleClientSecret = secrets.clientSecret;
-                Debug.Log("Đã nạp thành công cấu hình bảo mật Google từ file Resources!");
+                Debug.Log("Google security configuration loaded successfully from Resources!");
             }
             catch (Exception ex)
             {
-                Debug.LogError("Lỗi phân tích cú pháp file JSON bảo mật Google: " + ex.Message);
+                Debug.LogError("Failed to parse Google security JSON file: " + ex.Message);
             }
         }
         else
         {
-            Debug.LogError("Không tìm thấy file google_secrets.json tại Assets/Resources/! Vui lòng tạo file này để chạy đăng nhập Google.");
-            ShowLoginMessage("Chưa thiết lập file google_secrets.json!", Color.red);
+            Debug.LogError("google_secrets.json not found at Assets/Resources/! Please create this file to enable Google login.");
+            ShowLoginMessage("google_secrets.json is not configured!", Color.red);
         }
     }
 
@@ -429,7 +429,7 @@ public class LoginController : MonoBehaviour
         {
             if (string.IsNullOrEmpty(googleClientId))
             {
-                ShowLoginMessage("Lỗi: Không tìm thấy Client ID Google cấu hình!", Color.red);
+                ShowLoginMessage("Error: Google Client ID not configured!", Color.red);
                 return;
             }
 
@@ -442,11 +442,11 @@ public class LoginController : MonoBehaviour
                              $"scope=openid%20email%20profile";
 
             Application.OpenURL(authUrl);
-            ShowLoginMessage("Đang mở trình duyệt để đăng nhập Google...", Color.white);
+            ShowLoginMessage("Opening browser for Google login...", Color.white);
         }
         catch (Exception ex)
         {
-            ShowLoginMessage("Lỗi đăng nhập Google: " + ex.Message, Color.red);
+            ShowLoginMessage("Google login error: " + ex.Message, Color.red);
         }
     }
 
@@ -510,9 +510,9 @@ public class LoginController : MonoBehaviour
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                string detail = request.error + " | Chi tiết: " + request.downloadHandler.text;
-                Debug.LogError("Lỗi Google Exchange Code: " + detail);
-                ShowLoginMessage("Lỗi trao đổi: " + detail, Color.red);
+                string detail = request.error + " | Detail: " + request.downloadHandler.text;
+                Debug.LogError("Google Code Exchange Error: " + detail);
+                ShowLoginMessage("Exchange error: " + detail, Color.red);
                 yield break;
             }
 
@@ -521,7 +521,7 @@ public class LoginController : MonoBehaviour
 
             string idToken = tokenData.id_token;
 
-            // Gửi idToken nhận được lên Backend của bạn
+            // Send idToken to backend
             yield return StartCoroutine(GoogleLoginBackendRoutine(idToken));
         }
     }
@@ -551,11 +551,11 @@ public class LoginController : MonoBehaviour
                     yield break;
                 }
 
-                ShowLoginMessage(resp?.message ?? "Đăng nhập Google thất bại.", Color.red);
+                ShowLoginMessage(resp?.message ?? "Google login failed.", Color.red);
             }
             else
             {
-                HandleMaintenanceError(request, "Lỗi đăng nhập Google", isRegister: false);
+                HandleMaintenanceError(request, "Google login error", isRegister: false);
             }
         }
     }
@@ -564,7 +564,7 @@ public class LoginController : MonoBehaviour
     {
         if (regEmailInput == null || string.IsNullOrWhiteSpace(regEmailInput.text))
         {
-            ShowRegisterMessage("Vui lòng nhập email trước khi gửi OTP.", Color.red);
+            ShowRegisterMessage("Please enter your email before requesting OTP.", Color.red);
             return;
         }
 
@@ -575,13 +575,13 @@ public class LoginController : MonoBehaviour
     {
         if (regPasswordInput.text != regConfirmPasswordInput.text)
         {
-            ShowRegisterMessage("Lỗi: Mật khẩu xác nhận không khớp!", Color.red);
+            ShowRegisterMessage("Error: Passwords do not match!", Color.red);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(regOtpInput.text))
         {
-            ShowRegisterMessage("Vui lòng nhập mã OTP.", Color.red);
+            ShowRegisterMessage("Please enter the OTP code.", Color.red);
             return;
         }
 
@@ -610,11 +610,11 @@ public class LoginController : MonoBehaviour
             if (request.result == UnityWebRequest.Result.Success)
             {
                 var resp = JsonUtility.FromJson<ApiResponse>(request.downloadHandler.text);
-                ShowRegisterMessage(resp?.message ?? "Mã OTP đã được gửi đến email.", Color.green);
+                ShowRegisterMessage(resp?.message ?? "OTP has been sent to your email.", Color.green);
             }
             else
             {
-                HandleMaintenanceError(request, "Lỗi gửi OTP", isRegister: true);
+                HandleMaintenanceError(request, "OTP send error", isRegister: true);
             }
         }
     }
@@ -649,11 +649,11 @@ public class LoginController : MonoBehaviour
                     yield break;
                 }
 
-                ShowLoginMessage(resp?.message ?? "Đăng nhập thất bại.", Color.red);
+                ShowLoginMessage(resp?.message ?? "Login failed.", Color.red);
             }
             else
             {
-                HandleMaintenanceError(request, "Lỗi đăng nhập", isRegister: false);
+                HandleMaintenanceError(request, "Login error", isRegister: false);
             }
         }
     }
@@ -723,7 +723,7 @@ public class LoginController : MonoBehaviour
             }
         }
 
-        ShowLoginMessage("Đăng nhập thành công!", Color.green);
+        ShowLoginMessage("Login successful!", Color.green);
 
         // Tự động giải phóng Scene đăng nhập
         string currentSceneName = gameObject.scene.name;
@@ -767,13 +767,13 @@ public class LoginController : MonoBehaviour
             if (request.result == UnityWebRequest.Result.Success)
             {
                 var resp = JsonUtility.FromJson<ApiResponse>(request.downloadHandler.text);
-                ShowRegisterMessage(resp?.message ?? "Đăng ký thành công! Hãy quay lại để đăng nhập.", Color.green);
+                ShowRegisterMessage(resp?.message ?? "Registration successful! Please go back to log in.", Color.green);
 
                 Invoke("ShowLoginPanel", 1.5f);
             }
             else
             {
-                HandleMaintenanceError(request, "Lỗi đăng ký", isRegister: true);
+                HandleMaintenanceError(request, "Registration error", isRegister: true);
             }
         }
     }
@@ -868,7 +868,7 @@ public class LoginController : MonoBehaviour
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[LoginController] Lỗi phân tích phản hồi bảo trì 503: {ex.Message}");
+                Debug.LogWarning($"[LoginController] Failed to parse 503 maintenance response: {ex.Message}");
             }
         }
 
