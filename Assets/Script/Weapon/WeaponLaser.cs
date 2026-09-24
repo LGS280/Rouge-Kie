@@ -259,6 +259,15 @@ public class WeaponLaser : MonoBehaviour
     public void SetRemoteLaserActive(bool active)
     {
         isRemote = true;
+
+        // Nếu vũ khí không được cầm trên tay (ví dụ đang đeo sau lưng), tuyệt đối không kích hoạt
+        if (transform.parent == null || !transform.parent.name.Contains("Hand"))
+        {
+            isRemoteFiring = false;
+            StopLaser();
+            return;
+        }
+
         isRemoteFiring = active;
         if (active)
         {
@@ -273,6 +282,14 @@ public class WeaponLaser : MonoBehaviour
 
     private void UpdateRemoteLaser()
     {
+        // Nếu chuyển sang vũ khí phụ hoặc không ở trên tay -> Tắt ngay lập tức
+        if (transform.parent == null || !transform.parent.name.Contains("Hand"))
+        {
+            isRemoteFiring = false;
+            StopLaser();
+            return;
+        }
+
         // Timeout bảo vệ nếu không nhận được heartbeat quá 0.35s thì tự tắt
         if (isRemoteFiring && Time.time - lastRemotePacketTime > 0.35f)
         {

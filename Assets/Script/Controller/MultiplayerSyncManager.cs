@@ -734,19 +734,21 @@ public class MultiplayerSyncManager : MonoBehaviour
         GameObject remotePlayer = GetRemotePlayerById(playerId);
         if (remotePlayer != null)
         {
-            // BỔ SUNG: Xử lý đồng bộ tia Laser cho Remote Player
-            WeaponLaser remoteLaser = remotePlayer.GetComponentInChildren<WeaponLaser>();
-            if (remoteLaser != null || (weaponId != null && weaponId.StartsWith("Laser_Gun_MK1")))
+            // BỔ SUNG: Chỉ xử lý Laser khi gói tin bắn thực sự là của Laser_Gun_MK1
+            if (weaponId != null && weaponId.StartsWith("Laser_Gun_MK1"))
             {
-                if (remoteLaser == null)
+                Transform handPos = remotePlayer.transform.Find("Hand_Position");
+                WeaponLaser remoteLaser = handPos != null ? handPos.GetComponentInChildren<WeaponLaser>() : null;
+
+                if (remoteLaser == null && handPos != null)
                 {
                     HandleRemoteWeaponChanged(playerId, "Laser_Gun_MK1", "");
-                    remoteLaser = remotePlayer.GetComponentInChildren<WeaponLaser>();
+                    remoteLaser = handPos.GetComponentInChildren<WeaponLaser>();
                 }
 
                 if (remoteLaser != null)
                 {
-                    bool isStopping = weaponId != null && weaponId.Contains("Stop");
+                    bool isStopping = weaponId.Contains("Stop");
                     remoteLaser.SetRemoteLaserActive(!isStopping);
                 }
                 return;
