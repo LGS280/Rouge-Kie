@@ -8,7 +8,7 @@ using UnityEngine;
 /// - Tự động kích hoạt chiêu nộ Laser 360 độ khi máu <= 50% (lướt về giữa phòng xả chiêu)
 /// - Bước vào Phase 2 (Hóa nộ): Tăng 10% tốc độ đánh và xả đạn 10 viên tỏa tròn 360 độ
 /// </summary>
-public class BraeadBossAI : MonoBehaviour
+public class BraeadBossAI : MonoBehaviour, IBossAI
 {
     public enum BossState
     {
@@ -19,7 +19,7 @@ public class BraeadBossAI : MonoBehaviour
     }
 
     [Header("Trạng thái hiện tại của Boss")]
-    public BossState currentState = BossState.Combat;
+    public BossState currentState = BossState.Inactive;
 
     [Header("Cấu hình cự ly & Tốc độ")]
     [Tooltip("Khoảng cách chiến đấu lý tưởng để giữ cự ly với người chơi")]
@@ -53,8 +53,19 @@ public class BraeadBossAI : MonoBehaviour
     private float strafeChangeTimer = 0f;
     private const float StrafeInterval = 2.5f;
 
+    private bool isRoomActivated = false;
     private bool isHost = true;
     [HideInInspector] public RoomController myRoom;
+
+    // Các biến phục vụ đồng bộ mạng mượt mà (Client interpolation)
+    private Vector2 networkTargetPos;
+    private Vector2 lastNetworkTargetPos;
+    private Vector3 mobNetworkVelocity;
+    private Vector2 estimatedMobVelocity;
+    private float lastMobPacketTime;
+    private bool hasFirstNetworkPos = false;
+    private float lastNetworkSyncTime = 0f;
+    private float networkSyncInterval = 0.05f;
 
     public void SetRoom(RoomController room)
     {
@@ -62,6 +73,26 @@ public class BraeadBossAI : MonoBehaviour
         if (myRoom != null)
         {
             roomCenter = myRoom.transform.position;
+        }
+    }
+
+    public void ActivateMob()
+    {
+        isRoomActivated = true;
+        currentState = BossState.Combat;
+        NotifyBossHealthBar();
+    }
+
+    public bool IsCombatActivated() => isRoomActivated;
+
+    public string GetBossDisplayName() => "FINAL BOSS - BRAEAD";
+
+    private void NotifyBossHealthBar()
+    {
+        if (!hasShownBossBar && BossHealthBarUI.Instance != null && mobHealth != null)
+        {
+            BossHealthBarUI.Instance.ShowBossBar(GetBossDisplayName(), mobHealth);
+            hasShownBossBar = true;
         }
     }
 
@@ -153,49 +184,105 @@ public class BraeadBossAI : MonoBehaviour
         // 2. Luôn tìm và bám theo người chơi gần nhất
         FindNearestPlayer();
 
-        // 3. Kích hoạt thanh máu Boss lớn trên màn hình khi chạm mặt người chơi
-        if (!hasShownBossBar && targetPlayer != null && BossHealthBarUI.Instance != null && mobHealth != null)
+        if (isHost)
         {
-            BossHealthBarUI.Instance.ShowBossBar("BRAEAD", mobHealth);
-            hasShownBossBar = true;
-        }
-
-        // 4. Kiểm tra ngưỡng máu <= 50% để kích hoạt Chiêu Nộ Laser đúng 1 lần
-        if (!hasTriggeredUltimate && mobHealth != null && mobHealth.maxHealth > 0)
-        {
-            if (mobHealth.CurrentHealth <= mobHealth.maxHealth * 0.5f)
+            // Đồng bộ vị trí mạng từ Host xuống các Client
+            if (isRoomActivated && NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && mobNetworkIdentity != null && !string.IsNullOrEmpty(mobNetworkIdentity.networkId))
             {
-                hasTriggeredUltimate = true;
-                StartCoroutine(UltimateSequenceRoutine());
+                if (Time.time - lastNetworkSyncTime >= networkSyncInterval)
+                {
+                    NetworkManager.Instance.SendEnemyPosition(mobNetworkIdentity.networkId, transform.position.x, transform.position.y);
+                    lastNetworkSyncTime = Time.time;
+                }
+            }
+
+            // 3. Nếu chưa kích hoạt phòng chiến đấu
+            if (!isRoomActivated)
+            {
+                if ((myRoom == null && targetPlayer != null && Vector2.Distance(transform.position, targetPlayer.position) <= detectRange)
+                    || (mobHealth != null && mobHealth.CurrentHealth < mobHealth.maxHealth))
+                {
+                    ActivateMob();
+                }
+                else
+                {
+                    currentState = BossState.Inactive;
+                    if (animator != null) animator.SetBool("isMoving", false);
+                    return;
+                }
+            }
+
+            // 4. Kiểm tra ngưỡng máu <= 50% để kích hoạt Chiêu Nộ Laser đúng 1 lần
+            if (!hasTriggeredUltimate && mobHealth != null && mobHealth.maxHealth > 0)
+            {
+                if (mobHealth.CurrentHealth <= mobHealth.maxHealth * 0.5f)
+                {
+                    hasTriggeredUltimate = true;
+                    StartCoroutine(UltimateSequenceRoutine());
+                    return;
+                }
+            }
+
+            // 5. Nếu đang trong chuỗi chiêu nộ, để Coroutine điều khiển
+            if (currentState == BossState.PreparingUltimate || currentState == BossState.CastingUltimate)
+            {
                 return;
             }
+
+            // 6. Xử lý quay mặt Boss và ngắm vũ khí luôn luôn hướng vào Player
+            if (targetPlayer != null)
+            {
+                UpdateBossFacing(targetPlayer.position.x - transform.position.x);
+
+                if (weaponAim != null)
+                {
+                    weaponAim.AimAtTarget(targetPlayer);
+                }
+            }
+
+            // 7. Xử lý di chuyển giữ khoảng cách (Kiting) và xả đạn
+            if (currentState == BossState.Combat)
+            {
+                HandleCombatMovementAndAttack();
+            }
+
+            // 8. Đảm bảo Boss luôn ở trong ranh giới phòng chiến đấu (không đi lọt ra ngoài cửa)
+            ClampPositionToRoom();
         }
-
-        // 5. Nếu đang trong chuỗi chiêu nộ, để Coroutine điều khiển
-        if (currentState == BossState.PreparingUltimate || currentState == BossState.CastingUltimate)
+        else
         {
-            return;
-        }
+            // Phía Client: Nhận vị trí nội suy từ Host
+            if (hasFirstNetworkPos)
+            {
+                Vector3 predictedMobPos = (Vector3)networkTargetPos + ((Vector3)estimatedMobVelocity * 0.033f);
+                transform.position = Vector3.SmoothDamp(transform.position, predictedMobPos, ref mobNetworkVelocity, 0.04f);
 
-        // 6. Xử lý quay mặt Boss và ngắm vũ khí luôn luôn hướng vào Player
-        if (targetPlayer != null)
-        {
-            UpdateBossFacing(targetPlayer.position.x - transform.position.x);
+                if (Vector3.Distance(transform.position, networkTargetPos) > 3.5f)
+                {
+                    transform.position = networkTargetPos;
+                    mobNetworkVelocity = Vector3.zero;
+                    estimatedMobVelocity = Vector2.zero;
+                }
 
-            if (weaponAim != null)
+                bool isMoving = mobNetworkVelocity.sqrMagnitude > 0.01f || estimatedMobVelocity.sqrMagnitude > 0.01f;
+                if (animator != null) animator.SetBool("isMoving", isMoving);
+
+                if (isMoving)
+                {
+                    float moveX = (mobNetworkVelocity.sqrMagnitude > 0.01f) ? mobNetworkVelocity.x : estimatedMobVelocity.x;
+                    UpdateBossFacing(moveX);
+                }
+                else if (targetPlayer != null)
+                {
+                    UpdateBossFacing(targetPlayer.position.x - transform.position.x);
+                }
+            }
+
+            if (targetPlayer != null && weaponAim != null)
             {
                 weaponAim.AimAtTarget(targetPlayer);
             }
         }
-
-        // 7. Xử lý di chuyển giữ khoảng cách (Kiting) và xả đạn
-        if (isHost && currentState == BossState.Combat)
-        {
-            HandleCombatMovementAndAttack();
-        }
-
-        // 8. Đảm bảo Boss luôn ở trong ranh giới phòng chiến đấu (không đi lọt ra ngoài cửa)
-        ClampPositionToRoom();
     }
 
     /// <summary>
@@ -439,5 +526,41 @@ public class BraeadBossAI : MonoBehaviour
         }
 
         enabled = false;
+    }
+
+    public void UpdateNetworkPosition(Vector2 newPos)
+    {
+        if (!hasFirstNetworkPos)
+        {
+            transform.position = newPos;
+            lastNetworkTargetPos = newPos;
+            hasFirstNetworkPos = true;
+            lastMobPacketTime = Time.time;
+        }
+        else
+        {
+            float dt = Time.time - lastMobPacketTime;
+            if (dt > 0.001f && dt < 0.3f)
+            {
+                estimatedMobVelocity = (newPos - lastNetworkTargetPos) / dt;
+            }
+            else
+            {
+                estimatedMobVelocity = Vector2.zero;
+            }
+
+            lastNetworkTargetPos = newPos;
+            lastMobPacketTime = Time.time;
+        }
+        networkTargetPos = newPos;
+    }
+
+    public void ExecuteNetworkAttack(Vector2 targetPos)
+    {
+        UpdateBossFacing(targetPos.x - transform.position.x);
+        if (weaponAim != null)
+        {
+            weaponAim.ShootNormalBarrage(targetPlayer, targetPos, isEnraged);
+        }
     }
 }

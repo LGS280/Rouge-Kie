@@ -31,21 +31,27 @@ public class MobHealth : MonoBehaviour
 
     private void ScaleHealthByProgression()
     {
-        if (gameObject.name.Contains("BOSS") || GetComponent<MelogBossAI>() != null)
+        // 1. Final Boss (Braead hoặc Boss tầng cuối): Máu lấy BaseHealth từ Database, nhân hệ số Co-op nếu có nhiều người chơi
+        if (GetComponent<BraeadBossAI>() != null || gameObject.name.ToUpper().Contains("BRAEAD"))
         {
-            int floor = 1;
-            if (GameProgressionManager.Instance != null) floor = GameProgressionManager.Instance.currentFloor;
-            if (floor > 1)
-            {
-                maxHealth = originalMaxHealth + ((floor - 1) * 100);
-            }
-            else
-            {
-                maxHealth = originalMaxHealth;
-            }
+            float bossMult = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.GetBossHPMultiplier() : 1.0f;
+            maxHealth = Mathf.RoundToInt(originalMaxHealth * bossMult);
             return;
         }
 
+        // 2. Mini-Boss (Melog): GIỮ NGUYÊN 100% CÔNG THỨC GỐC: (BaseHealth từ DB + ((floor - 1) * 100)) x Hệ số Co-op
+        if (GetComponent<MelogBossAI>() != null || gameObject.name.ToUpper().Contains("MELOG") || gameObject.name.ToUpper().Contains("BOSS"))
+        {
+            int floor = 1;
+            if (GameProgressionManager.Instance != null) floor = GameProgressionManager.Instance.currentFloor;
+            int baseFloorHp = (floor > 1) ? (originalMaxHealth + ((floor - 1) * 100)) : originalMaxHealth;
+
+            float bossMult = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.GetBossHPMultiplier() : 1.0f;
+            maxHealth = Mathf.RoundToInt(baseFloorHp * bossMult);
+            return;
+        }
+
+        // 3. Quái thường: Nhân hệ số độ khó theo tầng
         if (GameProgressionManager.Instance != null)
         {
             float mult = GameProgressionManager.Instance.GetMonsterHPMultiplier();
@@ -60,19 +66,33 @@ public class MobHealth : MonoBehaviour
     public void ApplyEnemyConfig()
     {
         if (GameConfigManager.Instance == null) return;
-        string key = !string.IsNullOrEmpty(enemyConfigName) ? enemyConfigName : gameObject.name;
-        key = key.Replace("(Clone)", "").Trim();
-
-        // Tự động nhận diện nếu là Boss Melog (kể cả khi tên bị đổi thành MINI BOSS - FLOOR X)
-        if (GetComponent<MelogBossAI>() != null || key.Contains("BOSS"))
+        string key = enemyConfigName;
+        if (string.IsNullOrEmpty(key))
         {
-            key = "Melog";
+            key = gameObject.name.Replace("(Clone)", "").Trim();
+
+            // Tự động nhận diện nếu là Boss Braead hoặc Melog theo AI component hoặc name
+            if (GetComponent<BraeadBossAI>() != null || key.ToUpper().Contains("BRAEAD"))
+            {
+                key = "Braead";
+            }
+            else if (GetComponent<MelogBossAI>() != null || key.ToUpper().Contains("MELOG") || key.ToUpper().Contains("BOSS"))
+            {
+                key = "Melog";
+            }
         }
 
         EnemyConfig config = GameConfigManager.Instance.GetEnemyConfig(key);
-        if (config == null && GetComponent<MelogBossAI>() != null)
+        if (config == null)
         {
-            config = GameConfigManager.Instance.GetEnemyConfig("Melog");
+            if (GetComponent<BraeadBossAI>() != null)
+            {
+                config = GameConfigManager.Instance.GetEnemyConfig("Braead");
+            }
+            else if (GetComponent<MelogBossAI>() != null)
+            {
+                config = GameConfigManager.Instance.GetEnemyConfig("Melog");
+            }
         }
 
         if (config != null && config.baseHealth > 0)

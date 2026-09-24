@@ -651,6 +651,7 @@ MonoBehaviour:
   chestPrefab: {fileID: 1794885319913789208, guid: cd33e2f60b137ef4ba0032240d9fda01, type: 3}
   weaponChestPrefab: {fileID: 6415236004820850263, guid: c634a5f64678d004f9afbaef98cafedc, type: 3}
   miniBossPrefab: {fileID: 8867885939936706342, guid: b61cb4c43c9d4ec418dfed9159a92226, type: 3}
+  finalBossPrefab: {fileID: 2781793333547482475, guid: 64c4f05d1270aaa4fb1c4d53c408e5f4, type: 3}
   doorTilemap: {fileID: 286068818}
   doorTopTilemap: {fileID: 0}
   minRoomSize: 12
