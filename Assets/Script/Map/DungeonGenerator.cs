@@ -24,28 +24,32 @@ public class DungeonGenerator : MonoBehaviour
 
     [Header("Chest Prefab")]
     public GameObject chestPrefab;
+    public GameObject weaponChestPrefab;
+
+    [Header("Boss Prefabs")]
+    [Tooltip("Prefab Mini-Boss xuất hiện ở các tầng 1 - 4 (Melog)")]
+    public GameObject miniBossPrefab;
+    [Tooltip("Prefab Boss cuối xuất hiện ở tầng cuối cùng (Braead)")]
+    public GameObject finalBossPrefab;
 
     [Header("Door Tilemap")]
     public Tilemap doorTilemap;
     public Tilemap doorTopTilemap;
 
-    [Header("Danh sách gach sàn")]
-    public TileBase[] baseTiles;
-    public TileBase[] detailTiles;
-    public TileBase[] shadowTiles;
+    // Các Tile Assets được lấy động trực tiếp từ currentTheme (DungeonTheme ScriptableObject)
+    public TileBase doorTile => currentTheme != null ? currentTheme.doorTile : null;
+    public TileBase doorTopTile => currentTheme != null ? currentTheme.doorTopTile : null;
 
-    [Header("Wall Tiles")]
-    public TileBase wallTopSide;
-    public TileBase wallTopBot;
-    public TileBase wallDefault;
-    public TileBase wallBottomFoot;
+    public TileBase[] baseTiles => currentTheme != null ? currentTheme.baseTiles : null;
+    public TileBase[] detailTiles => currentTheme != null ? currentTheme.detailTiles : null;
+    public TileBase[] shadowTiles => currentTheme != null ? currentTheme.shadowTiles : null;
 
-    [Header("Door Tiles")]
-    public TileBase doorTile;
-    public TileBase doorTopTile;
+    public TileBase wallTopSide => currentTheme != null ? currentTheme.wallTopSide : null;
+    public TileBase wallTopBot => currentTheme != null ? currentTheme.wallTopBot : null;
+    public TileBase wallDefault => currentTheme != null ? currentTheme.wallDefault : null;
+    public TileBase wallBottomFoot => currentTheme != null ? currentTheme.wallBottomFoot : null;
 
-    [Header("Obstacle Asset")]
-    public TileBase obstacleTile;
+    public TileBase obstacleTile => currentTheme != null ? currentTheme.obstacleTile : null;
 
     [Header("Room Size")]
     public int minRoomSize = 14;
@@ -82,7 +86,10 @@ public class DungeonGenerator : MonoBehaviour
         public Vector2Int gridPos;
         public RectInt rect;
         public bool isStartRoom;
+        public bool isBossRoom;
+        public bool isPortalRoom;
         public RoomController controller;
+        public List<BoundsInt> obstacleBoundsList = new List<BoundsInt>(); // Danh sách vùng giới hạn vật cản trong phòng
 
         public Vector2Int Center
         {
@@ -127,9 +134,61 @@ public class DungeonGenerator : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        // Tự động sinh bản đồ khi Scene SampleScene được nạp nếu bản đồ đang trống
+        if (roomsByGrid == null || roomsByGrid.Count == 0)
+        {
+            GenerateSoulKnightMap();
+        }
+    }
+
+    /// <summary>
+    /// Khởi tạo Hạt giống ngẫu nhiên (Map Seed) đồng bộ cho chế độ Co-op
+    /// </summary>
+    private void InitMapSeed()
+    {
+        int currentFloor = 1;
+        if (GameProgressionManager.Instance != null)
+        {
+            currentFloor = GameProgressionManager.Instance.currentFloor;
+        }
+
+        bool isMultiplayer = NetworkManager.Instance != null && 
+                             NetworkManager.Instance.IsLoggedIn && 
+                             !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+
+        int mapSeed;
+        if (isMultiplayer)
+        {
+            // Trong Co-op: Dùng Hash của mã phòng (RoomCode) kết hợp với Tầng hiện tại
+            // Đảm bảo cả Host và Guest tính ra đúng 1 con số mapSeed DUY NHẤT
+            string roomCode = NetworkManager.Instance.CurrentRoomId.ToUpper();
+            mapSeed = (roomCode.GetHashCode() ^ (currentFloor * 397)) & 0x7FFFFFFF;
+            Debug.Log($"[DungeonGenerator] [Co-op] Nạp Map Seed đồng bộ cho phòng '{roomCode}' (Tầng {currentFloor}): {mapSeed}");
+        }
+        else
+        {
+            // Trong Solo: Sinh Seed ngẫu nhiên theo thời gian
+            mapSeed = UnityEngine.Random.Range(100000, 999999);
+            Debug.Log($"[DungeonGenerator] [Solo] Nạp Map Seed ngẫu nhiên (Tầng {currentFloor}): {mapSeed}");
+        }
+
+        // Khởi tạo trạng thái ngẫu nhiên cho toàn bộ hàm UnityEngine.Random trong lần sinh map này
+        UnityEngine.Random.InitState(mapSeed);
+    }
+
     [ContextMenu("Generate Soul Knight Map")]
     public void GenerateSoulKnightMap()
     {
+        //if (GameConfigManager.Instance != null)
+        //{
+        //    GameConfigManager.Instance.ReloadConfigs();
+        //}
+
+        // 1. Nạp Hạt giống ngẫu nhiên đồng bộ cho Co-op
+        InitMapSeed();
+
         ClearMap();
 
         roomsByGrid.Clear();
@@ -143,19 +202,37 @@ public class DungeonGenerator : MonoBehaviour
         DecorateWallsByCluster();
         CreateAllRoomControllers();
         CreateAllDoors();
+        // Phân loại phòng (Start, Boss, Chest, Normal) trước khi sinh vật cản và quái
+        CategorizeRooms();
         SpawnAllRoomObstacles();
+
         SpawnAllRoomMobs();
 
-        // Phân loại phòng (Start, Boss, Chest, Normal)
-        CategorizeRooms();
-
-        // Khởi tạo Minimap
+        // Khởi tạo và đảm bảo Minimap UI hiển thị cho tầng mới
+        MinimapManager.EnsureMinimapExists();
         if (MinimapManager.Instance != null)
         {
-            MinimapManager.Instance.InitializeMinimap();
+            MinimapManager.Instance.InitializeWithRooms(GetRoomControllers());
         }
 
-        Debug.Log("Đã generate map kiểu Soul Knight và cập nhật Minimap.");
+        // BỔ SUNG: Làm mới Cache phòng và quái vật cho MultiplayerSyncManager khi chuyển tầng hầm ngục mới
+        if (MultiplayerSyncManager.Instance != null)
+        {
+            MultiplayerSyncManager.Instance.RefreshRoomAndMobNetworkCache();
+        }
+
+        StartCoroutine(AutoHideLoadingRoutine());
+
+        Debug.Log("Đã generate map kiểu Soul Knight và cập nhật Minimap & Cache mạng.");
+    }
+
+    private System.Collections.IEnumerator AutoHideLoadingRoutine()
+    {
+        yield return new WaitForSeconds(0.5f);
+        if (LoadingScreenUI.Instance != null)
+        {
+            LoadingScreenUI.Instance.HideLoading();
+        }
     }
 
     private void GenerateLayout()
@@ -178,7 +255,10 @@ public class DungeonGenerator : MonoBehaviour
 
         int safeLoop = 0;
 
-        while (roomsByGrid.Count < maxRooms && safeLoop < 500)
+        int currentFloor = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.currentFloor : 1;
+        int targetRooms = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.GetRoomCountForFloor(currentFloor) : maxRooms;
+
+        while (roomsByGrid.Count < targetRooms && safeLoop < 500)
         {
             safeLoop++;
 
@@ -215,6 +295,73 @@ public class DungeonGenerator : MonoBehaviour
             roomsByGrid.Add(newGrid, newRoom);
             expandableRooms.Add(newRoom);
             connections.Add(new MapConnection(anchor, newRoom, chosenDir));
+        }
+
+        // Tự động gắn 1 phòng Portal nối tiếp ngay sau phòng Boss
+        AttachPortalRoomToBossRoom();
+    }
+
+    private void AttachPortalRoomToBossRoom()
+    {
+        // 1. Sắp xếp danh sách ứng viên phòng Boss giảm dần theo khoảng cách đến Start (0,0)
+        List<MapRoom> candidateBossRooms = new List<MapRoom>();
+        foreach (var kvp in roomsByGrid)
+        {
+            if (!kvp.Value.isStartRoom)
+            {
+                candidateBossRooms.Add(kvp.Value);
+            }
+        }
+
+        candidateBossRooms.Sort((a, b) =>
+        {
+            float distA = Vector2Int.Distance(a.gridPos, Vector2Int.zero);
+            float distB = Vector2Int.Distance(b.gridPos, Vector2Int.zero);
+            return distB.CompareTo(distA);
+        });
+
+        MapRoom bossRoom = null;
+        MapRoom portalRoom = null;
+        Vector2Int portalGridPos = Vector2Int.zero;
+        Vector2Int chosenDir = Vector2Int.zero;
+
+        Vector2Int[] directions = { Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left };
+
+        // 2. Duyệt tìm phòng xa nhất mà CÓ ÍT NHẤT 1 Ô TRỐNG bên cạnh để gắn phòng Portal
+        foreach (MapRoom candidate in candidateBossRooms)
+        {
+            foreach (Vector2Int dir in directions)
+            {
+                Vector2Int checkGrid = candidate.gridPos + dir;
+                if (!roomsByGrid.ContainsKey(checkGrid))
+                {
+                    bossRoom = candidate;
+                    portalGridPos = checkGrid;
+                    chosenDir = dir;
+                    break;
+                }
+            }
+            if (bossRoom != null) break;
+        }
+
+        // 3. Khởi tạo phòng Portal nối tiếp sau phòng Boss
+        if (bossRoom != null)
+        {
+            bossRoom.isBossRoom = true; // Đánh dấu phòng Boss
+
+            portalRoom = CreateMapRoom(portalGridPos, false);
+            portalRoom.isPortalRoom = true; // Đánh dấu phòng Portal riêng biệt
+            roomsByGrid.Add(portalGridPos, portalRoom);
+            connections.Add(new MapConnection(bossRoom, portalRoom, chosenDir));
+            Debug.Log($"[DungeonGenerator] Đã tạo phòng Portal riêng tại {portalGridPos} nối tiếp sau phòng Boss tại {bossRoom.gridPos}");
+        }
+        else if (candidateBossRooms.Count > 0)
+        {
+            // Fallback: Nếu tất cả phòng xa đều bị kẹt cạnh, dùng phòng xa nhất làm phòng Boss kiêm Portal
+            bossRoom = candidateBossRooms[0];
+            bossRoom.isBossRoom = true;
+            bossRoom.isPortalRoom = true;
+            Debug.LogWarning($"[DungeonGenerator] Không tìm thấy ô trống cạnh phòng Boss, gán Portal xuất hiện trực tiếp tại phòng Boss {bossRoom.gridPos}");
         }
     }
 
@@ -672,28 +819,125 @@ public class DungeonGenerator : MonoBehaviour
     {
         foreach (MapRoom room in roomsByGrid.Values)
         {
-            if (room.isStartRoom && !spawnObstacleInStartRoom)
+            // Bỏ qua không sinh vật cản ở phòng xuất phát (Start), phòng Rương báu (Chest) và phòng Portal
+            if (room.controller != null && (room.controller.roomType == RoomType.Chest || room.controller.roomType == RoomType.Portal || (room.isStartRoom && !spawnObstacleInStartRoom)))
             {
                 continue;
             }
 
-            SpawnCenterObstacle(room.Center.x, room.Center.y);
+            // Nếu là phòng Boss -> Sinh các dạng vật cản ở các rìa/cánh phòng, tuyệt đối không sinh ở tâm phòng
+            if (room.controller != null && room.controller.roomType == RoomType.Boss)
+            {
+                SpawnBossRoomObstacles(room);
+                continue;
+            }
+
+            // 70% sinh vật cản trung tâm, 30% sinh 4 cột ở 4 góc và để trống ở giữa
+            if (Random.value < 0.7f)
+            {
+                SpawnCenterObstacle(room.Center.x, room.Center.y, room);
+            }
+            else
+            {
+                SpawnCornerObstacles(room);
+            }
         }
     }
 
-    private void SpawnCenterObstacle(int centerX, int centerY)
+    private void SpawnBossRoomObstacles(MapRoom room)
     {
-        if (obstacleTile == null || obstacleTilemap == null)
-        {
-            return;
-        }
+        if (room == null || obstacleTile == null || obstacleTilemap == null) return;
 
+        float rand = Random.value;
+        if (rand < 0.35f)
+        {
+            // 35% chance: Sinh 4 cột đá ở 4 góc phòng
+            SpawnCornerObstacles(room);
+        }
+        else
+        {
+            // Sinh các dạng layout vật cản khác nhau ở các cánh/rìa phòng, giữ cho tâm phòng hoàn toàn trống trải
+            int[,] selectedLayout = GetRandomObstacleLayout();
+
+            int offsetX = Mathf.Max(3, (room.Right - room.Left) / 4);
+            int offsetY = Mathf.Max(3, (room.Top - room.Bottom) / 4);
+
+            if (rand < 0.68f)
+            {
+                // Sinh ở cánh Trái và Phải của phòng Boss
+                SpawnLayoutAt(room.Center.x - offsetX, room.Center.y, selectedLayout, room);
+                SpawnLayoutAt(room.Center.x + offsetX, room.Center.y, selectedLayout, room);
+            }
+            else
+            {
+                // Sinh ở cánh Trên và Dưới của phòng Boss
+                SpawnLayoutAt(room.Center.x, room.Center.y + offsetY, selectedLayout, room);
+                SpawnLayoutAt(room.Center.x, room.Center.y - offsetY, selectedLayout, room);
+            }
+        }
+    }
+
+    private void SpawnCornerObstacles(MapRoom room)
+    {
+        if (obstacleTile == null || obstacleTilemap == null || room == null) return;
+
+        int offset = 3;
+        int pillarSize = 2;
+
+        Vector2Int[] corners = new Vector2Int[]
+        {
+            new Vector2Int(room.Left + offset, room.Bottom + offset),
+            new Vector2Int(room.Right - offset - pillarSize + 1, room.Bottom + offset),
+            new Vector2Int(room.Left + offset, room.Top - offset - pillarSize + 1),
+            new Vector2Int(room.Right - offset - pillarSize + 1, room.Top - offset - pillarSize + 1)
+        };
+
+        foreach (var startPos in corners)
+        {
+            for (int x = 0; x < pillarSize; x++)
+            {
+                for (int y = 0; y < pillarSize; y++)
+                {
+                    Vector3Int tilePos = new Vector3Int(startPos.x + x, startPos.y + y, 0);
+                    obstacleTilemap.SetTile(tilePos, obstacleTile);
+
+                    if (y == 0)
+                    {
+                        Vector3Int bottomPos = new Vector3Int(startPos.x + x, startPos.y - 1, 0);
+                        obstacleTilemap.SetTile(bottomPos, wallTopBot);
+
+                        Vector3Int shadowPos = new Vector3Int(startPos.x + x, startPos.y - 2, 0);
+                        if (shadowTiles != null && shadowTiles.Length > 0 && floorTilemap.HasTile(shadowPos))
+                        {
+                            floorTilemap.SetTile(shadowPos, shadowTiles[Random.Range(0, shadowTiles.Length)]);
+                        }
+                    }
+                }
+            }
+
+            BoundsInt pillarBounds = new BoundsInt(
+                new Vector3Int(startPos.x - 1, startPos.y - 2, 0),
+                new Vector3Int(pillarSize + 2, pillarSize + 3, 1)
+            );
+            room.obstacleBoundsList.Add(pillarBounds);
+        }
+    }
+
+    private void SpawnCenterObstacle(int centerX, int centerY, MapRoom room = null)
+    {
+        if (obstacleTile == null || obstacleTilemap == null) return;
+        int[,] selectedLayout = GetRandomObstacleLayout();
+        SpawnLayoutAt(centerX, centerY, selectedLayout, room);
+    }
+
+    private int[,] GetRandomObstacleLayout()
+    {
         int[,] layout1 = new int[,]
         {
             { 1, 0, 0, 0, 0, 0, 1 },
             { 0, 1, 0, 0, 0, 1, 0 },
             { 0, 0, 1, 1, 1, 0, 0 },
-            { 0, 0, 1, 0, 1, 0, 0 },
+            { 0, 0, 1, 1, 1, 0, 0 },
             { 0, 0, 1, 1, 1, 0, 0 },
             { 0, 1, 0, 0, 0, 1, 0 },
             { 1, 0, 0, 0, 0, 0, 1 }
@@ -702,8 +946,8 @@ public class DungeonGenerator : MonoBehaviour
         int[,] layout2 = new int[,]
         {
             { 1, 1, 1, 1 },
-            { 1, 0, 0, 1 },
-            { 1, 0, 0, 1 },
+            { 1, 1, 1, 1 },
+            { 1, 1, 1, 1 },
             { 1, 1, 1, 1 }
         };
 
@@ -751,9 +995,9 @@ public class DungeonGenerator : MonoBehaviour
 
         int[,] layout8 = new int[,]
         {
-            { 1, 0, 0, 0, 1 },
-            { 1, 0, 0, 0, 1 },
-            { 1, 0, 0, 0, 1 },
+            { 1, 1, 1, 1, 1 },
+            { 1, 1, 1, 1, 1 },
+            { 1, 1, 1, 1, 1 },
             { 1, 1, 1, 1, 1 }
         };
 
@@ -768,34 +1012,78 @@ public class DungeonGenerator : MonoBehaviour
 
         int[,] layout10 = new int[,]
         {
-            { 1, 0, 1, 0, 1 },
-            { 0, 0, 0, 0, 0 },
-            { 1, 0, 1, 0, 1 },
-            { 0, 0, 0, 0, 0 },
-            { 1, 0, 1, 0, 1 }
+            { 1, 0, 0, 1, 0, 0, 1 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 1, 0, 0, 1, 0, 0, 1 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0 },
+            { 1, 0, 0, 1, 0, 0, 1 }
+        };
+
+        int[,] layout11 = new int[,]
+        {
+            { 0, 0, 1, 0, 0 },
+            { 0, 0, 1, 0, 0 },
+            { 1, 1, 1, 1, 1 },
+            { 0, 0, 1, 0, 0 },
+            { 0, 0, 1, 0, 0 }
+        };
+
+        int[,] layout12 = new int[,]
+        {
+            { 1, 0, 0, 0, 1 },
+            { 1, 0, 0, 0, 1 },
+            { 1, 1, 1, 1, 1 },
+            { 1, 0, 0, 0, 1 },
+            { 1, 0, 0, 0, 1 }
+        };
+
+        int[,] layout13 = new int[,]
+        {
+            { 0, 0, 0, 0, 1 },
+            { 0, 0, 0, 1, 0 },
+            { 0, 0, 1, 0, 0 },
+            { 0, 1, 0, 0, 0 },
+            { 1, 0, 0, 0, 0 }
         };
 
         int[][,] layouts = new int[][,]
         {
             layout1, layout2, layout3, layout4, layout5,
-            layout6, layout7, layout8, layout9, layout10
+            layout6, layout7, layout8, layout9, layout10,
+            layout11, layout12, layout13
         };
 
-        int[,] selectedLayout = layouts[Random.Range(0, layouts.Length)];
+        return layouts[Random.Range(0, layouts.Length)];
+    }
+
+    private void SpawnLayoutAt(int centerX, int centerY, int[,] selectedLayout, MapRoom room = null)
+    {
+        if (obstacleTile == null || obstacleTilemap == null || selectedLayout == null) return;
+
         int layoutHeight = selectedLayout.GetLength(0);
         int layoutWidth = selectedLayout.GetLength(1);
 
         int startX = centerX - (layoutWidth / 2);
         int startY = centerY - (layoutHeight / 2);
 
+        if (room != null)
+        {
+            BoundsInt bounds = new BoundsInt(
+                new Vector3Int(startX - 1, startY - 2, 0),
+                new Vector3Int(layoutWidth + 2, layoutHeight + 3, 1)
+            );
+            room.obstacleBoundsList.Add(bounds);
+        }
+
         for (int row = 0; row < layoutHeight; row++)
         {
             for (int col = 0; col < layoutWidth; col++)
             {
-                if (selectedLayout[row, col] != 1)
-                {
-                    continue;
-                }
+                if (selectedLayout[row, col] != 1) continue;
 
                 int targetX = startX + col;
                 int targetY = startY + (layoutHeight - 1 - row);
@@ -908,12 +1196,60 @@ public class DungeonGenerator : MonoBehaviour
 
         floorPositions.Clear();
 
-        for (int i = transform.childCount - 1; i >= 0; i--)
+        // Xóa tất cả các cổng dịch chuyển cũ (TeleportPortal) còn tồn tại trong Scene
+        TeleportPortal[] oldPortals = Object.FindObjectsByType<TeleportPortal>(FindObjectsSortMode.None);
+        foreach (var p in oldPortals)
         {
-            DestroyImmediate(transform.GetChild(i).gameObject);
+            if (p != null && p.gameObject != null) DestroySmart(p.gameObject);
+        }
+        GameObject oldPortalObj = GameObject.Find("TeleportPortal");
+        if (oldPortalObj != null) DestroySmart(oldPortalObj);
+
+        // 🧹 DỌN DẸP SẠCH SẼ TẤT CẢ VẬT PHẨM VÀ VŨ KHÍ RƠI VÃI TẦNG CŨ KHI QUA TẦNG MỚI (CẢ SINGLEPLAYER & MULTIPLAYER)
+        LootItem[] remainingLoot = Object.FindObjectsByType<LootItem>(FindObjectsSortMode.None);
+        foreach (var loot in remainingLoot)
+        {
+            if (loot != null && loot.gameObject != null) Destroy(loot.gameObject);
         }
 
-        Debug.Log("?ã xoá s?ch toàn b? Tilemap và các Prefab c?a c?.");
+        GroundWeapon[] remainingWeapons = Object.FindObjectsByType<GroundWeapon>(FindObjectsSortMode.None);
+        foreach (var weapon in remainingWeapons)
+        {
+            if (weapon != null && weapon.gameObject != null) Destroy(weapon.gameObject);
+        }
+
+        RewardChest[] remainingRewardChests = Object.FindObjectsByType<RewardChest>(FindObjectsSortMode.None);
+        foreach (var chest in remainingRewardChests)
+        {
+            if (chest != null && chest.gameObject != null) Destroy(chest.gameObject);
+        }
+
+        WeaponChest[] remainingWeaponChests = Object.FindObjectsByType<WeaponChest>(FindObjectsSortMode.None);
+        foreach (var chest in remainingWeaponChests)
+        {
+            if (chest != null && chest.gameObject != null) Destroy(chest.gameObject);
+        }
+
+        for (int i = transform.childCount - 1; i >= 0; i--)
+        {
+            GameObject child = transform.GetChild(i).gameObject;
+            DestroySmart(child);
+        }
+
+        Debug.Log("Đã xóa sạch toàn bộ Tilemap và các Prefab cũ.");
+    }
+
+    private void DestroySmart(GameObject obj)
+    {
+        if (obj == null) return;
+        if (Application.isPlaying)
+        {
+            Destroy(obj);
+        }
+        else
+        {
+            DestroyImmediate(obj);
+        }
     }
 
     private void DecorateWallsByCluster()
@@ -1066,34 +1402,182 @@ public class DungeonGenerator : MonoBehaviour
             if (room.isStartRoom && !currentTheme.spawnMobInStartRoom)
                 continue;
 
+            // Nếu là phòng Portal (cổng qua tầng), không sinh quái mà khởi tạo cổng dịch chuyển ở tâm phòng
+            if (room.controller != null && room.controller.roomType == RoomType.Portal)
+            {
+                room.controller.roomCleared = true;
+                room.controller.chestSpawned = true;
+                room.controller.SpawnTeleportPortal();
+                Debug.Log($"[DungeonGenerator] Đã khởi tạo Cổng Dịch Chuyển tại tâm phòng Portal: {room.gridPos}");
+                continue;
+            }
+
+            // Nếu là phòng Rương Báu, không sinh quái mà sinh rương thưởng trực tiếp
+            if (room.controller != null && room.controller.roomType == RoomType.Chest)
+            {
+                SpawnChestInChestRoom(room);
+                continue;
+            }
+
             SpawnMobsInRoom(room);
+        }
+    }
+
+    /// <summary>
+    /// Sinh rương thưởng trực tiếp tại tâm phòng Rương Báu
+    /// </summary>
+    private void SpawnChestInChestRoom(MapRoom room)
+    {
+        if (room.controller == null) return;
+
+        GameObject targetPrefab = weaponChestPrefab;
+#if UNITY_EDITOR
+        if (targetPrefab == null)
+        {
+            targetPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/Map/WeaponChest.prefab");
+        }
+#endif
+        if (targetPrefab == null)
+        {
+            targetPrefab = Resources.Load<GameObject>("Prefab/Map/WeaponChest");
+        }
+        if (targetPrefab == null)
+        {
+            targetPrefab = chestPrefab;
+        }
+
+        if (targetPrefab != null)
+        {
+            Vector3 worldPos = floorTilemap.CellToWorld((Vector3Int)room.Center) + new Vector3(0.5f, 0.5f, 0f);
+            if (room.controller != null)
+            {
+                worldPos = room.controller.GetSafeChestSpawnPosition(worldPos);
+            }
+            GameObject chestObj = Instantiate(targetPrefab, worldPos, Quaternion.identity);
+            chestObj.transform.SetParent(transform);
+
+            // Cấu hình phòng Rương đã được dọn sạch để mở cửa
+            room.controller.roomCleared = true;
+            room.controller.chestSpawned = true; // Chặn sinh rương thêm lần nữa khi dọn dẹp
+            Debug.Log($"[DungeonGenerator] Đã sinh Rương Vũ Khí (WeaponChest) tại phòng Rương báu: {room.gridPos}");
+        }
+        else
+        {
+            Debug.LogWarning("[DungeonGenerator] Chưa gán weaponChestPrefab để sinh trong phòng Rương báu.");
         }
     }
 
     private void SpawnMobsInRoom(MapRoom room)
     {
-        int mobCount = Random.Range(
-            currentTheme.minMobPerRoom,
-            currentTheme.maxMobPerRoom + 1
-        );
+        // Kiểm tra xem phòng hiện tại có phải là phòng Boss hay không
+        bool isBossRoom = room.controller != null && room.controller.roomType == RoomType.Boss;
+
+        int mobCount = isBossRoom ? 1 : (GameProgressionManager.Instance != null 
+            ? GameProgressionManager.Instance.GetMobCountPerRoom(currentTheme.minMobPerRoom, currentTheme.maxMobPerRoom) 
+            : Random.Range(currentTheme.minMobPerRoom, currentTheme.maxMobPerRoom + 1));
 
         for (int i = 0; i < mobCount; i++)
         {
-            GameObject mobPrefab = GetRandomMobPrefabFromTheme();
+            GameObject mobPrefab = null;
+
+            if (isBossRoom)
+            {
+                int floor = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.currentFloor : 1;
+                int maxFloor = GameConfigManager.Instance != null ? GameConfigManager.Instance.GetMaxFloor(5) : 5;
+                bool isFinalFloor = (floor >= maxFloor);
+
+                if (isFinalFloor)
+                {
+                    if (finalBossPrefab != null)
+                    {
+                        mobPrefab = finalBossPrefab;
+                    }
+#if UNITY_EDITOR
+                    else
+                    {
+                        mobPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/Mobs/Braead.prefab");
+                    }
+#endif
+                    if (mobPrefab == null) mobPrefab = miniBossPrefab;
+                }
+                else
+                {
+                    if (miniBossPrefab != null)
+                    {
+                        mobPrefab = miniBossPrefab;
+                    }
+#if UNITY_EDITOR
+                    else
+                    {
+                        mobPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/Mobs/Melog.prefab");
+                    }
+#endif
+                    if (mobPrefab == null) mobPrefab = finalBossPrefab;
+                }
+
+                if (mobPrefab == null) mobPrefab = GetRandomMobPrefabFromTheme();
+            }
+            else
+            {
+                mobPrefab = GetRandomMobPrefabFromTheme();
+            }
 
             if (mobPrefab == null)
                 continue;
 
+            // Luôn sử dụng GetRandomMobSpawnCell(room) để kiểm tra 4 lớp an toàn (tránh đè vật cản/tường)
             Vector3Int cellPos = GetRandomMobSpawnCell(room);
             Vector3 worldPos = floorTilemap.CellToWorld(cellPos) + new Vector3(0.5f, 0.5f, 0f);
 
             GameObject mobObj = Instantiate(mobPrefab, worldPos, Quaternion.identity);
             mobObj.transform.SetParent(transform);
 
-            MobHealth mobHealth = mobObj.GetComponent<MobHealth>();
-            if (mobHealth != null && room.controller != null)
+            // Cấu hình Boss hoặc Mini-Boss nếu là phòng Boss
+            if (isBossRoom)
             {
-                room.controller.AddMob(mobHealth);
+                int floor = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.currentFloor : 1;
+                int maxFloor = GameConfigManager.Instance != null ? GameConfigManager.Instance.GetMaxFloor(5) : 5;
+                bool isFinalFloor = (floor >= maxFloor);
+
+                if (isFinalFloor)
+                {
+                    mobObj.name = "FINAL BOSS - BRAEAD";
+                    mobObj.transform.localScale = Vector3.one;
+                }
+                else
+                {
+                    mobObj.name = $"MINI BOSS - FLOOR {floor}";
+                    mobObj.transform.localScale = new Vector3(1.7f, 1.7f, 1f);
+                }
+
+                MobHealth mobHealth = mobObj.GetComponent<MobHealth>();
+                if (mobHealth != null)
+                {
+                    // Gán enemyConfigName theo tên prefab gốc (ví dụ: "Melog", "Braead" hoặc bất kỳ Boss nào thay thế sau này)
+                    // để MobHealth nạp trực tiếp BaseHealth từ Database qua GameConfigManager
+                    mobHealth.enemyConfigName = mobPrefab.name;
+                    mobHealth.ApplyEnemyConfig();
+                }
+            }
+
+            MobHealth mobH = mobObj.GetComponent<MobHealth>();
+            if (mobH != null && room.controller != null)
+            {
+                room.controller.AddMob(mobH);
+
+                MobAI mobAI = mobObj.GetComponent<MobAI>();
+                if (mobAI != null) mobAI.SetRoom(room.controller);
+
+                IBossAI bossAI = mobObj.GetComponent<IBossAI>();
+                if (bossAI != null)
+                {
+                    bossAI.SetRoom(room.controller);
+                }
+                else
+                {
+                    MelogBossAI melogAI = mobObj.GetComponent<MelogBossAI>();
+                    if (melogAI != null) melogAI.SetRoom(room.controller);
+                }
             }
             else
             {
@@ -1144,7 +1628,7 @@ public class DungeonGenerator : MonoBehaviour
         int safeLoop = 0;
         int padding = currentTheme.mobSpawnPadding;
 
-        while (safeLoop < 100)
+        while (safeLoop < 200)
         {
             safeLoop++;
 
@@ -1153,17 +1637,92 @@ public class DungeonGenerator : MonoBehaviour
 
             Vector3Int cellPos = new Vector3Int(x, y, 0);
 
-            bool hasFloor = floorTilemap.HasTile(cellPos);
-            bool hasObstacle = obstacleTilemap != null && obstacleTilemap.HasTile(cellPos);
-            bool hasWall = wallTilemap != null && wallTilemap.HasTile(cellPos);
-
-            if (hasFloor && !hasObstacle && !hasWall)
+            if (IsCellValidForMobSpawn(cellPos, room))
             {
                 return cellPos;
             }
         }
 
-        return new Vector3Int(room.Center.x, room.Center.y, 0);
+        // Fallback an toàn: Quét các góc phòng (lùi vào từ tường) để tìm vị trí mở rộng rãi
+        for (int offset = 2; offset <= 6; offset++)
+        {
+            Vector3Int[] candidateCells = new Vector3Int[]
+            {
+                new Vector3Int(room.Left + offset, room.Bottom + offset, 0),
+                new Vector3Int(room.Right - offset, room.Bottom + offset, 0),
+                new Vector3Int(room.Left + offset, room.Top - offset, 0),
+                new Vector3Int(room.Right - offset, room.Top - offset, 0)
+            };
+
+            foreach (var cell in candidateCells)
+            {
+                if (IsCellValidForMobSpawn(cell, room))
+                {
+                    return cell;
+                }
+            }
+        }
+
+        // Dự phòng cuối cùng: Trả về mép góc phòng
+        return new Vector3Int(room.Left + 2, room.Bottom + 2, 0);
+    }
+
+    private bool IsCellValidForMobSpawn(Vector3Int cellPos, MapRoom room)
+    {
+        // 1. Phải có Tile sàn và KHÔNG được có Tile tường hay Tile vật cản
+        if (floorTilemap == null || !floorTilemap.HasTile(cellPos)) return false;
+        if (wallTilemap != null && wallTilemap.HasTile(cellPos)) return false;
+        if (obstacleTilemap != null && obstacleTilemap.HasTile(cellPos)) return false;
+
+        // 2. Không nằm trong bất kỳ BoundsInt vật cản nào của phòng
+        if (room != null && room.obstacleBoundsList != null)
+        {
+            foreach (var bounds in room.obstacleBoundsList)
+            {
+                if (bounds.Contains(cellPos))
+                {
+                    return false;
+                }
+            }
+        }
+
+        // 3. Kiểm tra va chạm vật lý tại vị trí thế giới (tránh kẹt collider)
+        Vector3 worldPos = floorTilemap.CellToWorld(cellPos) + new Vector3(0.5f, 0.5f, 0f);
+        Collider2D[] hits = Physics2D.OverlapCircleAll(worldPos, 0.5f);
+        foreach (var col in hits)
+        {
+            if (col == null || col.isTrigger) continue;
+            string cName = col.name;
+            if (cName.Contains("Door") || cName.Contains("Obstacle") || cName.Contains("Pillar") || cName.Contains("Wall") || cName.Contains("Tilemap"))
+            {
+                return false;
+            }
+        }
+
+        // 4. Kiểm tra chống nhốt trong hốc kín: ô này phải có ít nhất 2 ô lân cận (N, S, E, W) là sàn trống
+        int openNeighbors = 0;
+        Vector3Int[] directions = new Vector3Int[]
+        {
+            Vector3Int.up, Vector3Int.down, Vector3Int.left, Vector3Int.right
+        };
+        foreach (var dir in directions)
+        {
+            Vector3Int neighborCell = cellPos + dir;
+            bool nFloor = floorTilemap.HasTile(neighborCell);
+            bool nWall = wallTilemap != null && wallTilemap.HasTile(neighborCell);
+            bool nObs = obstacleTilemap != null && obstacleTilemap.HasTile(neighborCell);
+            if (nFloor && !nWall && !nObs)
+            {
+                openNeighbors++;
+            }
+        }
+
+        if (openNeighbors < 2)
+        {
+            return false; // Ô bị quây hẹp/kẹt 3-4 hướng bởi tường đá -> Bỏ qua
+        }
+
+        return true;
     }
 
     private void CreateAllRoomControllers()
@@ -1216,20 +1775,187 @@ public class DungeonGenerator : MonoBehaviour
     {
         if (roomsByGrid.Count == 0) return;
 
+        // 1. Đặt tất cả các phòng về Normal mặc định
         foreach (var kvp in roomsByGrid)
         {
-            if (kvp.Value.controller == null) continue;
-
-            // Reset tất cả về Normal
-            kvp.Value.controller.roomType = RoomType.Normal;
-
-            // Chỉ gán phòng Start
-            if (kvp.Value.isStartRoom)
+            if (kvp.Value.controller != null)
             {
-                kvp.Value.controller.roomType = RoomType.Start;
-                kvp.Value.controller.isVisited = true; // Phòng xuất phát mặc định đã được đi qua
+                kvp.Value.controller.roomType = RoomType.Normal;
             }
         }
+
+        // 2. Gán phòng Start
+        foreach (var kvp in roomsByGrid)
+        {
+            if (kvp.Value.isStartRoom)
+            {
+                kvp.Value.isStartRoom = true;
+                if (kvp.Value.controller != null)
+                {
+                    kvp.Value.controller.roomType = RoomType.Start;
+                    kvp.Value.controller.isVisited = true;
+                }
+            }
+        }
+
+        // 3. Gán phòng Boss và phòng Portal dựa trên cờ đánh dấu chính xác
+        MapRoom bossRoom = null;
+        MapRoom portalRoom = null;
+
+        foreach (var kvp in roomsByGrid)
+        {
+            if (kvp.Value.isBossRoom) bossRoom = kvp.Value;
+            if (kvp.Value.isPortalRoom) portalRoom = kvp.Value;
+        }
+
+        if (bossRoom != null && bossRoom.controller != null)
+        {
+            bossRoom.controller.roomType = RoomType.Boss;
+            Debug.Log($"[DungeonGenerator] Đã gán phòng Boss tại tọa độ lưới: {bossRoom.gridPos}");
+        }
+
+        if (portalRoom != null && portalRoom.controller != null)
+        {
+            portalRoom.controller.roomType = RoomType.Portal;
+            Debug.Log($"[DungeonGenerator] Đã gán phòng Portal riêng biệt tại tọa độ lưới: {portalRoom.gridPos}");
+        }
+
+        // 4. Tìm các phòng cụt (chỉ có duy nhất 1 liên kết với các phòng khác) và không trùng Start/Boss/Portal
+        List<MapRoom> deadEnds = new List<MapRoom>();
+        List<MapRoom> otherCandidates = new List<MapRoom>();
+
+        foreach (var kvp in roomsByGrid)
+        {
+            MapRoom room = kvp.Value;
+            if (room.isStartRoom || room == bossRoom || room == portalRoom) continue;
+
+            int neighbors = 0;
+            Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+            foreach (var dir in dirs)
+            {
+                if (roomsByGrid.ContainsKey(room.gridPos + dir))
+                {
+                    neighbors++;
+                }
+            }
+
+            if (neighbors == 1)
+            {
+                deadEnds.Add(room);
+            }
+            else
+            {
+                otherCandidates.Add(room);
+            }
+        }
+
+        // Sắp xếp xác định để Host và Client chọn phòng rương giống hệt nhau khi dùng chung mapSeed
+        deadEnds.Sort((a, b) => (a.gridPos.x * 1000 + a.gridPos.y).CompareTo(b.gridPos.x * 1000 + b.gridPos.y));
+        otherCandidates.Sort((a, b) => (a.gridPos.x * 1000 + a.gridPos.y).CompareTo(b.gridPos.x * 1000 + b.gridPos.y));
+
+        int currentFloor = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.currentFloor : 1;
+        int targetChestRooms = GameProgressionManager.Instance != null ? GameProgressionManager.Instance.GetChestRoomCountForFloor(currentFloor) : 1;
+
+        // Giới hạn an toàn: Số phòng rương không vượt quá 50% số phòng thông thường
+        int nonSpecialCount = deadEnds.Count + otherCandidates.Count;
+        int maxAllowedChest = Mathf.Max(1, nonSpecialCount / 2);
+        int finalChestCount = Mathf.Clamp(targetChestRooms, 1, maxAllowedChest);
+
+        List<MapRoom> chosenChestRooms = new List<MapRoom>();
+
+        // Hàm kiểm tra xem phòng có nằm sát (liền kề) với bất kỳ phòng rương đã chọn nào không
+        bool IsAdjacentToChosen(MapRoom candidate)
+        {
+            foreach (var chosen in chosenChestRooms)
+            {
+                int manhattanDist = Mathf.Abs(candidate.gridPos.x - chosen.gridPos.x) + Mathf.Abs(candidate.gridPos.y - chosen.gridPos.y);
+                if (manhattanDist <= 1) return true;
+            }
+            return false;
+        }
+
+        // Danh sách gộp ưu tiên: Ngõ cụt trước, các phòng khác sau
+        List<MapRoom> pool = new List<MapRoom>();
+        // Shuffle ngẫu nhiên có hạt giống theo mapSeed hiện tại
+        List<MapRoom> shuffledDeadEnds = new List<MapRoom>(deadEnds);
+        for (int i = shuffledDeadEnds.Count - 1; i > 0; i--)
+        {
+            int r = UnityEngine.Random.Range(0, i + 1);
+            var tmp = shuffledDeadEnds[i];
+            shuffledDeadEnds[i] = shuffledDeadEnds[r];
+            shuffledDeadEnds[r] = tmp;
+        }
+
+        List<MapRoom> shuffledOther = new List<MapRoom>(otherCandidates);
+        for (int i = shuffledOther.Count - 1; i > 0; i--)
+        {
+            int r = UnityEngine.Random.Range(0, i + 1);
+            var tmp = shuffledOther[i];
+            shuffledOther[i] = shuffledOther[r];
+            shuffledOther[r] = tmp;
+        }
+
+        pool.AddRange(shuffledDeadEnds);
+        pool.AddRange(shuffledOther);
+
+        // Lần 1: Chọn các phòng thỏa mãn điều kiện luân phiên (không nằm sát nhau)
+        foreach (MapRoom cand in pool)
+        {
+            if (chosenChestRooms.Count >= finalChestCount) break;
+
+            if (!IsAdjacentToChosen(cand))
+            {
+                chosenChestRooms.Add(cand);
+            }
+        }
+
+        // Lần 2 (Dự phòng nếu layout ngục tối quá hẹp): Điền nốt nếu chưa đủ finalChestCount
+        if (chosenChestRooms.Count < finalChestCount)
+        {
+            foreach (MapRoom cand in pool)
+            {
+                if (chosenChestRooms.Count >= finalChestCount) break;
+                if (!chosenChestRooms.Contains(cand))
+                {
+                    chosenChestRooms.Add(cand);
+                }
+            }
+        }
+
+        // 5. Gán loại phòng Chest cho các phòng đã chọn
+        foreach (MapRoom chestRoom in chosenChestRooms)
+        {
+            if (chestRoom != null && chestRoom.controller != null)
+            {
+                if (chestRoom.controller.roomType == RoomType.Normal)
+                {
+                    chestRoom.controller.roomType = RoomType.Chest;
+                    Debug.Log($"[DungeonGenerator] Đã gán phòng Rương báu tại tọa độ lưới: {chestRoom.gridPos} (Tầng {currentFloor}, Tổng rương: {chosenChestRooms.Count})");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Trả về tập hợp các cặp phòng (gridPosA, gridPosB) có hành lang nối thực tế với nhau
+    /// </summary>
+    public HashSet<KeyValuePair<Vector2Int, Vector2Int>> GetRoomConnections()
+    {
+        var result = new HashSet<KeyValuePair<Vector2Int, Vector2Int>>();
+        if (connections != null)
+        {
+            foreach (var conn in connections)
+            {
+                if (conn != null && conn.from != null && conn.to != null)
+                {
+                    Vector2Int a = conn.from.gridPos;
+                    Vector2Int b = conn.to.gridPos;
+                    result.Add(new KeyValuePair<Vector2Int, Vector2Int>(a, b));
+                    result.Add(new KeyValuePair<Vector2Int, Vector2Int>(b, a));
+                }
+            }
+        }
+        return result;
     }
 }
 

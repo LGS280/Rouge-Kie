@@ -164,6 +164,12 @@ public class KeyRebindHelper : MonoBehaviour
         string rebinds = action.actionMap.asset.SaveBindingOverridesAsJson();
         PlayerPrefs.SetString("RogueKie_ControlRebinds", rebinds);
         PlayerPrefs.Save();
+
+        // Đồng bộ lại với InputLoader để tất cả các hệ thống trong game nhận phím mới tức thì
+        if (InputLoader.Instance != null)
+        {
+            InputLoader.Instance.LoadRebinds();
+        }
     }
 
     private void LoadBindings()

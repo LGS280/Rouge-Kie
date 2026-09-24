@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -17,6 +17,8 @@ public class PlayerController : MonoBehaviour
 
     public enum InputMode { KeyboardMouse, Gamepad}
     public InputMode currentMode = InputMode.KeyboardMouse;
+
+    private WeaponAim weaponAim;
 
     private void Start()
     {
@@ -38,6 +40,7 @@ public class PlayerController : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
 
         animator = GetComponent<Animator>();
+        weaponAim = GetComponentInChildren<WeaponAim>();
 
         if (rb2d != null)
         {
@@ -52,6 +55,21 @@ public class PlayerController : MonoBehaviour
         if(animator != null)
         {
             animator.SetFloat("Speed", moveInput.magnitude);
+            if (weaponAim == null) weaponAim = GetComponentInChildren<WeaponAim>();
+            bool lookUp = (weaponAim != null && weaponAim.isAimingUp);
+            int yInt = lookUp ? 1 : 0;
+            float yFloat = lookUp ? 1f : 0f;
+            foreach (var param in animator.parameters)
+            {
+                if (param.name == "MoveY")
+                {
+                    if (param.type == AnimatorControllerParameterType.Int)
+                        animator.SetInteger("MoveY", yInt);
+                    else if (param.type == AnimatorControllerParameterType.Float)
+                        animator.SetFloat("MoveY", yFloat);
+                    break;
+                }
+            }
         }
     }
 
@@ -60,6 +78,13 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // Chú ý: thêm điều kiện dừng di chuyển nếu Shop UI hoặc Kho Vũ Khí (Weapon Vault) đang mở
+        if ((ShopUIController.Instance != null && ShopUIController.Instance.IsShopOpen()) ||
+            (WeaponVaultUIController.Instance != null && WeaponVaultUIController.Instance.IsVaultOpen()))
+        {
+            return;
+        }
+
         if (rb2d != null)
         {
             rb2d.MovePosition(rb2d.position + moveInput.normalized * moveSpeed * Time.fixedDeltaTime);

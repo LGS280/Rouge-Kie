@@ -1,23 +1,35 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class WeaponChest : MonoBehaviour
 {
-    [Header("Visual Components")]
-    public GameObject body;      // Body (thân rương)
-    public GameObject top;       // Top (nắp rương)
-    public GameObject inside;    // Inside (lòng rương hiển thị khi mở)
+    [Header("thành phần của rương")]
+    public GameObject body;
+    public GameObject top;
+    public GameObject inside;
 
-    [Header("Loot Configuration")]
-    public GameObject[] weaponPrefabs;      // Danh sách các súng để random khi mở
+    [Header("cấu hình vật phẩm trong rương")]
+    public GameObject[] weaponPrefabs;
+
+    [Header("Network Identity")]
+    public string chestId = "";
 
     private bool isOpened = false;
     private bool isPlayerInRange = false;
     private TextMesh promptText;
 
+    private void Awake()
+    {
+        if (string.IsNullOrEmpty(chestId))
+        {
+            chestId = $"chest_{Mathf.RoundToInt(transform.position.x)}_{Mathf.RoundToInt(transform.position.y)}";
+        }
+    }
+
     private void Start()
     {
-        // 1. Tự động sửa lỗi liên kết ở Runtime (Self-healing)
+
         if (body == null)
         {
             Transform bodyTrans = transform.Find("Body");
@@ -36,10 +48,8 @@ public class WeaponChest : MonoBehaviour
             if (insideTrans != null) inside = insideTrans.gameObject;
         }
 
-        // 2. Ép cứng Sorting Order để rương hiển thị đúng đè lớp
         EnforceSortingOrders();
 
-        // 3. Tạo chữ hướng dẫn tương tác bay phía trên
         CreatePromptText();
     }
 
@@ -68,12 +78,12 @@ public class WeaponChest : MonoBehaviour
     {
         GameObject textObj = new GameObject("PromptText");
         textObj.transform.SetParent(transform);
-        textObj.transform.localPosition = new Vector3(0f, 0.9f, 0f); // Phía trên nắp rương
+        textObj.transform.localPosition = new Vector3(0f, 0.95f, 0f);
 
         promptText = textObj.AddComponent<TextMesh>();
-        promptText.text = ""; // Không hiện tiêu đề rương ban đầu như yêu cầu
-        promptText.fontSize = 24;
-        promptText.characterSize = 0.05f;
+        promptText.text = "";
+        promptText.fontSize = 32;
+        promptText.characterSize = 0.07f;
         promptText.anchor = TextAnchor.MiddleCenter;
         promptText.alignment = TextAlignment.Center;
         promptText.color = Color.green;
@@ -81,7 +91,7 @@ public class WeaponChest : MonoBehaviour
         MeshRenderer mr = textObj.GetComponent<MeshRenderer>();
         if (mr != null)
         {
-            mr.sortingOrder = 7;
+            mr.sortingOrder = 10;
         }
     }
 
@@ -91,28 +101,27 @@ public class WeaponChest : MonoBehaviour
 
         if (isPlayerInRange)
         {
-            // Cập nhật text động tùy theo thiết bị đang sử dụng
+
             if (promptText != null)
             {
                 if (InputDeviceHelper.IsGamepadActive())
                 {
-                    promptText.text = "Nút B";
+                    promptText.text = "Press B";
                 }
                 else
                 {
-                    promptText.text = "Bấm E";
+                    promptText.text = "Press E";
                 }
                 promptText.color = Color.green;
             }
 
             bool hasPressedOpenKey = false;
 
-            // Bàn phím bấm E
             if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
             {
                 hasPressedOpenKey = true;
             }
-            // Tay cầm bấm B (buttonEast)
+
             else if (Gamepad.current != null && Gamepad.current.bButton.wasPressedThisFrame)
             {
                 hasPressedOpenKey = true;
@@ -128,33 +137,140 @@ public class WeaponChest : MonoBehaviour
     public void OpenChest()
     {
         if (isOpened) return;
+
+        // 1. Chọn loại súng ngẫu nhiên theo độ hiếm
+        #if UNITY_EDITOR
+        if (weaponPrefabs == null || weaponPrefabs.Length == 0)
+        {
+            string folderPath = "Assets/Prefab/Weapons";
+            if (System.IO.Directory.Exists(folderPath))
+            {
+                string[] files = System.IO.Directory.GetFiles(folderPath, "*.prefab");
+                System.Collections.Generic.List<GameObject> list = new System.Collections.Generic.List<GameObject>();
+                foreach (string file in files)
+                {
+                    if (file.Contains("GroundWeapon")) continue;
+                    GameObject prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(file);
+                    if (prefab != null) list.Add(prefab);
+                }
+                weaponPrefabs = list.ToArray();
+            }
+        }
+        #endif
+
+        GameObject randomWeaponPrefab = null;
+        if (weaponPrefabs != null && weaponPrefabs.Length > 0)
+        {
+            randomWeaponPrefab = SelectWeaponByRarity(weaponPrefabs);
+        }
+
+        string weaponName = (randomWeaponPrefab != null) ? randomWeaponPrefab.name.Replace("(Clone)", "").Trim() : "";
+        Vector3 spawnPos = transform.position + new Vector3(0.8f, 0f, 0f);
+
+        // 2. Nếu đang trong phòng Co-op: Phát sự kiện mở rương cho cả phòng
+        bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+        if (isMultiplayer)
+        {
+            NetworkManager.Instance.SendOpenChest(chestId, weaponName, spawnPos.x, spawnPos.y);
+        }
+
+        // 3. Mở rương cục bộ
+        ExecuteOpenChest(weaponName, spawnPos);
+    }
+
+    public void OpenChestFromNetwork(string weaponName, Vector3 spawnPos)
+    {
+        ExecuteOpenChest(weaponName, spawnPos);
+    }
+
+    private void ExecuteOpenChest(string weaponName, Vector3 spawnPos)
+    {
+        if (isOpened) return;
         isOpened = true;
 
-        // 1. Cập nhật hiển thị rương mở
         if (body != null) body.SetActive(true);
-        if (top != null) top.SetActive(false);
         if (inside != null) inside.SetActive(true);
 
-        // 2. Xóa chữ hướng dẫn
         if (promptText != null)
         {
             Destroy(promptText.gameObject);
         }
 
-        // 3. Sinh vũ khí ngẫu nhiên nằm yên trên sàn (lệch sang phải 0.8 unit)
-        SpawnWeaponLoot();
+        // Sinh súng rơi trên sàn với networkId cố định để đồng bộ nhặt đồ
+        GameObject weaponPrefab = null;
+        if (!string.IsNullOrEmpty(weaponName))
+        {
+            weaponPrefab = FindWeaponPrefabByName(weaponName);
+        }
 
-        // 4. Vô hiệu hóa vùng va chạm để không tương tác nữa
+        if (weaponPrefab != null)
+        {
+            string groundWeaponId = $"loot_{chestId}";
+            GroundWeapon.Create(weaponPrefab, spawnPos, groundWeaponId);
+        }
+
         Collider2D col = GetComponent<Collider2D>();
         if (col != null)
         {
             col.enabled = false;
         }
+
+        if (top != null)
+        {
+            StartCoroutine(AnimateTopChestOpen(top));
+        }
+    }
+
+    private GameObject FindWeaponPrefabByName(string weaponName)
+    {
+        if (weaponPrefabs != null)
+        {
+            foreach (var p in weaponPrefabs)
+            {
+                if (p != null && p.name == weaponName) return p;
+            }
+        }
+        if (WeaponManager.Instance != null)
+        {
+            return WeaponManager.Instance.FindWeaponPrefabByName(weaponName);
+        }
+        return null;
+    }
+
+    private IEnumerator AnimateTopChestOpen(GameObject topObj)
+    {
+        SpriteRenderer sr = topObj.GetComponent<SpriteRenderer>();
+        Vector3 startPos = topObj.transform.localPosition;
+        Vector3 targetPos = startPos + new Vector3(0f, 0.4f, 0f);
+
+        float duration = 0.55f;
+        float elapsed = 0f;
+
+        Color startColor = (sr != null) ? sr.color : Color.white;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+
+            topObj.transform.localPosition = Vector3.Lerp(startPos, targetPos, t);
+
+            if (sr != null)
+            {
+                Color c = startColor;
+                c.a = Mathf.Lerp(1f, 0f, t);
+                sr.color = c;
+            }
+
+            yield return null;
+        }
+
+        topObj.SetActive(false);
     }
 
     private void SpawnWeaponLoot()
     {
-        // DỰ PHÒNG EDITOR: Tự động nạp súng nếu mảng trống khi đang chạy trong Editor
+
 #if UNITY_EDITOR
         if (weaponPrefabs == null || weaponPrefabs.Length == 0)
         {
@@ -176,18 +292,70 @@ public class WeaponChest : MonoBehaviour
 
         if (weaponPrefabs == null || weaponPrefabs.Length == 0)
         {
-            Debug.LogWarning("[WeaponChest] Thiếu cấu hình weaponPrefabs!");
+
             return;
         }
 
-        // Chọn súng ngẫu nhiên
-        GameObject randomWeaponPrefab = weaponPrefabs[Random.Range(0, weaponPrefabs.Length)];
-        
-        // Sinh súng nằm yên trên sàn (không cần GroundWeapon prefab), lệch phải 0.8 unit để không đè lên rương
+        GameObject randomWeaponPrefab = SelectWeaponByRarity(weaponPrefabs);
+
         Vector3 spawnPos = transform.position + new Vector3(0.8f, 0f, 0f);
         GroundWeapon.Create(randomWeaponPrefab, spawnPos);
 
-        Debug.Log($"[WeaponChest] Đã mở rương vũ khí! Sinh súng: {randomWeaponPrefab.name} tại {spawnPos}");
+    }
+
+    private GameObject SelectWeaponByRarity(GameObject[] prefabs)
+    {
+        float totalWeight = 0f;
+        float[] weights = new float[prefabs.Length];
+
+        for (int i = 0; i < prefabs.Length; i++)
+        {
+            float weight = 40f;
+            GameObject p = prefabs[i];
+
+            if (p != null)
+            {
+                string pName = p.name.Replace("(Clone)", "").Trim();
+                if (GameConfigManager.Instance != null && GameConfigManager.Instance.WeaponDbByName.TryGetValue(pName, out WeaponConfig config))
+                {
+                    if (!string.IsNullOrEmpty(config.rarity))
+                    {
+                        switch (config.rarity.Trim().ToLower())
+                        {
+                            case "common":
+                                weight = 50f;
+                                break;
+                            case "rare":
+                                weight = 30f;
+                                break;
+                            case "epic":
+                                weight = 15f;
+                                break;
+                            case "legendary":
+                                weight = 5f;
+                                break;
+                        }
+                    }
+                }
+            }
+
+            weights[i] = weight;
+            totalWeight += weight;
+        }
+
+        float randomRoll = Random.Range(0f, totalWeight);
+        float currentSum = 0f;
+
+        for (int i = 0; i < prefabs.Length; i++)
+        {
+            currentSum += weights[i];
+            if (randomRoll <= currentSum)
+            {
+                return prefabs[i];
+            }
+        }
+
+        return prefabs[Random.Range(0, prefabs.Length)];
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -208,7 +376,6 @@ public class WeaponChest : MonoBehaviour
         {
             isPlayerInRange = false;
 
-            // Xóa text tương tác khi đi xa
             if (promptText != null)
             {
                 promptText.text = "";
@@ -216,26 +383,4 @@ public class WeaponChest : MonoBehaviour
         }
     }
 
-#if UNITY_EDITOR
-    private void OnValidate()
-    {
-        string folderPath = "Assets/Prefab/Weapons";
-        if (System.IO.Directory.Exists(folderPath))
-        {
-            string[] files = System.IO.Directory.GetFiles(folderPath, "*.prefab");
-            System.Collections.Generic.List<GameObject> list = new System.Collections.Generic.List<GameObject>();
-            foreach (string file in files)
-            {
-                if (file.Contains("GroundWeapon")) continue;
-                GameObject prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(file);
-                if (prefab != null)
-                {
-                    list.Add(prefab);
-                }
-            }
-            weaponPrefabs = list.ToArray();
-            UnityEditor.EditorUtility.SetDirty(this);
-        }
-    }
-#endif
 }

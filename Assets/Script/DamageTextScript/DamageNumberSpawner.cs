@@ -12,7 +12,7 @@ public class DamageNumberSpawner : MonoBehaviour
             damageNumberPrefab = Resources.Load<GameObject>("DamageText 1");
     }
 
-    public void Spawn(Vector3 position, int damage, bool isCrit = false)
+    public DamageNumber Spawn(Vector3 position, int damage, bool isCrit = false)
     {
         Debug.Log("Spawn called: damage=" + damage + " isCrit=" + isCrit);
         Vector3 offset = new Vector3(Random.Range(-0.4f, 0.4f), 1f, 0f);
@@ -20,5 +20,6 @@ public class DamageNumberSpawner : MonoBehaviour
         DamageNumber dn = obj.GetComponent<DamageNumber>();
         Debug.Log("DamageNumber component: " + dn);
         if (dn != null) dn.Setup(damage, isCrit);
+        return dn;
     }
 }

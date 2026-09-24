@@ -52,8 +52,8 @@ MonoBehaviour:
   body: {fileID: 6464931990546401849}
   top: {fileID: 5160866273079798963}
   inside: {fileID: 8076257812437331800}
-  coinPrefab: {fileID: 0}
-  manaPrefab: {fileID: 0}
+  coinPrefab: {fileID: 499877432794843320, guid: 37ed24bef8ff4eb4aa62a61cda0fdad4, type: 3}
+  manaPrefab: {fileID: 5135757895966900724, guid: cc04880d9ca75264a8c00200bb996385, type: 3}
   minGold: 3
   maxGold: 4
   minMana: 3

@@ -6,7 +6,8 @@ public enum RoomType
     Normal, // Phòng thường có quái
     Start,  // Phòng xuất phát (Home)
     Boss,   // Phòng Boss
-    Chest   // Phòng rương báu
+    Chest,  // Phòng rương báu
+    Portal  // Phòng Cổng Dịch Chuyển (phòng trống dành riêng cho Portal qua tầng)
 }
 
 public class RoomController : MonoBehaviour
@@ -21,7 +22,7 @@ public class RoomController : MonoBehaviour
     public bool roomCleared = false;
     public bool roomStarted = false;
     private Transform currentPlayer;
-    private bool chestSpawned = false;
+    [HideInInspector] public bool chestSpawned = false;
     
     [Header("Reward Chest Prefab")]
     public GameObject chestPrefab;
@@ -108,6 +109,24 @@ public class RoomController : MonoBehaviour
         if (roomCleared || roomStarted)
             return;
 
+        // KIỂM TRA AN TOÀN: Chỉ bắt đầu combat nếu người chơi thực sự đã bước vào trong phòng.
+        // Việc này tránh trường hợp người chơi đứng ở hành lang chạm nhẹ vào trigger cửa làm sập cửa sớm.
+        if (currentPlayer == null)
+        {
+            GameObject pObj = GameObject.FindWithTag("Player");
+            if (pObj != null) currentPlayer = pObj.transform;
+        }
+
+        if (currentPlayer != null && RoomCollider != null)
+        {
+            Bounds bounds = RoomCollider.bounds;
+            bounds.Expand(0.8f); // Mở rộng biên an toàn 0.8 unit để bao phủ cả mép trong của cửa
+            if (!bounds.Contains(currentPlayer.position))
+            {
+                return; // Chưa bước vào phòng, bỏ qua đóng cửa
+            }
+        }
+
         bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
 
         if (GetAliveMobCount() <= 0)
@@ -162,6 +181,7 @@ public class RoomController : MonoBehaviour
     {
         roomCleared = true;
         roomStarted = false;
+        CollectDoorsNearRoom();
         OpenDoors();
 
         if (RunStatsTracker.Instance != null)
@@ -175,30 +195,238 @@ public class RoomController : MonoBehaviour
             MinimapManager.Instance.OnRoomCleared(this);
         }
 
-        // Sinh rương thưởng khi dọn sạch phòng quái (Bỏ qua phòng xuất phát Start)
-        if (roomType != RoomType.Start && !chestSpawned)
+        // Sinh rương thưởng khi dọn sạch phòng quái (Bỏ qua phòng xuất phát Start và phòng Portal)
+        if (roomType != RoomType.Start && roomType != RoomType.Portal && !chestSpawned)
         {
             chestSpawned = true;
-            SpawnRewardChest(spawnPosition);
+            Vector3 chestPos = spawnPosition;
+            SpawnRewardChest(chestPos);
         }
+
+        // BỔ SUNG: Nếu đây là phòng Boss hoặc phòng Portal, tự động đảm bảo Cổng Dịch Chuyển xuất hiện
+        if (roomType == RoomType.Boss || roomType == RoomType.Portal)
+        {
+            EnsureTeleportPortalExists();
+        }
+    }
+
+    /// <summary>
+    /// Tự động đảm bảo Cổng Dịch Chuyển tồn tại tại tâm phòng Portal (hoặc phòng Boss) khi hạ gục Miniboss
+    /// </summary>
+    public void EnsureTeleportPortalExists()
+    {
+        if (GameObject.Find("TeleportPortal") != null) return;
+
+        RoomController[] allRooms = FindObjectsByType<RoomController>(FindObjectsSortMode.None);
+        RoomController portalRoom = null;
+        foreach (var r in allRooms)
+        {
+            if (r.roomType == RoomType.Portal)
+            {
+                portalRoom = r;
+                break;
+            }
+        }
+
+        if (portalRoom != null)
+        {
+            portalRoom.SpawnTeleportPortal();
+        }
+        else
+        {
+            SpawnTeleportPortal();
+        }
+    }
+
+    /// <summary>
+    /// Sinh cổng dịch chuyển mượt mà tại tâm phòng
+    /// </summary>
+    public void SpawnTeleportPortal()
+    {
+        // 0. Hủy bỏ tất cả các cổng cũ trong Scene trước khi tạo cổng mới tại tầng hiện tại
+        TeleportPortal[] oldPortals = Object.FindObjectsByType<TeleportPortal>(FindObjectsSortMode.None);
+        foreach (var p in oldPortals)
+        {
+            if (p != null && p.gameObject != null)
+            {
+                if (Application.isPlaying) Destroy(p.gameObject);
+                else DestroyImmediate(p.gameObject);
+            }
+        }
+
+        Debug.Log($"[RoomController] Đang khởi tạo cổng dịch chuyển mới tại phòng {gameObject.name}");
+
+        // 1. Tạo GameObject Portal mới
+        GameObject portalObj = new GameObject("TeleportPortal");
+        portalObj.transform.position = transform.position; // Đặt tại tâm phòng
+
+        // 2. Thêm SpriteRenderer và tạo Texture Cổng Xanh Cyan phát sáng rực rỡ 64x64
+        SpriteRenderer renderer = portalObj.AddComponent<SpriteRenderer>();
+
+        Texture2D portalTex = new Texture2D(64, 64);
+        Color cyanCore = new Color(0f, 1f, 1f, 0.95f);
+        Color cyanEdge = new Color(0f, 0.5f, 0.9f, 0.3f);
+        for (int y = 0; y < 64; y++)
+        {
+            for (int x = 0; x < 64; x++)
+            {
+                float dist = Vector2.Distance(new Vector2(x, y), new Vector2(31.5f, 31.5f));
+                if (dist <= 30f)
+                {
+                    float alpha = Mathf.Clamp01(1f - (dist / 30f));
+                    portalTex.SetPixel(x, y, Color.Lerp(cyanCore, cyanEdge, dist / 30f) * alpha);
+                }
+                else
+                {
+                    portalTex.SetPixel(x, y, Color.clear);
+                }
+            }
+        }
+        portalTex.Apply();
+
+        renderer.sprite = Sprite.Create(portalTex, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f), 32f);
+        renderer.sortingLayerName = "Default";
+        renderer.sortingOrder = 25; // Nổi hoàn toàn trên tất cả gạch sàn Tilemap
+        portalObj.transform.localScale = new Vector3(2.5f, 2.5f, 1f);
+
+        // 3. Thêm Collider 2D làm vùng va chạm Trigger
+        CircleCollider2D col = portalObj.AddComponent<CircleCollider2D>();
+        col.isTrigger = true;
+        col.radius = 0.5f;
+
+        // 4. Gắn script quản lý chuyển tiếp
+        portalObj.AddComponent<TeleportPortal>();
     }
 
     private void SpawnRewardChest(Vector3 spawnPosition)
     {
         if (chestPrefab != null)
         {
-            // Sinh rương tại vị trí chỉ định (ví dụ vị trí quái cuối cùng chết)
-            GameObject chestObj = Instantiate(chestPrefab, spawnPosition, Quaternion.identity);
+            // Tìm vị trí an toàn không bị kẹt hoặc đè bởi vật thể/tường
+            Vector3 safePos = GetSafeChestSpawnPosition(spawnPosition);
+            GameObject chestObj = Instantiate(chestPrefab, safePos, Quaternion.identity);
             
             // Đặt làm con của Room để quản lý phân cấp gọn gàng
             chestObj.transform.SetParent(transform);
             
-            Debug.Log($"[RoomController] Đã sinh Rương Thưởng tại vị trí {spawnPosition} ở phòng {gameObject.name}");
+            Debug.Log($"[RoomController] Đã sinh Rương Thưởng tại vị trí an toàn {safePos} ở phòng {gameObject.name}");
         }
         else
         {
             Debug.LogWarning($"[RoomController] Chưa gán chestPrefab cho RoomController tại phòng {gameObject.name}. Vui lòng kéo thả vào Map_Generator.");
         }
+    }
+
+    /// <summary>
+    /// Tìm vị trí an toàn tuyệt đối để sinh Rương thưởng trong phòng (không dính tường, không bị vật cản đè lên, không bị kẹt)
+    /// </summary>
+    public Vector3 GetSafeChestSpawnPosition(Vector3 targetPos)
+    {
+        // 1. Nếu phòng có Collider, lấy ranh giới phòng an toàn (lùi vào 1.5 unit từ biên ngoài)
+        Bounds roomBounds = (RoomCollider != null) ? RoomCollider.bounds : new Bounds(transform.position, new Vector3(10f, 10f, 0f));
+        Vector3 roomCenter = roomBounds.center;
+
+        // Giới hạn biên an toàn tối đa bên trong phòng
+        float minX = roomBounds.min.x + 1.5f;
+        float maxX = roomBounds.max.x - 1.5f;
+        float minY = roomBounds.min.y + 1.5f;
+        float maxY = roomBounds.max.y - 1.5f;
+
+        // Clamp vị trí ban đầu nằm gọn trong phòng
+        Vector3 clampedPos = new Vector3(
+            Mathf.Clamp(targetPos.x, minX, maxX),
+            Mathf.Clamp(targetPos.y, minY, maxY),
+            targetPos.z
+        );
+
+        // 2. Kiểm tra xem vị trí ban đầu có hoàn toàn an toàn hay không
+        if (IsPositionSafeForChest(clampedPos))
+        {
+            return clampedPos;
+        }
+
+        // 3. Nếu vị trí ban đầu dính vật cản/tường, tiến hành tìm kiếm theo bán kính xoắn ốc (Spiral/Ring search)
+        float[] searchDistances = new float[] { 0.5f, 1.0f, 1.5f, 2.0f, 2.5f, 3.0f, 3.5f, 4.0f };
+        Vector2[] directions = new Vector2[]
+        {
+            Vector2.up, Vector2.down, Vector2.left, Vector2.right,
+            new Vector2(0.707f, 0.707f), new Vector2(-0.707f, 0.707f),
+            new Vector2(0.707f, -0.707f), new Vector2(-0.707f, -0.707f)
+        };
+
+        // Tìm từ vị trí quái chết trước
+        foreach (float dist in searchDistances)
+        {
+            foreach (Vector2 dir in directions)
+            {
+                Vector3 candidate = clampedPos + (Vector3)(dir * dist);
+                candidate.x = Mathf.Clamp(candidate.x, minX, maxX);
+                candidate.y = Mathf.Clamp(candidate.y, minY, maxY);
+
+                if (IsPositionSafeForChest(candidate))
+                {
+                    return candidate;
+                }
+            }
+        }
+
+        // 4. Nếu vị trí quanh quái chết đều dính vật cản, tìm từ tâm phòng (roomCenter)
+        if (IsPositionSafeForChest(roomCenter))
+        {
+            return roomCenter;
+        }
+
+        foreach (float dist in searchDistances)
+        {
+            foreach (Vector2 dir in directions)
+            {
+                Vector3 candidate = roomCenter + (Vector3)(dir * dist);
+                candidate.x = Mathf.Clamp(candidate.x, minX, maxX);
+                candidate.y = Mathf.Clamp(candidate.y, minY, maxY);
+
+                if (IsPositionSafeForChest(candidate))
+                {
+                    return candidate;
+                }
+            }
+        }
+
+        // Fallback cuối cùng: Trả về tâm phòng
+        return roomCenter;
+    }
+
+    /// <summary>
+    /// Kiểm tra vị trí chỉ định có bị dính tường, dính Tilemap vật cản hoặc bị đè bởi Collider vật cản không
+    /// </summary>
+    private bool IsPositionSafeForChest(Vector3 pos)
+    {
+        // 1. Kiểm tra Tilemap vật cản / tường của DungeonGenerator
+        DungeonGenerator generator = FindAnyObjectByType<DungeonGenerator>();
+        if (generator != null)
+        {
+            Vector3Int cellPos = (generator.floorTilemap != null) ? generator.floorTilemap.WorldToCell(pos) : Vector3Int.FloorToInt(pos);
+
+            // Nếu ô trùng tường hoặc trùng vật cản đá -> Không an toàn
+            if (generator.wallTilemap != null && generator.wallTilemap.HasTile(cellPos)) return false;
+            if (generator.obstacleTilemap != null && generator.obstacleTilemap.HasTile(cellPos)) return false;
+        }
+
+        // 2. Kiểm tra va chạm Physics2D xung quanh vị trí rương (bán kính 0.6 unit)
+        // Tìm xem có Collider nào thuộc vật thể (Obstacle/Wall) che chắn không
+        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(pos, 0.6f);
+        foreach (var col in hitColliders)
+        {
+            if (col == null || col.isTrigger) continue;
+
+            // Nếu trúng Collider của tường/vật cản/cửa -> Không an toàn
+            string cName = col.name;
+            if (cName.Contains("Door") || cName.Contains("Obstacle") || cName.Contains("Pillar") || cName.Contains("Wall") || cName.Contains("Tilemap"))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private void PushPlayerInsideRoom()
@@ -225,6 +453,20 @@ public class RoomController : MonoBehaviour
                 if (mobAI != null)
                 {
                     mobAI.ActivateMob();
+                }
+
+                IBossAI bossAI = mob.GetComponent<IBossAI>();
+                if (bossAI != null)
+                {
+                    bossAI.ActivateMob();
+                }
+                else
+                {
+                    MelogBossAI melogBossAI = mob.GetComponent<MelogBossAI>();
+                    if (melogBossAI != null)
+                    {
+                        melogBossAI.ActivateMob();
+                    }
                 }
             }
         }

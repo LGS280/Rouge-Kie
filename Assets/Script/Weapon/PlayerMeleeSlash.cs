@@ -2,7 +2,7 @@
 
 public class PlayerMeleeSlash : MonoBehaviour
 {
-    [Header("XỬ LÝ CẬN CHIẾN")]
+    [Header("xử lý cận chiến")]
     public GameObject meleeSlashPrefab;
     public float meleeRadius = 3f;
     public float meleeCooldown = 0.3f;

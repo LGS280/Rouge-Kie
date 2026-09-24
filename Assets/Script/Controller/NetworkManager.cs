@@ -6,7 +6,24 @@ using UnityEngine;
 
 public class NetworkManager : MonoBehaviour
 {
-    public static NetworkManager Instance { get; private set; }
+    private static NetworkManager _instance;
+    public static NetworkManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindAnyObjectByType<NetworkManager>();
+                if (_instance == null)
+                {
+                    GameObject go = new GameObject("NetworkManager");
+                    _instance = go.AddComponent<NetworkManager>();
+                }
+            }
+            return _instance;
+        }
+        private set => _instance = value;
+    }
 
     [Header("Server Connection Settings")]
     [SerializeField] private string serverUrl = "http://localhost:5000/gamehub";
@@ -25,12 +42,23 @@ public class NetworkManager : MonoBehaviour
     public event System.Action<string, float> OnRemoteEnemyDamaged;
     public event System.Action<string, float, float, float> OnReceiveWeaponAngle;
 
+    [System.Serializable]
+    public class PublicRoomInfo
+    {
+        public string roomCode { get; set; } = string.Empty;
+        public string hostName { get; set; } = "Host";
+        public int currentPlayers { get; set; } = 1;
+        public int maxPlayers { get; set; } = 4;
+        public bool isGameStarted { get; set; } = false;
+    }
+
     // --- CÁC SỰ KIỆN C# ĐỂ LỚP UI & SYNC MANAGER LẮNG NGHE ---
     public event Action<string> OnRoomCreated;
     public event Action<string, List<string>> OnJoinRoomSuccess;
     public event Action<string> OnJoinRoomFailed;
     public event Action<string, string> OnPlayerJoined;
     public event Action<string, string> OnPlayerDisconnected;
+    public event Action<List<PublicRoomInfo>> OnReceivePublicRooms;
 
     // Sự kiện đồng bộ vị trí (Đồng đội gọi)
     public event Action<string, float, float> OnReceivePosition;
@@ -43,16 +71,60 @@ public class NetworkManager : MonoBehaviour
     public event Action<string> OnRoomClearedFromServer;          // roomId
     public event Action<string, float, float> OnReceiveEnemyPosition; // enemyId, x, y
 
+    // BỔ SUNG: Sự kiện đồng bộ chuyển tầng hầm ngục Co-op giữa các máy trong phòng
+    public event Action<int> OnFloorTransitionSynced;
+
+    // BỔ SUNG: Sự kiện đồng bộ loại súng chính và súng phụ Remote Player đang cầm (connId, activeWeaponName, secondaryWeaponName)
+    public event Action<string, string, string> OnRemoteWeaponChanged;
+
+    // BỔ SUNG: Sự kiện đồng bộ phòng đã mở trên Minimap cho đồng đội
+    public event Action<string> OnRemoteRoomVisited;
+
+    // BỔ SUNG: Sự kiện đồng bộ sát thương quái đánh trúng người chơi qua mạng (targetConnId, damage)
+    public event Action<string, float> OnPlayerDamaged;
+
+    // BỔ SUNG: Sự kiện đồng bộ khi đồng đội hy sinh (connId)
+    public event Action<string> OnRemotePlayerDied;
+
+    // BỔ SUNG: Sự kiện đồng bộ khi tất cả thành viên trong phòng Co-op đều đã hy sinh
+    public event Action OnTeamDefeat;
+
+    // BỔ SUNG: Sự kiện đồng bộ khi người chơi được hồi sinh (targetConnId, reviveHp)
+    public event Action<string, int> OnPlayerRevived;
+
+    // BỔ SUNG: Sự kiện đồng bộ khi Host ngắt kết nối/out game (hostName)
+    public event Action<string> OnHostDisconnectedEndGame;
+
+    // BỔ SUNG: Sự kiện đồng bộ mở rương vũ khí dùng chung (chestId, weaponName, spawnX, spawnY)
+    public event Action<string, string, float, float> OnChestOpened;
+
+    // BỔ SUNG: Sự kiện đồng bộ nhặt vũ khí rơi trên sàn (groundWeaponId)
+    public event Action<string> OnGroundWeaponPickedUp;
+
+    // BỔ SUNG: Sự kiện đồng bộ khi người chơi vứt vũ khí cũ ra sàn (weaponName, posX, posY, groundWeaponId)
+    public event Action<string, float, float, string> OnWeaponDropped;
+
+    // BỔ SUNG: Sự kiện đồng bộ khi Boss xả đạn (bossId, targetX, targetY)
+    public event Action<string, float, float> OnBossAttack;
+
+    // BỔ SUNG: Sự kiện đồng bộ thứ tự người chơi toàn cục trong phòng (Global Player Slot Order)
+    public event Action<List<string>> OnSyncPlayerOrder;
+
+    public List<string> OrderedRoomPlayerIds { get; private set; } = new List<string>();
+
     public string MyConnectionId => hubConnection?.ConnectionId;
 
     // QUYỀN HẠN TRONG TRẬN: Sẽ được Server định đoạt khi tạo hoặc vào phòng thành công
     public string UserRole = "Guest";
 
+    // QUYỀN HẠN TÀI KHOẢN (Developer, Admin, User, etc.)
+    public string AccountRole = "User";
+
     private void Awake()
     {
-        if (Instance == null)
+        if (_instance == null)
         {
-            Instance = this;
+            _instance = this;
             DontDestroyOnLoad(gameObject);
             unityContext = SynchronizationContext.Current;
 
@@ -63,11 +135,12 @@ public class NetworkManager : MonoBehaviour
             {
                 IsLoggedIn = true;
                 LoggedInUsername = savedUsername;
+                AccountRole = PlayerPrefs.GetString("account_role", "User");
                 UserRole = "Player";
-                Debug.Log($"[NetworkManager] Tự động đăng nhập người dùng: {LoggedInUsername}");
+                Debug.Log($"[NetworkManager] Tự động đăng nhập người dùng: {LoggedInUsername} (Role: {AccountRole})");
             }
         }
-        else
+        else if (_instance != this)
         {
             Destroy(gameObject);
         }
@@ -93,9 +166,25 @@ public class NetworkManager : MonoBehaviour
         {
             CurrentRoomId = roomCode;
             UserRole = isHost ? "Host" : "Client";
+            OrderedRoomPlayerIds.Clear();
+            if (!string.IsNullOrEmpty(MyConnectionId))
+            {
+                OrderedRoomPlayerIds.Add(MyConnectionId);
+            }
             Debug.Log($"Đã tạo phòng thành công! RoomCode: {roomCode} | Quyền của bạn: {UserRole}");
 
             unityContext.Post(_ => OnRoomCreated?.Invoke(roomCode), null);
+        });
+
+        // BỔ SUNG: Lắng nghe danh sách thứ tự người chơi cố định từ Server (Global Player Slot Order)
+        hubConnection.On<List<string>>("OnSyncPlayerOrder", (orderedIds) =>
+        {
+            if (orderedIds != null)
+            {
+                OrderedRoomPlayerIds = new List<string>(orderedIds);
+                Debug.Log($"[NetworkManager] Đã đồng bộ thứ tự {OrderedRoomPlayerIds.Count} người chơi trong phòng: {string.Join(", ", OrderedRoomPlayerIds)}");
+            }
+            unityContext.Post(_ => OnSyncPlayerOrder?.Invoke(orderedIds), null);
         });
 
         // CẬP NHẬT CÁCH 1: Hứng thêm biến bool isHost từ Server gửi về khi vào phòng thành công
@@ -146,6 +235,84 @@ public class NetworkManager : MonoBehaviour
             unityContext.Post(_ => OnRoomClearedFromServer?.Invoke(roomId), null);
         });
 
+        // BỔ SUNG: Lắng nghe sự kiện đồng bộ chuyển tầng từ Server phát xuống
+        hubConnection.On<int>("OnFloorTransitionSynced", (targetFloor) =>
+        {
+            unityContext.Post(_ => OnFloorTransitionSynced?.Invoke(targetFloor), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện đổi súng của đồng đội từ Server phát xuống
+        hubConnection.On<string, string, string>("OnRemoteWeaponChanged", (connId, activeName, secondaryName) =>
+        {
+            unityContext.Post(_ => OnRemoteWeaponChanged?.Invoke(connId, activeName, secondaryName), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện đồng bộ phòng mở trên Minimap từ đồng đội
+        hubConnection.On<string>("OnRemoteRoomVisited", (roomUniqueId) =>
+        {
+            unityContext.Post(_ => OnRemoteRoomVisited?.Invoke(roomUniqueId), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện đồng bộ sát thương quái đánh trúng người chơi từ Server
+        hubConnection.On<string, float>("OnPlayerDamaged", (targetConnId, damage) =>
+        {
+            unityContext.Post(_ => OnPlayerDamaged?.Invoke(targetConnId, damage), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện đồng bộ người chơi hy sinh từ Server
+        hubConnection.On<string>("OnRemotePlayerDied", (connId) =>
+        {
+            unityContext.Post(_ => OnRemotePlayerDied?.Invoke(connId), null);
+        });
+
+        hubConnection.On("OnTeamDefeat", () =>
+        {
+            unityContext.Post(_ => OnTeamDefeat?.Invoke(), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện đồng bộ người chơi được hồi sinh từ đồng đội
+        hubConnection.On<string, int>("OnPlayerRevived", (connId, reviveHp) =>
+        {
+            unityContext.Post(_ => OnPlayerRevived?.Invoke(connId, reviveHp), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện Host ngắt kết nối/out game
+        hubConnection.On<string>("OnHostDisconnectedEndGame", (hostName) =>
+        {
+            unityContext.Post(_ => OnHostDisconnectedEndGame?.Invoke(hostName), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện mở rương vũ khí dùng chung từ Server
+        hubConnection.On<string, string, float, float>("OnChestOpened", (chestId, weaponName, spawnX, spawnY) =>
+        {
+            unityContext.Post(_ => OnChestOpened?.Invoke(chestId, weaponName, spawnX, spawnY), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện nhặt vũ khí rơi trên sàn từ Server
+        hubConnection.On<string>("OnGroundWeaponPickedUp", (groundWeaponId) =>
+        {
+            unityContext.Post(_ => OnGroundWeaponPickedUp?.Invoke(groundWeaponId), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện vứt vũ khí cũ ra sàn từ đồng đội
+        hubConnection.On<string, float, float, string>("OnWeaponDropped", (weaponName, posX, posY, groundWeaponId) =>
+        {
+            unityContext.Post(_ => OnWeaponDropped?.Invoke(weaponName, posX, posY, groundWeaponId), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện Boss tấn công (xả đạn) từ Server
+        hubConnection.On<string, float, float>("OnBossAttack", (bossId, targetX, targetY) =>
+        {
+            unityContext.Post(_ => OnBossAttack?.Invoke(bossId, targetX, targetY), null);
+        });
+
+        // BỔ SUNG: Lắng nghe danh sách phòng từ Server trả về
+        hubConnection.On<List<PublicRoomInfo>>("OnReceivePublicRooms", (rooms) =>
+        {
+            Debug.Log($"[NetworkManager] Nhận được danh sách phòng từ Server: {(rooms != null ? rooms.Count : 0)} phòng.");
+            unityContext.Post(_ => OnReceivePublicRooms?.Invoke(rooms), null);
+        });
+
         // Gọi hàm đăng ký các sự kiện Combat mạng
         RegisterCombatCallbacks();
 
@@ -162,38 +329,157 @@ public class NetworkManager : MonoBehaviour
 
     // --- CÁC HÀM GỬI LỆNH LÊN SERVER ---
 
+    public async void RequestGetPublicRooms()
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("GetPublicRooms");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] RequestGetPublicRooms gián đoạn: {ex.Message}");
+        }
+    }
+
+    public async void RequestLeaveRoom()
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("LeaveRoom");
+            }
+            OrderedRoomPlayerIds.Clear();
+            CurrentRoomId = null;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] RequestLeaveRoom gián đoạn: {ex.Message}");
+        }
+    }
+
     public async void RequestCreateRoom(string username)
     {
-        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        try
         {
-            await hubConnection.InvokeAsync("CreateRoom", username);
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("CreateRoom", username);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] RequestCreateRoom gián đoạn: {ex.Message}");
         }
     }
 
     public async void RequestJoinRoom(string roomCode, string username)
     {
-        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        try
         {
-            await hubConnection.InvokeAsync("JoinRoom", roomCode, username);
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("JoinRoom", roomCode, username);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] RequestJoinRoom gián đoạn: {ex.Message}");
         }
     }
 
     // Hàm gửi tọa độ di chuyển của người chơi cục bộ lên Server
     public async void SendPlayerPosition(float x, float y)
     {
-        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        try
         {
-            await hubConnection.InvokeAsync("SyncPosition", x, y);
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("SyncPosition", x, y);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Bắt ngoại lệ khi ngắt kết nối/reconnect tạm thời, tránh văng lỗi lên Unity SynchronizationContext
+            Debug.LogWarning($"[NetworkManager] SendPlayerPosition tạm thời bị gián đoạn: {ex.Message}");
         }
     }
 
     // Hàm gửi yêu cầu bắt đầu game lên Server (Chỉ Host gọi)
     public async void RequestStartGame()
     {
-        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        try
         {
-            await hubConnection.InvokeAsync("StartGame");
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("StartGame");
+            }
         }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] RequestStartGame gián đoạn: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Yêu cầu Server gửi lại danh sách thứ tự người chơi trong phòng (phục vụ đồng bộ màu khi load Scene)
+    /// </summary>
+    public async void RequestSyncPlayerOrder()
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("GetPlayerOrder");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] RequestSyncPlayerOrder gián đoạn: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Lấy chỉ số Slot người chơi toàn cục (0: Host / P1, 1: P2, 2: P3, 3: P4)
+    /// </summary>
+    public int GetPlayerSlotIndex(string connId)
+    {
+        if (string.IsNullOrEmpty(connId)) return 0;
+
+        int idx = OrderedRoomPlayerIds.IndexOf(connId);
+        if (idx >= 0) return idx;
+
+        // Fallback dự phòng nếu danh sách chưa kịp đồng bộ:
+        if (connId == MyConnectionId)
+        {
+            return UserRole == "Host" ? 0 : 1;
+        }
+
+        return 1;
+    }
+
+    /// <summary>
+    /// Lấy tổng số lượng người chơi thực tế trong phòng (Solo: 1, Co-op: số người chơi đang kết nối)
+    /// </summary>
+    public int GetCoopPlayerCount()
+    {
+        bool isMultiplayer = IsLoggedIn && !string.IsNullOrEmpty(CurrentRoomId);
+        if (!isMultiplayer) return 1;
+
+        if (OrderedRoomPlayerIds != null && OrderedRoomPlayerIds.Count > 0)
+        {
+            return Mathf.Max(1, OrderedRoomPlayerIds.Count);
+        }
+
+        if (MultiplayerSyncManager.Instance != null && MultiplayerSyncManager.Instance.remotePlayers != null)
+        {
+            return Mathf.Max(1, 1 + MultiplayerSyncManager.Instance.remotePlayers.Count);
+        }
+
+        return 2; // Dự phòng tối thiểu cho co-op nếu chưa nạp kịp danh sách
     }
 
     // CÁC PHƯƠNG THỨC GỬI SỰ KIỆN ROOM LÊN SERVER
@@ -201,19 +487,33 @@ public class NetworkManager : MonoBehaviour
     // Gọi khi có bất kỳ ai bước vào một phòng combat (Gửi vị trí người kích hoạt thay vì tâm phòng)
     public async void SendRoomCombatTrigger(string targetRoomId, Vector3 triggerPlayerPos)
     {
-        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        try
         {
-            // Gửi lên Hub: Match Room Id hiện tại, Unique Room Id tự sinh, và tọa độ người kích hoạt ngay cửa
-            await hubConnection.InvokeAsync("TriggerRoomCombat", CurrentRoomId, targetRoomId, triggerPlayerPos.x, triggerPlayerPos.y);
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                // Gửi lên Hub: Match Room Id hiện tại, Unique Room Id tự sinh, và tọa độ người kích hoạt ngay cửa
+                await hubConnection.InvokeAsync("TriggerRoomCombat", CurrentRoomId, targetRoomId, triggerPlayerPos.x, triggerPlayerPos.y);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendRoomCombatTrigger gián đoạn: {ex.Message}");
         }
     }
 
     // Gọi khi một phòng đã hết sạch quái
     public async void SendRoomClearedEvent(string targetRoomId)
     {
-        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        try
         {
-            await hubConnection.InvokeAsync("RegisterRoomCleared", CurrentRoomId, targetRoomId);
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("RegisterRoomCleared", CurrentRoomId, targetRoomId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendRoomClearedEvent gián đoạn: {ex.Message}");
         }
     }
 
@@ -270,33 +570,144 @@ public class NetworkManager : MonoBehaviour
 
     public async void SendShootEvent(string weaponId, Vector3 position, Vector3 direction)
     {
-        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        try
         {
-            await hubConnection.InvokeAsync("SendShoot", CurrentRoomId, weaponId, position.x, position.y, direction.x, direction.y);
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("SendShoot", CurrentRoomId, weaponId, position.x, position.y, direction.x, direction.y);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendShootEvent gián đoạn: {ex.Message}");
         }
     }
 
     public async void SendEnemyHitEvent(string roomId, string enemyId, float damage)
     {
-        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        try
         {
-            await hubConnection.InvokeAsync("RegisterEnemyHit", roomId, enemyId, damage);
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("RegisterEnemyHit", roomId, enemyId, damage);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendEnemyHitEvent gián đoạn: {ex.Message}");
         }
     }
 
     public async void SendWeaponAngle(float angle, float px, float py)
     {
-        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        try
         {
-            await hubConnection.InvokeAsync("SyncShoot", angle, px, py);
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("SyncShoot", angle, px, py);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendWeaponAngle gián đoạn: {ex.Message}");
         }
     }
 
     public async void SendEnemyPosition(string enemyId, float x, float y)
     {
-        if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+        try
         {
-            await hubConnection.InvokeAsync("SyncEnemyPosition", CurrentRoomId, enemyId, x, y);
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("SyncEnemyPosition", CurrentRoomId, enemyId, x, y);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendEnemyPosition gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi yêu cầu chuyển tầng đồng bộ tới toàn bộ người chơi trong phòng Co-op
+    public async void SendNextFloorRequest(int targetFloor)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("RequestNextFloor", CurrentRoomId, targetFloor);
+                Debug.Log($"[NetworkManager] Đã gửi yêu cầu chuyển sang Tầng {targetFloor} lên Server.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendNextFloorRequest gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi thông báo đổi súng chính và súng phụ hiển thị qua mạng tới các người chơi khác trong phòng
+    public async void SendEquippedWeapon(string activeWeaponName, string secondaryWeaponName)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncEquippedWeapon", CurrentRoomId, activeWeaponName, secondaryWeaponName);
+                Debug.Log($"[NetworkManager] Đã gửi thông báo đổi súng '{activeWeaponName}' & phụ '{secondaryWeaponName}' lên Server.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendEquippedWeapon gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi thông báo đã mở phòng trên Minimap tới các người chơi khác
+    public async void SendRoomVisited(string roomUniqueId)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncRoomVisited", CurrentRoomId, roomUniqueId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendRoomVisited gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi thông báo sát thương quái đánh trúng người chơi qua mạng
+    public async void SendPlayerDamaged(string targetConnId, float damage)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncPlayerDamaged", CurrentRoomId, targetConnId, damage);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendPlayerDamaged gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi thông báo người chơi hy sinh (Player Death) lên Server cho đồng đội
+    public async void SendPlayerDeath()
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncPlayerDeath", CurrentRoomId);
+                Debug.Log("[NetworkManager] Đã gửi thông báo Player Death lên Server.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendPlayerDeath gián đoạn: {ex.Message}");
         }
     }
 
@@ -318,6 +729,90 @@ public class NetworkManager : MonoBehaviour
             {
                 Debug.LogError($"[NetworkManager] Lỗi khi reconnect SignalR: {ex.Message}");
             }
+        }
+    }
+
+    // BỔ SUNG: Gửi lệnh Hồi Sinh đồng đội (SendPlayerRevive) qua SignalR
+    public async void SendPlayerRevive(string targetConnId, int reviveHp)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncPlayerRevive", CurrentRoomId, targetConnId, reviveHp);
+                Debug.Log($"[NetworkManager] Đã gửi thông báo Hồi Sinh cho player: {targetConnId}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendPlayerRevive gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi sự kiện mở rương vũ khí dùng chung qua SignalR
+    public async void SendOpenChest(string chestId, string weaponName, float spawnX, float spawnY)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncOpenChest", CurrentRoomId, chestId, weaponName, spawnX, spawnY);
+                Debug.Log($"[NetworkManager] Đã gửi thông báo mở rương '{chestId}' rớt súng '{weaponName}' lên Server.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendOpenChest gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi sự kiện nhặt vũ khí rơi trên sàn qua SignalR
+    public async void SendPickupGroundWeapon(string groundWeaponId)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncPickupGroundWeapon", CurrentRoomId, groundWeaponId);
+                Debug.Log($"[NetworkManager] Đã gửi thông báo nhặt súng '{groundWeaponId}' lên Server.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendPickupGroundWeapon gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi sự kiện vứt vũ khí cũ ra sàn qua SignalR
+    public async void SendDropWeapon(string weaponName, float posX, float posY, string groundWeaponId)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncDropWeapon", CurrentRoomId, weaponName, posX, posY, groundWeaponId);
+                Debug.Log($"[NetworkManager] Đã gửi thông báo vứt súng '{weaponName}' (ID: {groundWeaponId}) tại ({posX}, {posY}) lên Server.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendDropWeapon gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi sự kiện Boss xả đạn qua SignalR
+    public async void SendBossAttack(string bossId, float targetX, float targetY)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(CurrentRoomId))
+            {
+                await hubConnection.InvokeAsync("SyncBossAttack", CurrentRoomId, bossId, targetX, targetY);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendBossAttack gián đoạn: {ex.Message}");
         }
     }
 }

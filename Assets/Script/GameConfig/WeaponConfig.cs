@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 [Serializable]
 public class WeaponConfig
@@ -10,6 +10,7 @@ public class WeaponConfig
     public int bulletsPerShot;
     public float spreadAngle;
     public int bulletId;
+    public int secondBulletId;
 
     public string prefabName;
     public string shootSound;
@@ -20,6 +21,9 @@ public class WeaponConfig
     public float recoilDistance;
     public float recoilDuration;
     public float returnDuration;
+
+    public string weaponType;
+    public string rarity;
 }
 
 [Serializable]

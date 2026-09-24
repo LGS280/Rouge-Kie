@@ -1,41 +1,52 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class MobAI : MonoBehaviour
 {
-    public enum EnemyState { Idle, Chase, Attack, Die }
+    public enum EnemyState { Idle, Wander, Chase, Attack, Retreat }
+
+    [Header("Trạng Thái AI")]
     public EnemyState currentState = EnemyState.Idle;
 
-    [Header("Stats")]
-    public float chaseSpeed = 3f;
-    public float detectRange = 7f;
-    public float attackRange = 1.5f;
-    public float attackCooldown = 1.5f;
-    private float nextAttackTime = 0f;
+    [Header("Thông Số Di Chuyển")]
+    public float chaseSpeed = 3.0f;
+    public float detectRange = 9.0f;
+    public float attackRange = 4.5f;
+    public float attackCooldown = 2.0f;
+    public int attackDamage = 10;
+    public float wallPadding = 0.5f;
 
-    [Header("Network Status")]
+    [Header("Network Sync (Co-op Multiplayer)")]
     public bool isHost = true;
 
-    [Header("Room Setup")]
-    [Tooltip("Khoảng cách giữ thêm với rào chắn phòng (Mặc định bằng 0 vì rào chắn của DungeonGenerator đã tự cách tường 2 ô)")]
-    public float wallPadding = 0f;
-    [HideInInspector] public RoomController myRoom; // Tự động nhận diện từ RoomController khi map được sinh ra
-    private bool isRoomActivated = false;          // Cờ kiểm soát kích hoạt AI
-
-    private float syncTimer = 0f;
-    private float syncInterval = 0.1f; // 100ms sync rate cho Mob
-    private Vector3 lastPos;
-    
-    // Lerp Variables cho Client
     private Vector2 networkTargetPos;
     private bool hasFirstNetworkPos = false;
-    private float syncSmoothing = 15f;
+    private Vector3 mobNetworkVelocity;
+    private Vector2 lastNetworkTargetPos;
+    private float lastMobPacketTime;
+    private Vector2 estimatedMobVelocity;
 
-    private Transform targetPlayer;
+    [HideInInspector] public Transform targetPlayer;
+    [HideInInspector] public RoomController myRoom;
     private Rigidbody2D rb;
     private Animator animator;
     private MobHealth mobHealth;
     private SpriteRenderer spriteRenderer;
     private Vector3 originalScale;
+    private bool isRoomActivated = false;
+    private Vector2 lastPos;
+    private float nextAttackTime;
+    private float retreatEndTime;
+
+    private Vector2 wanderTargetPos;
+    private float nextWanderTimer;
+
+    private MobWeaponAim mobWeaponAim;
+
+    private MobNetworkIdentity mobNetworkIdentity;
+    private float lastNetworkSyncTime = 0f;
+    private float networkSyncInterval = 0.05f;
 
     void Start()
     {
@@ -43,145 +54,287 @@ public class MobAI : MonoBehaviour
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         mobHealth = GetComponent<MobHealth>();
+        mobNetworkIdentity = GetComponent<MobNetworkIdentity>();
         originalScale = transform.localScale;
 
-        if (NetworkManager.Instance != null)
+        mobWeaponAim = GetComponentInChildren<MobWeaponAim>();
+
+        if (mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null)
+        {
+            bool isMelee = mobWeaponAim.currentWeaponInfo.IsMelee;
+            detectRange = isMelee ? 5.0f : 7.0f;
+            attackRange = isMelee ? 0.9f : 4.0f;
+
+            WeaponConfig wConfig = mobWeaponAim.currentWeaponInfo.GetWeaponConfig();
+            if (wConfig != null && wConfig.fireRate > 0)
+            {
+                attackCooldown = wConfig.fireRate;
+            }
+        }
+        else
+        {
+            detectRange = 7.0f;
+            attackRange = 4.0f;
+        }
+
+        if (GameConfigManager.Instance != null)
+        {
+            EnemyConfig eConfig = GameConfigManager.Instance.GetEnemyConfig(gameObject.name);
+            if (eConfig != null)
+            {
+                if (eConfig.moveSpeed > 0)
+                {
+                    chaseSpeed = eConfig.moveSpeed;
+                }
+                if (eConfig.attackSpeed > 0)
+                {
+                    attackCooldown = eConfig.attackSpeed;
+                }
+            }
+        }
+
+        bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+        if (isMultiplayer)
         {
             isHost = (NetworkManager.Instance.UserRole == "Host");
         }
-        
+        if (!isHost && rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.linearVelocity = Vector2.zero;
+        }
+
         lastPos = transform.position;
+        wanderTargetPos = transform.position;
+    }
+
+    public void SetRoom(RoomController room)
+    {
+        myRoom = room;
     }
 
     void Update()
     {
-        if (mobHealth.isDead) return;
+        if (mobHealth != null && mobHealth.isDead) return;
 
-        if (!isHost)
+        if (isHost)
         {
-            // Client: Di chuyển mượt (Lerp) tới tọa độ do Host gửi
+
+            bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+            if (isMultiplayer && isRoomActivated && mobNetworkIdentity != null && !string.IsNullOrEmpty(mobNetworkIdentity.networkId))
+            {
+                if (Time.time - lastNetworkSyncTime >= networkSyncInterval)
+                {
+                    NetworkManager.Instance.SendEnemyPosition(mobNetworkIdentity.networkId, transform.position.x, transform.position.y);
+                    lastNetworkSyncTime = Time.time;
+                }
+            }
+
+            if (!isRoomActivated)
+            {
+                targetPlayer = null;
+                currentState = EnemyState.Idle;
+                if (animator != null) animator.SetBool("isMoving", false);
+                return;
+            }
+
+            FindNearestPlayer();
+
+            switch (currentState)
+            {
+                case EnemyState.Idle:
+                    MonitorIdleState();
+                    break;
+                case EnemyState.Wander:
+                    MonitorWanderState();
+                    break;
+                case EnemyState.Chase:
+                    MonitorChaseState();
+                    break;
+                case EnemyState.Attack:
+                    MonitorAttackState();
+                    break;
+                case EnemyState.Retreat:
+                    MonitorRetreatState();
+                    break;
+            }
+        }
+        else
+        {
+
+            FindNearestPlayer();
+
+            if (targetPlayer != null && mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null)
+            {
+                Vector3 clientAttackOrigin = (mobWeaponAim.currentWeaponInfo.firePoint != null) ? mobWeaponAim.currentWeaponInfo.firePoint.position : transform.position;
+                float dist = Vector2.Distance(clientAttackOrigin, targetPlayer.position);
+
+                if (dist <= attackRange && Time.time >= nextAttackTime)
+                {
+                    if (animator != null) animator.SetTrigger("attack");
+                    mobWeaponAim.Fire(targetPlayer.position, attackDamage);
+                    nextAttackTime = Time.time + attackCooldown;
+                }
+            }
+
             if (hasFirstNetworkPos)
             {
-                Vector3 target = new Vector3(networkTargetPos.x, networkTargetPos.y, transform.position.z);
-                transform.position = Vector3.Lerp(transform.position, target, Time.deltaTime * syncSmoothing);
-            }
+                Vector3 predictedMobPos = (Vector3)networkTargetPos + ((Vector3)estimatedMobVelocity * 0.033f);
+                transform.position = Vector3.SmoothDamp(transform.position, predictedMobPos, ref mobNetworkVelocity, 0.04f);
 
-            // Tự động đoán animation dựa trên sự thay đổi vị trí
-            Vector3 delta = transform.position - lastPos;
-            if (animator != null)
-            {
-                animator.SetBool("isMoving", delta.magnitude > 0.001f);
-            }
-            if (delta.x > 0.001f) spriteRenderer.flipX = false;
-            else if (delta.x < -0.001f) spriteRenderer.flipX = true;
-
-            lastPos = transform.position;
-            return;
-        }
-
-        // BẢO VỆ CHẶT CHẼ: Nếu người chơi chưa bước qua cửa kích hoạt phòng,
-        // quái vật đứng yên hoàn toàn, KHÔNG nhận diện và KHÔNG tìm kiếm Player.
-        if (!isRoomActivated)
-        {
-            targetPlayer = null;
-            currentState = EnemyState.Idle;
-            if (animator != null) animator.SetBool("isMoving", false);
-            rb.linearVelocity = Vector2.zero;
-            return; // Thoát hàm ngay lập tức
-        }
-
-        // CHỈ KHI cửa đóng và combat bắt đầu, quái mới bắt đầu mở giác quan tìm Player
-        FindNearestPlayer();
-
-        switch (currentState)
-        {
-            case EnemyState.Idle:
-                MonitorIdleState();
-                break;
-            case EnemyState.Chase:
-                MonitorChaseState();
-                break;
-            case EnemyState.Attack:
-                MonitorAttackState();
-                break;
-        }
-
-        // Host: Gửi vị trí quái vật liên tục cho Client
-        if (NetworkManager.Instance != null)
-        {
-            syncTimer -= Time.deltaTime;
-            if (syncTimer <= 0f)
-            {
-                MobNetworkIdentity identity = GetComponent<MobNetworkIdentity>();
-                if (identity != null && !string.IsNullOrEmpty(identity.networkId))
+                if (Vector3.Distance(transform.position, networkTargetPos) > 3.5f)
                 {
-                    NetworkManager.Instance.SendEnemyPosition(identity.networkId, transform.position.x, transform.position.y);
+                    transform.position = networkTargetPos;
+                    mobNetworkVelocity = Vector3.zero;
+                    estimatedMobVelocity = Vector2.zero;
                 }
-                syncTimer = syncInterval;
+
+                bool isMoving = mobNetworkVelocity.sqrMagnitude > 0.01f || estimatedMobVelocity.sqrMagnitude > 0.01f;
+                if (animator != null) animator.SetBool("isMoving", isMoving);
+
+                float moveX = (mobNetworkVelocity.sqrMagnitude > 0.01f) ? mobNetworkVelocity.x : estimatedMobVelocity.x;
+                if (moveX > 0.05f) spriteRenderer.flipX = false;
+                else if (moveX < -0.05f) spriteRenderer.flipX = true;
+            }
+        }
+    }
+
+    void FixedUpdate()
+    {
+        if (mobHealth != null && mobHealth.isDead) return;
+
+        if (isHost && isRoomActivated)
+        {
+            if (currentState == EnemyState.Idle)
+            {
+                if (rb != null) rb.linearVelocity = Vector2.zero;
             }
         }
     }
 
     void LateUpdate()
     {
-        if (mobHealth.isDead) return;
+        if (mobHealth != null && mobHealth.isDead) return;
         ClampPositionToRoom();
     }
 
-    // Được gọi trực tiếp bởi RoomController khi bắt đầu TryStartRoomCombat()
     public void ActivateMob()
     {
         isRoomActivated = true;
     }
 
-    // Client nhận tọa độ từ mạng
+    public bool IsCombatActivated()
+    {
+        return isRoomActivated;
+    }
+
+    public Transform GetTargetPlayer()
+    {
+        return targetPlayer;
+    }
+
     public void UpdateNetworkPosition(float x, float y)
     {
         Vector2 newPos = new Vector2(x, y);
         if (!hasFirstNetworkPos)
         {
-            transform.position = new Vector3(x, y, transform.position.z);
-            networkTargetPos = newPos;
+            transform.position = newPos;
+            lastNetworkTargetPos = newPos;
             hasFirstNetworkPos = true;
+            lastMobPacketTime = Time.time;
         }
         else
         {
-            networkTargetPos = newPos;
+            float dt = Time.time - lastMobPacketTime;
+            if (dt > 0.001f && dt < 0.3f)
+            {
+                estimatedMobVelocity = (newPos - lastNetworkTargetPos) / dt;
+            }
+            else
+            {
+                estimatedMobVelocity = Vector2.zero;
+            }
+
+            lastNetworkTargetPos = newPos;
+            lastMobPacketTime = Time.time;
         }
+        networkTargetPos = newPos;
     }
 
-    // Chặn không cho quái vật đi ra khỏi ranh giới phòng
     void ClampPositionToRoom()
     {
         if (myRoom == null || myRoom.RoomCollider == null) return;
 
         Bounds bounds = myRoom.RoomCollider.bounds;
 
-        // Khống chế tọa độ của quái vật nằm gọn trong bounds của RoomCollider
         float minX = bounds.min.x + wallPadding;
         float maxX = bounds.max.x - wallPadding;
         float minY = bounds.min.y + wallPadding;
         float maxY = bounds.max.y - wallPadding;
 
-        float clampedX = Mathf.Clamp(transform.position.x, minX, maxX);
-        float clampedY = Mathf.Clamp(transform.position.y, minY, maxY);
-
-        transform.position = new Vector3(clampedX, clampedY, transform.position.z);
+        Vector3 pos = transform.position;
+        if (pos.x < minX || pos.x > maxX || pos.y < minY || pos.y > maxY)
+        {
+            float clampedX = Mathf.Clamp(pos.x, minX, maxX);
+            float clampedY = Mathf.Clamp(pos.y, minY, maxY);
+            if (rb != null)
+            {
+                rb.position = new Vector2(clampedX, clampedY);
+            }
+            else
+            {
+                transform.position = new Vector3(clampedX, clampedY, pos.z);
+            }
+        }
     }
 
     void FindNearestPlayer()
     {
-        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
         float shortestDistance = Mathf.Infinity;
         Transform nearestPlayer = null;
 
-        foreach (GameObject player in players)
+        GameObject localPlayerObj = GameObject.FindGameObjectWithTag("Player");
+
+        if (localPlayerObj == null)
         {
-            float distanceToPlayer = Vector2.Distance(transform.position, player.transform.position);
-            if (distanceToPlayer < shortestDistance)
+            int playerLayer = LayerMask.NameToLayer("Player");
+            if (playerLayer != -1)
             {
-                shortestDistance = distanceToPlayer;
-                nearestPlayer = player.transform;
+                Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, 50f, 1 << playerLayer);
+                if (colliders != null && colliders.Length > 0)
+                {
+                    localPlayerObj = colliders[0].gameObject;
+                }
+            }
+        }
+
+        if (localPlayerObj != null)
+        {
+            RookieHealth localHealth = localPlayerObj.GetComponent<RookieHealth>();
+            if (localHealth == null) localHealth = localPlayerObj.GetComponentInParent<RookieHealth>();
+
+            if (localHealth == null || !localHealth.isDead)
+            {
+                float dist = Vector2.Distance(transform.position, localPlayerObj.transform.position);
+                if (dist < shortestDistance)
+                {
+                    shortestDistance = dist;
+                    nearestPlayer = localPlayerObj.transform;
+                }
+            }
+        }
+
+        RemotePlayerController[] remotePlayers = Object.FindObjectsByType<RemotePlayerController>(FindObjectsSortMode.None);
+        foreach (var rpc in remotePlayers)
+        {
+            if (rpc != null && rpc.gameObject != null && !rpc.isDead)
+            {
+                float dist = Vector2.Distance(transform.position, rpc.transform.position);
+                if (dist < shortestDistance)
+                {
+                    shortestDistance = dist;
+                    nearestPlayer = rpc.transform;
+                }
             }
         }
 
@@ -190,12 +343,70 @@ public class MobAI : MonoBehaviour
 
     void MonitorIdleState()
     {
-        animator.SetBool("isMoving", false);
-        rb.linearVelocity = Vector2.zero;
+        if (animator != null) animator.SetBool("isMoving", false);
+        if (rb != null) rb.linearVelocity = Vector2.zero;
 
-        if (isRoomActivated && targetPlayer != null && Vector2.Distance(transform.position, targetPlayer.position) <= detectRange)
+        if (isRoomActivated)
+        {
+            if (targetPlayer != null && Vector2.Distance(transform.position, targetPlayer.position) <= detectRange)
+            {
+                currentState = EnemyState.Chase;
+            }
+            else
+            {
+                currentState = EnemyState.Wander;
+            }
+        }
+    }
+
+    void MonitorWanderState()
+    {
+        if (targetPlayer != null && Vector2.Distance(transform.position, targetPlayer.position) <= detectRange)
         {
             currentState = EnemyState.Chase;
+            return;
+        }
+
+        if (Time.time >= nextWanderTimer)
+        {
+            PickRandomWanderTarget();
+            nextWanderTimer = Time.time + Random.Range(2.5f, 4.0f);
+        }
+
+        float distToWanderTarget = Vector2.Distance(transform.position, wanderTargetPos);
+        if (distToWanderTarget > 0.3f)
+        {
+            Vector2 moveDir = (wanderTargetPos - (Vector2)transform.position).normalized;
+            Vector2 separateForce = GetSeparationForce();
+            Vector2 finalMoveDir = (moveDir + separateForce).normalized;
+
+            rb.linearVelocity = finalMoveDir * (chaseSpeed * 0.35f);
+            if (animator != null) animator.SetBool("isMoving", true);
+
+            UpdateSpriteFacing(moveDir);
+        }
+        else
+        {
+            rb.linearVelocity = Vector2.zero;
+            if (animator != null) animator.SetBool("isMoving", false);
+        }
+    }
+
+    private void PickRandomWanderTarget()
+    {
+        Vector2 randomOffset = Random.insideUnitCircle * 2.5f;
+        Vector3 potentialPos = transform.position + new Vector3(randomOffset.x, randomOffset.y, 0);
+
+        if (myRoom != null && myRoom.RoomCollider != null)
+        {
+            Bounds bounds = myRoom.RoomCollider.bounds;
+            float clampedX = Mathf.Clamp(potentialPos.x, bounds.min.x + wallPadding, bounds.max.x - wallPadding);
+            float clampedY = Mathf.Clamp(potentialPos.y, bounds.min.y + wallPadding, bounds.max.y - wallPadding);
+            wanderTargetPos = new Vector2(clampedX, clampedY);
+        }
+        else
+        {
+            wanderTargetPos = potentialPos;
         }
     }
 
@@ -203,64 +414,208 @@ public class MobAI : MonoBehaviour
     {
         if (targetPlayer == null)
         {
-            currentState = EnemyState.Idle;
+            currentState = EnemyState.Wander;
             return;
         }
 
-        float distance = Vector2.Distance(transform.position, targetPlayer.position);
+        Vector3 attackOrigin = (mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null && mobWeaponAim.currentWeaponInfo.firePoint != null)
+            ? mobWeaponAim.currentWeaponInfo.firePoint.position
+            : transform.position;
 
-        if (distance > detectRange)
+        float distanceToPlayer = Vector2.Distance(attackOrigin, targetPlayer.position);
+
+        if (distanceToPlayer > detectRange)
         {
-            currentState = EnemyState.Idle;
+            currentState = EnemyState.Wander;
+            return;
         }
-        else if (distance <= attackRange)
+
+        bool isMelee = (mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null && mobWeaponAim.currentWeaponInfo.IsMelee);
+
+        float targetAttackDistance = isMelee ? 0.9f : 4.0f;
+
+        if (Time.time >= nextAttackTime)
         {
-            currentState = EnemyState.Attack;
+            if (distanceToPlayer <= targetAttackDistance)
+            {
+                currentState = EnemyState.Attack;
+                return;
+            }
+
+            Vector2 targetDir = (targetPlayer.position - transform.position).normalized;
+            Vector2 separateForce = GetSeparationForce();
+            Vector2 finalMoveDir = (targetDir + separateForce).normalized;
+
+            rb.linearVelocity = finalMoveDir * chaseSpeed;
+            if (animator != null) animator.SetBool("isMoving", true);
+            UpdateSpriteFacing(targetPlayer.position - transform.position);
+            return;
+        }
+
+        if (isMelee)
+        {
+
+            if (distanceToPlayer > 1.1f)
+            {
+                Vector2 targetDir = (targetPlayer.position - transform.position).normalized;
+                Vector2 separateForce = GetSeparationForce();
+                Vector2 finalMoveDir = (targetDir + separateForce).normalized;
+
+                rb.linearVelocity = finalMoveDir * chaseSpeed;
+                if (animator != null) animator.SetBool("isMoving", true);
+            }
+            else
+            {
+                rb.linearVelocity = Vector2.zero;
+                if (animator != null) animator.SetBool("isMoving", false);
+            }
         }
         else
         {
-            Vector2 direction = (targetPlayer.position - transform.position).normalized;
-            rb.linearVelocity = direction * chaseSpeed;
 
-            animator.SetBool("isMoving", true);
+            if (distanceToPlayer < 5.0f)
+            {
+                Vector2 targetDir = (targetPlayer.position - transform.position).normalized;
+                Vector2 retreatDir = -targetDir;
+                Vector2 orbitDir = new Vector2(-targetDir.y, targetDir.x);
+                Vector2 separateForce = GetSeparationForce();
+                Vector2 finalMoveDir = (retreatDir * 0.5f + orbitDir * 0.5f + separateForce).normalized;
 
-            // Xử lý quay mặt Sprite
-            if (direction.x > 0)
+                rb.linearVelocity = finalMoveDir * (chaseSpeed * 0.6f);
+                if (animator != null) animator.SetBool("isMoving", true);
+            }
+            else
+            {
+                rb.linearVelocity = Vector2.zero;
+                if (animator != null) animator.SetBool("isMoving", false);
+            }
+        }
+
+        UpdateSpriteFacing(targetPlayer.position - transform.position);
+    }
+
+    void MonitorAttackState()
+    {
+        if (targetPlayer == null)
+        {
+            currentState = EnemyState.Wander;
+            return;
+        }
+
+        UpdateSpriteFacing(targetPlayer.position - transform.position);
+
+        rb.linearVelocity = Vector2.zero;
+        if (animator != null) animator.SetBool("isMoving", false);
+
+        AttackTarget();
+        nextAttackTime = Time.time + attackCooldown;
+
+        currentState = EnemyState.Chase;
+    }
+
+    void MonitorRetreatState()
+    {
+        if (Time.time >= retreatEndTime || targetPlayer == null)
+        {
+            currentState = EnemyState.Chase;
+            return;
+        }
+
+        Vector2 retreatDir = (transform.position - targetPlayer.position).normalized;
+        Vector2 separateForce = GetSeparationForce();
+        Vector2 finalMoveDir = (retreatDir + separateForce).normalized;
+
+        rb.linearVelocity = finalMoveDir * (chaseSpeed * 0.8f);
+        if (animator != null) animator.SetBool("isMoving", true);
+
+        UpdateSpriteFacing(targetPlayer.position - transform.position);
+    }
+
+    private Vector2 GetSeparationForce()
+    {
+        Vector2 force = Vector2.zero;
+        Collider2D[] nearbyMobs = Physics2D.OverlapCircleAll(transform.position, 0.8f, LayerMask.GetMask("Enemy"));
+        int count = 0;
+
+        foreach (var col in nearbyMobs)
+        {
+            if (col != null && col.gameObject != gameObject)
+            {
+                Vector2 pushDir = (transform.position - col.transform.position);
+                float dist = pushDir.magnitude;
+                if (dist > 0.05f && dist < 0.8f)
+                {
+                    force += pushDir.normalized * ((0.8f - dist) / 0.8f);
+                    count++;
+                }
+            }
+        }
+
+        if (count > 0)
+        {
+            force /= count;
+            return force.normalized * 0.2f;
+        }
+
+        return Vector2.zero;
+    }
+
+    private void UpdateSpriteFacing(Vector2 directionToPlayer)
+    {
+        if (spriteRenderer != null)
+        {
+            if (directionToPlayer.x > 0.05f)
             {
                 spriteRenderer.flipX = false;
             }
-            else if (direction.x < 0)
+            else if (directionToPlayer.x < -0.05f)
             {
                 spriteRenderer.flipX = true;
             }
         }
     }
 
-    void MonitorAttackState()
+    void AttackTarget()
     {
-        rb.linearVelocity = Vector2.zero;
-        animator.SetBool("isMoving", false);
+        if (animator != null) animator.SetTrigger("attack");
 
-        if (targetPlayer == null)
+        if (mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null && targetPlayer != null)
         {
-            currentState = EnemyState.Idle;
-            return;
+            mobWeaponAim.Fire(targetPlayer.position, attackDamage);
         }
-
-        float distance = Vector2.Distance(transform.position, targetPlayer.position);
-        if (distance > attackRange)
+        else
         {
-            currentState = EnemyState.Chase;
-        }
-        else if (Time.time >= nextAttackTime)
-        {
-            AttackTarget();
-            nextAttackTime = Time.time + attackCooldown;
+            StartCoroutine(DealDamageWithDelay());
         }
     }
 
-    void AttackTarget()
+    private System.Collections.IEnumerator DealDamageWithDelay()
     {
-        animator.SetTrigger("attack");
+        yield return new WaitForSeconds(0.35f);
+
+        if (targetPlayer != null && mobHealth != null && !mobHealth.isDead)
+        {
+            RookieHealth playerHealth = targetPlayer.GetComponent<RookieHealth>();
+            RemotePlayerController rpc = targetPlayer.GetComponent<RemotePlayerController>();
+
+            if ((playerHealth != null && playerHealth.isDead) || (rpc != null && rpc.isDead))
+            {
+                targetPlayer = null;
+                currentState = EnemyState.Idle;
+                yield break;
+            }
+
+            if (playerHealth != null)
+            {
+                playerHealth.TakeDamage(attackDamage);
+            }
+            else if (rpc != null)
+            {
+                if (NetworkManager.Instance != null)
+                {
+                    NetworkManager.Instance.SendPlayerDamaged(rpc.connectionId, attackDamage);
+                }
+            }
+        }
     }
 }

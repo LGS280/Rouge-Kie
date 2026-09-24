@@ -2,23 +2,25 @@ using UnityEngine;
 
 public class MeleeSlash : MonoBehaviour
 {
-    public float delayTime = 0.1f;
+    [Header("life time")]
+    public float lifeTime = 0.1f;
     [HideInInspector] public float damage;
     [HideInInspector] public float critChance;
-    public float critMultiplier = 2f;
+    [HideInInspector] public float critMultiplier;
 
     public void InitFromDb(int bulletId)
     {
         if (GameConfigManager.Instance != null && GameConfigManager.Instance.BulletDb.TryGetValue(bulletId, out BulletConfig config))
         {
             damage = config.damage;
-            critChance = config.critRate; // Script cận chiến của bạn dùng [Range(0,1)] nên giữ nguyên hệ thập phân
+            critChance = config.critRate;
+            critMultiplier = config.critMultiplier;
         }
     }
 
     void Start()
     {
-        Destroy(gameObject, delayTime);
+        Destroy(gameObject, lifeTime);
     }
 
     void OnTriggerEnter2D(Collider2D collision)
@@ -26,11 +28,22 @@ public class MeleeSlash : MonoBehaviour
         if (collision.CompareTag("Enemy"))
         {
             float finalDamage = damage;
+            if (PlayerBuffManager.Instance != null)
+            {
+                finalDamage *= PlayerBuffManager.Instance.damageMultiplier;
+            }
+
             bool isCrit = false;
 
-            if (Random.value <= critChance)
+            float finalCritChance = critChance;
+            if (PlayerBuffManager.Instance != null)
             {
-                finalDamage = damage * critMultiplier;
+                finalCritChance += PlayerBuffManager.Instance.critChanceOffset / 100f;
+            }
+
+            if (Random.value <= finalCritChance)
+            {
+                finalDamage *= critMultiplier;
                 isCrit = true;
             }
 
@@ -39,7 +52,7 @@ public class MeleeSlash : MonoBehaviour
             {
                 if (!gameObject.name.EndsWith("_Remote"))
                 {
-                    enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage));
+                    enemyHealth.TakeDamage(Mathf.RoundToInt(finalDamage), isCrit);
                 }
             }
         }

@@ -36,6 +36,8 @@ public class PlayerProfileUI : MonoBehaviour
         }
     }
 
+    public static ProfileResponseData CurrentProfile { get; private set; }
+
     [Header("Profile UI Elements")]
     [SerializeField] private GameObject profileContainer; // Panel tổng thể chứa thông tin profile (hiện khi đã login)
     [SerializeField] private GameObject loginButton;       // Nút bấm đăng nhập nhanh ở Menu chính (hiện khi chưa login)
@@ -89,6 +91,7 @@ public class PlayerProfileUI : MonoBehaviour
     {
         if (!UnityEngine.SceneManagement.SceneManager.GetSceneByName("LoginScrene").isLoaded)
         {
+            LoginController.PendingActionAfterLogin = "";
             UnityEngine.SceneManagement.SceneManager.LoadScene("LoginScrene", UnityEngine.SceneManagement.LoadSceneMode.Additive);
         }
     }
@@ -144,6 +147,7 @@ public class PlayerProfileUI : MonoBehaviour
     // Đổ dữ liệu đã phân tích được lên các TextMeshPro UI Elements tương ứng
     private void UpdateUI(ProfileResponseData data)
     {
+        CurrentProfile = data;
         if (displayNameText != null) displayNameText.text = data.displayName;
         if (gemText != null) gemText.text = $"{data.standardCurrency} Gem";
         if (rubyText != null) rubyText.text = $"{data.premiumCurrency} Ruby";

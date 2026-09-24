@@ -43,6 +43,19 @@ public class DamageNumber : MonoBehaviour
         startColor = tmp.color;
     }
 
+    public void SetColor(Color c)
+    {
+        if (tmp == null) tmp = GetComponent<TextMeshPro>();
+        tmp.color = c;
+        startColor = c;
+    }
+
+    public void SetText(string text)
+    {
+        if (tmp == null) tmp = GetComponent<TextMeshPro>();
+        tmp.text = text;
+    }
+
     void Update()
     {
         timer += Time.deltaTime;
