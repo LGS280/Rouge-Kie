@@ -172,6 +172,17 @@ public class LobbyUIController : MonoBehaviour
         playMenuPanel.SetActive(true);
     }
 
+    /// <summary>
+    /// Đóng toàn bộ các panel sảnh Co-op và đưa về trạng thái trắng (phục vụ Logout hoặc Force Return to Menu)
+    /// </summary>
+    public void ResetToMainState()
+    {
+        if (lobbyMenuPanel != null) lobbyMenuPanel.SetActive(false);
+        if (roomLobbyPanel != null) roomLobbyPanel.SetActive(false);
+        if (playMenuPanel != null) playMenuPanel.SetActive(false);
+        ResetCopyButtonText();
+    }
+
     public void OnBackPressedFromRoomCode()
     {
         if (NetworkManager.Instance != null)
