@@ -3,6 +3,7 @@ using System.Collections;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Lớp hỗ trợ gọi các API Backend có xác thực JWT và cơ chế tự động xoay vòng Refresh Token
@@ -134,6 +135,20 @@ public class ApiClient : MonoBehaviour
                 catch { }
             }
 
+            // Nhận mã lỗi 403 Forbidden -> Kiểm tra tài khoản có bị khóa không
+            if (request.responseCode == 403)
+            {
+                string respBody = request.downloadHandler?.text ?? "";
+                if (respBody.IndexOf("suspended", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    respBody.IndexOf("banned", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    respBody.IndexOf("khóa", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    Debug.LogWarning("[ApiClient] Tài khoản đã bị vô hiệu hóa bởi Quản trị viên (403). Buộc đăng xuất ngay lập tức.");
+                    Logout("Your account has been suspended by an Administrator.\nYou have been disconnected from the session.");
+                    yield break;
+                }
+            }
+
             // Nhận mã lỗi 401 Unauthorized và chưa thử lại -> Tiến hành làm mới token tự động
             if (request.responseCode == 401 && !isRetry)
             {
@@ -238,9 +253,9 @@ public class ApiClient : MonoBehaviour
     }
 
     /// <summary>
-    /// Thực hiện xóa sạch thông tin đăng nhập trong PlayerPrefs và thiết lập lại trạng thái Guest
+    /// Thực hiện xóa sạch thông tin đăng nhập trong PlayerPrefs, thiết lập lại trạng thái Guest và đưa người chơi về Main Menu
     /// </summary>
-    public void Logout()
+    public void Logout(string banNotice = null)
     {
         PlayerPrefs.DeleteKey("jwt_token");
         PlayerPrefs.DeleteKey("refresh_token");
@@ -260,8 +275,61 @@ public class ApiClient : MonoBehaviour
         // Tải lại cấu hình game dạng Guest (không token)
         GameConfigManager.Instance?.ReloadConfigs();
 
-        // Refresh lai giao dien profile
+        // Refresh lại giao diện profile
         PlayerProfileUI.Instance?.RefreshProfile();
+
+        // Đưa người chơi quay về màn hình Main Menu chính
+        ReturnToMainMenu();
+
+        // Nếu có thông báo khóa tài khoản, mở Modal Popup tiếng Anh
+        if (!string.IsNullOrEmpty(banNotice))
+        {
+            AccountSuspendedPopupUI.Instance?.Show(banNotice);
+        }
+    }
+
+    /// <summary>
+    /// Điều hướng người chơi quay về Menu chính một cách an toàn và giải phóng trạng thái cũ
+    /// </summary>
+    public void ReturnToMainMenu()
+    {
+        Time.timeScale = 1f;
+
+        // Nếu có Scene LoginScrene đang mở đè (Additive), đóng nó lại
+        if (SceneManager.GetSceneByName("LoginScrene").isLoaded)
+        {
+            SceneManager.UnloadSceneAsync("LoginScrene");
+        }
+
+        string currentScene = SceneManager.GetActiveScene().name;
+        if (!currentScene.Equals("Scene_Menu", StringComparison.OrdinalIgnoreCase))
+        {
+            // Ngắt kết nối phòng và reset trạng thái đồng bộ nếu đang trong trận
+            if (NetworkManager.Instance != null)
+            {
+                _ = NetworkManager.Instance.DisconnectAndReconnect();
+            }
+            WeaponManager.ResetSavedWeapons();
+
+            // Chuyển Scene về Menu chính
+            SceneManager.LoadScene("Scene_Menu");
+        }
+        else
+        {
+            // Nếu đã ở trong Scene_Menu, reset giao diện để hiển thị lại Main Menu panel
+            MainMenuController mainMenu = FindFirstObjectByType<MainMenuController>();
+            if (mainMenu != null)
+            {
+                mainMenu.ShowMainMenu();
+            }
+
+            // Đóng các sảnh phụ Co-op / Room nếu đang mở
+            LobbyUIController lobby = FindFirstObjectByType<LobbyUIController>();
+            if (lobby != null)
+            {
+                lobby.ResetToMainState();
+            }
+        }
     }
 }
 
