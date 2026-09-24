@@ -91,6 +91,20 @@ public class LobbyUIController : MonoBehaviour
             return; 
         }
 
+        // Chặn vào sảnh Co-op nếu máy chủ đang bảo trì (ngoại trừ Developer và Admin)
+        if (MaintenanceManager.Instance != null && MaintenanceManager.Instance.IsUnderMaintenance)
+        {
+            string role = NetworkManager.Instance.AccountRole;
+            if (role != "Developer" && role != "Admin")
+            {
+                if (MaintenancePopupUI.Instance != null && MaintenanceManager.Instance.CurrentStatus != null)
+                {
+                    MaintenancePopupUI.Instance.Show(MaintenanceManager.Instance.CurrentStatus);
+                }
+                return;
+            }
+        }
+
         // TẠM THỜI: Tự động đăng nhập Guest nếu chưa đăng nhập khi test Co-op
         //if (!NetworkManager.Instance.IsLoggedIn)
         //{
@@ -374,7 +388,7 @@ public class LobbyUIController : MonoBehaviour
         Debug.Log("Trận đấu bắt đầu! Đang tải màn chơi...");
         if (LoadingScreenUI.Instance != null)
         {
-            LoadingScreenUI.Instance.ShowLoading("TẦNG 1 - 1", "Đang kết nối và khởi tạo phòng chơi Co-op...");
+            LoadingScreenUI.Instance.ShowLoading("SECTOR 1 - 1", "Connecting and initializing Co-op chamber...");
         }
         // Tải Scene chơi game thực tế của bạn
         UnityEngine.SceneManagement.SceneManager.LoadScene("SampleScene");

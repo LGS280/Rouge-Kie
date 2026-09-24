@@ -16,6 +16,11 @@ public class WeaponVaultUIController : MonoBehaviour
     public TextMeshProUGUI emptyNoticeText;
     public Button openShopQuickButton;
 
+    [Header("Scroll References")]
+    public ScrollRect vaultScrollRect;
+    public Button scrollLeftBtn;
+    public Button scrollRightBtn;
+
     [Serializable]
     public class UnlockedWeaponDto
     {
@@ -91,6 +96,10 @@ public class WeaponVaultUIController : MonoBehaviour
         }
 
         RefreshCardsDisplay();
+        if (vaultScrollRect != null)
+        {
+            vaultScrollRect.horizontalNormalizedPosition = 0f;
+        }
         FetchUnlockedWeapons();
     }
 
@@ -191,7 +200,7 @@ public class WeaponVaultUIController : MonoBehaviour
             return;
         }
 
-        if (statusText != null) statusText.text = "Đang đồng bộ Kho Vũ Khí...";
+        if (statusText != null) statusText.text = "Syncing Weapon Vault...";
 
         ApiClient.Instance.Get("/PlayerWeapons/my-weapons", (json) =>
         {
@@ -216,7 +225,7 @@ public class WeaponVaultUIController : MonoBehaviour
                     Debug.Log($"[WeaponVaultUI] Đã đồng bộ thành công {wrapper.items.Count} vũ khí từ Server.");
                 }
 
-                if (statusText != null) statusText.text = "Kho Vũ Khí sẵn sàng!";
+                if (statusText != null) statusText.text = "Weapon Vault Ready!";
                 RefreshCardsDisplay();
             }
             catch (Exception ex)
@@ -227,7 +236,7 @@ public class WeaponVaultUIController : MonoBehaviour
         }, (err) =>
         {
             Debug.LogWarning($"[WeaponVaultUI] Không thể kết nối tới server (chuyển sang Offline Cache): {err}");
-            if (statusText != null) statusText.text = "Chế độ Kho Offline";
+            if (statusText != null) statusText.text = "Offline Vault Mode";
             RefreshCardsDisplay();
         });
     }
@@ -252,13 +261,72 @@ public class WeaponVaultUIController : MonoBehaviour
 
         if (!hasAny)
         {
+            if (scrollLeftBtn != null) scrollLeftBtn.gameObject.SetActive(false);
+            if (scrollRightBtn != null) scrollRightBtn.gameObject.SetActive(false);
             return;
+        }
+
+        int cardCount = unlockedWeaponPrefabs.Count;
+        float totalCardWidth = 32f + (cardCount * 215f) + (Mathf.Max(0, cardCount - 1) * 16f);
+        bool needsScroll = totalCardWidth > 940f;
+
+        if (scrollLeftBtn != null) scrollLeftBtn.gameObject.SetActive(needsScroll);
+        if (scrollRightBtn != null) scrollRightBtn.gameObject.SetActive(needsScroll);
+
+        RectTransform cRect = weaponGridContent.GetComponent<RectTransform>();
+        HorizontalLayoutGroup layout = weaponGridContent.GetComponent<HorizontalLayoutGroup>();
+
+        if (cRect != null && layout != null)
+        {
+            if (!needsScroll)
+            {
+                cRect.anchorMin = new Vector2(0.5f, 0.5f);
+                cRect.anchorMax = new Vector2(0.5f, 0.5f);
+                cRect.pivot = new Vector2(0.5f, 0.5f);
+                cRect.anchoredPosition = Vector2.zero;
+                layout.childAlignment = TextAnchor.MiddleCenter;
+                if (vaultScrollRect != null) vaultScrollRect.horizontal = false;
+            }
+            else
+            {
+                cRect.anchorMin = new Vector2(0f, 0.5f);
+                cRect.anchorMax = new Vector2(0f, 0.5f);
+                cRect.pivot = new Vector2(0f, 0.5f);
+                cRect.anchoredPosition = Vector2.zero;
+                layout.childAlignment = TextAnchor.MiddleLeft;
+                if (vaultScrollRect != null)
+                {
+                    vaultScrollRect.horizontal = true;
+                    vaultScrollRect.horizontalNormalizedPosition = 0f;
+                }
+            }
         }
 
         foreach (string prefabName in unlockedWeaponPrefabs)
         {
             CreateWeaponVaultCard(prefabName);
         }
+
+        if (cRect != null)
+        {
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(cRect);
+            if (needsScroll && vaultScrollRect != null)
+            {
+                vaultScrollRect.horizontalNormalizedPosition = 0f;
+            }
+        }
+    }
+
+    private void ScrollStep(int direction)
+    {
+        if (vaultScrollRect == null) return;
+        int count = unlockedWeaponPrefabs.Count;
+        int extra = count - 4;
+        if (extra <= 0) return;
+
+        float step = 1f / extra;
+        vaultScrollRect.horizontalNormalizedPosition = Mathf.Clamp01(vaultScrollRect.horizontalNormalizedPosition + direction * step);
     }
 
     private void CreateWeaponVaultCard(string prefabName)
@@ -274,7 +342,7 @@ public class WeaponVaultUIController : MonoBehaviour
         card.transform.SetParent(weaponGridContent, false);
 
         RectTransform rect = card.GetComponent<RectTransform>();
-        rect.sizeDelta = new Vector2(230, 310);
+        rect.sizeDelta = new Vector2(215, 325);
 
         Image img = card.GetComponent<Image>();
         img.color = new Color(0.12f, 0.16f, 0.24f, 0.98f);
@@ -288,11 +356,11 @@ public class WeaponVaultUIController : MonoBehaviour
         GameObject tObj = new GameObject("Title", typeof(RectTransform), typeof(TextMeshProUGUI));
         tObj.transform.SetParent(card.transform, false);
         RectTransform tRect = tObj.GetComponent<RectTransform>();
-        tRect.anchoredPosition = new Vector2(0, 115);
-        tRect.sizeDelta = new Vector2(210, 30);
+        tRect.anchoredPosition = new Vector2(0, 122);
+        tRect.sizeDelta = new Vector2(200, 30);
         TextMeshProUGUI tTxt = tObj.GetComponent<TextMeshProUGUI>();
         tTxt.text = displayName;
-        tTxt.fontSize = 16;
+        tTxt.fontSize = 15;
         tTxt.color = new Color(1f, 0.85f, 0.35f);
         tTxt.alignment = TextAlignmentOptions.Center;
         tTxt.fontStyle = FontStyles.Bold;
@@ -301,8 +369,8 @@ public class WeaponVaultUIController : MonoBehaviour
         GameObject iconObj = new GameObject("Icon", typeof(RectTransform), typeof(Image));
         iconObj.transform.SetParent(card.transform, false);
         RectTransform iconRect = iconObj.GetComponent<RectTransform>();
-        iconRect.anchoredPosition = new Vector2(0, 45);
-        iconRect.sizeDelta = new Vector2(130, 80);
+        iconRect.anchoredPosition = new Vector2(0, 48);
+        iconRect.sizeDelta = new Vector2(120, 80);
         Image iconImg = iconObj.GetComponent<Image>();
         iconImg.preserveAspect = true;
         if (weaponSprite != null)
@@ -319,10 +387,10 @@ public class WeaponVaultUIController : MonoBehaviour
         GameObject tagObj = new GameObject("Tag", typeof(RectTransform), typeof(TextMeshProUGUI));
         tagObj.transform.SetParent(card.transform, false);
         RectTransform tagRect = tagObj.GetComponent<RectTransform>();
-        tagRect.anchoredPosition = new Vector2(0, -30);
-        tagRect.sizeDelta = new Vector2(200, 25);
+        tagRect.anchoredPosition = new Vector2(0, -32);
+        tagRect.sizeDelta = new Vector2(190, 25);
         TextMeshProUGUI tagTxt = tagObj.GetComponent<TextMeshProUGUI>();
-        tagTxt.text = "<color=#40ff40>✓ ĐÃ MỞ KHÓA</color>";
+        tagTxt.text = "<color=#40ff40>✓ UNLOCKED</color>";
         tagTxt.fontSize = 13;
         tagTxt.alignment = TextAlignmentOptions.Center;
         tagTxt.fontStyle = FontStyles.Bold;
@@ -331,8 +399,8 @@ public class WeaponVaultUIController : MonoBehaviour
         GameObject btnObj = new GameObject("EquipBtn", typeof(RectTransform), typeof(Image), typeof(Button));
         btnObj.transform.SetParent(card.transform, false);
         RectTransform btnRect = btnObj.GetComponent<RectTransform>();
-        btnRect.anchoredPosition = new Vector2(0, -95);
-        btnRect.sizeDelta = new Vector2(180, 42);
+        btnRect.anchoredPosition = new Vector2(0, -100);
+        btnRect.sizeDelta = new Vector2(170, 42);
 
         Image btnImg = btnObj.GetComponent<Image>();
         Button btn = btnObj.GetComponent<Button>();
@@ -389,7 +457,7 @@ public class WeaponVaultUIController : MonoBehaviour
         if (prefab == null)
         {
             Debug.LogError($"[WeaponVaultUI] Không tìm thấy Prefab cho súng: {prefabName}");
-            if (statusText != null) statusText.text = $"<color=red>Lỗi: Không tìm thấy Prefab {prefabName}!</color>";
+            if (statusText != null) statusText.text = $"<color=red>Error: Prefab not found for weapon {displayName}!</color>";
             return;
         }
 
@@ -397,7 +465,7 @@ public class WeaponVaultUIController : MonoBehaviour
         if (success)
         {
             Debug.Log($"[WeaponVaultUI] Đã trang bị thành công '{displayName}' vào tay nhân vật!");
-            if (statusText != null) statusText.text = $"<color=green>Đã trang bị {displayName}!</color>";
+            if (statusText != null) statusText.text = $"<color=green>Equipped {displayName} successfully!</color>";
 
             // Làm mới các nút thẻ
             RefreshCardsDisplay();
@@ -519,7 +587,7 @@ public class WeaponVaultUIController : MonoBehaviour
         GameObject dialog = new GameObject("VaultDialog", typeof(RectTransform), typeof(Image));
         dialog.transform.SetParent(vaultPanel.transform, false);
         RectTransform dialogRect = dialog.GetComponent<RectTransform>();
-        dialogRect.sizeDelta = new Vector2(880, 580);
+        dialogRect.sizeDelta = new Vector2(1020, 580);
         dialogRect.anchoredPosition = Vector2.zero;
 
         Image dialogImg = dialog.GetComponent<Image>();
@@ -534,7 +602,7 @@ public class WeaponVaultUIController : MonoBehaviour
         headerObj.transform.SetParent(dialog.transform, false);
         RectTransform headerRect = headerObj.GetComponent<RectTransform>();
         headerRect.anchoredPosition = new Vector2(0, 245);
-        headerRect.sizeDelta = new Vector2(650, 45);
+        headerRect.sizeDelta = new Vector2(700, 45);
 
         TextMeshProUGUI headerTxt = headerObj.GetComponent<TextMeshProUGUI>();
         headerTxt.text = "WEAPON ARMORY VAULT";
@@ -548,9 +616,9 @@ public class WeaponVaultUIController : MonoBehaviour
         subObj.transform.SetParent(dialog.transform, false);
         RectTransform subRect = subObj.GetComponent<RectTransform>();
         subRect.anchoredPosition = new Vector2(0, 210);
-        subRect.sizeDelta = new Vector2(700, 30);
+        subRect.sizeDelta = new Vector2(750, 30);
         TextMeshProUGUI subTxt = subObj.GetComponent<TextMeshProUGUI>();
-        subTxt.text = "Chọn vũ khí đã mở khóa vĩnh viễn để trang bị cho chuyến thám hiểm!";
+        subTxt.text = "Select an unlocked weapon to equip for your expedition.";
         subTxt.fontSize = 14;
         subTxt.color = new Color(0.75f, 0.82f, 0.9f);
         subTxt.alignment = TextAlignmentOptions.Center;
@@ -559,7 +627,7 @@ public class WeaponVaultUIController : MonoBehaviour
         GameObject closeObj = new GameObject("CloseButton", typeof(RectTransform), typeof(Image), typeof(Button));
         closeObj.transform.SetParent(dialog.transform, false);
         RectTransform closeRect = closeObj.GetComponent<RectTransform>();
-        closeRect.anchoredPosition = new Vector2(400, 245);
+        closeRect.anchoredPosition = new Vector2(470, 245);
         closeRect.sizeDelta = new Vector2(38, 38);
         Image closeImg = closeObj.GetComponent<Image>();
         closeImg.color = new Color(0.75f, 0.2f, 0.2f);
@@ -580,20 +648,101 @@ public class WeaponVaultUIController : MonoBehaviour
         closeVaultButton = closeObj.GetComponent<Button>();
         closeVaultButton.onClick.AddListener(CloseVault);
 
-        // Khung cuộn / Grid chứa các Card súng
-        GameObject gridObj = new GameObject("WeaponGrid", typeof(RectTransform), typeof(HorizontalLayoutGroup));
-        gridObj.transform.SetParent(dialog.transform, false);
-        RectTransform gridRect = gridObj.GetComponent<RectTransform>();
-        gridRect.anchoredPosition = new Vector2(0, 0);
-        gridRect.sizeDelta = new Vector2(820, 340);
+        // Khung ScrollView với RectMask2D chống tràn viền
+        GameObject scrollObj = new GameObject("VaultScrollView", typeof(RectTransform), typeof(ScrollRect), typeof(RectMask2D));
+        scrollObj.transform.SetParent(dialog.transform, false);
+        RectTransform scrollRect = scrollObj.GetComponent<RectTransform>();
+        scrollRect.anchoredPosition = new Vector2(0, -10);
+        scrollRect.sizeDelta = new Vector2(940, 350);
 
-        HorizontalLayoutGroup layout = gridObj.GetComponent<HorizontalLayoutGroup>();
-        layout.spacing = 20;
-        layout.childAlignment = TextAnchor.MiddleCenter;
+        // Content chứa các Card vũ khí
+        GameObject contentObj = new GameObject("VaultContent", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(ContentSizeFitter));
+        contentObj.transform.SetParent(scrollObj.transform, false);
+        RectTransform cRect = contentObj.GetComponent<RectTransform>();
+        cRect.anchorMin = new Vector2(0f, 0.5f);
+        cRect.anchorMax = new Vector2(0f, 0.5f);
+        cRect.pivot = new Vector2(0f, 0.5f);
+        cRect.anchoredPosition = Vector2.zero;
+        cRect.sizeDelta = new Vector2(940, 350);
+
+        HorizontalLayoutGroup layout = contentObj.GetComponent<HorizontalLayoutGroup>();
+        layout.spacing = 16;
+        layout.padding = new RectOffset(16, 16, 10, 10);
+        layout.childAlignment = TextAnchor.MiddleLeft;
         layout.childControlWidth = false;
         layout.childControlHeight = false;
 
-        weaponGridContent = gridObj.transform;
+        ContentSizeFitter fitter = contentObj.GetComponent<ContentSizeFitter>();
+        fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+        fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+        vaultScrollRect = scrollObj.GetComponent<ScrollRect>();
+        vaultScrollRect.content = cRect;
+        vaultScrollRect.viewport = scrollRect;
+        vaultScrollRect.horizontal = true;
+        vaultScrollRect.vertical = false;
+        vaultScrollRect.movementType = ScrollRect.MovementType.Clamped;
+        vaultScrollRect.scrollSensitivity = 35f;
+        vaultScrollRect.inertia = true;
+        vaultScrollRect.decelerationRate = 0.135f;
+
+        weaponGridContent = contentObj.transform;
+
+        // Nút Cuộn Trái [<]
+        GameObject leftBtnObj = new GameObject("ScrollLeftBtn", typeof(RectTransform), typeof(Image), typeof(Button));
+        leftBtnObj.transform.SetParent(dialog.transform, false);
+        RectTransform leftRect = leftBtnObj.GetComponent<RectTransform>();
+        leftRect.anchoredPosition = new Vector2(-482, -10);
+        leftRect.sizeDelta = new Vector2(28, 64);
+        Image leftImg = leftBtnObj.GetComponent<Image>();
+        leftImg.color = new Color(0.18f, 0.28f, 0.42f, 0.85f);
+        Outline leftOutline = leftBtnObj.AddComponent<Outline>();
+        leftOutline.effectColor = new Color(0.4f, 0.6f, 0.9f, 0.6f);
+        leftOutline.effectDistance = new Vector2(1, -1);
+
+        GameObject leftTxtObj = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        leftTxtObj.transform.SetParent(leftBtnObj.transform, false);
+        RectTransform leftTxtRect = leftTxtObj.GetComponent<RectTransform>();
+        leftTxtRect.anchorMin = Vector2.zero;
+        leftTxtRect.anchorMax = Vector2.one;
+        leftTxtRect.sizeDelta = Vector2.zero;
+        TextMeshProUGUI leftTxt = leftTxtObj.GetComponent<TextMeshProUGUI>();
+        leftTxt.text = "<";
+        leftTxt.fontSize = 22;
+        leftTxt.color = Color.white;
+        leftTxt.alignment = TextAlignmentOptions.Center;
+        leftTxt.fontStyle = FontStyles.Bold;
+
+        scrollLeftBtn = leftBtnObj.GetComponent<Button>();
+        scrollLeftBtn.onClick.AddListener(() => ScrollStep(-1));
+
+        // Nút Cuộn Phải [>]
+        GameObject rightBtnObj = new GameObject("ScrollRightBtn", typeof(RectTransform), typeof(Image), typeof(Button));
+        rightBtnObj.transform.SetParent(dialog.transform, false);
+        RectTransform rightRect = rightBtnObj.GetComponent<RectTransform>();
+        rightRect.anchoredPosition = new Vector2(482, -10);
+        rightRect.sizeDelta = new Vector2(28, 64);
+        Image rightImg = rightBtnObj.GetComponent<Image>();
+        rightImg.color = new Color(0.18f, 0.28f, 0.42f, 0.85f);
+        Outline rightOutline = rightBtnObj.AddComponent<Outline>();
+        rightOutline.effectColor = new Color(0.4f, 0.6f, 0.9f, 0.6f);
+        rightOutline.effectDistance = new Vector2(1, -1);
+
+        GameObject rightTxtObj = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        rightTxtObj.transform.SetParent(rightBtnObj.transform, false);
+        RectTransform rightTxtRect = rightTxtObj.GetComponent<RectTransform>();
+        rightTxtRect.anchorMin = Vector2.zero;
+        rightTxtRect.anchorMax = Vector2.one;
+        rightTxtRect.sizeDelta = Vector2.zero;
+        TextMeshProUGUI rightTxt = rightTxtObj.GetComponent<TextMeshProUGUI>();
+        rightTxt.text = ">";
+        rightTxt.fontSize = 22;
+        rightTxt.color = Color.white;
+        rightTxt.alignment = TextAlignmentOptions.Center;
+        rightTxt.fontStyle = FontStyles.Bold;
+
+        scrollRightBtn = rightBtnObj.GetComponent<Button>();
+        scrollRightBtn.onClick.AddListener(() => ScrollStep(1));
 
         // Thông báo khi kho trống (Empty Notice)
         GameObject emptyObj = new GameObject("EmptyNotice", typeof(RectTransform), typeof(TextMeshProUGUI));
@@ -602,7 +751,7 @@ public class WeaponVaultUIController : MonoBehaviour
         emptyRect.anchoredPosition = new Vector2(0, 30);
         emptyRect.sizeDelta = new Vector2(650, 70);
         emptyNoticeText = emptyObj.GetComponent<TextMeshProUGUI>();
-        emptyNoticeText.text = "Kho Vũ Khí hiện đang trống!\nHãy ghé Cửa Hàng (Shop) mua súng để mở khóa vĩnh viễn.";
+        emptyNoticeText.text = "Weapon Vault is currently empty!\nVisit the Shop to unlock legendary weapons.";
         emptyNoticeText.fontSize = 18;
         emptyNoticeText.color = new Color(0.9f, 0.7f, 0.3f);
         emptyNoticeText.alignment = TextAlignmentOptions.Center;
@@ -624,7 +773,7 @@ public class WeaponVaultUIController : MonoBehaviour
         shopBtnTxtRect.anchorMax = Vector2.one;
         shopBtnTxtRect.sizeDelta = Vector2.zero;
         TextMeshProUGUI shopBtnTxt = shopBtnTxtObj.GetComponent<TextMeshProUGUI>();
-        shopBtnTxt.text = "ĐẾN CỬA HÀNG SHOP";
+        shopBtnTxt.text = "VISIT SHOP";
         shopBtnTxt.fontSize = 15;
         shopBtnTxt.color = Color.white;
         shopBtnTxt.alignment = TextAlignmentOptions.Center;

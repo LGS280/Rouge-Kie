@@ -33,6 +33,31 @@ public class WeaponInfo : MonoBehaviour
     [SerializeField] private float recoilDuration = 0.05f;
     [SerializeField] private float returnDuration = 0.1f;
 
+    [Header("BOW MECHANIC")]
+    public bool isBow = false;
+    [Tooltip("Time in seconds to reach full charge")]
+    public float maxChargeTime = 0.65f;
+    [Tooltip("Minimum force ratio applied even on quick click")]
+    public float minChargeRatio = 0.35f;
+    [Tooltip("Visual distance the bow pulls backward while charging")]
+    public float drawBackDistance = 0.14f;
+    public AudioClip bowChargeSoundClip;
+
+    [Header("Bow Visual Arrow")]
+    public SpriteRenderer arrowPreviewRenderer;
+    [Tooltip("Scale of the nocked arrow preview while drawing")]
+    public Vector3 arrowPreviewScale = new Vector3(0.5f, 0.5f, 1f);
+
+    [Header("Aim Up Adjustment")]
+    [Tooltip("Forward offset when aiming up to keep weapon at chest level")]
+    public float upAimOffset = 0.28f;
+
+    private bool isBowCharging = false;
+    private float currentChargeTimer = 0f;
+    private float currentChargeRatio = 0f;
+    private Vector3 bowDrawBackOffset = Vector3.zero;
+    private Coroutine bowSnapCoroutine;
+
     Vector3 originalLocalPos;
     bool positionSaved = false;
 
@@ -45,6 +70,12 @@ public class WeaponInfo : MonoBehaviour
     void OnDisable()
     {
         GameConfigManager.OnConfigLoaded -= ApplyConfigFromDb;
+        CancelBowCharge();
+        if (bowSnapCoroutine != null)
+        {
+            StopCoroutine(bowSnapCoroutine);
+            bowSnapCoroutine = null;
+        }
     }
 
     private void Start()
@@ -269,7 +300,190 @@ public class WeaponInfo : MonoBehaviour
         }
     }
 
-    public void Attack()
+    public bool IsBowWeapon()
+    {
+        if (isBow) return true;
+
+        WeaponConfig config = GetWeaponConfig();
+        if (config != null)
+        {
+            if (!string.IsNullOrEmpty(config.weaponType) && config.weaponType.Equals("Bow", System.StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (!string.IsNullOrEmpty(config.weaponName) && config.weaponName.IndexOf("bow", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                return true;
+            if (!string.IsNullOrEmpty(config.prefabName) && config.prefabName.IndexOf("bow", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                return true;
+        }
+
+        string rawName = weaponPrefab != null ? weaponPrefab.name : gameObject.name;
+        if (rawName.IndexOf("bow", System.StringComparison.OrdinalIgnoreCase) >= 0)
+            return true;
+
+        return false;
+    }
+
+    public bool IsBowCharging()
+    {
+        return isBowCharging;
+    }
+
+    public float GetCurrentChargeRatio()
+    {
+        return currentChargeRatio;
+    }
+
+    public Vector3 GetDrawBackOffset()
+    {
+        return bowDrawBackOffset;
+    }
+
+    private void EnsureArrowPreview()
+    {
+        if (arrowPreviewRenderer != null) return;
+
+        Transform existing = transform.Find("ArrowPreview");
+        if (existing != null)
+        {
+            arrowPreviewRenderer = existing.GetComponent<SpriteRenderer>();
+        }
+        else
+        {
+            GameObject previewObj = new GameObject("ArrowPreview");
+            previewObj.transform.SetParent(transform, false);
+            arrowPreviewRenderer = previewObj.AddComponent<SpriteRenderer>();
+        }
+
+        if (arrowPreviewRenderer != null)
+        {
+            arrowPreviewRenderer.transform.localScale = arrowPreviewScale;
+            arrowPreviewRenderer.enabled = false;
+        }
+    }
+
+    private void UpdateArrowPreviewPosition()
+    {
+        if (arrowPreviewRenderer == null || !arrowPreviewRenderer.enabled) return;
+
+        float yOffset = (firePoint != null) ? firePoint.localPosition.y : 0.05f;
+        Vector3 basePos = new Vector3(0.04f, yOffset, 0f);
+        Vector3 pullOffset = -Vector3.right * (drawBackDistance * 0.85f * currentChargeRatio);
+        arrowPreviewRenderer.transform.localPosition = basePos + pullOffset;
+        arrowPreviewRenderer.transform.localRotation = Quaternion.identity;
+        arrowPreviewRenderer.transform.localScale = arrowPreviewScale;
+    }
+
+    public void StartBowCharge()
+    {
+        if (bowSnapCoroutine != null)
+        {
+            StopCoroutine(bowSnapCoroutine);
+            bowSnapCoroutine = null;
+        }
+
+        isBowCharging = true;
+        currentChargeTimer = 0f;
+        currentChargeRatio = 0f;
+        bowDrawBackOffset = Vector3.zero;
+
+        EnsureArrowPreview();
+        if (arrowPreviewRenderer != null)
+        {
+            WeaponConfig wConfig = GetWeaponConfig();
+            GameObject targetBulletPrefab = (wConfig != null && wConfig.bulletId > 0)
+                ? GetBulletPrefabFromDb(wConfig.bulletId)
+                : bulletPrefab;
+
+            if (targetBulletPrefab != null)
+            {
+                SpriteRenderer bulletSr = targetBulletPrefab.GetComponent<SpriteRenderer>();
+                if (bulletSr != null)
+                {
+                    arrowPreviewRenderer.sprite = bulletSr.sprite;
+                    arrowPreviewRenderer.color = bulletSr.color;
+                    arrowPreviewRenderer.sharedMaterial = bulletSr.sharedMaterial;
+                }
+            }
+
+            SpriteRenderer bowSr = GetComponent<SpriteRenderer>();
+            if (bowSr != null)
+            {
+                arrowPreviewRenderer.sortingLayerID = bowSr.sortingLayerID;
+                arrowPreviewRenderer.sortingOrder = bowSr.sortingOrder + 1;
+            }
+
+            UpdateArrowPreviewPosition();
+            arrowPreviewRenderer.enabled = true;
+        }
+
+        if (bowChargeSoundClip != null && RogueKie.Audio.AudioManager.Instance != null)
+        {
+            RogueKie.Audio.AudioManager.Instance.PlaySFXAtPosition(bowChargeSoundClip, transform.position, soundVolume * 0.7f);
+        }
+    }
+
+    public void UpdateBowCharge(float deltaTime)
+    {
+        if (!isBowCharging) return;
+
+        float effectiveMaxTime = maxChargeTime;
+        if (PlayerStats.Instance != null && PlayerStats.Instance.attackSpeedMultiplier > 0.01f)
+        {
+            effectiveMaxTime = maxChargeTime / PlayerStats.Instance.attackSpeedMultiplier;
+        }
+
+        currentChargeTimer = Mathf.Min(currentChargeTimer + deltaTime, effectiveMaxTime);
+        currentChargeRatio = (effectiveMaxTime > 0f) ? Mathf.Clamp01(currentChargeTimer / effectiveMaxTime) : 1f;
+
+        Vector3 pullBack = -Vector3.right * (drawBackDistance * currentChargeRatio);
+
+        // Add micro-vibration when charge is near full to indicate tension
+        if (currentChargeRatio >= 0.95f)
+        {
+            Vector3 tremble = (Vector3)(UnityEngine.Random.insideUnitCircle * 0.015f);
+            bowDrawBackOffset = pullBack + tremble;
+        }
+        else
+        {
+            bowDrawBackOffset = pullBack;
+        }
+
+        UpdateArrowPreviewPosition();
+    }
+
+    public void ReleaseBowCharge()
+    {
+        if (!isBowCharging) return;
+
+        if (arrowPreviewRenderer != null)
+        {
+            arrowPreviewRenderer.enabled = false;
+        }
+
+        float effectiveRatio = Mathf.Lerp(minChargeRatio, 1f, currentChargeRatio);
+        isBowCharging = false;
+        currentChargeTimer = 0f;
+        currentChargeRatio = 0f;
+
+        Attack(effectiveRatio);
+    }
+
+    public void CancelBowCharge()
+    {
+        if (isBowCharging)
+        {
+            isBowCharging = false;
+            currentChargeTimer = 0f;
+            currentChargeRatio = 0f;
+            bowDrawBackOffset = Vector3.zero;
+
+            if (arrowPreviewRenderer != null)
+            {
+                arrowPreviewRenderer.enabled = false;
+            }
+        }
+    }
+
+    public void Attack(float chargeRatio = 1f)
     {
         if (!positionSaved)
         {
@@ -277,10 +491,13 @@ public class WeaponInfo : MonoBehaviour
             positionSaved = true;
         }
 
-        // Kiểm tra mana trước khi bắn
+        // Check mana before shooting
         RookieHealth playerHealth = GetComponentInParent<RookieHealth>();
         if (playerHealth != null && !playerHealth.UseMana(manaCostPerShot))
-            return; // hết mana, không bắn
+        {
+            bowDrawBackOffset = Vector3.zero;
+            return;
+        }
 
         WeaponConfig wConfig = GetWeaponConfig();
         Transform spawnPoint = (firePoint != null) ? firePoint : transform;
@@ -291,13 +508,18 @@ public class WeaponInfo : MonoBehaviour
 
         if (targetBulletPrefab == null)
         {
+            bowDrawBackOffset = Vector3.zero;
             return;
         }
 
-        if (targetBulletPrefab != null && spawnPoint != null)
+        if (spawnPoint != null)
         {
             int count = (wConfig != null && wConfig.bulletsPerShot > 0) ? wConfig.bulletsPerShot : 1;
             float spread = (wConfig != null && wConfig.spreadAngle > 0) ? wConfig.spreadAngle : 20f;
+            if (IsBowWeapon())
+            {
+                spread = Mathf.Lerp(spread, spread * 0.15f, chargeRatio);
+            }
             float baseAngle = spawnPoint.eulerAngles.z;
 
             for (int i = 0; i < count; i++)
@@ -312,10 +534,42 @@ public class WeaponInfo : MonoBehaviour
                 if (wConfig != null && wConfig.bulletId > 0)
                 {
                     var bullet = spawnedBullet.GetComponent<NormalBullet>();
-                    if (bullet != null) bullet.InitFromDb(wConfig.bulletId);
+                    if (bullet != null)
+                    {
+                        bullet.InitFromDb(wConfig.bulletId);
+                        if (IsBowWeapon())
+                        {
+                            bullet.speed *= Mathf.Lerp(0.65f, 1.4f, chargeRatio);
+                            bullet.baseDamage *= Mathf.Lerp(0.5f, 1.6f, chargeRatio);
+                            if (chargeRatio >= 0.9f)
+                            {
+                                bullet.critChance += 25f;
+                            }
+                        }
+                    }
 
                     var bSlash = spawnedBullet.GetComponent<MeleeSlash>();
                     if (bSlash != null) bSlash.InitFromDb(wConfig.bulletId);
+                }
+                else
+                {
+                    var bullet = spawnedBullet.GetComponent<NormalBullet>();
+                    if (bullet != null)
+                    {
+                        if (bullet.speed <= 0f) bullet.speed = bullet.defaultSpeed;
+                        if (bullet.baseDamage <= 0f) bullet.baseDamage = bullet.defaultBaseDamage;
+                        if (bullet.critMultiplier <= 0f) bullet.critMultiplier = 1.5f;
+
+                        if (IsBowWeapon())
+                        {
+                            bullet.speed *= Mathf.Lerp(0.65f, 1.4f, chargeRatio);
+                            bullet.baseDamage *= Mathf.Lerp(0.5f, 1.6f, chargeRatio);
+                            if (chargeRatio >= 0.9f)
+                            {
+                                bullet.critChance += 25f;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -392,7 +646,11 @@ public class WeaponInfo : MonoBehaviour
     private void TriggerAttackAnimation()
     {
         StopAllCoroutines();
-        if (IsMeleeWeapon())
+        if (IsBowWeapon())
+        {
+            bowSnapCoroutine = StartCoroutine(BowReleaseRoutine());
+        }
+        else if (IsMeleeWeapon())
         {
             StartCoroutine(SwordSlashRoutine());
         }
@@ -400,6 +658,34 @@ public class WeaponInfo : MonoBehaviour
         {
             StartCoroutine(RecoilRoutine());
         }
+    }
+
+    System.Collections.IEnumerator BowReleaseRoutine()
+    {
+        // Snap forward on string release
+        Vector3 snapPos = Vector3.right * (drawBackDistance * 0.4f);
+        float snapDuration = 0.04f;
+        float returnDuration = 0.08f;
+
+        Vector3 startOffset = bowDrawBackOffset;
+        float t = 0f;
+        while (t < snapDuration)
+        {
+            t += Time.deltaTime;
+            bowDrawBackOffset = Vector3.Lerp(startOffset, snapPos, t / snapDuration);
+            yield return null;
+        }
+
+        t = 0f;
+        while (t < returnDuration)
+        {
+            t += Time.deltaTime;
+            bowDrawBackOffset = Vector3.Lerp(snapPos, Vector3.zero, t / returnDuration);
+            yield return null;
+        }
+
+        bowDrawBackOffset = Vector3.zero;
+        bowSnapCoroutine = null;
     }
 
     private bool slashDownward = true;

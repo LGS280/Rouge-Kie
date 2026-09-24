@@ -117,6 +117,23 @@ public class ApiClient : MonoBehaviour
 
             yield return request.SendWebRequest();
 
+            // Nhận mã lỗi 503 Service Unavailable -> Máy chủ đang bảo trì
+            if (request.responseCode == 503)
+            {
+                try
+                {
+                    var mResp = JsonUtility.FromJson<MaintenanceApiResponse>(request.downloadHandler.text);
+                    if (mResp != null && mResp.isMaintenance && mResp.maintenance != null)
+                    {
+                        if (MaintenancePopupUI.Instance != null)
+                        {
+                            MaintenancePopupUI.Instance.Show(mResp.maintenance);
+                        }
+                    }
+                }
+                catch { }
+            }
+
             // Nhận mã lỗi 401 Unauthorized và chưa thử lại -> Tiến hành làm mới token tự động
             if (request.responseCode == 401 && !isRetry)
             {
@@ -173,6 +190,25 @@ public class ApiClient : MonoBehaviour
 
             yield return request.SendWebRequest();
 
+            if (request.responseCode == 503)
+            {
+                try
+                {
+                    var mResp = JsonUtility.FromJson<MaintenanceApiResponse>(request.downloadHandler.text);
+                    if (mResp != null && mResp.isMaintenance && mResp.maintenance != null)
+                    {
+                        if (MaintenancePopupUI.Instance != null)
+                        {
+                            MaintenancePopupUI.Instance.Show(mResp.maintenance);
+                        }
+                    }
+                }
+                catch { }
+                Debug.LogWarning("[ApiClient] Máy chủ đang bảo trì. Giữ nguyên phiên đăng nhập.");
+                onComplete?.Invoke(false);
+                yield break;
+            }
+
             if (request.result == UnityWebRequest.Result.Success)
             {
                 try
@@ -210,6 +246,7 @@ public class ApiClient : MonoBehaviour
         PlayerPrefs.DeleteKey("refresh_token");
         PlayerPrefs.DeleteKey("username");
         PlayerPrefs.DeleteKey("user_id");
+        PlayerPrefs.DeleteKey("account_role");
         PlayerPrefs.Save();
 
         if (NetworkManager.Instance != null)
@@ -217,6 +254,7 @@ public class ApiClient : MonoBehaviour
             NetworkManager.Instance.IsLoggedIn = false;
             NetworkManager.Instance.LoggedInUsername = "Guest";
             NetworkManager.Instance.UserRole = "Guest";
+            NetworkManager.Instance.AccountRole = "Guest";
         }
 
         // Tải lại cấu hình game dạng Guest (không token)

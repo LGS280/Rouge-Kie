@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using TMPro;
 
 [System.Serializable]
@@ -40,8 +42,11 @@ public class LoginResponse
     public string message;
     public int userId;
     public string username;
+    public string role;
     public string token;
     public string refreshToken;
+    public bool isMaintenance;
+    public CurrentMaintenanceStatus maintenance;
 }
 
 // Model nhận cấu hình bảo mật Google từ file JSON cục bộ
@@ -108,12 +113,42 @@ public class LoginController : MonoBehaviour
     // BỔ SUNG: Hàm lấy URL API động từ appsettings.json nếu có, tránh fix cứng đường dẫn Azure
     private string GetApiUrl(string path)
     {
-        string apiBase = backendBase + "/api";
+        string apiBase = "";
         if (GameConfigManager.Instance != null && !string.IsNullOrEmpty(GameConfigManager.Instance.BaseUrl))
         {
             apiBase = GameConfigManager.Instance.BaseUrl;
         }
+        else
+        {
+            apiBase = LoadBaseUrlFromStreamingAssets();
+        }
+
+        if (string.IsNullOrEmpty(apiBase))
+        {
+            apiBase = backendBase + "/api";
+        }
+
         return $"{apiBase}{path}";
+    }
+
+    private string LoadBaseUrlFromStreamingAssets()
+    {
+        try
+        {
+            string filePath = Path.Combine(Application.streamingAssetsPath, "appsettings.json");
+            if (File.Exists(filePath))
+            {
+                string jsonText = File.ReadAllText(filePath);
+                jsonText = System.Text.RegularExpressions.Regex.Replace(jsonText, @"^\s*//.*", "", System.Text.RegularExpressions.RegexOptions.Multiline);
+                ConfigData config = JsonUtility.FromJson<ConfigData>(jsonText);
+                if (config != null && !string.IsNullOrEmpty(config.baseUrl))
+                {
+                    return config.baseUrl;
+                }
+            }
+        }
+        catch { }
+        return null;
     }
 
     [Header("Google OAuth 2.0 Settings (PC)")]
@@ -142,6 +177,9 @@ public class LoginController : MonoBehaviour
 
         // Chặn tương tác của các scene khác (Menu) khi Login scene đang mở
         BlockOtherScenesInput();
+
+        // Kiểm tra trạng thái bảo trì máy chủ ngay khi mở màn hình Login
+        CheckServerMaintenanceOnStart();
     }
 
     private void LoadGoogleSecrets()
@@ -154,17 +192,17 @@ public class LoginController : MonoBehaviour
                 GoogleSecrets secrets = JsonUtility.FromJson<GoogleSecrets>(secretFile.text);
                 googleClientId = secrets.clientId;
                 googleClientSecret = secrets.clientSecret;
-                Debug.Log("Đã nạp thành công cấu hình bảo mật Google từ file Resources!");
+                Debug.Log("Google security configuration loaded successfully from Resources!");
             }
             catch (Exception ex)
             {
-                Debug.LogError("Lỗi phân tích cú pháp file JSON bảo mật Google: " + ex.Message);
+                Debug.LogError("Failed to parse Google security JSON file: " + ex.Message);
             }
         }
         else
         {
-            Debug.LogError("Không tìm thấy file google_secrets.json tại Assets/Resources/! Vui lòng tạo file này để chạy đăng nhập Google.");
-            ShowLoginMessage("Chưa thiết lập file google_secrets.json!", Color.red);
+            Debug.LogError("google_secrets.json not found at Assets/Resources/! Please create this file to enable Google login.");
+            ShowLoginMessage("google_secrets.json is not configured!", Color.red);
         }
     }
 
@@ -176,6 +214,83 @@ public class LoginController : MonoBehaviour
             string code = authCodeToExchange;
             authCodeToExchange = null; // Clear flag
             StartCoroutine(ExchangeGoogleCodeForToken(code));
+        }
+
+        HandleTabNavigation();
+    }
+
+    /// <summary>
+    /// Chuyển đổi con trỏ giữa các trường nhập liệu khi nhấn phím Tab (hoặc Shift+Tab để đi lùi)
+    /// </summary>
+    private void HandleTabNavigation()
+    {
+        bool tabPressed = false;
+        bool isShift = false;
+
+        if (Keyboard.current != null)
+        {
+            tabPressed = Keyboard.current.tabKey.wasPressedThisFrame;
+            isShift = Keyboard.current.shiftKey.isPressed;
+        }
+
+        if (!tabPressed)
+        {
+            tabPressed = Input.GetKeyDown(KeyCode.Tab);
+            isShift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        }
+
+        if (!tabPressed) return;
+
+        if (loginPanel != null && loginPanel.activeSelf)
+        {
+            NavigateInputs(new TMP_InputField[] { loginUsernameInput, loginPasswordInput }, isShift);
+        }
+        else if (registerPanel != null && registerPanel.activeSelf)
+        {
+            NavigateInputs(new TMP_InputField[] { regUsernameInput, regPasswordInput, regConfirmPasswordInput, regEmailInput, regOtpInput }, isShift);
+        }
+    }
+
+    private void NavigateInputs(TMP_InputField[] fields, bool isShift)
+    {
+        if (fields == null || fields.Length == 0) return;
+
+        int currentIndex = -1;
+        var currentSelected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+
+        for (int i = 0; i < fields.Length; i++)
+        {
+            if (fields[i] == null) continue;
+
+            if (fields[i].isFocused || (currentSelected != null && currentSelected == fields[i].gameObject))
+            {
+                currentIndex = i;
+                break;
+            }
+        }
+
+        int nextIndex;
+        if (currentIndex == -1)
+        {
+            nextIndex = isShift ? fields.Length - 1 : 0;
+        }
+        else
+        {
+            if (isShift)
+            {
+                nextIndex = (currentIndex - 1 + fields.Length) % fields.Length;
+            }
+            else
+            {
+                nextIndex = (currentIndex + 1) % fields.Length;
+            }
+        }
+
+        TMP_InputField target = fields[nextIndex];
+        if (target != null && target.gameObject.activeInHierarchy)
+        {
+            target.Select();
+            target.ActivateInputField();
         }
     }
 
@@ -314,7 +429,7 @@ public class LoginController : MonoBehaviour
         {
             if (string.IsNullOrEmpty(googleClientId))
             {
-                ShowLoginMessage("Lỗi: Không tìm thấy Client ID Google cấu hình!", Color.red);
+                ShowLoginMessage("Error: Google Client ID not configured!", Color.red);
                 return;
             }
 
@@ -327,11 +442,11 @@ public class LoginController : MonoBehaviour
                              $"scope=openid%20email%20profile";
 
             Application.OpenURL(authUrl);
-            ShowLoginMessage("Đang mở trình duyệt để đăng nhập Google...", Color.white);
+            ShowLoginMessage("Opening browser for Google login...", Color.white);
         }
         catch (Exception ex)
         {
-            ShowLoginMessage("Lỗi đăng nhập Google: " + ex.Message, Color.red);
+            ShowLoginMessage("Google login error: " + ex.Message, Color.red);
         }
     }
 
@@ -395,9 +510,9 @@ public class LoginController : MonoBehaviour
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                string detail = request.error + " | Chi tiết: " + request.downloadHandler.text;
-                Debug.LogError("Lỗi Google Exchange Code: " + detail);
-                ShowLoginMessage("Lỗi trao đổi: " + detail, Color.red);
+                string detail = request.error + " | Detail: " + request.downloadHandler.text;
+                Debug.LogError("Google Code Exchange Error: " + detail);
+                ShowLoginMessage("Exchange error: " + detail, Color.red);
                 yield break;
             }
 
@@ -406,7 +521,7 @@ public class LoginController : MonoBehaviour
 
             string idToken = tokenData.id_token;
 
-            // Gửi idToken nhận được lên Backend của bạn
+            // Send idToken to backend
             yield return StartCoroutine(GoogleLoginBackendRoutine(idToken));
         }
     }
@@ -422,6 +537,7 @@ public class LoginController : MonoBehaviour
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
+            request.certificateHandler = new AcceptAllCerts();
 
             yield return request.SendWebRequest();
 
@@ -435,11 +551,11 @@ public class LoginController : MonoBehaviour
                     yield break;
                 }
 
-                ShowLoginMessage(resp?.message ?? "Đăng nhập Google thất bại.", Color.red);
+                ShowLoginMessage(resp?.message ?? "Google login failed.", Color.red);
             }
             else
             {
-                ShowLoginMessage(GetErrorMessage(request, "Lỗi đăng nhập Google"), Color.red);
+                HandleMaintenanceError(request, "Google login error", isRegister: false);
             }
         }
     }
@@ -448,7 +564,7 @@ public class LoginController : MonoBehaviour
     {
         if (regEmailInput == null || string.IsNullOrWhiteSpace(regEmailInput.text))
         {
-            ShowRegisterMessage("Vui lòng nhập email trước khi gửi OTP.", Color.red);
+            ShowRegisterMessage("Please enter your email before requesting OTP.", Color.red);
             return;
         }
 
@@ -459,13 +575,13 @@ public class LoginController : MonoBehaviour
     {
         if (regPasswordInput.text != regConfirmPasswordInput.text)
         {
-            ShowRegisterMessage("Lỗi: Mật khẩu xác nhận không khớp!", Color.red);
+            ShowRegisterMessage("Error: Passwords do not match!", Color.red);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(regOtpInput.text))
         {
-            ShowRegisterMessage("Vui lòng nhập mã OTP.", Color.red);
+            ShowRegisterMessage("Please enter the OTP code.", Color.red);
             return;
         }
 
@@ -487,17 +603,18 @@ public class LoginController : MonoBehaviour
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
+            request.certificateHandler = new AcceptAllCerts();
 
             yield return request.SendWebRequest();
 
             if (request.result == UnityWebRequest.Result.Success)
             {
                 var resp = JsonUtility.FromJson<ApiResponse>(request.downloadHandler.text);
-                ShowRegisterMessage(resp?.message ?? "Mã OTP đã được gửi đến email.", Color.green);
+                ShowRegisterMessage(resp?.message ?? "OTP has been sent to your email.", Color.green);
             }
             else
             {
-                ShowRegisterMessage(GetErrorMessage(request, "Lỗi gửi OTP"), Color.red);
+                HandleMaintenanceError(request, "OTP send error", isRegister: true);
             }
         }
     }
@@ -518,6 +635,7 @@ public class LoginController : MonoBehaviour
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
+            request.certificateHandler = new AcceptAllCerts();
 
             yield return request.SendWebRequest();
 
@@ -531,11 +649,11 @@ public class LoginController : MonoBehaviour
                     yield break;
                 }
 
-                ShowLoginMessage(resp?.message ?? "Đăng nhập thất bại.", Color.red);
+                ShowLoginMessage(resp?.message ?? "Login failed.", Color.red);
             }
             else
             {
-                ShowLoginMessage(GetErrorMessage(request, "Lỗi đăng nhập"), Color.red);
+                HandleMaintenanceError(request, "Login error", isRegister: false);
             }
         }
     }
@@ -547,11 +665,23 @@ public class LoginController : MonoBehaviour
         PlayerPrefs.SetString("refresh_token", resp.refreshToken); // Lưu refresh token từ dev
         PlayerPrefs.SetString("username", resp.username);
         PlayerPrefs.SetInt("user_id", resp.userId);
+        string accountRole = !string.IsNullOrEmpty(resp.role) ? resp.role : "User";
+        PlayerPrefs.SetString("account_role", accountRole);
         PlayerPrefs.Save();
 
         NetworkManager.Instance.IsLoggedIn = true;
         NetworkManager.Instance.LoggedInUsername = resp.username;
         NetworkManager.Instance.UserRole = "Player";
+        NetworkManager.Instance.AccountRole = accountRole;
+
+        // Nếu là Developer hoặc Admin thì lập tức ẩn Popup thông báo bảo trì (nếu đang mở)
+        if (accountRole == "Developer" || accountRole == "Admin")
+        {
+            if (MaintenancePopupUI.Instance != null)
+            {
+                MaintenancePopupUI.Instance.Hide();
+            }
+        }
 
         // Tải lại cấu hình súng/đạn vì giờ đã có token (Cập nhật từ dev)
         GameConfigManager.Instance?.ReloadConfigs();
@@ -572,7 +702,7 @@ public class LoginController : MonoBehaviour
             {
                 if (LoadingScreenUI.Instance != null)
                 {
-                    LoadingScreenUI.Instance.ShowLoading("SẢNH CHỜ", "Đang di chuyển tới Sảnh Chờ...");
+                    LoadingScreenUI.Instance.ShowLoading("MAIN LOBBY", "Transitioning to Main Lobby...");
                 }
                 UnityEngine.SceneManagement.SceneManager.LoadScene("Lobby_Scene");
             }
@@ -583,8 +713,17 @@ public class LoginController : MonoBehaviour
             LobbyUIController lobbyUI = UnityEngine.Object.FindFirstObjectByType<LobbyUIController>();
             if (lobbyUI != null) lobbyUI.OnCoOpButtonPressed();
         }
+        else if (PendingActionAfterLogin == "PLAY_MENU")
+        {
+            PendingActionAfterLogin = "";
+            MainMenuController mainMenu = UnityEngine.Object.FindFirstObjectByType<MainMenuController>();
+            if (mainMenu != null)
+            {
+                mainMenu.OpenPlayMenu();
+            }
+        }
 
-        ShowLoginMessage("Đăng nhập thành công!", Color.green);
+        ShowLoginMessage("Login successful!", Color.green);
 
         // Tự động giải phóng Scene đăng nhập
         string currentSceneName = gameObject.scene.name;
@@ -595,6 +734,15 @@ public class LoginController : MonoBehaviour
 
     private IEnumerator RegisterRoutine()
     {
+        // Chặn đăng ký nếu máy chủ đang bảo trì
+        if (GameConfigManager.Instance != null && GameConfigManager.Instance.IsUnderMaintenance)
+        {
+            var m = GameConfigManager.Instance.CurrentMaintenance;
+            string header = !string.IsNullOrWhiteSpace(m.title) ? m.title : "SERVER UNDER MAINTENANCE";
+            ShowRegisterMessage($"[MAINTENANCE] {header}\n{m.message}", Color.yellow);
+            yield break;
+        }
+
         var data = new UserData
         {
             username = regUsernameInput.text.Trim(),
@@ -612,19 +760,20 @@ public class LoginController : MonoBehaviour
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
+            request.certificateHandler = new AcceptAllCerts();
 
             yield return request.SendWebRequest();
 
             if (request.result == UnityWebRequest.Result.Success)
             {
                 var resp = JsonUtility.FromJson<ApiResponse>(request.downloadHandler.text);
-                ShowRegisterMessage(resp?.message ?? "Đăng ký thành công! Hãy quay lại để đăng nhập.", Color.green);
+                ShowRegisterMessage(resp?.message ?? "Registration successful! Please go back to log in.", Color.green);
 
                 Invoke("ShowLoginPanel", 1.5f);
             }
             else
             {
-                ShowRegisterMessage(GetErrorMessage(request, "Lỗi đăng ký"), Color.red);
+                HandleMaintenanceError(request, "Registration error", isRegister: true);
             }
         }
     }
@@ -641,6 +790,7 @@ public class LoginController : MonoBehaviour
             }
 
             req.downloadHandler = new DownloadHandlerBuffer();
+            req.certificateHandler = new AcceptAllCerts();
             yield return req.SendWebRequest();
         }
     }
@@ -681,5 +831,55 @@ public class LoginController : MonoBehaviour
         }
 
         return fallback + ": " + request.error;
+    }
+
+    private void CheckServerMaintenanceOnStart()
+    {
+        if (MaintenanceManager.Instance != null)
+        {
+            MaintenanceManager.Instance.CheckMaintenanceStatus((status) =>
+            {
+                if (status != null && status.isUnderMaintenance)
+                {
+                    ShowLoginMessage($"[MAINTENANCE] {status.title}: {status.message}", new Color(1f, 0.72f, 0.2f));
+                }
+            }, showPopupIfMaintenance: true);
+        }
+    }
+
+    private void HandleMaintenanceError(UnityWebRequest request, string fallback, bool isRegister = false)
+    {
+        if (request.responseCode == 503)
+        {
+            try
+            {
+                var mResp = JsonUtility.FromJson<MaintenanceApiResponse>(request.downloadHandler.text);
+                if (mResp != null && mResp.isMaintenance && mResp.maintenance != null)
+                {
+                    if (MaintenancePopupUI.Instance != null)
+                    {
+                        MaintenancePopupUI.Instance.Show(mResp.maintenance);
+                    }
+                    string msg = !string.IsNullOrWhiteSpace(mResp.message) ? mResp.message : mResp.maintenance.message;
+                    if (isRegister) ShowRegisterMessage(msg, Color.red);
+                    else ShowLoginMessage(msg, Color.red);
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[LoginController] Failed to parse 503 maintenance response: {ex.Message}");
+            }
+        }
+
+        string errMsg = GetErrorMessage(request, fallback);
+        if (isRegister)
+        {
+            ShowRegisterMessage(errMsg, Color.red);
+        }
+        else
+        {
+            ShowLoginMessage(errMsg, Color.red);
+        }
     }
 }

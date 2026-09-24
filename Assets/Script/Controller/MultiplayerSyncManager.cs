@@ -383,7 +383,7 @@ public class MultiplayerSyncManager : MonoBehaviour
         Debug.LogWarning($"[MultiplayerSyncManager] Chủ phòng {hostName} đã thoát game! Trận đấu kết thúc.");
         if (LoadingScreenUI.Instance != null)
         {
-            LoadingScreenUI.Instance.ShowLoading("TRẬN ĐẤU KẾT THÚC", $"Chủ phòng {hostName} đã rời trận đấu.");
+            LoadingScreenUI.Instance.ShowLoading("MATCH ENDED", $"Host {hostName} has left the match.");
         }
         if (RunStatsTracker.Instance != null)
         {
@@ -782,14 +782,22 @@ public class MultiplayerSyncManager : MonoBehaviour
             }
             else
             {
-                MelogBossAI melogBossAI = enemy.GetComponent<MelogBossAI>();
-                if (melogBossAI != null)
+                IBossAI bossAI = enemy.GetComponent<IBossAI>();
+                if (bossAI != null)
                 {
-                    melogBossAI.UpdateNetworkPosition(new Vector2(x, y));
+                    bossAI.UpdateNetworkPosition(new Vector2(x, y));
                 }
                 else
                 {
-                    enemy.transform.position = new Vector3(x, y, enemy.transform.position.z);
+                    MelogBossAI melogBossAI = enemy.GetComponent<MelogBossAI>();
+                    if (melogBossAI != null)
+                    {
+                        melogBossAI.UpdateNetworkPosition(new Vector2(x, y));
+                    }
+                    else
+                    {
+                        enemy.transform.position = new Vector3(x, y, enemy.transform.position.z);
+                    }
                 }
             }
         }
@@ -891,10 +899,18 @@ public class MultiplayerSyncManager : MonoBehaviour
         GameObject bossObj = FindEnemyByNetworkId(bossId);
         if (bossObj != null)
         {
-            MelogBossAI melogAI = bossObj.GetComponent<MelogBossAI>();
-            if (melogAI != null)
+            IBossAI bossAI = bossObj.GetComponent<IBossAI>();
+            if (bossAI != null)
             {
-                melogAI.ExecuteNetworkAttack(new Vector2(targetX, targetY));
+                bossAI.ExecuteNetworkAttack(new Vector2(targetX, targetY));
+            }
+            else
+            {
+                MelogBossAI melogAI = bossObj.GetComponent<MelogBossAI>();
+                if (melogAI != null)
+                {
+                    melogAI.ExecuteNetworkAttack(new Vector2(targetX, targetY));
+                }
             }
         }
     }

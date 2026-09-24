@@ -56,9 +56,9 @@ public class PlayerController : MonoBehaviour
         {
             animator.SetFloat("Speed", moveInput.magnitude);
             if (weaponAim == null) weaponAim = GetComponentInChildren<WeaponAim>();
-            bool lookUp = (moveInput.y > 0.1f) || (weaponAim != null && weaponAim.isAimingUp);
-            int yInt = lookUp ? 1 : (moveInput.y < -0.1f ? -1 : 0);
-            float yFloat = lookUp ? 1f : moveInput.y;
+            bool lookUp = (weaponAim != null && weaponAim.isAimingUp);
+            int yInt = lookUp ? 1 : 0;
+            float yFloat = lookUp ? 1f : 0f;
             foreach (var param in animator.parameters)
             {
                 if (param.name == "MoveY")

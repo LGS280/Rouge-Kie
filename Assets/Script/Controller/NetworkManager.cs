@@ -117,6 +117,9 @@ public class NetworkManager : MonoBehaviour
     // QUYỀN HẠN TRONG TRẬN: Sẽ được Server định đoạt khi tạo hoặc vào phòng thành công
     public string UserRole = "Guest";
 
+    // QUYỀN HẠN TÀI KHOẢN (Developer, Admin, User, etc.)
+    public string AccountRole = "User";
+
     private void Awake()
     {
         if (_instance == null)
@@ -132,8 +135,9 @@ public class NetworkManager : MonoBehaviour
             {
                 IsLoggedIn = true;
                 LoggedInUsername = savedUsername;
+                AccountRole = PlayerPrefs.GetString("account_role", "User");
                 UserRole = "Player";
-                Debug.Log($"[NetworkManager] Tự động đăng nhập người dùng: {LoggedInUsername}");
+                Debug.Log($"[NetworkManager] Tự động đăng nhập người dùng: {LoggedInUsername} (Role: {AccountRole})");
             }
         }
         else if (_instance != this)
@@ -455,6 +459,27 @@ public class NetworkManager : MonoBehaviour
         }
 
         return 1;
+    }
+
+    /// <summary>
+    /// Lấy tổng số lượng người chơi thực tế trong phòng (Solo: 1, Co-op: số người chơi đang kết nối)
+    /// </summary>
+    public int GetCoopPlayerCount()
+    {
+        bool isMultiplayer = IsLoggedIn && !string.IsNullOrEmpty(CurrentRoomId);
+        if (!isMultiplayer) return 1;
+
+        if (OrderedRoomPlayerIds != null && OrderedRoomPlayerIds.Count > 0)
+        {
+            return Mathf.Max(1, OrderedRoomPlayerIds.Count);
+        }
+
+        if (MultiplayerSyncManager.Instance != null && MultiplayerSyncManager.Instance.remotePlayers != null)
+        {
+            return Mathf.Max(1, 1 + MultiplayerSyncManager.Instance.remotePlayers.Count);
+        }
+
+        return 2; // Dự phòng tối thiểu cho co-op nếu chưa nạp kịp danh sách
     }
 
     // CÁC PHƯƠNG THỨC GỬI SỰ KIỆN ROOM LÊN SERVER
