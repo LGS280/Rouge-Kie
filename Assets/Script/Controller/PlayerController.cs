@@ -18,6 +18,12 @@ public class PlayerController : MonoBehaviour
     public enum InputMode { KeyboardMouse, Gamepad}
     public InputMode currentMode = InputMode.KeyboardMouse;
 
+    [Header("Độ trễ chuyển đổi thiết bị (Exclusive Lockout)")]
+    [Tooltip("Thời gian phải buông thiết bị cũ (giây) trước khi game chấp nhận thiết bị mới")]
+    public float switchCooldown = 3.0f;
+    private float lastKeyboardMouseInputTime = -999f;
+    private float lastGamepadInputTime = -999f;
+
     private WeaponAim weaponAim;
 
     private void Start()
@@ -52,7 +58,9 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         CheckAndSwitchInputMode();
-        if(animator != null)
+        UpdateMoveInput();
+
+        if (animator != null)
         {
             animator.SetFloat("Speed", moveInput.magnitude);
             if (weaponAim == null) weaponAim = GetComponentInChildren<WeaponAim>();
@@ -70,6 +78,35 @@ public class PlayerController : MonoBehaviour
                     break;
                 }
             }
+        }
+    }
+
+    private void UpdateMoveInput()
+    {
+        if (currentMode == InputMode.Gamepad)
+        {
+            // Ở chế độ Gamepad: Chỉ nhận di chuyển từ cần Analog trái (bỏ qua phím WASD)
+            if (Gamepad.current != null && Gamepad.current.leftStick.ReadValue().sqrMagnitude > 0.05f)
+            {
+                moveInput = Gamepad.current.leftStick.ReadValue();
+            }
+            else
+            {
+                moveInput = Vector2.zero;
+            }
+        }
+        else // InputMode.KeyboardMouse
+        {
+            // Ở chế độ Bàn phím: Chỉ nhận di chuyển từ phím WASD / Mũi tên (bỏ qua cần Gamepad)
+            Vector2 kbMove = Vector2.zero;
+            if (Keyboard.current != null)
+            {
+                if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) kbMove.y += 1f;
+                if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) kbMove.y -= 1f;
+                if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) kbMove.x -= 1f;
+                if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) kbMove.x += 1f;
+            }
+            moveInput = kbMove.normalized;
         }
     }
 
@@ -91,10 +128,10 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    // nhận tín hiệu di chuyển từ New Input System của Unity
+    // Nhận tín hiệu di chuyển từ New Input System của Unity
     public void OnMove(InputValue value)
     {
-        moveInput = value.Get<Vector2>();
+        // Được quản lý và cập nhật liên tục qua UpdateMoveInput() để đảm bảo tính độc quyền thiết bị
     }
 
     public Vector2 GetMoveInput()
@@ -104,36 +141,65 @@ public class PlayerController : MonoBehaviour
 
     private void CheckAndSwitchInputMode()
     {
-        if (currentMode != InputMode.KeyboardMouse)
+        // 1. Kiểm tra xem Bàn phím hoặc Chuột có đang được chạm vào ở frame này không
+        bool keyboardActive = Keyboard.current != null && (Keyboard.current.anyKey.wasPressedThisFrame || Keyboard.current.anyKey.isPressed);
+        bool mouseActive = Mouse.current != null && (Mouse.current.delta.ReadValue().sqrMagnitude > 0.5f || 
+                                                    Mouse.current.leftButton.isPressed || 
+                                                    Mouse.current.rightButton.isPressed ||
+                                                    Mouse.current.middleButton.isPressed);
+
+        bool isKBMActive = keyboardActive || mouseActive;
+        if (isKBMActive)
         {
-            // check xem có nút nào trên bàn phím dc bấm ko
-            bool keyboardPressed = Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame;
+            lastKeyboardMouseInputTime = Time.time;
+        }
 
-            // check xem là chuột trái và chuột phải có bấm không
-            bool mouseMoved = Mouse.current != null && (Mouse.current.delta.ReadValue().sqrMagnitude > 0.1f || Mouse.current.leftButton.wasPressedThisFrame || Mouse.current.rightButton.wasPressedThisFrame);
+        // 2. Kiểm tra xem Tay cầm Gamepad có đang được chạm vào ở frame này không
+        bool isGamepadActive = false;
+        if (Gamepad.current != null)
+        {
+            bool leftStickMoved = Gamepad.current.leftStick.ReadValue().sqrMagnitude > 0.1f;
+            bool rightStickMoved = Gamepad.current.rightStick.ReadValue().sqrMagnitude > 0.1f;
 
-            //nếu có nút trên bàn phím dc bấm hoặc click chuột thì chuyển qua chế độ chuột + bàn phím
-            if (keyboardPressed || mouseMoved)
+            bool buttonPressed = Gamepad.current.aButton.isPressed ||
+                                 Gamepad.current.bButton.isPressed ||
+                                 Gamepad.current.xButton.isPressed ||
+                                 Gamepad.current.yButton.isPressed ||
+                                 Gamepad.current.leftShoulder.isPressed ||
+                                 Gamepad.current.rightShoulder.isPressed ||
+                                 Gamepad.current.leftTrigger.isPressed ||
+                                 Gamepad.current.rightTrigger.isPressed ||
+                                 Gamepad.current.startButton.isPressed ||
+                                 Gamepad.current.selectButton.isPressed ||
+                                 Gamepad.current.dpad.up.isPressed ||
+                                 Gamepad.current.dpad.down.isPressed ||
+                                 Gamepad.current.dpad.left.isPressed ||
+                                 Gamepad.current.dpad.right.isPressed;
+
+            isGamepadActive = leftStickMoved || rightStickMoved || buttonPressed;
+            if (isGamepadActive)
             {
-                currentMode = InputMode.KeyboardMouse;
+                lastGamepadInputTime = Time.time;
             }
         }
 
-        if (currentMode != InputMode.Gamepad && Gamepad.current != null)
+        // 3. Chuyển đổi độc quyền có độ trễ (Exclusive Cooldown 3s):
+        if (currentMode == InputMode.KeyboardMouse)
         {
-            // check xem nếu có nút bấm nào trên tay cầm dc bấm ko
-            bool gamepadButtonPressed = Gamepad.current.wasUpdatedThisFrame;
-
-            // check xem cái joystick bên trái có di chuyển ko
-            bool leftStickMoved = Gamepad.current.leftStick.ReadValue().sqrMagnitude > 0.05f;
-
-            // check xem cái jotstick bên phải có di chuyển ko
-            bool rightStickMoved = Gamepad.current.rightStick.ReadValue().sqrMagnitude > 0.05f;
-
-            // nếu nút bấm trên tay cầm dc bấm hoặc joystick bên trái di chuyển hoặc joystick bên phải di chuyển thì sẽ chuyển qua chơi bằng tay cầm
-            if (gamepadButtonPressed || leftStickMoved || rightStickMoved)
+            // Đang chơi phím chuột: BẮT BUỘC phải buông phím chuột đủ 3 giây mới cho chuyển sang Tay cầm
+            if (isGamepadActive && (Time.time - lastKeyboardMouseInputTime >= switchCooldown))
             {
                 currentMode = InputMode.Gamepad;
+                Debug.Log($"[PlayerController] Đã buông phím chuột đủ {switchCooldown}s -> Chuyển sang chế độ Gamepad!");
+            }
+        }
+        else if (currentMode == InputMode.Gamepad)
+        {
+            // Đang chơi tay cầm: BẮT BUỘC phải buông tay cầm đủ 3 giây mới cho chuyển sang Bàn phím chuột
+            if (isKBMActive && (Time.time - lastGamepadInputTime >= switchCooldown))
+            {
+                currentMode = InputMode.KeyboardMouse;
+                Debug.Log($"[PlayerController] Đã buông tay cầm đủ {switchCooldown}s -> Chuyển sang chế độ KeyboardMouse!");
             }
         }
     }
