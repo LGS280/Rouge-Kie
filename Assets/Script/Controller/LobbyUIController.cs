@@ -17,10 +17,13 @@ public class LobbyUIController : MonoBehaviour
     [Header("Texts")]
     [SerializeField] private TMP_Text roomCodeText;
     [SerializeField] private TMP_Text playerListText;
+    [SerializeField] private TMP_Text joinErrorText;
 
     [Header("Lobby Action Buttons")]
     [SerializeField] private Button startGameButton;
     [SerializeField] private Button copyRoomCodeButton;
+    [SerializeField] private Button createRoomButton;
+    [SerializeField] private Button joinRoomButton;
 
     [Header("Public Room List UI (Optional)")]
     [SerializeField] private Transform roomListContainer; // Khung Content trong ScrollView chứa danh sách các phòng
@@ -29,6 +32,7 @@ public class LobbyUIController : MonoBehaviour
     [SerializeField] private Button refreshRoomsButton; // Nút làm mới danh sách phòng
 
     private List<string> activePlayers = new List<string>();
+    private Coroutine buttonLockTimeoutCoroutine;
 
     private void Start()
     {
@@ -55,6 +59,14 @@ public class LobbyUIController : MonoBehaviour
             refreshRoomsButton.onClick.AddListener(OnRefreshRoomsPressed);
         }
 
+        EnsureButtonsFound();
+        EnsureJoinErrorTextCreated();
+
+        if (roomCodeInput != null)
+        {
+            roomCodeInput.onValueChanged.AddListener(OnRoomCodeValueChanged);
+        }
+
         // Xóa sạch các GameObject mẫu đặt sẵn trong Editor khi bắt đầu
         if (roomListContainer != null)
         {
@@ -79,6 +91,140 @@ public class LobbyUIController : MonoBehaviour
             NetworkManager.Instance.OnGameStarted -= HandleGameStarted;
             NetworkManager.Instance.OnReceivePublicRooms -= HandleReceivePublicRooms;
         }
+
+        if (roomCodeInput != null)
+        {
+            roomCodeInput.onValueChanged.RemoveListener(OnRoomCodeValueChanged);
+        }
+    }
+
+    private void OnRoomCodeValueChanged(string _)
+    {
+        ClearJoinError();
+    }
+
+    private void EnsureButtonsFound()
+    {
+        if (createRoomButton == null || joinRoomButton == null)
+        {
+            Button[] buttons = lobbyMenuPanel != null
+                ? lobbyMenuPanel.GetComponentsInChildren<Button>(true)
+                : GetComponentsInChildren<Button>(true);
+
+            if (buttons != null)
+            {
+                foreach (var btn in buttons)
+                {
+                    string name = btn.gameObject.name.Trim();
+                    if (createRoomButton == null && name.Equals("CreateRoom_Btn", System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        createRoomButton = btn;
+                    }
+                    else if (joinRoomButton == null && name.Equals("JoinRoom_Btn", System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        joinRoomButton = btn;
+                    }
+                }
+            }
+        }
+    }
+
+    private void EnsureJoinErrorTextCreated()
+    {
+        if (joinErrorText != null) return;
+
+        if (roomCodeInput != null)
+        {
+            Transform container = roomCodeInput.transform.parent;
+            if (container != null)
+            {
+                Transform existing = container.Find("JoinErrorText");
+                if (existing != null)
+                {
+                    joinErrorText = existing.GetComponent<TMP_Text>();
+                    return;
+                }
+
+                GameObject errorObj = new GameObject("JoinErrorText", typeof(RectTransform), typeof(TextMeshProUGUI));
+                errorObj.transform.SetParent(container, false);
+
+                RectTransform rect = errorObj.GetComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0.5f, 0.5f);
+                rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = new Vector2(0f, -15f);
+                rect.sizeDelta = new Vector2(260f, 26f);
+
+                joinErrorText = errorObj.GetComponent<TextMeshProUGUI>();
+                if (roomCodeInput.textComponent != null)
+                {
+                    joinErrorText.font = roomCodeInput.textComponent.font;
+                    joinErrorText.fontSharedMaterial = roomCodeInput.textComponent.fontSharedMaterial;
+                }
+                joinErrorText.fontSize = 12;
+                joinErrorText.enableAutoSizing = true;
+                joinErrorText.fontSizeMin = 9;
+                joinErrorText.fontSizeMax = 14;
+                joinErrorText.fontStyle = FontStyles.Bold;
+                joinErrorText.alignment = TextAlignmentOptions.Center;
+                joinErrorText.color = new Color(1f, 0.35f, 0.35f, 1f);
+                joinErrorText.raycastTarget = false;
+                joinErrorText.text = "";
+                errorObj.SetActive(false);
+            }
+        }
+    }
+
+    private void ShowJoinError(string message)
+    {
+        EnsureJoinErrorTextCreated();
+        if (joinErrorText != null)
+        {
+            joinErrorText.text = message;
+            joinErrorText.gameObject.SetActive(true);
+        }
+    }
+
+    private void ClearJoinError()
+    {
+        if (joinErrorText != null)
+        {
+            joinErrorText.text = "";
+            joinErrorText.gameObject.SetActive(false);
+        }
+    }
+
+    private void SetLobbyButtonsInteractable(bool interactable)
+    {
+        EnsureButtonsFound();
+
+        if (createRoomButton != null) createRoomButton.interactable = interactable;
+        if (joinRoomButton != null) joinRoomButton.interactable = interactable;
+
+        if (!interactable)
+        {
+            if (buttonLockTimeoutCoroutine != null)
+            {
+                StopCoroutine(buttonLockTimeoutCoroutine);
+            }
+            buttonLockTimeoutCoroutine = StartCoroutine(UnlockButtonsAfterTimeout(6f));
+        }
+        else
+        {
+            if (buttonLockTimeoutCoroutine != null)
+            {
+                StopCoroutine(buttonLockTimeoutCoroutine);
+                buttonLockTimeoutCoroutine = null;
+            }
+        }
+    }
+
+    private System.Collections.IEnumerator UnlockButtonsAfterTimeout(float timeoutSeconds)
+    {
+        yield return new WaitForSeconds(timeoutSeconds);
+        if (createRoomButton != null) createRoomButton.interactable = true;
+        if (joinRoomButton != null) joinRoomButton.interactable = true;
+        buttonLockTimeoutCoroutine = null;
     }
 
     // --- HÀNH ĐỘNG CỦA CÁC NÚT BẤM ---
@@ -134,6 +280,8 @@ public class LobbyUIController : MonoBehaviour
         }
 
         // Bỏ qua kiểm tra và cho phép mở sảnh chọn Co-op ngay lập tức
+        ClearJoinError();
+        SetLobbyButtonsInteractable(true);
         playMenuPanel.SetActive(false);
         lobbyMenuPanel.SetActive(true);
         roomLobbyPanel.SetActive(false);
@@ -148,26 +296,49 @@ public class LobbyUIController : MonoBehaviour
 
     public void OnCreateRoomPressed()
     {
+        ClearJoinError();
+
+        if (NetworkManager.Instance == null || !NetworkManager.Instance.IsConnected)
+        {
+            ShowJoinError("Cannot connect to server. Please try again!");
+            Debug.LogError("Cannot connect to server!");
+            return;
+        }
+
+        SetLobbyButtonsInteractable(false);
         string username = GetValidUsername();
         NetworkManager.Instance.RequestCreateRoom(username);
     }
 
     public void OnJoinRoomPressed()
     {
-        string username = GetValidUsername();
-        string roomCode = roomCodeInput.text.Trim();
+        ClearJoinError();
 
-        if (string.IsNullOrEmpty(roomCode))
+        if (NetworkManager.Instance == null || !NetworkManager.Instance.IsConnected)
         {
-            Debug.LogError("Mã phòng không được để trống!");
+            ShowJoinError("Cannot connect to server. Please try again!");
+            Debug.LogError("Cannot connect to server!");
             return;
         }
 
+        string roomCode = roomCodeInput != null ? roomCodeInput.text.Trim() : "";
+
+        if (string.IsNullOrEmpty(roomCode))
+        {
+            ShowJoinError("Please enter a room code!");
+            Debug.LogWarning("Mã phòng không được để trống!");
+            return;
+        }
+
+        SetLobbyButtonsInteractable(false);
+        string username = GetValidUsername();
         NetworkManager.Instance.RequestJoinRoom(roomCode, username);
     }
 
     public void OnBackPressedFromLobbyMenu()
     {
+        ClearJoinError();
+        SetLobbyButtonsInteractable(true);
         lobbyMenuPanel.SetActive(false);
         playMenuPanel.SetActive(true);
     }
@@ -177,6 +348,8 @@ public class LobbyUIController : MonoBehaviour
     /// </summary>
     public void ResetToMainState()
     {
+        ClearJoinError();
+        SetLobbyButtonsInteractable(true);
         if (lobbyMenuPanel != null) lobbyMenuPanel.SetActive(false);
         if (roomLobbyPanel != null) roomLobbyPanel.SetActive(false);
         if (playMenuPanel != null) playMenuPanel.SetActive(false);
@@ -212,6 +385,9 @@ public class LobbyUIController : MonoBehaviour
 
     private void HandleRoomCreated(string roomCode)
     {
+        SetLobbyButtonsInteractable(true);
+        ClearJoinError();
+
         lobbyMenuPanel.SetActive(false);
         roomLobbyPanel.SetActive(true);
 
@@ -230,6 +406,9 @@ public class LobbyUIController : MonoBehaviour
 
     private void HandleJoinRoomSuccess(string roomCode, List<string> playersInRoom)
     {
+        SetLobbyButtonsInteractable(true);
+        ClearJoinError();
+
         lobbyMenuPanel.SetActive(false);
         roomLobbyPanel.SetActive(true);
 
@@ -246,8 +425,9 @@ public class LobbyUIController : MonoBehaviour
 
     private void HandleJoinRoomFailed(string error)
     {
-        Debug.LogError($"Lỗi: {error}");
-        // Có thể bổ sung UI Popup thông báo lỗi cho người chơi tại đây
+        Debug.LogError($"[LobbyUIController] Join room failed: {error}");
+        SetLobbyButtonsInteractable(true);
+        ShowJoinError(string.IsNullOrEmpty(error) ? "Failed to join room!" : error);
     }
 
     private void HandlePlayerJoined(string username, string connId)
@@ -360,6 +540,13 @@ public class LobbyUIController : MonoBehaviour
                         joinBtn.onClick.RemoveAllListeners();
                         joinBtn.onClick.AddListener(() =>
                         {
+                            ClearJoinError();
+                            if (NetworkManager.Instance == null || !NetworkManager.Instance.IsConnected)
+                            {
+                                ShowJoinError("Cannot connect to server. Please try again!");
+                                return;
+                            }
+                            SetLobbyButtonsInteractable(false);
                             string username = GetValidUsername();
                             if (roomCodeInput != null && !string.IsNullOrEmpty(code)) roomCodeInput.text = code;
                             Debug.Log($"[LobbyUIController] Đang tham gia phòng '{code}' với tên '{username}'...");
