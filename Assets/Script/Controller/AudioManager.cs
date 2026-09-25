@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.SceneManagement;
 
 namespace RogueKie.Audio
 {
@@ -50,6 +51,25 @@ namespace RogueKie.Audio
                     _instance.PlayBGM(menuBgmClip);
                 }
                 Destroy(gameObject);
+            }
+        }
+
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            // Stop combat BGM when returning to Scene_Menu to prevent overlapping with menu BGM
+            if (scene.name == "Scene_Menu")
+            {
+                StopBGM();
             }
         }
 
@@ -139,6 +159,16 @@ namespace RogueKie.Audio
             bgmSource.clip = clip;
             bgmSource.loop = true;
             bgmSource.Play();
+        }
+
+        // --- HÀM DỪNG BGM (NHẠC NỀN) ---
+        public void StopBGM()
+        {
+            if (bgmSource != null)
+            {
+                bgmSource.Stop();
+                bgmSource.clip = null;
+            }
         }
 
         // --- HÀM PHÁT SFX (HIỆU ỨNG ÂM THANH) ---

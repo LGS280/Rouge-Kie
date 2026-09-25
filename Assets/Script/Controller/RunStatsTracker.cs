@@ -387,6 +387,10 @@ public class RunStatsTracker : MonoBehaviour
         }
         else
         {
+            if (RogueKie.Audio.AudioManager.Instance != null)
+            {
+                RogueKie.Audio.AudioManager.Instance.StopBGM();
+            }
             UnityEngine.SceneManagement.SceneManager.LoadScene("Scene_Menu");
         }
     }
