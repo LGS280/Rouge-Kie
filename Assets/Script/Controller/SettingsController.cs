@@ -25,6 +25,11 @@ public class SettingsController : MonoBehaviour
             Debug.LogError("resolutionDropdown chưa được gán trong Inspector!");
     }
 
+    private void OnEnable()
+    {
+        LoadSettings();
+    }
+
     private void Start()
     {
         LoadSettings();
@@ -111,6 +116,7 @@ public class SettingsController : MonoBehaviour
     public void SetMasterVolume(float volume)
     {
         PlayerPrefs.SetFloat("MasterVol", volume);
+        AudioListener.volume = Mathf.Clamp01(volume);
         if (RogueKie.Audio.AudioManager.Instance != null)
         {
             RogueKie.Audio.AudioManager.Instance.SetVolume("MasterVolume", volume);
@@ -120,6 +126,7 @@ public class SettingsController : MonoBehaviour
     public void SetBGMVolume(float volume)
     {
         PlayerPrefs.SetFloat("BGMVol", volume);
+        if (bgmSource != null) bgmSource.volume = volume;
         if (RogueKie.Audio.AudioManager.Instance != null)
         {
             RogueKie.Audio.AudioManager.Instance.SetVolume("BGMVolume", volume);
@@ -140,25 +147,29 @@ public class SettingsController : MonoBehaviour
     private void LoadSettings()
     {
         // Tắt event trước khi set value để tránh trigger
-        if (bgmSlider != null)
-        {
-            bgmSlider.onValueChanged.RemoveAllListeners();
-            bgmSlider.value = PlayerPrefs.GetFloat("BGMVol", 1f);
-            bgmSlider.onValueChanged.AddListener(SetBGMVolume); // gắn lại sau
-            if (bgmSource != null) bgmSource.volume = bgmSlider.value;
-        }
-
+        float masterVol = PlayerPrefs.GetFloat("MasterVol", 0.75f);
         if (masterSlider != null)
         {
             masterSlider.onValueChanged.RemoveAllListeners();
-            masterSlider.value = PlayerPrefs.GetFloat("MasterVol", 1f);
+            masterSlider.value = masterVol;
             masterSlider.onValueChanged.AddListener(SetMasterVolume);
         }
+        AudioListener.volume = Mathf.Clamp01(masterVol);
 
+        float bgmVol = PlayerPrefs.GetFloat("BGMVol", 0.60f);
+        if (bgmSlider != null)
+        {
+            bgmSlider.onValueChanged.RemoveAllListeners();
+            bgmSlider.value = bgmVol;
+            bgmSlider.onValueChanged.AddListener(SetBGMVolume);
+            if (bgmSource != null) bgmSource.volume = bgmVol;
+        }
+
+        float sfxVol = PlayerPrefs.GetFloat("SFXVol", 0.75f);
         if (sfxSlider != null)
         {
             sfxSlider.onValueChanged.RemoveAllListeners();
-            sfxSlider.value = PlayerPrefs.GetFloat("SFXVol", 1f);
+            sfxSlider.value = sfxVol;
             sfxSlider.onValueChanged.AddListener(SetSFXVolume);
         }
 
