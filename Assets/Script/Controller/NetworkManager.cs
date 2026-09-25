@@ -34,6 +34,7 @@ public class NetworkManager : MonoBehaviour
 
     // BỔ SUNG: Thuộc tính lưu trữ mã phòng chơi hiện tại (Multiplayer-Ready)
     public string CurrentRoomId { get; private set; }
+    public bool IsConnected => hubConnection != null && hubConnection.State == HubConnectionState.Connected;
 
     private HubConnection hubConnection;
     private SynchronizationContext unityContext; // Đồng bộ luồng chính Unity
