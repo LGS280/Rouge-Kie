@@ -51,6 +51,13 @@ public class WeaponLaser : MonoBehaviour
     private PlayerMeleeSlash playerMelee;
     private RookieHealth playerHealth;
 
+    [Header("Multiplayer Co-op Sync")]
+    [HideInInspector] public bool isRemote = false;
+    private bool isRemoteFiring = false;
+    private float lastRemotePacketTime = 0f;
+    private float lastNetworkSendTime = 0f;
+    private const float NETWORK_SYNC_INTERVAL = 0.12f;
+
     void Start()
     {
         playerMelee = GetComponentInParent<PlayerMeleeSlash>();
@@ -133,6 +140,12 @@ public class WeaponLaser : MonoBehaviour
 
     void Update()
     {
+        if (isRemote)
+        {
+            UpdateRemoteLaser();
+            return;
+        }
+
         if (transform.parent == null || !transform.parent.name.Contains("Hand"))
         {
             isHoldingAttack = false;
@@ -183,6 +196,9 @@ public class WeaponLaser : MonoBehaviour
                 // 1 CLICK RA TIA LUÔN: Hiển thị độ rộng tối đa ngay lập tức
                 currentLaserWidth = maxLaserWidth;
                 startGlowScale = 1.0f;
+
+                SendLaserNetworkEvent("Laser_Gun_MK1:Start");
+                lastNetworkSendTime = Time.time;
             }
             else
             {
@@ -204,14 +220,25 @@ public class WeaponLaser : MonoBehaviour
 
                 currentLaserWidth = Mathf.Lerp(currentLaserWidth, maxLaserWidth, Time.deltaTime * lerpSpeed);
                 startGlowScale = Mathf.Lerp(startGlowScale, 1.0f, Time.deltaTime * lerpSpeed);
+
+                // Gửi heartbeat định kỳ 0.12s để duy trì tia trên máy đồng đội
+                if (Time.time - lastNetworkSendTime >= NETWORK_SYNC_INTERVAL)
+                {
+                    SendLaserNetworkEvent("Laser_Gun_MK1:Hold");
+                    lastNetworkSendTime = Time.time;
+                }
             }
 
-            AnimateAndCalculateLaser();
+            AnimateAndCalculateLaser(true);
         }
         else
         {
             // Khi nhả nút bắn: thu nhỏ tia laser và tắt dần
-            isFiring = false;
+            if (isFiring)
+            {
+                isFiring = false;
+                SendLaserNetworkEvent("Laser_Gun_MK1:Stop");
+            }
             manaHoldTimer = 0f;
 
             if (instantiatedLaser != null)
@@ -219,7 +246,7 @@ public class WeaponLaser : MonoBehaviour
                 currentLaserWidth = Mathf.Lerp(currentLaserWidth, 0f, Time.deltaTime * lerpSpeed * 2.5f);
                 startGlowScale = Mathf.Lerp(startGlowScale, 0f, Time.deltaTime * lerpSpeed * 2.5f);
 
-                AnimateAndCalculateLaser();
+                AnimateAndCalculateLaser(true);
 
                 if (currentLaserWidth < 0.02f && startGlowScale < 0.02f)
                 {
@@ -229,8 +256,86 @@ public class WeaponLaser : MonoBehaviour
         }
     }
 
+    public void SetRemoteLaserActive(bool active)
+    {
+        isRemote = true;
+
+        // Nếu vũ khí không được cầm trên tay (ví dụ đang đeo sau lưng), tuyệt đối không kích hoạt
+        if (transform.parent == null || !transform.parent.name.Contains("Hand"))
+        {
+            isRemoteFiring = false;
+            StopLaser();
+            return;
+        }
+
+        isRemoteFiring = active;
+        if (active)
+        {
+            lastRemotePacketTime = Time.time;
+            EnsureLaserInstantiated();
+        }
+        else
+        {
+            StopLaser();
+        }
+    }
+
+    private void UpdateRemoteLaser()
+    {
+        // Nếu chuyển sang vũ khí phụ hoặc không ở trên tay -> Tắt ngay lập tức
+        if (transform.parent == null || !transform.parent.name.Contains("Hand"))
+        {
+            isRemoteFiring = false;
+            StopLaser();
+            return;
+        }
+
+        // Timeout bảo vệ nếu không nhận được heartbeat quá 0.35s thì tự tắt
+        if (isRemoteFiring && Time.time - lastRemotePacketTime > 0.35f)
+        {
+            isRemoteFiring = false;
+        }
+
+        if (isRemoteFiring && laserPrefab != null && firePoint != null)
+        {
+            EnsureLaserInstantiated();
+            currentLaserWidth = Mathf.Lerp(currentLaserWidth, maxLaserWidth, Time.deltaTime * lerpSpeed);
+            startGlowScale = Mathf.Lerp(startGlowScale, 1.0f, Time.deltaTime * lerpSpeed);
+            AnimateAndCalculateLaser(false);
+        }
+        else if (instantiatedLaser != null)
+        {
+            currentLaserWidth = Mathf.Lerp(currentLaserWidth, 0f, Time.deltaTime * lerpSpeed * 2.5f);
+            startGlowScale = Mathf.Lerp(startGlowScale, 0f, Time.deltaTime * lerpSpeed * 2.5f);
+            AnimateAndCalculateLaser(false);
+
+            if (currentLaserWidth < 0.02f && startGlowScale < 0.02f)
+            {
+                StopLaser();
+            }
+        }
+    }
+
+    private void SendLaserNetworkEvent(string eventTag)
+    {
+        if (isRemote) return;
+
+        if (NetworkManager.Instance != null && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId))
+        {
+            Vector3 pos = firePoint != null ? firePoint.position : transform.position;
+            Vector3 dir = firePoint != null ? firePoint.right : transform.right;
+            NetworkManager.Instance.SendShootEvent(eventTag, pos, dir);
+        }
+    }
+
     private void EnsureLaserInstantiated()
     {
+        if (firePoint == null)
+        {
+            firePoint = transform.Find("FirePoint");
+            if (firePoint == null) firePoint = transform;
+        }
+
         if (instantiatedLaser == null && laserPrefab != null && firePoint != null)
         {
             instantiatedLaser = Instantiate(laserPrefab, firePoint.position, Quaternion.identity, firePoint);
@@ -264,7 +369,7 @@ public class WeaponLaser : MonoBehaviour
         }
     }
 
-    void AnimateAndCalculateLaser()
+    void AnimateAndCalculateLaser(bool dealDamage = true)
     {
         if (currentLaserLine == null) return;
 
@@ -301,7 +406,7 @@ public class WeaponLaser : MonoBehaviour
             endGlowCircle.gameObject.SetActive(currentLaserWidth > 0.05f);
         }
 
-        if (currentLaserWidth > maxLaserWidth * 0.25f)
+        if (dealDamage && !isRemote && currentLaserWidth > maxLaserWidth * 0.25f)
         {
             ApplyLaserDamage(finalEndPoint);
         }
@@ -364,7 +469,13 @@ public class WeaponLaser : MonoBehaviour
 
     public void StopLaser()
     {
+        if (!isRemote && isFiring)
+        {
+            SendLaserNetworkEvent("Laser_Gun_MK1:Stop");
+        }
+
         isFiring = false;
+        isRemoteFiring = false;
         manaHoldTimer = 0f;
 
         if (instantiatedLaser != null)

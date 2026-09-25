@@ -34,6 +34,7 @@ public class NetworkManager : MonoBehaviour
 
     // BỔ SUNG: Thuộc tính lưu trữ mã phòng chơi hiện tại (Multiplayer-Ready)
     public string CurrentRoomId { get; private set; }
+    public bool IsConnected => hubConnection != null && hubConnection.State == HubConnectionState.Connected;
 
     private HubConnection hubConnection;
     private SynchronizationContext unityContext; // Đồng bộ luồng chính Unity
@@ -59,6 +60,8 @@ public class NetworkManager : MonoBehaviour
     public event Action<string, string> OnPlayerJoined;
     public event Action<string, string> OnPlayerDisconnected;
     public event Action<List<PublicRoomInfo>> OnReceivePublicRooms;
+    // BỔ SUNG: Sự kiện nhận lệnh khóa tài khoản từ Server theo thời gian thực (bannedUsername, banReason)
+    public event Action<string, string> OnUserBanned;
 
     // Sự kiện đồng bộ vị trí (Đồng đội gọi)
     public event Action<string, float, float> OnReceivePosition;
@@ -210,6 +213,22 @@ public class NetworkManager : MonoBehaviour
         hubConnection.On<string, string>("OnPlayerDisconnected", (username, connId) =>
         {
             unityContext.Post(_ => OnPlayerDisconnected?.Invoke(username, connId), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện khóa tài khoản thời gian thực từ Server (Real-time Ban/Kick)
+        hubConnection.On<string, string>("OnUserBanned", (bannedUsername, banReason) =>
+        {
+            unityContext.Post(_ =>
+            {
+                OnUserBanned?.Invoke(bannedUsername, banReason);
+
+                // Nếu người chơi hiện tại chính là tài khoản bị khóa
+                if (IsLoggedIn && string.Equals(LoggedInUsername, bannedUsername, StringComparison.OrdinalIgnoreCase))
+                {
+                    Debug.LogWarning($"[NetworkManager] Tài khoản '{LoggedInUsername}' đã bị Admin đình chỉ: {banReason}");
+                    HandleAccountBanned(banReason);
+                }
+            }, null);
         });
 
         // Đăng ký lắng nghe gói tin tọa độ của đồng đội từ Server gửi về
@@ -813,6 +832,31 @@ public class NetworkManager : MonoBehaviour
         catch (Exception ex)
         {
             Debug.LogWarning($"[NetworkManager] SendBossAttack gián đoạn: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Xử lý khẩn cấp khi nhận tín hiệu tài khoản bị Admin đình chỉ / khóa (Real-time Kick & Force Logout)
+    /// </summary>
+    public void HandleAccountBanned(string banReason = null)
+    {
+        if (string.IsNullOrWhiteSpace(banReason))
+        {
+            banReason = "Your account has been suspended by an Administrator.\nYou have been disconnected from the session.";
+        }
+
+        Debug.LogWarning($"[NetworkManager] Đang tiến hành ngắt kết nối và đăng xuất tài khoản bị khóa: {LoggedInUsername}");
+
+        // Rời phòng Co-op nếu đang ở trong phòng
+        if (!string.IsNullOrEmpty(CurrentRoomId))
+        {
+            RequestLeaveRoom();
+        }
+
+        // Thực hiện xóa session, đăng xuất và hiển thị Modal Popup thông báo tiếng Anh
+        if (ApiClient.Instance != null)
+        {
+            ApiClient.Instance.Logout(banReason);
         }
     }
 }

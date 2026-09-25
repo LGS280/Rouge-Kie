@@ -1,11 +1,24 @@
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.SceneManagement;
 
 namespace RogueKie.Audio
 {
     public class AudioManager : MonoBehaviour
     {
-        public static AudioManager Instance { get; private set; }
+        private static AudioManager _instance;
+        public static AudioManager Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = FindFirstObjectByType<AudioManager>();
+                }
+                return _instance;
+            }
+            private set => _instance = value;
+        }
 
         [Header("Audio Mixer Reference")]
         [SerializeField] private AudioMixer mainMixer;
@@ -24,14 +37,62 @@ namespace RogueKie.Audio
         private void Awake()
         {
             // Thiết lập DontDestroyOnLoad Singleton
-            if (Instance == null)
+            if (_instance == null)
             {
-                Instance = this;
+                _instance = this;
                 DontDestroyOnLoad(gameObject);
+                SetupMixerGroups();
             }
-            else
+            else if (_instance != this)
             {
+                // If a new scene has its own BGM clip, play it on the persistent AudioManager instance
+                if (menuBgmClip != null)
+                {
+                    _instance.PlayBGM(menuBgmClip);
+                }
                 Destroy(gameObject);
+            }
+        }
+
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            // Stop combat BGM when returning to Scene_Menu to prevent overlapping with menu BGM
+            if (scene.name == "Scene_Menu")
+            {
+                StopBGM();
+            }
+        }
+
+        private void SetupMixerGroups()
+        {
+            if (mainMixer == null) return;
+
+            if (bgmSource != null && bgmSource.outputAudioMixerGroup == null)
+            {
+                AudioMixerGroup[] bgmGroups = mainMixer.FindMatchingGroups("BGM");
+                if (bgmGroups != null && bgmGroups.Length > 0)
+                {
+                    bgmSource.outputAudioMixerGroup = bgmGroups[0];
+                }
+            }
+
+            if (sfxSource != null && sfxSource.outputAudioMixerGroup == null)
+            {
+                AudioMixerGroup[] sfxGroups = mainMixer.FindMatchingGroups("SFX");
+                if (sfxGroups != null && sfxGroups.Length > 0)
+                {
+                    sfxSource.outputAudioMixerGroup = sfxGroups[0];
+                }
             }
         }
 
@@ -51,6 +112,14 @@ namespace RogueKie.Audio
 
         private void InitializeVolume(string mixerParam, string prefsKey, float defaultValue)
         {
+            if (!PlayerPrefs.HasKey("BGMVol_Fixed") && prefsKey == "BGMVol")
+            {
+                PlayerPrefs.SetInt("BGMVol_Fixed", 1);
+                if (PlayerPrefs.GetFloat("BGMVol", defaultValue) <= 0.00015f)
+                {
+                    PlayerPrefs.SetFloat("BGMVol", defaultValue);
+                }
+            }
             float savedVol = PlayerPrefs.GetFloat(prefsKey, defaultValue);
             SetVolume(mixerParam, savedVol);
         }
@@ -58,11 +127,27 @@ namespace RogueKie.Audio
         // Chuyển đổi từ thang đo Tuyến tính [0.0001, 1] của Slider sang thang đo Logarit Decibel [-80, 20] của Mixer
         public void SetVolume(string parameterName, float linearVolume)
         {
-            if (mainMixer == null) return;
-
             float clampedVolume = Mathf.Clamp(linearVolume, 0.0001f, 1f);
-            float dbVolume = Mathf.Log10(clampedVolume) * 20f;
-            mainMixer.SetFloat(parameterName, dbVolume);
+
+            if (mainMixer != null)
+            {
+                float dbVolume = Mathf.Log10(clampedVolume) * 20f;
+                mainMixer.SetFloat(parameterName, dbVolume);
+            }
+
+            // Cơ chế bảo hiểm kép: can thiệp trực tiếp AudioListener và AudioSource
+            if (parameterName == "MasterVolume")
+            {
+                AudioListener.volume = Mathf.Clamp01(linearVolume);
+            }
+            else if (parameterName == "BGMVolume" && bgmSource != null)
+            {
+                bgmSource.volume = clampedVolume;
+            }
+            else if (parameterName == "SFXVolume" && sfxSource != null)
+            {
+                sfxSource.volume = clampedVolume;
+            }
         }
 
         // --- HÀM PHÁT BGM (NHẠC NỀN) ---
@@ -76,6 +161,16 @@ namespace RogueKie.Audio
             bgmSource.Play();
         }
 
+        // --- HÀM DỪNG BGM (NHẠC NỀN) ---
+        public void StopBGM()
+        {
+            if (bgmSource != null)
+            {
+                bgmSource.Stop();
+                bgmSource.clip = null;
+            }
+        }
+
         // --- HÀM PHÁT SFX (HIỆU ỨNG ÂM THANH) ---
         public void PlaySFX(AudioClip clip)
         {
@@ -84,15 +179,39 @@ namespace RogueKie.Audio
         }
 
         /// <summary>
-        /// Phát âm thanh 3D tại một tọa độ xác định trong không gian (Ví dụ: tiếng súng, tiếng nổ)
+        /// Phát âm thanh 3D tại một tọa độ xác định trong không gian (Ví dụ: tiếng súng, tiếng nổ) có định tuyến qua Mixer SFX
         /// </summary>
         public void PlaySFXAtPosition(AudioClip clip, Vector3 position, float volume = 1f)
         {
             if (clip == null) return;
 
-            // Tạo ra một AudioSource tạm thời tại vị trí phát, tự động xóa sau khi phát xong clip
-            // Âm thanh sẽ tự động nhỏ dần khi người chơi đi ra xa nguồn phát
-            AudioSource.PlayClipAtPoint(clip, position, volume);
+            GameObject tempAudioObj = new GameObject("TempSFXAudio_" + clip.name);
+            tempAudioObj.transform.position = position;
+
+            AudioSource tempSource = tempAudioObj.AddComponent<AudioSource>();
+            tempSource.clip = clip;
+            tempSource.volume = Mathf.Clamp01(volume);
+            tempSource.spatialBlend = 1f; // 3D sound
+            tempSource.rolloffMode = AudioRolloffMode.Linear;
+            tempSource.minDistance = 2f;
+            tempSource.maxDistance = 25f;
+
+            // Định tuyến qua Mixer SFX
+            if (sfxSource != null && sfxSource.outputAudioMixerGroup != null)
+            {
+                tempSource.outputAudioMixerGroup = sfxSource.outputAudioMixerGroup;
+            }
+            else if (mainMixer != null)
+            {
+                AudioMixerGroup[] sfxGroups = mainMixer.FindMatchingGroups("SFX");
+                if (sfxGroups != null && sfxGroups.Length > 0)
+                {
+                    tempSource.outputAudioMixerGroup = sfxGroups[0];
+                }
+            }
+
+            tempSource.Play();
+            Destroy(tempAudioObj, clip.length);
         }
 
         // Phục vụ nhanh cho hiệu ứng tương tác nút bấm

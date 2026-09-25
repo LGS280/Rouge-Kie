@@ -23,6 +23,7 @@ public class WeaponManager : MonoBehaviour
     private bool isUsingSlot1 = true;
     private WeaponAim handWeaponAim;
     private float nextScrollSwapTime = 0f;
+    private PlayerController playerController;
 
     private void Awake()
     {
@@ -31,6 +32,8 @@ public class WeaponManager : MonoBehaviour
 
     void Start()
     {
+        playerController = GetComponentInParent<PlayerController>();
+        if (playerController == null) playerController = GetComponent<PlayerController>();
         handWeaponAim = handPosition.GetComponent<WeaponAim>();
 
         string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
@@ -216,30 +219,36 @@ public class WeaponManager : MonoBehaviour
 
     void Update()
     {
-
         CheckWeaponPickup();
 
+        bool isGamepad = (playerController != null && playerController.currentMode == PlayerController.InputMode.Gamepad);
         bool hasPressedSwapKey = false;
 
-        InputAction switchAction = (InputLoader.Instance != null) ? InputLoader.Instance.GetAction("SwitchWeapon") : null;
-        if (switchAction != null && (switchAction.triggered || switchAction.WasPressedThisFrame()))
+        if (isGamepad)
         {
-            hasPressedSwapKey = true;
-        }
-        else if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
-        {
-            hasPressedSwapKey = true;
-        }
-        else if (Gamepad.current != null && Gamepad.current.aButton.wasPressedThisFrame)
-        {
-            hasPressedSwapKey = true;
-        }
-        else if (Mouse.current != null && Mathf.Abs(Mouse.current.scroll.ReadValue().y) > 0.1f)
-        {
-            if (Time.time >= nextScrollSwapTime)
+            if (Gamepad.current != null && Gamepad.current.aButton.wasPressedThisFrame)
             {
                 hasPressedSwapKey = true;
-                nextScrollSwapTime = Time.time + 1.0f;
+            }
+        }
+        else
+        {
+            InputAction switchAction = (InputLoader.Instance != null) ? InputLoader.Instance.GetAction("SwitchWeapon") : null;
+            if (switchAction != null && (switchAction.triggered || switchAction.WasPressedThisFrame()))
+            {
+                hasPressedSwapKey = true;
+            }
+            else if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
+            {
+                hasPressedSwapKey = true;
+            }
+            else if (Mouse.current != null && Mathf.Abs(Mouse.current.scroll.ReadValue().y) > 0.1f)
+            {
+                if (Time.time >= nextScrollSwapTime)
+                {
+                    hasPressedSwapKey = true;
+                    nextScrollSwapTime = Time.time + 1.0f;
+                }
             }
         }
 
@@ -253,22 +262,27 @@ public class WeaponManager : MonoBehaviour
     {
         if (nearbyWeapons.Count == 0) return;
 
+        bool isGamepad = (playerController != null && playerController.currentMode == PlayerController.InputMode.Gamepad);
         bool hasPressedPickupKey = false;
 
-        InputAction interactAction = (InputLoader.Instance != null) ? InputLoader.Instance.GetAction("Interact") : null;
-        if (interactAction != null && (interactAction.triggered || interactAction.WasPressedThisFrame()))
+        if (isGamepad)
         {
-            hasPressedPickupKey = true;
+            if (Gamepad.current != null && Gamepad.current.bButton.wasPressedThisFrame)
+            {
+                hasPressedPickupKey = true;
+            }
         }
-
-        else if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+        else
         {
-            hasPressedPickupKey = true;
-        }
-
-        else if (Gamepad.current != null && Gamepad.current.bButton.wasPressedThisFrame)
-        {
-            hasPressedPickupKey = true;
+            InputAction interactAction = (InputLoader.Instance != null) ? InputLoader.Instance.GetAction("Interact") : null;
+            if (interactAction != null && (interactAction.triggered || interactAction.WasPressedThisFrame()))
+            {
+                hasPressedPickupKey = true;
+            }
+            else if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+            {
+                hasPressedPickupKey = true;
+            }
         }
 
         if (hasPressedPickupKey)
