@@ -44,6 +44,11 @@ namespace RogueKie.Audio
             }
             else if (_instance != this)
             {
+                // If a new scene has its own BGM clip, play it on the persistent AudioManager instance
+                if (menuBgmClip != null)
+                {
+                    _instance.PlayBGM(menuBgmClip);
+                }
                 Destroy(gameObject);
             }
         }
@@ -87,6 +92,14 @@ namespace RogueKie.Audio
 
         private void InitializeVolume(string mixerParam, string prefsKey, float defaultValue)
         {
+            if (!PlayerPrefs.HasKey("BGMVol_Fixed") && prefsKey == "BGMVol")
+            {
+                PlayerPrefs.SetInt("BGMVol_Fixed", 1);
+                if (PlayerPrefs.GetFloat("BGMVol", defaultValue) <= 0.00015f)
+                {
+                    PlayerPrefs.SetFloat("BGMVol", defaultValue);
+                }
+            }
             float savedVol = PlayerPrefs.GetFloat(prefsKey, defaultValue);
             SetVolume(mixerParam, savedVol);
         }

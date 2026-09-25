@@ -16,6 +16,7 @@ public class SettingsController : MonoBehaviour
     public TMP_Dropdown fpsDropdown;
 
     private Resolution[] resolutions;
+    private bool _isInitializing = false;
 
     private void Awake()
     {
@@ -23,6 +24,9 @@ public class SettingsController : MonoBehaviour
             SetupResolutionDropdown();
         else
             Debug.LogError("resolutionDropdown chưa được gán trong Inspector!");
+
+        if (fpsDropdown != null)
+            SetupFPSDropdown();
     }
 
     private void OnEnable()
@@ -97,16 +101,45 @@ public class SettingsController : MonoBehaviour
         PlayerPrefs.Save();
     }
 
+    private void SetupFPSDropdown()
+    {
+        if (fpsDropdown == null) return;
+
+        fpsDropdown.ClearOptions();
+
+        System.Collections.Generic.List<string> options = new System.Collections.Generic.List<string>
+        {
+            "60 FPS",
+            "120 FPS",
+            "144 FPS"
+        };
+
+        fpsDropdown.AddOptions(options);
+
+        int savedIndex = PlayerPrefs.GetInt("FPSLimitIndex", 0);
+        if (savedIndex < 0 || savedIndex >= options.Count)
+        {
+            savedIndex = 0;
+        }
+
+        fpsDropdown.value = savedIndex;
+        fpsDropdown.RefreshShownValue();
+
+        fpsDropdown.onValueChanged.RemoveAllListeners();
+        fpsDropdown.onValueChanged.AddListener(SetFPSLimit);
+    }
+
     public void SetFPSLimit(int index)
     {
         switch (index)
         {
-            case 0: Application.targetFrameRate = 30; break;
-            case 1: Application.targetFrameRate = 60; break;
-            case 2: Application.targetFrameRate = 120; break;
-            case 3: Application.targetFrameRate = -1; break; // Không giới hạn
+            case 0: Application.targetFrameRate = 60; break;
+            case 1: Application.targetFrameRate = 120; break;
+            case 2: Application.targetFrameRate = 144; break;
+            default: Application.targetFrameRate = 60; break;
         }
         PlayerPrefs.SetInt("FPSLimitIndex", index);
+        PlayerPrefs.Save();
     }
 
     // --- CẤU HÌNH ÂM THANH (Sẽ kết nối với Audio Mixer sau) ---
@@ -115,6 +148,7 @@ public class SettingsController : MonoBehaviour
 
     public void SetMasterVolume(float volume)
     {
+        if (_isInitializing) return;
         PlayerPrefs.SetFloat("MasterVol", volume);
         AudioListener.volume = Mathf.Clamp01(volume);
         if (RogueKie.Audio.AudioManager.Instance != null)
@@ -125,6 +159,7 @@ public class SettingsController : MonoBehaviour
 
     public void SetBGMVolume(float volume)
     {
+        if (_isInitializing) return;
         PlayerPrefs.SetFloat("BGMVol", volume);
         if (bgmSource != null) bgmSource.volume = volume;
         if (RogueKie.Audio.AudioManager.Instance != null)
@@ -135,6 +170,7 @@ public class SettingsController : MonoBehaviour
 
     public void SetSFXVolume(float volume)
     {
+        if (_isInitializing) return;
         PlayerPrefs.SetFloat("SFXVol", volume);
         if (RogueKie.Audio.AudioManager.Instance != null)
         {
@@ -146,50 +182,92 @@ public class SettingsController : MonoBehaviour
 
     private void LoadSettings()
     {
-        // Tắt event trước khi set value để tránh trigger
-        float masterVol = PlayerPrefs.GetFloat("MasterVol", 0.75f);
-        if (masterSlider != null)
+        _isInitializing = true;
+        try
         {
-            masterSlider.onValueChanged.RemoveAllListeners();
-            masterSlider.value = masterVol;
-            masterSlider.onValueChanged.AddListener(SetMasterVolume);
-        }
-        AudioListener.volume = Mathf.Clamp01(masterVol);
+            // Self-healing: if previous bug corrupted BGMVol to ~0, reset it to default 0.60f once
+            if (!PlayerPrefs.HasKey("BGMVol_Fixed"))
+            {
+                PlayerPrefs.SetInt("BGMVol_Fixed", 1);
+                if (PlayerPrefs.GetFloat("BGMVol", 0.60f) <= 0.00015f)
+                {
+                    PlayerPrefs.SetFloat("BGMVol", 0.60f);
+                }
+            }
 
-        float bgmVol = PlayerPrefs.GetFloat("BGMVol", 0.60f);
-        if (bgmSlider != null)
-        {
-            bgmSlider.onValueChanged.RemoveAllListeners();
-            bgmSlider.value = bgmVol;
-            bgmSlider.onValueChanged.AddListener(SetBGMVolume);
-            if (bgmSource != null) bgmSource.volume = bgmVol;
-        }
+            // Tắt event trước khi set value để tránh trigger
+            float masterVol = PlayerPrefs.GetFloat("MasterVol", 0.75f);
+            if (masterSlider != null)
+            {
+                masterSlider.onValueChanged.RemoveAllListeners();
+                masterSlider.value = masterVol;
+                masterSlider.onValueChanged.AddListener(SetMasterVolume);
+            }
+            AudioListener.volume = Mathf.Clamp01(masterVol);
+            if (RogueKie.Audio.AudioManager.Instance != null)
+            {
+                RogueKie.Audio.AudioManager.Instance.SetVolume("MasterVolume", masterVol);
+            }
 
-        float sfxVol = PlayerPrefs.GetFloat("SFXVol", 0.75f);
-        if (sfxSlider != null)
-        {
-            sfxSlider.onValueChanged.RemoveAllListeners();
-            sfxSlider.value = sfxVol;
-            sfxSlider.onValueChanged.AddListener(SetSFXVolume);
-        }
+            float bgmVol = PlayerPrefs.GetFloat("BGMVol", 0.60f);
+            if (bgmSlider != null)
+            {
+                bgmSlider.onValueChanged.RemoveAllListeners();
+                bgmSlider.value = bgmVol;
+                bgmSlider.onValueChanged.AddListener(SetBGMVolume);
+                if (bgmSource != null) bgmSource.volume = bgmVol;
+            }
+            if (RogueKie.Audio.AudioManager.Instance != null)
+            {
+                RogueKie.Audio.AudioManager.Instance.SetVolume("BGMVolume", bgmVol);
+            }
 
-        // Phần còn lại giữ nguyên
-        bool isFullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
-        if (fullscreenToggle != null)
-        {
-            fullscreenToggle.isOn = isFullscreen;
-            fullscreenToggle.onValueChanged.RemoveAllListeners();
-            fullscreenToggle.onValueChanged.AddListener(SetFullscreen);
-        }
-        Screen.fullScreenMode = isFullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
+            float sfxVol = PlayerPrefs.GetFloat("SFXVol", 0.75f);
+            if (sfxSlider != null)
+            {
+                sfxSlider.onValueChanged.RemoveAllListeners();
+                sfxSlider.value = sfxVol;
+                sfxSlider.onValueChanged.AddListener(SetSFXVolume);
+            }
+            if (RogueKie.Audio.AudioManager.Instance != null)
+            {
+                RogueKie.Audio.AudioManager.Instance.SetVolume("SFXVolume", sfxVol);
+            }
 
-        int fpsIndex = PlayerPrefs.GetInt("FPSLimitIndex", 1);
-        if (fpsDropdown != null)
-        {
-            fpsDropdown.value = fpsIndex;
-            fpsDropdown.onValueChanged.RemoveAllListeners();
-            fpsDropdown.onValueChanged.AddListener(SetFPSLimit);
+            // Phần còn lại giữ nguyên
+            bool isFullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
+            if (fullscreenToggle != null)
+            {
+                fullscreenToggle.onValueChanged.RemoveAllListeners();
+                fullscreenToggle.isOn = isFullscreen;
+                fullscreenToggle.onValueChanged.AddListener(SetFullscreen);
+            }
+            Screen.fullScreenMode = isFullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
+
+            int fpsIndex = PlayerPrefs.GetInt("FPSLimitIndex", 0);
+            if (fpsDropdown != null)
+            {
+                if (fpsDropdown.options.Count == 0)
+                {
+                    SetupFPSDropdown();
+                }
+                else
+                {
+                    if (fpsIndex < 0 || fpsIndex >= fpsDropdown.options.Count)
+                    {
+                        fpsIndex = 0;
+                    }
+                    fpsDropdown.onValueChanged.RemoveAllListeners();
+                    fpsDropdown.value = fpsIndex;
+                    fpsDropdown.RefreshShownValue();
+                    fpsDropdown.onValueChanged.AddListener(SetFPSLimit);
+                }
+            }
+            SetFPSLimit(fpsIndex);
         }
-        SetFPSLimit(fpsIndex);
+        finally
+        {
+            _isInitializing = false;
+        }
     }
 }
