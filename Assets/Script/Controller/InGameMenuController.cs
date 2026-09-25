@@ -115,6 +115,12 @@ public class InGameMenuController : MonoBehaviour
         // Reset vũ khí đã lưu của lượt chơi cũ
         WeaponManager.ResetSavedWeapons();
 
+        // Tắt nhạc nền chiến đấu trước khi thoát về Menu
+        if (RogueKie.Audio.AudioManager.Instance != null)
+        {
+            RogueKie.Audio.AudioManager.Instance.StopBGM();
+        }
+
         // Chuyển về Scene Menu chính
         UnityEngine.SceneManagement.SceneManager.LoadScene("Scene_Menu");
     }
