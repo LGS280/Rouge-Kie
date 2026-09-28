@@ -51,10 +51,15 @@ public class MaintenanceManager : MonoBehaviour
 
     private string GetApiUrl(string path)
     {
-        string apiBase = "https://localhost:7075/api";
+        string apiBase = "https://rougekiebe.azurewebsites.net/api";
         if (GameConfigManager.Instance != null && !string.IsNullOrEmpty(GameConfigManager.Instance.BaseUrl))
         {
             apiBase = GameConfigManager.Instance.BaseUrl;
+        }
+        apiBase = apiBase.TrimEnd('/');
+        if (!apiBase.EndsWith("/api", StringComparison.OrdinalIgnoreCase))
+        {
+            apiBase += "/api";
         }
         return $"{apiBase}{path}";
     }
