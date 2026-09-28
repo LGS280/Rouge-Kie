@@ -125,7 +125,13 @@ public class LoginController : MonoBehaviour
 
         if (string.IsNullOrEmpty(apiBase))
         {
-            apiBase = backendBase + "/api";
+            apiBase = backendBase;
+        }
+
+        apiBase = apiBase.TrimEnd('/');
+        if (!apiBase.EndsWith("/api", StringComparison.OrdinalIgnoreCase))
+        {
+            apiBase += "/api";
         }
 
         return $"{apiBase}{path}";
