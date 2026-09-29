@@ -8,7 +8,8 @@ using UnityEngine.InputSystem;
 public class DashSlashSkill : MonoBehaviour
 {
     [Header("Input")]
-    [SerializeField] private Key dashKey = Key.G;
+    // Đổi phím kích hoạt kỹ năng lướt chém của Zero sang phím F
+    [SerializeField] private Key dashKey = Key.F;
 
     [Header("Dash")]
     [SerializeField] private float dashDistance = 7f;
@@ -64,8 +65,8 @@ public class DashSlashSkill : MonoBehaviour
 
     public bool IsDashing => isDashing;
 
-    // Script máu của nhân vật kiểm tra biến này để bỏ qua sát thương
-    public bool IsInvincible => Time.time < invincibleUntil;
+    // Script máu của nhân vật kiểm tra biến này để bỏ qua sát thương (bất tử trong suốt lúc lướt và thời gian invincibleDuration)
+    public bool IsInvincible => isDashing || Time.time < invincibleUntil;
 
     // NEW: các thuộc tính cho UI cooldown đọc
     public float CooldownDuration => cooldown;

@@ -19,7 +19,8 @@ public class DashCooldownUI : MonoBehaviour
     [Header("Giao diện")]
     [Tooltip("Icon skill (không bắt buộc). Để trống sẽ hiện chữ phím bấm.")]
     [SerializeField] private Sprite icon;
-    [SerializeField] private string keyLabel = "G";
+    // Hiển thị nhãn phím F tương ứng với phím kỹ năng của Zero
+    [SerializeField] private string keyLabel = "F";
     [SerializeField] private Color readyColor = new Color(0.3f, 0.8f, 1f, 1f);
     [SerializeField] private Color cooldownColor = new Color(0.25f, 0.25f, 0.3f, 1f);
     [SerializeField] private Color backgroundColor = new Color(0.08f, 0.1f, 0.14f, 0.9f);
