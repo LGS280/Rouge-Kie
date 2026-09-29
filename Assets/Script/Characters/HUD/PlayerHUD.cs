@@ -94,28 +94,29 @@ public class PlayerHUD : MonoBehaviour
 
     private void EnsureBuffContainer()
     {
-        if (buffContainer != null) return;
+        if (buffContainer != null)
+        {
+            ApplyBuffContainerLayout(buffContainer.GetComponent<RectTransform>());
+            return;
+        }
 
         Transform existing = transform.Find("BuffHUDContainer");
         if (existing != null)
         {
             buffContainer = existing;
+            ApplyBuffContainerLayout(buffContainer.GetComponent<RectTransform>());
             return;
         }
 
-        // Tạo Container linh hoạt nằm bên dưới các thanh máu/giáp/mana
+        // Tạo Container linh hoạt nằm HOÀN TOÀN BÊN DƯỚI khung HUD (Panel_PlayerInfo)
         GameObject containerObj = new GameObject("BuffHUDContainer");
         containerObj.transform.SetParent(transform, false);
 
         RectTransform rect = containerObj.AddComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0f, 1f);
-        rect.anchorMax = new Vector2(0f, 1f);
-        rect.pivot = new Vector2(0f, 1f);
-        rect.anchoredPosition = new Vector2(20f, -95f);
-        rect.sizeDelta = new Vector2(360f, 32f);
+        ApplyBuffContainerLayout(rect);
 
         HorizontalLayoutGroup hlg = containerObj.AddComponent<HorizontalLayoutGroup>();
-        hlg.spacing = 6f;
+        hlg.spacing = 8f;
         hlg.childAlignment = TextAnchor.MiddleLeft;
         hlg.childControlWidth = false;
         hlg.childControlHeight = false;
@@ -123,6 +124,18 @@ public class PlayerHUD : MonoBehaviour
         hlg.childForceExpandHeight = false;
 
         buffContainer = containerObj.transform;
+    }
+
+    private void ApplyBuffContainerLayout(RectTransform rect)
+    {
+        if (rect == null) return;
+        // Neo tại cạnh đáy dưới cùng của Panel_PlayerInfo (anchorMin/Max = 0, 0)
+        // và đẩy xuống phía dưới thêm 12px để nằm hoàn toàn bên ngoài khung HUD gỗ
+        rect.anchorMin = new Vector2(0f, 0f);
+        rect.anchorMax = new Vector2(0f, 0f);
+        rect.pivot = new Vector2(0f, 1f);
+        rect.anchoredPosition = new Vector2(16f, -12f);
+        rect.sizeDelta = new Vector2(420f, 36f);
     }
 
     private void CreateBuffIconBadge(BuffConfig buff)
@@ -133,15 +146,15 @@ public class PlayerHUD : MonoBehaviour
         badgeObj.transform.SetParent(buffContainer, false);
 
         RectTransform badgeRect = badgeObj.AddComponent<RectTransform>();
-        badgeRect.sizeDelta = new Vector2(28f, 28f);
+        badgeRect.sizeDelta = new Vector2(32f, 32f);
 
-        // Nền tối Slate cho badge
+        // Nền tối Slate rõ nét cho badge
         Image badgeBg = badgeObj.AddComponent<Image>();
-        badgeBg.color = new Color(0.09f, 0.13f, 0.20f, 0.92f); // #0F172A
+        badgeBg.color = new Color(0.08f, 0.11f, 0.18f, 0.95f); // #0F172A
 
         Outline outline = badgeObj.AddComponent<Outline>();
-        outline.effectColor = new Color(0.20f, 0.25f, 0.33f, 0.9f); // #334155
-        outline.effectDistance = new Vector2(1, 1);
+        outline.effectColor = new Color(0.35f, 0.42f, 0.52f, 0.95f); // #475569 viền sáng rõ nét
+        outline.effectDistance = new Vector2(1.5f, 1.5f);
 
         // Icon Sprite hiển thị bên trong badge
         Sprite iconSprite = UpgradeSelectionUI.GetBuffSprite(buff);
@@ -157,7 +170,7 @@ public class PlayerHUD : MonoBehaviour
             RectTransform iconRect = iconObj.GetComponent<RectTransform>();
             iconRect.anchorMin = new Vector2(0.5f, 0.5f);
             iconRect.anchorMax = new Vector2(0.5f, 0.5f);
-            iconRect.sizeDelta = new Vector2(20f, 20f);
+            iconRect.sizeDelta = new Vector2(24f, 24f);
             iconRect.anchoredPosition = Vector2.zero;
         }
     }

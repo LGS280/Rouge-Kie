@@ -257,12 +257,12 @@ public class UpgradeSelectionUI : MonoBehaviour
         RectTransform containerRect = containerObj.AddComponent<RectTransform>();
         containerRect.anchorMin = new Vector2(0.5f, 0.44f);
         containerRect.anchorMax = new Vector2(0.5f, 0.44f);
-        containerRect.sizeDelta = new Vector2(1000, 480);
+        containerRect.sizeDelta = new Vector2(1040, 500);
         containerRect.anchoredPosition = Vector2.zero;
 
-        // Thông số Card
-        float cardWidth = 280f;
-        float cardHeight = 430f;
+        // Thông số Card rộng rãi và chữ to rõ nét hơn
+        float cardWidth = 290f;
+        float cardHeight = 440f;
         float spacing = 36f;
         float startX = -((cardWidth * selectedBuffs.Count) + (spacing * (selectedBuffs.Count - 1))) / 2f + cardWidth / 2f;
 
@@ -288,7 +288,7 @@ public class UpgradeSelectionUI : MonoBehaviour
 
             // Viền Slate tối giản (#334155, không màu mè, không neon glow)
             Outline outline = cardObj.AddComponent<Outline>();
-            outline.effectColor = new Color(0.20f, 0.25f, 0.33f, 1f); // #334155
+            outline.effectColor = new Color(0.25f, 0.32f, 0.42f, 1f); // #3F516B
             outline.effectDistance = new Vector2(1.5f, 1.5f);
 
             // Button click chọn thẻ
@@ -308,14 +308,14 @@ public class UpgradeSelectionUI : MonoBehaviour
             RectTransform rarityRect = rarityBadge.AddComponent<RectTransform>();
             rarityRect.anchorMin = new Vector2(0.5f, 0.92f);
             rarityRect.anchorMax = new Vector2(0.5f, 0.92f);
-            rarityRect.sizeDelta = new Vector2(140, 24);
+            rarityRect.sizeDelta = new Vector2(140, 26);
             rarityRect.anchoredPosition = Vector2.zero;
 
             Image rarityBg = rarityBadge.AddComponent<Image>();
-            rarityBg.color = new Color(0.12f, 0.16f, 0.24f, 1f); // #1E293B
+            rarityBg.color = new Color(0.14f, 0.19f, 0.28f, 1f); // #1E293B
 
             Outline rarityOutline = rarityBadge.AddComponent<Outline>();
-            rarityOutline.effectColor = new Color(0.20f, 0.25f, 0.33f, 0.6f);
+            rarityOutline.effectColor = new Color(0.35f, 0.45f, 0.58f, 0.8f);
             rarityOutline.effectDistance = new Vector2(1, 1);
 
             GameObject rarityTextObj = new GameObject("RarityText");
@@ -323,10 +323,10 @@ public class UpgradeSelectionUI : MonoBehaviour
             TextMeshProUGUI rarityText = rarityTextObj.AddComponent<TextMeshProUGUI>();
             rarityText.text = string.IsNullOrEmpty(buff.rarity) ? "COMMON" : buff.rarity.ToUpper();
             if (fontAsset != null) rarityText.font = fontAsset;
-            rarityText.fontSize = 11;
+            rarityText.fontSize = 13;
             rarityText.fontStyle = FontStyles.Bold;
             rarityText.alignment = TextAlignmentOptions.Center;
-            rarityText.color = new Color(0.58f, 0.64f, 0.72f, 1f); // #94A3B8
+            rarityText.color = new Color(0.92f, 0.95f, 0.98f, 1f); // #EBF0F7
 
             RectTransform rarityTextRect = rarityTextObj.GetComponent<RectTransform>();
             rarityTextRect.anchorMin = Vector2.zero;
@@ -339,14 +339,14 @@ public class UpgradeSelectionUI : MonoBehaviour
             RectTransform iconContainerRect = iconContainer.AddComponent<RectTransform>();
             iconContainerRect.anchorMin = new Vector2(0.5f, 0.72f);
             iconContainerRect.anchorMax = new Vector2(0.5f, 0.72f);
-            iconContainerRect.sizeDelta = new Vector2(80, 80);
+            iconContainerRect.sizeDelta = new Vector2(84, 84);
             iconContainerRect.anchoredPosition = Vector2.zero;
 
             Image iconContainerBg = iconContainer.AddComponent<Image>();
-            iconContainerBg.color = new Color(0.12f, 0.16f, 0.24f, 0.85f); // #1E293B
+            iconContainerBg.color = new Color(0.12f, 0.17f, 0.26f, 0.9f); // #1E293B
 
             Outline iconBorder = iconContainer.AddComponent<Outline>();
-            iconBorder.effectColor = new Color(0.20f, 0.25f, 0.33f, 0.8f);
+            iconBorder.effectColor = new Color(0.30f, 0.40f, 0.55f, 0.85f);
             iconBorder.effectDistance = new Vector2(1, 1);
 
             // Sprite Icon bên trong
@@ -362,7 +362,7 @@ public class UpgradeSelectionUI : MonoBehaviour
                 RectTransform spriteRect = iconImgObj.GetComponent<RectTransform>();
                 spriteRect.anchorMin = new Vector2(0.5f, 0.5f);
                 spriteRect.anchorMax = new Vector2(0.5f, 0.5f);
-                spriteRect.sizeDelta = new Vector2(60, 60);
+                spriteRect.sizeDelta = new Vector2(64, 64);
                 spriteRect.anchoredPosition = Vector2.zero;
             }
 
@@ -372,15 +372,16 @@ public class UpgradeSelectionUI : MonoBehaviour
             TextMeshProUGUI nameText = nameObj.AddComponent<TextMeshProUGUI>();
             nameText.text = buff.buffName;
             if (fontAsset != null) nameText.font = fontAsset;
-            nameText.fontSize = 20;
+            nameText.fontSize = 22;
             nameText.fontStyle = FontStyles.Bold;
             nameText.alignment = TextAlignmentOptions.Center;
-            nameText.color = new Color(0.97f, 0.98f, 0.99f, 1f); // #F8FAFC
+            nameText.color = Color.white; // #FFFFFF sắc nét
+            nameText.characterSpacing = 1.5f;
 
             RectTransform nameRect = nameObj.GetComponent<RectTransform>();
             nameRect.anchorMin = new Vector2(0.5f, 0.54f);
             nameRect.anchorMax = new Vector2(0.5f, 0.54f);
-            nameRect.sizeDelta = new Vector2(250, 32);
+            nameRect.sizeDelta = new Vector2(270, 34);
             nameRect.anchoredPosition = Vector2.zero;
 
             // --- 4.4 Stat Chip Badge (+20% DAMAGE, +2 MAX HP...) ---
@@ -389,14 +390,14 @@ public class UpgradeSelectionUI : MonoBehaviour
             RectTransform chipRect = chipBadge.AddComponent<RectTransform>();
             chipRect.anchorMin = new Vector2(0.5f, 0.44f);
             chipRect.anchorMax = new Vector2(0.5f, 0.44f);
-            chipRect.sizeDelta = new Vector2(210, 26);
+            chipRect.sizeDelta = new Vector2(240, 32);
             chipRect.anchoredPosition = Vector2.zero;
 
             Image chipBg = chipBadge.AddComponent<Image>();
-            chipBg.color = new Color(0.12f, 0.16f, 0.24f, 1f);
+            chipBg.color = new Color(0.10f, 0.16f, 0.26f, 1f);
 
             Outline chipOutline = chipBadge.AddComponent<Outline>();
-            chipOutline.effectColor = new Color(0.20f, 0.25f, 0.33f, 0.7f);
+            chipOutline.effectColor = new Color(0.32f, 0.48f, 0.65f, 0.9f);
             chipOutline.effectDistance = new Vector2(1, 1);
 
             GameObject chipTextObj = new GameObject("StatChipText");
@@ -404,10 +405,11 @@ public class UpgradeSelectionUI : MonoBehaviour
             TextMeshProUGUI chipText = chipTextObj.AddComponent<TextMeshProUGUI>();
             chipText.text = GetStatChipText(buff);
             if (fontAsset != null) chipText.font = fontAsset;
-            chipText.fontSize = 12;
+            chipText.fontSize = 15;
             chipText.fontStyle = FontStyles.Bold;
             chipText.alignment = TextAlignmentOptions.Center;
-            chipText.color = new Color(0.22f, 0.74f, 0.97f, 1f); // #38BDF8 (Cyan Slate)
+            chipText.color = new Color(0.35f, 0.90f, 1f, 1f); // #59E6FF Cyan sáng nổi bật
+            chipText.characterSpacing = 1f;
 
             RectTransform chipTextRect = chipTextObj.GetComponent<RectTransform>();
             chipTextRect.anchorMin = Vector2.zero;
@@ -420,14 +422,17 @@ public class UpgradeSelectionUI : MonoBehaviour
             TextMeshProUGUI descText = descObj.AddComponent<TextMeshProUGUI>();
             descText.text = buff.description;
             if (fontAsset != null) descText.font = fontAsset;
-            descText.fontSize = 13;
+            descText.fontSize = 15;
+            descText.fontStyle = FontStyles.Bold; // Bolding giúp font pixel không bị mờ ở độ phân giải nhỏ
             descText.alignment = TextAlignmentOptions.Center;
-            descText.color = new Color(0.58f, 0.64f, 0.72f, 1f); // #94A3B8
+            descText.color = new Color(0.96f, 0.97f, 0.99f, 1f); // Trắng sáng rõ nét
+            descText.lineSpacing = 6f;
+            descText.characterSpacing = 0.5f;
 
             RectTransform descRect = descObj.GetComponent<RectTransform>();
             descRect.anchorMin = new Vector2(0.5f, 0.27f);
             descRect.anchorMax = new Vector2(0.5f, 0.27f);
-            descRect.sizeDelta = new Vector2(240, 75);
+            descRect.sizeDelta = new Vector2(265, 80);
             descRect.anchoredPosition = Vector2.zero;
 
             // --- 4.6 Bottom [ SELECT ] Button ---
@@ -436,20 +441,20 @@ public class UpgradeSelectionUI : MonoBehaviour
             RectTransform selectBtnRect = selectBtnObj.AddComponent<RectTransform>();
             selectBtnRect.anchorMin = new Vector2(0.5f, 0.10f);
             selectBtnRect.anchorMax = new Vector2(0.5f, 0.10f);
-            selectBtnRect.sizeDelta = new Vector2(220, 42);
+            selectBtnRect.sizeDelta = new Vector2(240, 44);
             selectBtnRect.anchoredPosition = Vector2.zero;
 
             Image selectBtnImg = selectBtnObj.AddComponent<Image>();
-            selectBtnImg.color = new Color(0.12f, 0.16f, 0.24f, 1f); // #1E293B
+            selectBtnImg.color = new Color(0.15f, 0.22f, 0.33f, 1f); // #1E293B
 
             Outline selectBtnBorder = selectBtnObj.AddComponent<Outline>();
-            selectBtnBorder.effectColor = new Color(0.20f, 0.25f, 0.33f, 1f);
+            selectBtnBorder.effectColor = new Color(0.35f, 0.48f, 0.65f, 1f);
             selectBtnBorder.effectDistance = new Vector2(1.5f, 1.5f);
 
             Button selectBtn = selectBtnObj.AddComponent<Button>();
             ColorBlock cb = selectBtn.colors;
-            cb.normalColor = new Color(0.12f, 0.16f, 0.24f, 1f);
-            cb.highlightedColor = new Color(0.20f, 0.25f, 0.33f, 1f);
+            cb.normalColor = new Color(0.15f, 0.22f, 0.33f, 1f);
+            cb.highlightedColor = new Color(0.24f, 0.33f, 0.48f, 1f);
             cb.pressedColor = new Color(0.05f, 0.65f, 0.91f, 1f);
             selectBtn.colors = cb;
 
@@ -463,10 +468,11 @@ public class UpgradeSelectionUI : MonoBehaviour
             TextMeshProUGUI selectBtnText = selectBtnTextObj.AddComponent<TextMeshProUGUI>();
             selectBtnText.text = "SELECT";
             if (fontAsset != null) selectBtnText.font = fontAsset;
-            selectBtnText.fontSize = 14;
+            selectBtnText.fontSize = 16;
             selectBtnText.fontStyle = FontStyles.Bold;
             selectBtnText.alignment = TextAlignmentOptions.Center;
-            selectBtnText.color = new Color(0.94f, 0.96f, 0.98f, 1f); // #F1F5F9
+            selectBtnText.color = Color.white;
+            selectBtnText.characterSpacing = 2f;
 
             RectTransform selectBtnTextRect = selectBtnTextObj.GetComponent<RectTransform>();
             selectBtnTextRect.anchorMin = Vector2.zero;
