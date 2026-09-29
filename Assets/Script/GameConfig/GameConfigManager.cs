@@ -150,8 +150,13 @@ public class GameConfigManager : MonoBehaviour
                 if (wrapper != null && wrapper.data != null)
                 {
                     BuffDb.Clear();
-                    foreach (var b in wrapper.data) BuffDb.Add(b);
-
+                    foreach (var b in wrapper.data)
+                    {
+                        if (b != null && !string.Equals(b.buffType, "MoveSpeed", StringComparison.OrdinalIgnoreCase))
+                        {
+                            BuffDb.Add(b);
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -378,11 +383,14 @@ public class GameConfigManager : MonoBehaviour
         if (BuffDb == null) BuffDb = new List<BuffConfig>();
         if (BuffDb.Count > 0) return;
 
-        // Dữ liệu Buffs dự phòng (Tiếng Anh trên UI, comment giữ nguyên tiếng Việt)
-        BuffDb.Add(new BuffConfig { id = 1, buffName = "Max HP Boost", description = "+20 Max Health", buffType = "HP", value = 20, rarity = "Common" });
-        BuffDb.Add(new BuffConfig { id = 2, buffName = "Max Armor Boost", description = "+2 Max Armor", buffType = "Armor", value = 2, rarity = "Common" });
-        BuffDb.Add(new BuffConfig { id = 3, buffName = "Max Mana Boost", description = "+30 Max Energy", buffType = "Mana", value = 30, rarity = "Common" });
-        BuffDb.Add(new BuffConfig { id = 4, buffName = "All-Around Boost", description = "+10 Max Health", buffType = "HP", value = 10, rarity = "Rare" });
+        // Dữ liệu 7 Buffs chính thức dự phòng (loại bỏ MoveSpeed)
+        BuffDb.Add(new BuffConfig { id = 1, buffName = "Vitality", description = "Increases Max HP by +2 and heals.", buffType = "MaxHP", value = 2, rarity = "Common", iconPath = "hp_icon" });
+        BuffDb.Add(new BuffConfig { id = 2, buffName = "Iron Armor", description = "Increases Max Armor by +2 and refills armor.", buffType = "MaxArmor", value = 2, rarity = "Common", iconPath = "armor_icon" });
+        BuffDb.Add(new BuffConfig { id = 3, buffName = "Magic Focus", description = "Increases Max Mana by +50 and refills it.", buffType = "MaxMana", value = 50, rarity = "Common", iconPath = "mana_icon" });
+        BuffDb.Add(new BuffConfig { id = 4, buffName = "Fierce Combat", description = "Increases all weapon damage by +20%.", buffType = "Damage", value = 1.20f, rarity = "Common", iconPath = "damage_icon" });
+        BuffDb.Add(new BuffConfig { id = 5, buffName = "Sharp Focus", description = "Increases crit rate by +15%.", buffType = "CritChance", value = 15, rarity = "Common", iconPath = "crit_icon" });
+        BuffDb.Add(new BuffConfig { id = 6, buffName = "Rapid Fire", description = "Decreases gun firing cooldown by 20%.", buffType = "FireRate", value = 0.80f, rarity = "Common", iconPath = "firerate_icon" });
+        BuffDb.Add(new BuffConfig { id = 7, buffName = "Golden Touch", description = "Increases picked up coins by +50%.", buffType = "CoinMultiplier", value = 1.50f, rarity = "Common", iconPath = "coin_icon" });
     }
 }
 

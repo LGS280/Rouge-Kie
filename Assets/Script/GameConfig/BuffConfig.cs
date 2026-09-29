@@ -9,6 +9,7 @@ public class BuffConfig
     public string buffType;
     public float value;
     public string rarity;
+    public string iconPath;
 }
 
 [Serializable]
