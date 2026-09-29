@@ -50,6 +50,25 @@ public class ShopUIController : MonoBehaviour
     }
 
     [Serializable]
+    public class UnlockedCharacterDto
+    {
+        public int id;
+        public int profileId;
+        public int characterId;
+        public string name;
+        public string prefabName;
+        public string description;
+        public bool isUnlocked;
+        public string unlockedAt;
+    }
+
+    [Serializable]
+    public class UnlockedCharacterListWrapper
+    {
+        public List<UnlockedCharacterDto> items;
+    }
+
+    [Serializable]
     public class ShopItemListWrapper
     {
         public List<ShopItemData> items;
@@ -69,6 +88,12 @@ public class ShopUIController : MonoBehaviour
     private void Awake()
     {
         if (Instance == null) Instance = this;
+        // Xóa key legacy toàn cục để tránh ô nhiễm dữ liệu giữa các tài khoản khác nhau
+        if (PlayerPrefs.HasKey("unlocked_characters"))
+        {
+            PlayerPrefs.DeleteKey("unlocked_characters");
+            PlayerPrefs.Save();
+        }
     }
 
     private void Start()
@@ -112,6 +137,7 @@ public class ShopUIController : MonoBehaviour
         UpdateGemDisplay();
         RefreshAllTabs();
         FetchShopItems();
+        SyncUnlockedCharactersFromServer(() => RefreshAllTabs());
     }
 
     /// <summary>
@@ -249,10 +275,11 @@ public class ShopUIController : MonoBehaviour
         }
         else
         {
-            string saved = PlayerPrefs.GetString("unlocked_weapons", "");
+            string weaponKey = WeaponVaultUIController.GetUserWeaponKey();
+            string saved = PlayerPrefs.GetString(weaponKey, "");
             if (string.IsNullOrEmpty(saved))
             {
-                PlayerPrefs.SetString("unlocked_weapons", clean);
+                PlayerPrefs.SetString(weaponKey, clean);
             }
             else
             {
@@ -260,12 +287,136 @@ public class ShopUIController : MonoBehaviour
                 if (!set.Contains(clean))
                 {
                     set.Add(clean);
-                    PlayerPrefs.SetString("unlocked_weapons", string.Join(",", set));
+                    PlayerPrefs.SetString(weaponKey, string.Join(",", set));
                 }
             }
             PlayerPrefs.Save();
-            Debug.Log($"[ShopUIController] Đã lưu offline fallback vũ khí '{clean}' vào PlayerPrefs!");
+            Debug.Log($"[ShopUIController] Đã lưu offline fallback vũ khí '{clean}' vào PlayerPrefs ({weaponKey})!");
         }
+    }
+
+    /// <summary>
+    /// Lấy key PlayerPrefs mở khóa nhân vật được cô lập riêng theo từng tài khoản người chơi (UserId)
+    /// </summary>
+    public static string GetUserCharacterKey()
+    {
+        int userId = PlayerPrefs.GetInt("user_id", 0);
+        return userId > 0 ? $"unlocked_characters_{userId}" : "unlocked_characters_guest";
+    }
+
+    /// <summary>
+    /// Kiểm tra xem nhân vật đã được mở khóa chưa (Rookie mặc định mở khóa sẵn cho mọi tài khoản)
+    /// </summary>
+    public static bool IsCharacterUnlocked(string charName)
+    {
+        if (string.IsNullOrEmpty(charName)) return false;
+        string clean = charName.ToLower().Trim();
+        // Tân binh Rookie (hoặc Kie Warrior) mặc định luôn mở khóa
+        if (clean.Contains("rookie") || clean.Contains("warrior")) return true;
+
+        string key = GetUserCharacterKey();
+        string saved = PlayerPrefs.GetString(key, "Rookie");
+        var items = saved.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+        return Array.Exists(items, item => clean.Contains(item.Trim().ToLower()) || item.Trim().ToLower().Contains(clean));
+    }
+
+    /// <summary>
+    /// Đăng ký mở khóa nhân vật vào PlayerPrefs theo từng tài khoản
+    /// </summary>
+    public static void RegisterUnlockedCharacter(string charName)
+    {
+        if (string.IsNullOrEmpty(charName)) return;
+        string clean = charName.Trim();
+        if (clean.ToLower().Contains("zero") || clean.ToLower().Contains("mage")) clean = "Zero";
+        else if (clean.ToLower().Contains("rookie") || clean.ToLower().Contains("warrior")) clean = "Rookie";
+
+        string key = GetUserCharacterKey();
+        string saved = PlayerPrefs.GetString(key, "Rookie");
+        var set = new HashSet<string>(saved.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries), StringComparer.OrdinalIgnoreCase);
+        set.Add("Rookie");
+        if (!set.Contains(clean))
+        {
+            set.Add(clean);
+            PlayerPrefs.SetString(key, string.Join(",", set));
+            PlayerPrefs.Save();
+            Debug.Log($"[ShopUIController] Đã mở khóa nhân vật '{clean}' vào PlayerPrefs ({key})!");
+        }
+    }
+
+    /// <summary>
+    /// Đồng bộ danh sách nhân vật đã mở khóa từ Server về máy người chơi
+    /// </summary>
+    public static void SyncUnlockedCharactersFromServer(Action onComplete = null)
+    {
+        string token = PlayerPrefs.GetString("jwt_token", "");
+        if (string.IsNullOrEmpty(token) || ApiClient.Instance == null)
+        {
+            onComplete?.Invoke();
+            return;
+        }
+
+        int userId = PlayerPrefs.GetInt("user_id", 0);
+        string key = GetUserCharacterKey();
+
+        ApiClient.Instance.Get("/Characters/my-characters", (json) =>
+        {
+            try
+            {
+                string wrappedJson = "{\"items\":" + json + "}";
+                UnlockedCharacterListWrapper wrapper = JsonUtility.FromJson<UnlockedCharacterListWrapper>(wrappedJson);
+                if (wrapper != null && wrapper.items != null)
+                {
+                    var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    set.Add("Rookie");
+
+                    foreach (var item in wrapper.items)
+                    {
+                        if (item.isUnlocked)
+                        {
+                            string clean = (item.prefabName ?? "").Trim();
+                            if (string.IsNullOrEmpty(clean)) clean = (item.name ?? "").Trim();
+                            if (clean.ToLower().Contains("zero") || clean.ToLower().Contains("mage")) clean = "Zero";
+                            else if (clean.ToLower().Contains("rookie") || clean.ToLower().Contains("warrior")) clean = "Rookie";
+
+                            if (!string.IsNullOrEmpty(clean))
+                            {
+                                set.Add(clean);
+                            }
+                        }
+                    }
+
+                    PlayerPrefs.SetString(key, string.Join(",", set));
+                    PlayerPrefs.Save();
+                    Debug.Log($"[ShopUIController] Đã đồng bộ thành công {set.Count} nhân vật cho User {userId}: {string.Join(",", set)}");
+
+                    // Nếu nhân vật đang chọn chưa được mở khóa thì đưa về Rookie
+                    if (CharacterManager.Instance != null)
+                    {
+                        string current = CharacterManager.Instance.GetSelectedCharacter();
+                        if (!set.Contains(current))
+                        {
+                            Debug.LogWarning($"[ShopUIController] Nhân vật đang chọn '{current}' chưa được tài khoản {userId} mở khóa! Tự động chuyển về 'Rookie'.");
+                            CharacterManager.Instance.ResetToDefaultCharacter();
+                        }
+                    }
+
+                    onComplete?.Invoke();
+                }
+                else
+                {
+                    onComplete?.Invoke();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[ShopUIController] Lỗi parse nhân vật từ server: {ex.Message}");
+                onComplete?.Invoke();
+            }
+        }, (err) =>
+        {
+            Debug.LogWarning($"[ShopUIController] Không thể fetch my-characters từ server ({err}). Dùng dữ liệu cache hiện tại.");
+            onComplete?.Invoke();
+        });
     }
 
     /// <summary>
@@ -294,24 +445,27 @@ public class ShopUIController : MonoBehaviour
     }
 
     /// <summary>
-    /// Bấm Mua vật phẩm Súng/Skin bằng Coins trong Game qua Backend API
+    /// Bấm Mua vật phẩm Súng / Nhân vật bằng Gems trong Game qua Backend API
     /// </summary>
-    public void BuyShopItem(int shopItemId, string weaponPrefab = "")
+    public void BuyShopItem(int shopItemId, string weaponPrefab = "", bool isCharacter = false, string characterName = "")
     {
-        if (statusText != null) statusText.text = "Processing purchase...";
+        if (statusText != null) statusText.text = isCharacter ? "Unlocking character..." : "Processing purchase...";
 
         string prefabPath = weaponPrefab;
-        if (string.IsNullOrEmpty(prefabPath) && dynamicShopItems != null)
+        if (!isCharacter)
         {
-            var found = dynamicShopItems.Find(x => x.shopItemId == shopItemId);
-            if (found != null && found.itemType != "SKIN")
+            if (string.IsNullOrEmpty(prefabPath) && dynamicShopItems != null)
             {
-                prefabPath = ResolveWeaponPrefabName(found.name, found.description);
+                var found = dynamicShopItems.Find(x => x.shopItemId == shopItemId);
+                if (found != null && found.itemType != "SKIN" && found.itemType != "CHARACTER")
+                {
+                    prefabPath = ResolveWeaponPrefabName(found.name, found.description);
+                }
             }
-        }
-        if (string.IsNullOrEmpty(prefabPath))
-        {
-            prefabPath = GetPrefabPathByItemId(shopItemId);
+            if (string.IsNullOrEmpty(prefabPath))
+            {
+                prefabPath = GetPrefabPathByItemId(shopItemId);
+            }
         }
 
         ApiClient.Instance.Post($"/ShopItems/buy/{shopItemId}", "{}", (json) =>
@@ -324,8 +478,16 @@ public class ShopUIController : MonoBehaviour
                     Debug.Log($"[ShopUIController] {res.message}");
                     if (statusText != null) statusText.text = $"<color=green>{res.message}</color>";
 
-                    // Đăng ký mở khóa vĩnh viễn vào Kho Vũ Khí
-                    RegisterUnlockSafely(prefabPath);
+                    if (isCharacter)
+                    {
+                        string charToUnlock = !string.IsNullOrEmpty(characterName) ? characterName : weaponPrefab;
+                        RegisterUnlockedCharacter(charToUnlock);
+                    }
+                    else
+                    {
+                        // Đăng ký mở khóa vĩnh viễn vào Kho Vũ Khí
+                        RegisterUnlockSafely(prefabPath);
+                    }
 
                     // Làm mới giao diện hiển thị Gems của người chơi
                     if (PlayerProfileUI.Instance != null)
@@ -347,8 +509,11 @@ public class ShopUIController : MonoBehaviour
                         UpdateGemDisplay();
                     }
 
-                    // Tự động sinh súng vừa mua lên Bàn Trưng Bày
-                    SpawnBoughtWeaponOnTable(prefabPath);
+                    if (!isCharacter)
+                    {
+                        // Tự động sinh súng vừa mua lên Bàn Trưng Bày
+                        SpawnBoughtWeaponOnTable(prefabPath);
+                    }
 
                     // Làm mới giao diện thẻ Shop (chuyển sang trạng thái ĐÃ MỞ KHÓA)
                     RefreshAllTabs();
@@ -361,16 +526,30 @@ public class ShopUIController : MonoBehaviour
             catch (Exception ex)
             {
                 Debug.LogError($"[ShopUIController] Parse error: {ex.Message}");
-                RegisterUnlockSafely(prefabPath);
-                SpawnBoughtWeaponOnTable(prefabPath);
+                if (isCharacter)
+                {
+                    RegisterUnlockedCharacter(!string.IsNullOrEmpty(characterName) ? characterName : weaponPrefab);
+                }
+                else
+                {
+                    RegisterUnlockSafely(prefabPath);
+                    SpawnBoughtWeaponOnTable(prefabPath);
+                }
                 RefreshAllTabs();
             }
         }, (err) =>
         {
             Debug.LogWarning($"[ShopUIController] API Buy Item Error (chuyển chế độ Offline Test): {err}");
-            if (statusText != null) statusText.text = "<color=green>Offline Purchase Success! Weapon spawned on table!</color>";
-            RegisterUnlockSafely(prefabPath);
-            SpawnBoughtWeaponOnTable(prefabPath);
+            if (statusText != null) statusText.text = isCharacter ? $"<color=green>Character {characterName} unlocked!</color>" : "<color=green>Offline Purchase Success! Weapon spawned on table!</color>";
+            if (isCharacter)
+            {
+                RegisterUnlockedCharacter(!string.IsNullOrEmpty(characterName) ? characterName : weaponPrefab);
+            }
+            else
+            {
+                RegisterUnlockSafely(prefabPath);
+                SpawnBoughtWeaponOnTable(prefabPath);
+            }
             RefreshAllTabs();
         });
     }
@@ -502,7 +681,7 @@ public class ShopUIController : MonoBehaviour
     }
 
     /// <summary>
-    /// Nạp Sprite viên Gem từ Assets/Images/gemV1.png
+    /// Nạp Sprite viên Gem từ Assets/Images/gemV1.png (Không dùng Resources)
     /// </summary>
     public Sprite GetGemSprite()
     {
@@ -510,12 +689,6 @@ public class ShopUIController : MonoBehaviour
         Sprite s = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Images/gemV1.png");
         if (s != null) return s;
 #endif
-        var sprites = Resources.FindObjectsOfTypeAll<Sprite>();
-        foreach (var sp in sprites)
-        {
-            if (sp != null && (sp.name == "gemV1" || sp.name.Equals("gemV1", StringComparison.OrdinalIgnoreCase)))
-                return sp;
-        }
         return null;
     }
 
@@ -572,9 +745,91 @@ public class ShopUIController : MonoBehaviour
     }
 
     /// <summary>
-    /// Hiển thị hộp thoại Popup xác nhận (Double Check) trước khi thực hiện mua vật phẩm
+    private static readonly System.Collections.Generic.Dictionary<string, Sprite> characterSpriteCache 
+        = new System.Collections.Generic.Dictionary<string, Sprite>(System.StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Tìm và nạp Sprite hình ảnh hiển thị của nhân vật từ Assets/Characters/ hoặc Prefab (tương tự như logic nạp của vũ khí, không dùng Resources)
     /// </summary>
-    public void ShowPurchaseConfirmation(string itemName, string priceText, string spritePath, UnityEngine.Events.UnityAction onConfirmAction)
+    public static Sprite GetCharacterSprite(string charName)
+    {
+        if (string.IsNullOrEmpty(charName)) return null;
+        string clean = charName.ToLower().Trim();
+        string key = (clean.Contains("zero") || clean.Contains("mage")) ? "Zero" : "Rookie";
+
+        if (characterSpriteCache.TryGetValue(key, out Sprite cached) && cached != null)
+        {
+            return cached;
+        }
+
+        // 1. Lấy từ Prefab qua CharacterManager nếu có sẵn
+        if (CharacterManager.Instance != null)
+        {
+            GameObject p = CharacterManager.Instance.GetCharacterPrefab(key);
+            if (p != null)
+            {
+                SpriteRenderer rootSr = p.GetComponent<SpriteRenderer>();
+                if (rootSr != null && rootSr.sprite != null)
+                {
+                    characterSpriteCache[key] = rootSr.sprite;
+                    return rootSr.sprite;
+                }
+            }
+        }
+
+#if UNITY_EDITOR
+        // 2. Nạp từ Prefab trong Assets/Prefab/
+        string prefabPath = key == "Zero" 
+            ? "Assets/Prefab/Zero/Zero.prefab" 
+            : "Assets/Prefab/Rookie/Rookie.prefab";
+
+        GameObject prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+        if (prefab != null)
+        {
+            SpriteRenderer rootSr = prefab.GetComponent<SpriteRenderer>();
+            if (rootSr != null && rootSr.sprite != null)
+            {
+                characterSpriteCache[key] = rootSr.sprite;
+                return rootSr.sprite;
+            }
+        }
+
+        // 3. Tìm trực tiếp file Sprite ảnh nhân vật trong thư mục Assets/Characters/
+        string sheetPath = key == "Zero" 
+            ? "Assets/Characters/Zero/Zero_Idle.png" 
+            : "Assets/Characters/Rookie/Rookie_Idel.png";
+        var subAssets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(sheetPath);
+        if (subAssets != null)
+        {
+            foreach (var obj in subAssets)
+            {
+                if (obj is Sprite sp)
+                {
+                    characterSpriteCache[key] = sp;
+                    return sp;
+                }
+            }
+        }
+#endif
+
+        return null;
+    }
+
+    /// <summary>
+    /// Nhận diện nhân vật tương ứng từ tên hoặc mô tả
+    /// </summary>
+    public string ResolveCharacterPrefabName(string name, string desc = "")
+    {
+        string combined = $"{name} {desc}".ToLowerInvariant();
+        if (combined.Contains("zero") || combined.Contains("mage")) return "Zero";
+        if (combined.Contains("rookie") || combined.Contains("warrior")) return "Rookie";
+        return "Rookie";
+    }
+
+    /// <summary>
+    /// Hiển thị hộp thoại Popup xác nhận (Double Check) trước khi thực hiện mua vật phẩm hoặc mở khóa nhân vật
+    /// </summary>
+    public void ShowPurchaseConfirmation(string itemName, string priceText, string spritePath, UnityEngine.Events.UnityAction onConfirmAction, bool isCharacter = false)
     {
         if (confirmationOverlay == null && shopPanel != null)
         {
@@ -592,18 +847,25 @@ public class ShopUIController : MonoBehaviour
 
         if (confirmTitleText != null)
         {
-            confirmTitleText.text = "CONFIRM PURCHASE";
+            confirmTitleText.text = isCharacter ? "UNLOCK CHARACTER" : "CONFIRM PURCHASE";
         }
 
         if (confirmMessageText != null)
         {
-            confirmMessageText.text = $"Are you sure you want to purchase\n<color=#FFD700><b>{itemName}</b></color> for <color=#40FF40><b>{priceText}</b></color>?";
+            confirmMessageText.text = isCharacter
+                ? $"Are you sure you want to unlock character\n<color=#FFD700><b>{itemName}</b></color> for <color=#40FF40><b>{priceText}</b></color>?"
+                : $"Are you sure you want to purchase\n<color=#FFD700><b>{itemName}</b></color> for <color=#40FF40><b>{priceText}</b></color>?";
         }
 
         if (confirmItemIcon != null)
         {
             Sprite itemSprite = null;
-            if (!string.IsNullOrEmpty(spritePath))
+            if (isCharacter)
+            {
+                itemSprite = GetCharacterSprite(itemName);
+                if (itemSprite == null && !string.IsNullOrEmpty(spritePath)) itemSprite = GetCharacterSprite(spritePath);
+            }
+            if (itemSprite == null && !string.IsNullOrEmpty(spritePath))
             {
                 itemSprite = GetWeaponSpriteFromPrefab(spritePath);
             }
@@ -967,7 +1229,12 @@ public class ShopUIController : MonoBehaviour
 
         coinTabButton = CreateTabButton(tabBar.transform, new Vector2(-280, 0), "GEM WEAPONS");
         gemTabButton = CreateTabButton(tabBar.transform, new Vector2(0, 0), "VIP WEAPONS (VietQR)");
-        skinTabButton = CreateTabButton(tabBar.transform, new Vector2(280, 0), "SKINS");
+        skinTabButton = CreateTabButton(tabBar.transform, new Vector2(280, 0), "CHARACTERS");
+
+        if (coinTabButton != null) { coinTabButton.onClick.RemoveAllListeners(); coinTabButton.onClick.AddListener(() => SwitchTab(0)); }
+        if (gemTabButton != null) { gemTabButton.onClick.RemoveAllListeners(); gemTabButton.onClick.AddListener(() => SwitchTab(1)); }
+        if (skinTabButton != null) { skinTabButton.onClick.RemoveAllListeners(); skinTabButton.onClick.AddListener(() => SwitchTab(2)); }
+        if (closeShopButton != null) { closeShopButton.onClick.RemoveAllListeners(); closeShopButton.onClick.AddListener(CloseShop); }
 
         // 5. Khung chứa Nội dung 3 Tab (Tab Contents)
         coinTabContent = CreateTabContent(dialog.transform, "CoinTabContent");
@@ -996,7 +1263,7 @@ public class ShopUIController : MonoBehaviour
     }
 
     /// <summary>
-    /// Làm mới nội dung các thẻ vật phẩm trong cả 3 Tab, tự động nhận biết vũ khí đã mở khóa
+    /// Làm mới nội dung các thẻ vật phẩm trong cả 3 Tab, tự động nhận biết vũ khí và nhân vật đã mở khóa
     /// </summary>
     public void RefreshAllTabs()
     {
@@ -1016,11 +1283,11 @@ public class ShopUIController : MonoBehaviour
                 string currencyType = (item.currencyType ?? "").ToUpperInvariant().Trim();
                 string prefabPath = ResolveWeaponPrefabName(item.name, item.description);
 
-                if (itemType == "WEAPON_GEM" || (currencyType == "GEM" && itemType != "SKIN" && itemType != "WEAPON_VIP"))
+                if (itemType == "WEAPON_GEM" || (currencyType == "GEM" && itemType != "SKIN" && itemType != "CHARACTER" && itemType != "HERO" && itemType != "WEAPON_VIP"))
                 {
                     // Tab 1: GEM WEAPONS
                     string priceText = $"{item.price:N0} Gems";
-                    string btnText = $"BUY ({FormatNumberShort(item.price)} GEMS)";
+                    string btnText = "BUY NOW";
                     int itemId = item.shopItemId;
                     string itemName = item.name;
                     string targetPrefab = prefabPath;
@@ -1033,7 +1300,7 @@ public class ShopUIController : MonoBehaviour
                 {
                     // Tab 2: VIP WEAPONS (VietQR)
                     string priceText = $"{item.price:N0} VND";
-                    string btnText = $"BUY NOW ({FormatNumberShort(item.price)} VND)";
+                    string btnText = "BUY NOW";
                     int itemId = item.shopItemId;
                     int price = item.price;
                     string itemName = item.name;
@@ -1044,17 +1311,18 @@ public class ShopUIController : MonoBehaviour
                         ShowPurchaseConfirmation(itemName, priceText, targetPrefab, () => BuyGemPackage(price, desc, itemId, targetPrefab));
                     });
                 }
-                else if (itemType == "SKIN")
+                else if (itemType == "SKIN" || itemType == "CHARACTER" || itemType == "HERO")
                 {
-                    // Tab 3: SKINS
+                    // Tab 3: CHARACTERS (Nhân Vật)
                     string priceText = $"{item.price:N0} Gems";
-                    string btnText = $"BUY ({FormatNumberShort(item.price)} GEMS)";
+                    string btnText = "BUY NOW";
                     int itemId = item.shopItemId;
                     string itemName = item.name;
-                    CreateShopCard(skinTabContent.transform, itemName, priceText, item.description, btnText, "", () =>
+                    string targetChar = ResolveCharacterPrefabName(item.name, item.description);
+                    CreateShopCard(skinTabContent.transform, itemName, priceText, item.description, btnText, targetChar, () =>
                     {
-                        ShowPurchaseConfirmation(itemName, priceText, "", () => BuyShopItem(itemId, ""));
-                    });
+                        ShowPurchaseConfirmation(itemName, priceText, targetChar, () => BuyShopItem(itemId, targetChar, true, itemName), isCharacter: true);
+                    }, isCharacter: true);
                 }
             }
         }
@@ -1062,26 +1330,25 @@ public class ShopUIController : MonoBehaviour
         {
             // Fallback tĩnh phòng khi chưa kết nối được Backend
             // 5a. Súng mua bằng Gem trong Game (In-Game Gems)
-            CreateShopCard(coinTabContent.transform, "AK-47 Gold", "500 Gems", "High-damage gold-plated assault rifle", "BUY (500 GEMS)", "Weapons/AK_47A_Gold", () =>
+            CreateShopCard(coinTabContent.transform, "AK-47 Gold", "500 Gems", "High-damage gold-plated assault rifle", "BUY NOW", "Weapons/AK_47A_Gold", () =>
                 ShowPurchaseConfirmation("AK-47 Gold", "500 Gems", "Weapons/AK_47A_Gold", () => BuyShopItem(1, "AK_47A_Gold")));
-            CreateShopCard(coinTabContent.transform, "Missile Launcher", "800 Gems", "Long-range homing missile launcher", "BUY (800 GEMS)", "Weapons/Missile_Launcher", () =>
+            CreateShopCard(coinTabContent.transform, "Missile Launcher", "800 Gems", "Long-range homing missile launcher", "BUY NOW", "Weapons/Missile_Launcher", () =>
                 ShowPurchaseConfirmation("Missile Launcher", "800 Gems", "Weapons/Missile_Launcher", () => BuyShopItem(2, "Missile_Launcher")));
-            CreateShopCard(coinTabContent.transform, "Rocket Launcher", "1,200 Gems", "Heavy rocket launcher with wide AoE", "BUY (1.2K GEMS)", "Weapons/Rocket_Launcher", () =>
+            CreateShopCard(coinTabContent.transform, "Rocket Launcher", "1,200 Gems", "Heavy rocket launcher with wide AoE", "BUY NOW", "Weapons/Rocket_Launcher", () =>
                 ShowPurchaseConfirmation("Rocket Launcher", "1,200 Gems", "Weapons/Rocket_Launcher", () => BuyShopItem(3, "Rocket_Launcher")));
 
             // 5b. Súng VIP mua trực tiếp bằng Tiền Thật qua VietQR (PayOS)
-            CreateShopCard(gemTabContent.transform, "AK-47 Gold VIP", "2,000 VND", "Pay via VietQR to unlock AK-47 Gold VIP", "BUY NOW (2K VND)", "Weapons/AK_47A_Gold", () =>
+            CreateShopCard(gemTabContent.transform, "AK-47 Gold VIP", "2,000 VND", "Pay via VietQR to unlock AK-47 Gold VIP", "BUY NOW", "Weapons/AK_47A_Gold", () =>
                 ShowPurchaseConfirmation("AK-47 Gold VIP", "2,000 VND", "Weapons/AK_47A_Gold", () => BuyGemPackage(2000, "Buy AK-47 Gold VIP", 1, "AK_47A_Gold")));
-            CreateShopCard(gemTabContent.transform, "Missile Launcher VIP", "2,000 VND", "Pay via VietQR to unlock Missile Launcher VIP", "BUY NOW (2K VND)", "Weapons/Missile_Launcher", () =>
+            CreateShopCard(gemTabContent.transform, "Missile Launcher VIP", "2,000 VND", "Pay via VietQR to unlock Missile Launcher VIP", "BUY NOW", "Weapons/Missile_Launcher", () =>
                 ShowPurchaseConfirmation("Missile Launcher VIP", "2,000 VND", "Weapons/Missile_Launcher", () => BuyGemPackage(2000, "Buy Missile Launcher VIP", 2, "Missile_Launcher")));
-            CreateShopCard(gemTabContent.transform, "Rocket Launcher VIP", "2,000 VND", "Pay via VietQR to unlock Rocket Launcher VIP", "BUY NOW (2K VND)", "Weapons/Rocket_Launcher", () =>
+            CreateShopCard(gemTabContent.transform, "Rocket Launcher VIP", "2,000 VND", "Pay via VietQR to unlock Rocket Launcher VIP", "BUY NOW", "Weapons/Rocket_Launcher", () =>
                 ShowPurchaseConfirmation("Rocket Launcher VIP", "2,000 VND", "Weapons/Rocket_Launcher", () => BuyGemPackage(2000, "Buy Rocket Launcher VIP", 3, "Rocket_Launcher")));
 
-            // 5c. Trang Phục Skins
-            CreateShopCard(skinTabContent.transform, "Cyber Rookie", "100 Gems", "Rookie warrior battle suit", "BUY (100 GEMS)", "", () =>
-                ShowPurchaseConfirmation("Cyber Rookie", "100 Gems", "", () => BuyShopItem(4, "")));
-            CreateShopCard(skinTabContent.transform, "Hero Zero", "200 Gems", "Zero superhero battle suit", "BUY (200 GEMS)", "", () =>
-                ShowPurchaseConfirmation("Hero Zero", "200 Gems", "", () => BuyShopItem(5, "")));
+            // 5c. Nhân Vật (Characters)
+            CreateShopCard(skinTabContent.transform, "Rookie", "0 Gems", "Default brave tactical operative. Balanced combat stats.", "OWNED", "Rookie", () => { }, isCharacter: true);
+            CreateShopCard(skinTabContent.transform, "Hero Zero", "200 Gems", "Agile high-tech cyborg operative with enhanced mobility.", "BUY NOW", "Zero", () =>
+                ShowPurchaseConfirmation("Hero Zero", "200 Gems", "Zero", () => BuyShopItem(5, "Zero", true, "Hero Zero"), isCharacter: true), isCharacter: true);
         }
     }
 
@@ -1161,11 +1428,15 @@ public class ShopUIController : MonoBehaviour
         return content;
     }
 
-    private void CreateShopCard(Transform parent, string title, string price, string desc, string buttonText, string spritePath, UnityEngine.Events.UnityAction onClickAction)
+    private void CreateShopCard(Transform parent, string title, string price, string desc, string buttonText, string spritePath, UnityEngine.Events.UnityAction onClickAction, bool isCharacter = false)
     {
-        // Kiểm tra xem vũ khí này đã được người chơi mở khóa vĩnh viễn chưa
+        // Kiểm tra xem vũ khí hoặc nhân vật này đã được người chơi mở khóa vĩnh viễn chưa
         bool isUnlocked = false;
-        if (!string.IsNullOrEmpty(spritePath))
+        if (isCharacter)
+        {
+            isUnlocked = IsCharacterUnlocked(title);
+        }
+        else if (!string.IsNullOrEmpty(spritePath))
         {
             string clean = spritePath.Replace("Weapons/", "").Replace(".prefab", "").Trim();
             if (WeaponVaultUIController.Instance != null)
@@ -1174,7 +1445,8 @@ public class ShopUIController : MonoBehaviour
             }
             else
             {
-                string saved = PlayerPrefs.GetString("unlocked_weapons", "");
+                string weaponKey = WeaponVaultUIController.GetUserWeaponKey();
+                string saved = PlayerPrefs.GetString(weaponKey, "");
                 if (!string.IsNullOrEmpty(saved))
                 {
                     var items = saved.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -1211,17 +1483,31 @@ public class ShopUIController : MonoBehaviour
         tTxt.alignment = TextAlignmentOptions.Center;
         tTxt.fontStyle = FontStyles.Bold;
 
-        // Icon súng
+        // Icon vũ khí hoặc nhân vật
         GameObject iconObj = new GameObject("Icon", typeof(RectTransform), typeof(Image));
         iconObj.transform.SetParent(card.transform, false);
         RectTransform iconRect = iconObj.GetComponent<RectTransform>();
         iconRect.anchoredPosition = new Vector2(0, 55);
-        iconRect.sizeDelta = new Vector2(130, 75);
+        iconRect.sizeDelta = isCharacter ? new Vector2(95, 95) : new Vector2(130, 75);
 
         Image iconImg = iconObj.GetComponent<Image>();
         iconImg.preserveAspect = true;
 
-        if (!string.IsNullOrEmpty(spritePath))
+        if (isCharacter)
+        {
+            Sprite s = GetCharacterSprite(title);
+            if (s == null && !string.IsNullOrEmpty(spritePath)) s = GetCharacterSprite(spritePath);
+            if (s != null)
+            {
+                iconImg.sprite = s;
+                iconImg.color = Color.white;
+            }
+            else
+            {
+                iconImg.color = new Color(1f, 1f, 1f, 0.15f);
+            }
+        }
+        else if (!string.IsNullOrEmpty(spritePath))
         {
             Sprite s = GetWeaponSpriteFromPrefab(spritePath);
             if (s != null)
@@ -1280,20 +1566,22 @@ public class ShopUIController : MonoBehaviour
         btRect.anchorMax = Vector2.one;
         btRect.sizeDelta = Vector2.zero;
         TextMeshProUGUI btTxt = btObj.GetComponent<TextMeshProUGUI>();
-        btTxt.text = isUnlocked ? "OWNED" : (string.IsNullOrEmpty(buttonText) ? "BUY NOW" : buttonText);
         btTxt.fontSize = 15;
-        btTxt.color = isUnlocked ? new Color(0.6f, 0.65f, 0.7f) : Color.white;
         btTxt.alignment = TextAlignmentOptions.Center;
         btTxt.fontStyle = FontStyles.Bold;
 
         Button btn = bObj.GetComponent<Button>();
         if (isUnlocked)
         {
-            // Đã mua: Khóa nút bấm (disable) để chống spam sinh hàng loạt súng ra bàn
+            // Vật phẩm hoặc nhân vật đã mở khóa/sở hữu: Hiển thị trạng thái OWNED đồng nhất giống như bên súng
+            btTxt.text = "OWNED";
+            btTxt.color = new Color(0.6f, 0.65f, 0.7f);
             btn.interactable = false;
         }
         else
         {
+            btTxt.text = string.IsNullOrEmpty(buttonText) ? "BUY NOW" : buttonText;
+            btTxt.color = Color.white;
             btn.interactable = true;
             btn.onClick.AddListener(onClickAction);
         }

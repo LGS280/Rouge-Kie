@@ -3531,7 +3531,7 @@ MonoBehaviour:
   playerHUDs:
   - {fileID: 163530327}
   players:
-  - {fileID: 0}
+  - {fileID: 1081606780}
 --- !u!114 &381416464
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9742,6 +9742,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 309a21bdf3e7fb146a0e985171e25f9e, type: 3}
+--- !u!114 &1081606780 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2946071390104774221, guid: 309a21bdf3e7fb146a0e985171e25f9e, type: 3}
+  m_PrefabInstance: {fileID: 1081606779}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb5fad99dbb4df44cb1d8acb78a39aab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RookieHealth
 --- !u!1 &1108935222
 GameObject:
   m_ObjectHideFlags: 0
@@ -28637,10 +28648,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.0067720087
-    y: 0
-    width: 0.98702025
-    height: 0.99999994
+    x: 0
+    y: 0.014814815
+    width: 1
+    height: 0.96969694
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60

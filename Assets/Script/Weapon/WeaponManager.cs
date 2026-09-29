@@ -131,7 +131,7 @@ public class WeaponManager : MonoBehaviour
         return weaponObj.name.Replace("(Clone)", "").Trim();
     }
 
-    private bool RestoreSavedEquippedWeapons()
+    public bool RestoreSavedEquippedWeapons()
     {
         string s1Name = !string.IsNullOrEmpty(savedSlot1PrefabName) ? savedSlot1PrefabName : PlayerPrefs.GetString("Lobby_Slot1_Weapon", "");
         string s2Name = !string.IsNullOrEmpty(savedSlot2PrefabName) ? savedSlot2PrefabName : PlayerPrefs.GetString("Lobby_Slot2_Weapon", "");
