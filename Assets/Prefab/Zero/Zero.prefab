@@ -719,13 +719,30 @@ MonoBehaviour:
   m_GameObject: {fileID: 3292902489147678423}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41ac3d13826c411469f364e9aa9e4618, type: 3}
+  m_Script: {fileID: 11500000, guid: 6c1aa110fc163fb45add127f56730010, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpeedSkill
-  buffMultiplier: 2
-  buffDuration: 7
-  cooldown: 15
-  skillKey: 102
+  m_EditorClassIdentifier: Assembly-CSharp::DashSlashSkill
+  dashKey: 20
+  dashDistance: 7
+  dashDuration: 0.18
+  cooldown: 2
+  dashTrigger: 
+  movementScriptName: PlayerController
+  disableWhileDashing: []
+  invincibleDuration: 0.5
+  damage: 60
+  hitRadius: 7
+  enemyTag: Enemy
+  damageMethodName: TakeDamage
+  slashVfxPrefab: {fileID: 8616719184387406343, guid: 0f9f2a81ca31463408b2c686ed0b2437, type: 3}
+  slashVfxLifetime: 1
+  slashVfxScale: 2
+  dashSfx: {fileID: 0}
+  hitSfx: {fileID: 0}
+  sfxVolume: 1
+  ghostInterval: 0.03
+  ghostLifetime: 0.25
+  ghostColor: {r: 0.3, g: 0.8, b: 1, a: 0.6}
 --- !u!114 &1927486307782480633
 MonoBehaviour:
   m_ObjectHideFlags: 0
