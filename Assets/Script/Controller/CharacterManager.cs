@@ -280,6 +280,17 @@ public class CharacterManager : MonoBehaviour
 
         if (current != null)
         {
+            // Đảm bảo PlayerHUD trong Scene luôn được kết nối với nhân vật người chơi
+            RookieHealth currentHealth = current.GetComponent<RookieHealth>();
+            if (currentHealth != null)
+            {
+                PlayerHUD[] huds = UnityEngine.Object.FindObjectsByType<PlayerHUD>(FindObjectsSortMode.None);
+                foreach (var hud in huds)
+                {
+                    if (hud != null) hud.SetTarget(currentHealth);
+                }
+            }
+
             string curName = current.name.Replace("(Clone)", "").Trim();
             if (selected.Equals("Zero", StringComparison.OrdinalIgnoreCase) && !curName.Equals("Zero", StringComparison.OrdinalIgnoreCase))
             {

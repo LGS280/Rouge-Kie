@@ -37,13 +37,26 @@ public class PlayerHUD : MonoBehaviour
         }
     }
 
+    private RookieHealth currentTarget;
+
     private void Start()
     {
         RefreshBuffIcons();
+        if (currentTarget == null)
+        {
+            GameObject p = GameObject.FindGameObjectWithTag("Player");
+            if (p != null)
+            {
+                RookieHealth rh = p.GetComponent<RookieHealth>();
+                if (rh != null) SetTarget(rh);
+            }
+        }
     }
 
     public void SetTarget(RookieHealth target)
     {
+        if (target == null) return;
+        currentTarget = target;
         target.onHealthChanged.AddListener(() =>
         {
             if (hpBar != null) hpBar.value = (float)target.GetCurrentHealth() / target.GetMaxHealth();
