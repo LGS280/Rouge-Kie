@@ -1,9 +1,14 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
+/// <summary>
+/// Giao diện chọn nâng cấp Buff giữa các tầng (Minimalist Slate Theme, Font Symtext SDF, Icon 2D Sprite)
+/// </summary>
 public class UpgradeSelectionUI : MonoBehaviour
 {
     private static UpgradeSelectionUI _instance;
@@ -39,6 +44,90 @@ public class UpgradeSelectionUI : MonoBehaviour
 
     private bool isMenuOpen = false;
 
+    // Font Symtext SDF dùng đồng bộ cho toàn bộ UI
+    private static TMP_FontAsset cachedFont;
+    public static TMP_FontAsset GetSymtextFont()
+    {
+        if (cachedFont == null)
+        {
+            cachedFont = Resources.Load<TMP_FontAsset>("Fonts/Symtext SDF");
+        }
+        return cachedFont;
+    }
+
+    /// <summary>
+    /// Tìm và nạp Sprite icon tương ứng cho Buff (ưu tiên iconPath trong Database, fallback về buffType)
+    /// </summary>
+    public static Sprite GetBuffSprite(BuffConfig buff)
+    {
+        if (buff == null) return null;
+        Sprite sprite = null;
+
+        if (!string.IsNullOrEmpty(buff.iconPath))
+        {
+            string path = buff.iconPath.Replace(".png", "").Replace(".jpg", "");
+            if (!path.StartsWith("BuffIcons/"))
+            {
+                path = "BuffIcons/" + path;
+            }
+            sprite = Resources.Load<Sprite>(path);
+            if (sprite == null)
+            {
+                sprite = Resources.Load<Sprite>(buff.iconPath.Replace(".png", ""));
+            }
+        }
+
+        if (sprite == null && !string.IsNullOrEmpty(buff.buffType))
+        {
+            sprite = Resources.Load<Sprite>("BuffIcons/" + buff.buffType);
+        }
+
+        return sprite;
+    }
+
+    /// <summary>
+    /// Tạo nhãn hiển thị chỉ số ngắn gọn (Stat Chip badge)
+    /// </summary>
+    public static string GetStatChipText(BuffConfig buff)
+    {
+        if (buff == null) return string.Empty;
+
+        switch (buff.buffType)
+        {
+            case "MaxHP":
+            case "HP":
+            case "Health":
+                return $"+{Mathf.RoundToInt(buff.value)} MAX HP";
+
+            case "MaxArmor":
+            case "Armor":
+                return $"+{Mathf.RoundToInt(buff.value)} MAX ARMOR";
+
+            case "MaxMana":
+            case "Mana":
+            case "Energy":
+                return $"+{Mathf.RoundToInt(buff.value)} MAX MANA";
+
+            case "Damage":
+                int dmgPercent = Mathf.RoundToInt((buff.value - 1f) * 100f);
+                return dmgPercent > 0 ? $"+{dmgPercent}% DAMAGE" : $"+{Mathf.RoundToInt(buff.value * 100f)}% DAMAGE";
+
+            case "CritChance":
+                return $"+{Mathf.RoundToInt(buff.value)}% CRIT CHANCE";
+
+            case "FireRate":
+                int ratePercent = buff.value < 1f ? Mathf.RoundToInt((1f - buff.value) * 100f) : Mathf.RoundToInt(buff.value * 100f);
+                return $"+{ratePercent}% ATK SPEED";
+
+            case "CoinMultiplier":
+                int coinPercent = Mathf.RoundToInt((buff.value - 1f) * 100f);
+                return coinPercent > 0 ? $"+{coinPercent}% COINS" : $"+{Mathf.RoundToInt(buff.value * 100f)}% COINS";
+
+            default:
+                return $"+{buff.value}";
+        }
+    }
+
     public void OpenUpgradeMenu(Action onComplete)
     {
         if (isMenuOpen || GameObject.Find("UpgradeSelectionCanvas") != null)
@@ -62,14 +151,20 @@ public class UpgradeSelectionUI : MonoBehaviour
 
         isMenuOpen = true;
 
-        // Tạm dừng trò chơi
+        // Tạm dừng thời gian trò chơi khi mở bảng nâng cấp
         Time.timeScale = 0f;
 
-        // Chọn ngẫu nhiên 3 Buff từ DB
-        List<BuffConfig> availableBuffs = new List<BuffConfig>(GameConfigManager.Instance.BuffDb);
-        List<BuffConfig> selectedBuffs = new List<BuffConfig>();
+        // Lọc danh sách Buff: Tuyệt đối loại bỏ MoveSpeed và chọn ngẫu nhiên 3 Buff
+        List<BuffConfig> availableBuffs = new List<BuffConfig>();
+        foreach (var b in GameConfigManager.Instance.BuffDb)
+        {
+            if (b != null && !string.Equals(b.buffType, "MoveSpeed", StringComparison.OrdinalIgnoreCase))
+            {
+                availableBuffs.Add(b);
+            }
+        }
 
-        // Chọn ngẫu nhiên không trùng lặp
+        List<BuffConfig> selectedBuffs = new List<BuffConfig>();
         int countToSelect = Mathf.Min(3, availableBuffs.Count);
         for (int i = 0; i < countToSelect; i++)
         {
@@ -78,16 +173,22 @@ public class UpgradeSelectionUI : MonoBehaviour
             availableBuffs.RemoveAt(index);
         }
 
-        // Tạo Canvas động
+        TMP_FontAsset fontAsset = GetSymtextFont();
+
+        // 1. Tạo Canvas hiển thị
         GameObject canvasObj = new GameObject("UpgradeSelectionCanvas");
         Canvas canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 999;
 
-        canvasObj.AddComponent<CanvasScaler>();
+        CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920, 1080);
+        scaler.matchWidthOrHeight = 0.5f;
+
         canvasObj.AddComponent<GraphicRaycaster>();
 
-        // Đảm bảo EventSystem tồn tại để bắt click chuột
+        // Đảm bảo EventSystem tồn tại
         if (FindAnyObjectByType<EventSystem>() == null)
         {
             GameObject eventSystem = new GameObject("EventSystem");
@@ -95,226 +196,409 @@ public class UpgradeSelectionUI : MonoBehaviour
             eventSystem.AddComponent<StandaloneInputModule>();
         }
 
-        // Tạo Background Overlay mờ tối
+        // 2. Tạo Background Overlay mờ tối (Sleek dark vignette)
         GameObject bgObj = new GameObject("BackgroundOverlay");
         bgObj.transform.SetParent(canvasObj.transform, false);
         Image bgImage = bgObj.AddComponent<Image>();
-        bgImage.color = new Color(0.05f, 0.05f, 0.07f, 0.85f); // Màu tối huyền bí
+        bgImage.color = new Color(0.04f, 0.06f, 0.09f, 0.90f);
 
         RectTransform bgRect = bgObj.GetComponent<RectTransform>();
         bgRect.anchorMin = Vector2.zero;
         bgRect.anchorMax = Vector2.one;
         bgRect.sizeDelta = Vector2.zero;
 
-        // Tiêu đề
+        // 3. Header Text & Subtitle
+        GameObject headerContainer = new GameObject("HeaderContainer");
+        headerContainer.transform.SetParent(canvasObj.transform, false);
+        RectTransform headerRect = headerContainer.AddComponent<RectTransform>();
+        headerRect.anchorMin = new Vector2(0.5f, 0.85f);
+        headerRect.anchorMax = new Vector2(0.5f, 0.85f);
+        headerRect.sizeDelta = new Vector2(800, 110);
+        headerRect.anchoredPosition = Vector2.zero;
+
+        // Title
         GameObject titleObj = new GameObject("TitleText");
-        titleObj.transform.SetParent(canvasObj.transform, false);
-        Text titleText = titleObj.AddComponent<Text>();
+        titleObj.transform.SetParent(headerContainer.transform, false);
+        TextMeshProUGUI titleText = titleObj.AddComponent<TextMeshProUGUI>();
         titleText.text = "SELECT AN UPGRADE";
-        titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        titleText.fontSize = 42;
-        titleText.alignment = TextAnchor.MiddleCenter;
-        titleText.color = new Color(0.9f, 0.9f, 0.95f);
-        titleText.fontStyle = FontStyle.Bold;
+        if (fontAsset != null) titleText.font = fontAsset;
+        titleText.fontSize = 38;
+        titleText.fontStyle = FontStyles.Bold;
+        titleText.alignment = TextAlignmentOptions.Center;
+        titleText.color = new Color(0.95f, 0.96f, 0.98f, 1f); // #F1F5F9
+        titleText.characterSpacing = 2f;
 
-        RectTransform titleRect = titleObj.GetComponent<RectTransform>();
-        titleRect.anchorMin = new Vector2(0.5f, 0.8f);
-        titleRect.anchorMax = new Vector2(0.5f, 0.8f);
-        titleRect.sizeDelta = new Vector2(600, 80);
-        titleRect.anchoredPosition = Vector2.zero;
+        RectTransform titleTextRect = titleObj.GetComponent<RectTransform>();
+        titleTextRect.anchorMin = new Vector2(0.5f, 0.7f);
+        titleTextRect.anchorMax = new Vector2(0.5f, 0.7f);
+        titleTextRect.sizeDelta = new Vector2(800, 50);
+        titleTextRect.anchoredPosition = Vector2.zero;
 
-        // Container chứa 3 thẻ
+        // Subtitle
+        GameObject subtitleObj = new GameObject("SubtitleText");
+        subtitleObj.transform.SetParent(headerContainer.transform, false);
+        TextMeshProUGUI subtitleText = subtitleObj.AddComponent<TextMeshProUGUI>();
+        subtitleText.text = "Choose 1 enhancement to strengthen your operative";
+        if (fontAsset != null) subtitleText.font = fontAsset;
+        subtitleText.fontSize = 16;
+        subtitleText.alignment = TextAlignmentOptions.Center;
+        subtitleText.color = new Color(0.58f, 0.64f, 0.72f, 1f); // #94A3B8
+
+        RectTransform subTextRect = subtitleObj.GetComponent<RectTransform>();
+        subTextRect.anchorMin = new Vector2(0.5f, 0.2f);
+        subTextRect.anchorMax = new Vector2(0.5f, 0.2f);
+        subTextRect.sizeDelta = new Vector2(800, 30);
+        subTextRect.anchoredPosition = Vector2.zero;
+
+        // 4. Container chứa 3 thẻ
         GameObject containerObj = new GameObject("CardsContainer");
         containerObj.transform.SetParent(canvasObj.transform, false);
 
         RectTransform containerRect = containerObj.AddComponent<RectTransform>();
-        containerRect.anchorMin = new Vector2(0.5f, 0.45f);
-        containerRect.anchorMax = new Vector2(0.5f, 0.45f);
-        containerRect.sizeDelta = new Vector2(900, 360);
+        containerRect.anchorMin = new Vector2(0.5f, 0.44f);
+        containerRect.anchorMax = new Vector2(0.5f, 0.44f);
+        containerRect.sizeDelta = new Vector2(1000, 480);
         containerRect.anchoredPosition = Vector2.zero;
 
-        // Spawn 3 thẻ
-        float cardWidth = 260f;
-        float cardHeight = 340f;
-        float spacing = 40f;
+        // Thông số Card
+        float cardWidth = 280f;
+        float cardHeight = 430f;
+        float spacing = 36f;
         float startX = -((cardWidth * selectedBuffs.Count) + (spacing * (selectedBuffs.Count - 1))) / 2f + cardWidth / 2f;
+
+        List<GameObject> spawnedCards = new List<GameObject>();
 
         for (int i = 0; i < selectedBuffs.Count; i++)
         {
             var buff = selectedBuffs[i];
             float posX = startX + i * (cardWidth + spacing);
 
-            // Thẻ Card
-            GameObject cardObj = new GameObject($"Card_{i}");
+            // Thẻ Card Root
+            GameObject cardObj = new GameObject($"Card_{i}_{buff.buffType}");
             cardObj.transform.SetParent(containerObj.transform, false);
-            
-            Image cardImage = cardObj.AddComponent<Image>();
-            cardImage.color = new Color(0.12f, 0.12f, 0.18f, 1f); // Sleek dark panel
+            spawnedCards.Add(cardObj);
 
-            // Thêm hiệu ứng viền sáng (Outline)
-            Outline outline = cardObj.AddComponent<Outline>();
-            outline.effectColor = GetColorForBuffType(buff.buffType);
-            outline.effectDistance = new Vector2(2, 2);
-
-            RectTransform cardRect = cardObj.GetComponent<RectTransform>();
+            RectTransform cardRect = cardObj.AddComponent<RectTransform>();
             cardRect.sizeDelta = new Vector2(cardWidth, cardHeight);
             cardRect.anchoredPosition = new Vector2(posX, 0f);
 
-            // Button sự kiện click
+            // Nền Slate Card (Dark Slate #0F172A)
+            Image cardImage = cardObj.AddComponent<Image>();
+            cardImage.color = new Color(0.06f, 0.09f, 0.16f, 0.98f);
+
+            // Viền Slate tối giản (#334155, không màu mè, không neon glow)
+            Outline outline = cardObj.AddComponent<Outline>();
+            outline.effectColor = new Color(0.20f, 0.25f, 0.33f, 1f); // #334155
+            outline.effectDistance = new Vector2(1.5f, 1.5f);
+
+            // Button click chọn thẻ
             Button cardButton = cardObj.AddComponent<Button>();
+            cardButton.transition = Selectable.Transition.None;
             cardButton.onClick.AddListener(() =>
             {
-                // Áp dụng buff
-                if (PlayerBuffManager.Instance != null)
-                {
-                    PlayerBuffManager.Instance.ApplyBuff(buff);
-                }
-
-                // Hủy UI & Tiếp tục
-                isMenuOpen = false;
-                Destroy(canvasObj);
-                Time.timeScale = 1f;
-                onComplete?.Invoke();
+                SelectBuff(buff, canvasObj, onComplete);
             });
 
-            // Thêm hiệu ứng di chuột (Micro-animation)
+            // Hiệu ứng Hover tối giản (Nâng nhẹ thẻ 8px và sáng viền Slate)
             cardObj.AddComponent<CardHoverEffect>();
 
-            // Icon hoặc Ký hiệu chữ
-            GameObject iconObj = new GameObject("Icon");
-            iconObj.transform.SetParent(cardObj.transform, false);
-            Text iconText = iconObj.AddComponent<Text>();
-            iconText.text = GetSymbolForBuffType(buff.buffType);
-            iconText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            iconText.fontSize = 55;
-            iconText.alignment = TextAnchor.MiddleCenter;
-            iconText.color = GetColorForBuffType(buff.buffType);
-
-            RectTransform iconRect = iconObj.GetComponent<RectTransform>();
-            iconRect.anchorMin = new Vector2(0.5f, 0.75f);
-            iconRect.anchorMax = new Vector2(0.5f, 0.75f);
-            iconRect.sizeDelta = new Vector2(100, 100);
-            iconRect.anchoredPosition = Vector2.zero;
-
-            // Tên Buff
-            GameObject nameObj = new GameObject("BuffName");
-            nameObj.transform.SetParent(cardObj.transform, false);
-            Text nameText = nameObj.AddComponent<Text>();
-            nameText.text = buff.buffName;
-            nameText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            nameText.fontSize = 24;
-            nameText.fontStyle = FontStyle.Bold;
-            nameText.alignment = TextAnchor.MiddleCenter;
-            nameText.color = Color.white;
-
-            RectTransform nameRect = nameObj.GetComponent<RectTransform>();
-            nameRect.anchorMin = new Vector2(0.5f, 0.52f);
-            nameRect.anchorMax = new Vector2(0.5f, 0.52f);
-            nameRect.sizeDelta = new Vector2(240, 40);
-            nameRect.anchoredPosition = Vector2.zero;
-
-            // Độ hiếm (Rarity)
-            GameObject rarityObj = new GameObject("Rarity");
-            rarityObj.transform.SetParent(cardObj.transform, false);
-            Text rarityText = rarityObj.AddComponent<Text>();
-            rarityText.text = buff.rarity.ToUpper();
-            rarityText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            rarityText.fontSize = 14;
-            rarityText.alignment = TextAnchor.MiddleCenter;
-            rarityText.color = new Color(0.7f, 0.7f, 0.75f);
-
-            RectTransform rarityRect = rarityObj.GetComponent<RectTransform>();
-            rarityRect.anchorMin = new Vector2(0.5f, 0.42f);
-            rarityRect.anchorMax = new Vector2(0.5f, 0.42f);
-            rarityRect.sizeDelta = new Vector2(240, 20);
+            // --- 4.1 Rarity Header Tag ---
+            GameObject rarityBadge = new GameObject("RarityBadge");
+            rarityBadge.transform.SetParent(cardObj.transform, false);
+            RectTransform rarityRect = rarityBadge.AddComponent<RectTransform>();
+            rarityRect.anchorMin = new Vector2(0.5f, 0.92f);
+            rarityRect.anchorMax = new Vector2(0.5f, 0.92f);
+            rarityRect.sizeDelta = new Vector2(140, 24);
             rarityRect.anchoredPosition = Vector2.zero;
 
-            // Mô tả
+            Image rarityBg = rarityBadge.AddComponent<Image>();
+            rarityBg.color = new Color(0.12f, 0.16f, 0.24f, 1f); // #1E293B
+
+            Outline rarityOutline = rarityBadge.AddComponent<Outline>();
+            rarityOutline.effectColor = new Color(0.20f, 0.25f, 0.33f, 0.6f);
+            rarityOutline.effectDistance = new Vector2(1, 1);
+
+            GameObject rarityTextObj = new GameObject("RarityText");
+            rarityTextObj.transform.SetParent(rarityBadge.transform, false);
+            TextMeshProUGUI rarityText = rarityTextObj.AddComponent<TextMeshProUGUI>();
+            rarityText.text = string.IsNullOrEmpty(buff.rarity) ? "COMMON" : buff.rarity.ToUpper();
+            if (fontAsset != null) rarityText.font = fontAsset;
+            rarityText.fontSize = 11;
+            rarityText.fontStyle = FontStyles.Bold;
+            rarityText.alignment = TextAlignmentOptions.Center;
+            rarityText.color = new Color(0.58f, 0.64f, 0.72f, 1f); // #94A3B8
+
+            RectTransform rarityTextRect = rarityTextObj.GetComponent<RectTransform>();
+            rarityTextRect.anchorMin = Vector2.zero;
+            rarityTextRect.anchorMax = Vector2.one;
+            rarityTextRect.sizeDelta = Vector2.zero;
+
+            // --- 4.2 Icon Container (Khung chứa Icon 2D Sprite) ---
+            GameObject iconContainer = new GameObject("IconContainer");
+            iconContainer.transform.SetParent(cardObj.transform, false);
+            RectTransform iconContainerRect = iconContainer.AddComponent<RectTransform>();
+            iconContainerRect.anchorMin = new Vector2(0.5f, 0.72f);
+            iconContainerRect.anchorMax = new Vector2(0.5f, 0.72f);
+            iconContainerRect.sizeDelta = new Vector2(80, 80);
+            iconContainerRect.anchoredPosition = Vector2.zero;
+
+            Image iconContainerBg = iconContainer.AddComponent<Image>();
+            iconContainerBg.color = new Color(0.12f, 0.16f, 0.24f, 0.85f); // #1E293B
+
+            Outline iconBorder = iconContainer.AddComponent<Outline>();
+            iconBorder.effectColor = new Color(0.20f, 0.25f, 0.33f, 0.8f);
+            iconBorder.effectDistance = new Vector2(1, 1);
+
+            // Sprite Icon bên trong
+            Sprite buffSprite = GetBuffSprite(buff);
+            if (buffSprite != null)
+            {
+                GameObject iconImgObj = new GameObject("SpriteIcon");
+                iconImgObj.transform.SetParent(iconContainer.transform, false);
+                Image spriteImg = iconImgObj.AddComponent<Image>();
+                spriteImg.sprite = buffSprite;
+                spriteImg.preserveAspect = true;
+
+                RectTransform spriteRect = iconImgObj.GetComponent<RectTransform>();
+                spriteRect.anchorMin = new Vector2(0.5f, 0.5f);
+                spriteRect.anchorMax = new Vector2(0.5f, 0.5f);
+                spriteRect.sizeDelta = new Vector2(60, 60);
+                spriteRect.anchoredPosition = Vector2.zero;
+            }
+
+            // --- 4.3 Buff Name ---
+            GameObject nameObj = new GameObject("BuffName");
+            nameObj.transform.SetParent(cardObj.transform, false);
+            TextMeshProUGUI nameText = nameObj.AddComponent<TextMeshProUGUI>();
+            nameText.text = buff.buffName;
+            if (fontAsset != null) nameText.font = fontAsset;
+            nameText.fontSize = 20;
+            nameText.fontStyle = FontStyles.Bold;
+            nameText.alignment = TextAlignmentOptions.Center;
+            nameText.color = new Color(0.97f, 0.98f, 0.99f, 1f); // #F8FAFC
+
+            RectTransform nameRect = nameObj.GetComponent<RectTransform>();
+            nameRect.anchorMin = new Vector2(0.5f, 0.54f);
+            nameRect.anchorMax = new Vector2(0.5f, 0.54f);
+            nameRect.sizeDelta = new Vector2(250, 32);
+            nameRect.anchoredPosition = Vector2.zero;
+
+            // --- 4.4 Stat Chip Badge (+20% DAMAGE, +2 MAX HP...) ---
+            GameObject chipBadge = new GameObject("StatChipBadge");
+            chipBadge.transform.SetParent(cardObj.transform, false);
+            RectTransform chipRect = chipBadge.AddComponent<RectTransform>();
+            chipRect.anchorMin = new Vector2(0.5f, 0.44f);
+            chipRect.anchorMax = new Vector2(0.5f, 0.44f);
+            chipRect.sizeDelta = new Vector2(210, 26);
+            chipRect.anchoredPosition = Vector2.zero;
+
+            Image chipBg = chipBadge.AddComponent<Image>();
+            chipBg.color = new Color(0.12f, 0.16f, 0.24f, 1f);
+
+            Outline chipOutline = chipBadge.AddComponent<Outline>();
+            chipOutline.effectColor = new Color(0.20f, 0.25f, 0.33f, 0.7f);
+            chipOutline.effectDistance = new Vector2(1, 1);
+
+            GameObject chipTextObj = new GameObject("StatChipText");
+            chipTextObj.transform.SetParent(chipBadge.transform, false);
+            TextMeshProUGUI chipText = chipTextObj.AddComponent<TextMeshProUGUI>();
+            chipText.text = GetStatChipText(buff);
+            if (fontAsset != null) chipText.font = fontAsset;
+            chipText.fontSize = 12;
+            chipText.fontStyle = FontStyles.Bold;
+            chipText.alignment = TextAlignmentOptions.Center;
+            chipText.color = new Color(0.22f, 0.74f, 0.97f, 1f); // #38BDF8 (Cyan Slate)
+
+            RectTransform chipTextRect = chipTextObj.GetComponent<RectTransform>();
+            chipTextRect.anchorMin = Vector2.zero;
+            chipTextRect.anchorMax = Vector2.one;
+            chipTextRect.sizeDelta = Vector2.zero;
+
+            // --- 4.5 Description ---
             GameObject descObj = new GameObject("Description");
             descObj.transform.SetParent(cardObj.transform, false);
-            Text descText = descObj.AddComponent<Text>();
+            TextMeshProUGUI descText = descObj.AddComponent<TextMeshProUGUI>();
             descText.text = buff.description;
-            descText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            descText.fontSize = 16;
-            descText.alignment = TextAnchor.MiddleCenter;
-            descText.color = new Color(0.8f, 0.8f, 0.85f);
+            if (fontAsset != null) descText.font = fontAsset;
+            descText.fontSize = 13;
+            descText.alignment = TextAlignmentOptions.Center;
+            descText.color = new Color(0.58f, 0.64f, 0.72f, 1f); // #94A3B8
 
             RectTransform descRect = descObj.GetComponent<RectTransform>();
-            descRect.anchorMin = new Vector2(0.5f, 0.22f);
-            descRect.anchorMax = new Vector2(0.5f, 0.22f);
-            descRect.sizeDelta = new Vector2(220, 80);
+            descRect.anchorMin = new Vector2(0.5f, 0.27f);
+            descRect.anchorMax = new Vector2(0.5f, 0.27f);
+            descRect.sizeDelta = new Vector2(240, 75);
             descRect.anchoredPosition = Vector2.zero;
+
+            // --- 4.6 Bottom [ SELECT ] Button ---
+            GameObject selectBtnObj = new GameObject("SelectButton");
+            selectBtnObj.transform.SetParent(cardObj.transform, false);
+            RectTransform selectBtnRect = selectBtnObj.AddComponent<RectTransform>();
+            selectBtnRect.anchorMin = new Vector2(0.5f, 0.10f);
+            selectBtnRect.anchorMax = new Vector2(0.5f, 0.10f);
+            selectBtnRect.sizeDelta = new Vector2(220, 42);
+            selectBtnRect.anchoredPosition = Vector2.zero;
+
+            Image selectBtnImg = selectBtnObj.AddComponent<Image>();
+            selectBtnImg.color = new Color(0.12f, 0.16f, 0.24f, 1f); // #1E293B
+
+            Outline selectBtnBorder = selectBtnObj.AddComponent<Outline>();
+            selectBtnBorder.effectColor = new Color(0.20f, 0.25f, 0.33f, 1f);
+            selectBtnBorder.effectDistance = new Vector2(1.5f, 1.5f);
+
+            Button selectBtn = selectBtnObj.AddComponent<Button>();
+            ColorBlock cb = selectBtn.colors;
+            cb.normalColor = new Color(0.12f, 0.16f, 0.24f, 1f);
+            cb.highlightedColor = new Color(0.20f, 0.25f, 0.33f, 1f);
+            cb.pressedColor = new Color(0.05f, 0.65f, 0.91f, 1f);
+            selectBtn.colors = cb;
+
+            selectBtn.onClick.AddListener(() =>
+            {
+                SelectBuff(buff, canvasObj, onComplete);
+            });
+
+            GameObject selectBtnTextObj = new GameObject("BtnText");
+            selectBtnTextObj.transform.SetParent(selectBtnObj.transform, false);
+            TextMeshProUGUI selectBtnText = selectBtnTextObj.AddComponent<TextMeshProUGUI>();
+            selectBtnText.text = "SELECT";
+            if (fontAsset != null) selectBtnText.font = fontAsset;
+            selectBtnText.fontSize = 14;
+            selectBtnText.fontStyle = FontStyles.Bold;
+            selectBtnText.alignment = TextAlignmentOptions.Center;
+            selectBtnText.color = new Color(0.94f, 0.96f, 0.98f, 1f); // #F1F5F9
+
+            RectTransform selectBtnTextRect = selectBtnTextObj.GetComponent<RectTransform>();
+            selectBtnTextRect.anchorMin = Vector2.zero;
+            selectBtnTextRect.anchorMax = Vector2.one;
+            selectBtnTextRect.sizeDelta = Vector2.zero;
         }
+
+        // Kích hoạt hiệu ứng xuất hiện nhẹ nhàng của 3 thẻ
+        StartCoroutine(AnimateCardsIntro(spawnedCards));
     }
 
-    private Color GetColorForBuffType(string type)
+    private void SelectBuff(BuffConfig buff, GameObject canvasObj, Action onComplete)
     {
-        switch (type)
+        if (RogueKie.Audio.AudioManager.Instance != null)
         {
-            case "MaxHP": return new Color(1f, 0.25f, 0.25f);       // Đỏ tươi
-            case "MaxArmor": return new Color(0.3f, 0.65f, 1f);     // Xanh lam
-            case "MaxMana": return new Color(0.7f, 0.3f, 1f);       // Tím phép
-            case "MoveSpeed": return new Color(0.25f, 0.9f, 0.6f);   // Xanh lục tốc chạy
-            case "Damage": return new Color(1f, 0.5f, 0.1f);         // Cam sát thương
-            case "CritChance": return new Color(1f, 0.8f, 0f);       // Vàng chí mạng
-            case "FireRate": return new Color(0.9f, 0.2f, 0.5f);     // Hồng cánh sen
-            case "CoinMultiplier": return new Color(1f, 0.85f, 0.3f); // Vàng kim tiền
-            default: return Color.gray;
+            RogueKie.Audio.AudioManager.Instance.PlayClickSound();
         }
+
+        if (PlayerBuffManager.Instance != null)
+        {
+            PlayerBuffManager.Instance.ApplyBuff(buff);
+        }
+
+        isMenuOpen = false;
+        if (canvasObj != null)
+        {
+            Destroy(canvasObj);
+        }
+        Time.timeScale = 1f;
+        onComplete?.Invoke();
     }
 
-    private string GetSymbolForBuffType(string type)
+    private IEnumerator AnimateCardsIntro(List<GameObject> cards)
     {
-        switch (type)
+        foreach (var card in cards)
         {
-            case "MaxHP": return "💖";
-            case "MaxArmor": return "🛡️";
-            case "MaxMana": return "🧪";
-            case "MoveSpeed": return "👟";
-            case "Damage": return "⚔️";
-            case "CritChance": return "🎯";
-            case "FireRate": return "⚡";
-            case "CoinMultiplier": return "💰";
-            default: return "🌀";
+            if (card != null) card.transform.localScale = Vector3.one * 0.88f;
+        }
+
+        float elapsed = 0f;
+        float duration = 0.22f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float scale = Mathf.Lerp(0.88f, 1f, Mathf.Sin(t * Mathf.PI * 0.5f));
+
+            foreach (var card in cards)
+            {
+                if (card != null) card.transform.localScale = Vector3.one * scale;
+            }
+            yield return null;
+        }
+
+        foreach (var card in cards)
+        {
+            if (card != null) card.transform.localScale = Vector3.one;
         }
     }
 }
 
-// Lớp bổ trợ hiệu ứng di chuột co giãn (Hover Effect)
+/// <summary>
+/// Hiệu ứng nâng nhẹ thẻ lên 8px và tăng sáng viền Slate khi di chuột (Hoạt động mượt ngay cả khi Time.timeScale = 0)
+/// </summary>
 public class CardHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    private Vector3 originalScale;
+    private RectTransform rectTransform;
     private Outline outline;
+    private Vector2 originalPos;
+    private Color originalBorderColor;
+    private Color hoverBorderColor = new Color(0.39f, 0.45f, 0.55f, 1f); // #64748B
+    private Coroutine animRoutine;
+
+    private void Awake()
+    {
+        rectTransform = GetComponent<RectTransform>();
+        outline = GetComponent<Outline>();
+        if (outline != null) originalBorderColor = outline.effectColor;
+    }
 
     private void Start()
     {
-        originalScale = transform.localScale;
-        outline = GetComponent<Outline>();
+        if (rectTransform != null) originalPos = rectTransform.anchoredPosition;
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        // Phóng to nhẹ và tăng sáng outline
-        transform.localScale = originalScale * 1.05f;
-        if (outline != null)
+        if (RogueKie.Audio.AudioManager.Instance != null)
         {
-            outline.effectDistance = new Vector2(4, 4);
+            RogueKie.Audio.AudioManager.Instance.PlayHoverSound();
         }
+
+        if (outline != null) outline.effectColor = hoverBorderColor;
+
+        if (animRoutine != null) StopCoroutine(animRoutine);
+        animRoutine = StartCoroutine(AnimateTo(originalPos + new Vector2(0f, 8f)));
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        // Trả lại tỷ lệ gốc
-        transform.localScale = originalScale;
-        if (outline != null)
+        if (outline != null) outline.effectColor = originalBorderColor;
+
+        if (animRoutine != null) StopCoroutine(animRoutine);
+        animRoutine = StartCoroutine(AnimateTo(originalPos));
+    }
+
+    private IEnumerator AnimateTo(Vector2 targetPos)
+    {
+        if (rectTransform == null) yield break;
+        float elapsed = 0f;
+        float duration = 0.12f;
+        Vector2 startPos = rectTransform.anchoredPosition;
+
+        while (elapsed < duration)
         {
-            outline.effectDistance = new Vector2(2, 2);
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            t = Mathf.SmoothStep(0f, 1f, t);
+            rectTransform.anchoredPosition = Vector2.Lerp(startPos, targetPos, t);
+            yield return null;
         }
+        rectTransform.anchoredPosition = targetPos;
     }
 
     private void OnDisable()
     {
-        // Reset scale tránh lỗi khi bị huỷ
-        transform.localScale = originalScale;
+        if (animRoutine != null) StopCoroutine(animRoutine);
+        if (rectTransform != null && originalPos != Vector2.zero)
+        {
+            rectTransform.anchoredPosition = originalPos;
+        }
+        if (outline != null) outline.effectColor = originalBorderColor;
     }
 }

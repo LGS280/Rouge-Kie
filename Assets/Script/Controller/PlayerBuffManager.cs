@@ -27,7 +27,6 @@ public class PlayerBuffManager : MonoBehaviour
     public float critChanceOffset = 0f; // Cộng thẳng % chí mạng (ví dụ: +15f)
     public float fireRateMultiplier = 1f; // Cooldown multiplier (ví dụ: 0.8f)
     public float coinGainMultiplier = 1f;
-    public float moveSpeedMultiplier = 1f;
 
     [Header("Bonus Stats")]
     public int bonusMaxHealth = 0;
@@ -36,6 +35,9 @@ public class PlayerBuffManager : MonoBehaviour
 
     // Danh sách ID các Buff đã chọn trong lượt chơi này
     public List<int> selectedBuffIds = new List<int>();
+    public List<BuffConfig> activeBuffs = new List<BuffConfig>();
+
+    public event Action OnBuffsChanged;
 
     private void Awake()
     {
@@ -56,13 +58,14 @@ public class PlayerBuffManager : MonoBehaviour
         critChanceOffset = 0f;
         fireRateMultiplier = 1f;
         coinGainMultiplier = 1f;
-        moveSpeedMultiplier = 1f;
 
         bonusMaxHealth = 0;
         bonusMaxArmor = 0;
         bonusMaxMana = 0;
 
         selectedBuffIds.Clear();
+        activeBuffs.Clear();
+        OnBuffsChanged?.Invoke();
         Debug.Log("[PlayerBuffManager] Đã reset toàn bộ Buff về mặc định.");
     }
 
@@ -71,6 +74,7 @@ public class PlayerBuffManager : MonoBehaviour
         if (buff == null) return;
 
         selectedBuffIds.Add(buff.id);
+        activeBuffs.Add(buff);
         Debug.Log($"[PlayerBuffManager] Áp dụng Buff: {buff.buffName} (Loại: {buff.buffType}, Giá trị: {buff.value})");
 
         // Tìm Player trong Scene để tác động trực tiếp nếu cần thiết
@@ -80,6 +84,8 @@ public class PlayerBuffManager : MonoBehaviour
         switch (buff.buffType)
         {
             case "MaxHP":
+            case "HP":
+            case "Health":
                 bonusMaxHealth += Mathf.RoundToInt(buff.value);
                 if (health != null)
                 {
@@ -88,6 +94,7 @@ public class PlayerBuffManager : MonoBehaviour
                 break;
 
             case "MaxArmor":
+            case "Armor":
                 bonusMaxArmor += Mathf.RoundToInt(buff.value);
                 if (health != null)
                 {
@@ -96,15 +103,13 @@ public class PlayerBuffManager : MonoBehaviour
                 break;
 
             case "MaxMana":
+            case "Mana":
+            case "Energy":
                 bonusMaxMana += Mathf.RoundToInt(buff.value);
                 if (health != null)
                 {
                     health.ApplyUpgradeStats(0, 0, Mathf.RoundToInt(buff.value));
                 }
-                break;
-
-            case "MoveSpeed":
-                moveSpeedMultiplier *= buff.value;
                 break;
 
             case "Damage":
@@ -124,8 +129,10 @@ public class PlayerBuffManager : MonoBehaviour
                 break;
 
             default:
-                Debug.LogWarning($"[PlayerBuffManager] Loại Buff không xác định: {buff.buffType}");
+                Debug.LogWarning($"[PlayerBuffManager] Loại Buff không xác định hoặc đã gỡ bỏ: {buff.buffType}");
                 break;
         }
+
+        OnBuffsChanged?.Invoke();
     }
 }
