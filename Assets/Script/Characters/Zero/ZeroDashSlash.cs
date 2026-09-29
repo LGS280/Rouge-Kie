@@ -195,6 +195,17 @@ public class DashSlashSkill : MonoBehaviour
     private void ApplyDamage(Collider2D target)
     {
         Debug.Log($"[Dash] Trúng: {target.name} - sát thương {damage}");
+
+        // Ưu tiên lấy trực tiếp MobHealth trên collider hoặc object cha để gọi hàm TakeDamage(int, bool = false)
+        // Tránh lỗi Reflection của SendMessageUpwards khi hàm TakeDamage có 2 tham số (kể cả tham số mặc định isCrit)
+        MobHealth mobHealth = target.GetComponentInParent<MobHealth>();
+        if (mobHealth != null)
+        {
+            mobHealth.TakeDamage(damage);
+            return;
+        }
+
+        // Fallback cho các mục tiêu khác không sử dụng MobHealth
         target.SendMessageUpwards(damageMethodName, damage, SendMessageOptions.DontRequireReceiver);
     }
 
