@@ -520,36 +520,46 @@ public class ShopUIController : MonoBehaviour
                 }
                 else
                 {
-                    if (statusText != null) statusText.text = $"<color=red>{res.message}</color>";
+                    string failMsg = (res != null && !string.IsNullOrEmpty(res.message)) ? res.message : "Giao dịch không thành công.";
+                    Debug.LogWarning($"[ShopUIController] Mua thất bại: {failMsg}");
+                    if (statusText != null) statusText.text = $"<color=red>{failMsg}</color>";
+                    UpdateGemDisplay();
+                    RefreshAllTabs();
                 }
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[ShopUIController] Parse error: {ex.Message}");
-                if (isCharacter)
-                {
-                    RegisterUnlockedCharacter(!string.IsNullOrEmpty(characterName) ? characterName : weaponPrefab);
-                }
-                else
-                {
-                    RegisterUnlockSafely(prefabPath);
-                    SpawnBoughtWeaponOnTable(prefabPath);
-                }
+                if (statusText != null) statusText.text = "<color=red>Lỗi xử lý dữ liệu từ máy chủ.</color>";
+                UpdateGemDisplay();
                 RefreshAllTabs();
             }
         }, (err) =>
         {
-            Debug.LogWarning($"[ShopUIController] API Buy Item Error (chuyển chế độ Offline Test): {err}");
-            if (statusText != null) statusText.text = isCharacter ? $"<color=green>Character {characterName} unlocked!</color>" : "<color=green>Offline Purchase Success! Weapon spawned on table!</color>";
-            if (isCharacter)
+            Debug.LogWarning($"[ShopUIController] API Buy Item Error: {err}");
+            string failureMessage = "Giao dịch thất bại!";
+            try
             {
-                RegisterUnlockedCharacter(!string.IsNullOrEmpty(characterName) ? characterName : weaponPrefab);
+                if (!string.IsNullOrEmpty(err))
+                {
+                    BuyItemResponseData errRes = JsonUtility.FromJson<BuyItemResponseData>(err);
+                    if (errRes != null && !string.IsNullOrEmpty(errRes.message))
+                    {
+                        failureMessage = errRes.message;
+                    }
+                    else
+                    {
+                        failureMessage = err;
+                    }
+                }
             }
-            else
+            catch
             {
-                RegisterUnlockSafely(prefabPath);
-                SpawnBoughtWeaponOnTable(prefabPath);
+                failureMessage = err;
             }
+
+            if (statusText != null) statusText.text = $"<color=red>{failureMessage}</color>";
+            UpdateGemDisplay();
             RefreshAllTabs();
         });
     }
