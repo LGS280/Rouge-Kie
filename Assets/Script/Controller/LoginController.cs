@@ -695,6 +695,10 @@ public class LoginController : MonoBehaviour
         // Cập nhật thông tin profile lên UI (Cập nhật từ dev)
         PlayerProfileUI.Instance?.RefreshProfile();
 
+        // Đồng bộ kho vũ khí và nhân vật sở hữu của tài khoản vừa đăng nhập từ Server
+        WeaponVaultUIController.Instance?.FetchUnlockedWeapons();
+        ShopUIController.SyncUnlockedCharactersFromServer();
+
         // Điều hướng tự động dựa trên hành động người chơi đã chọn trước khi mở Login
         if (PendingActionAfterLogin == "SINGLEPLAYER")
         {
