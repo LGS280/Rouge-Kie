@@ -22,8 +22,12 @@ public class RunStatsTracker : MonoBehaviour
     public int EnemiesKilled { get; private set; } = 0;     // Số lượng kẻ địch tiêu diệt
     public float DamageDealt { get; private set; } = 0;     // Lượng sát thương gây ra
     public int CurrencyEarned { get; private set; } = 0;    // Số Coin nhận được trong trận (chỉ có giá trị trong run)
+    public int TotalGemsEarned { get; private set; } = 0;   // Số Gem thực nhận sau khi quy đổi (100 Coin = 1 Gem + Victory Bonus)
     public int ClearedRoomsCount { get; private set; } = 0; // Số phòng đã dọn dẹp xong quái
     public int TotalCombatRooms { get; private set; } = 0;  // Tổng số phòng có quái cần vượt qua
+
+    // Sự kiện thông báo khi số Coin thay đổi để cập nhật UI trong trận
+    public event Action<int> OnCurrencyChanged;
 
     private float startTime;
     private bool runEnded = false;
@@ -72,6 +76,7 @@ public class RunStatsTracker : MonoBehaviour
             {
                 EnsureCloseButtonExists();
             }
+            InGameCoinUI.Instance?.SetVisible(!nextState);
             Debug.Log($"[RunStatsTracker] Bấm phím Tab thay đổi trạng thái Bảng Thống Kê: {(nextState ? "MỞ" : "ĐÓNG")}");
         }
     }
@@ -86,6 +91,7 @@ public class RunStatsTracker : MonoBehaviour
         EnemiesKilled = 0;
         DamageDealt = 0;
         CurrencyEarned = 0;
+        TotalGemsEarned = 0;
         WavesSurvived = 1;
         startTime = Time.time;
         runEnded = false;
@@ -101,6 +107,9 @@ public class RunStatsTracker : MonoBehaviour
         {
             PlayerBuffManager.Instance.ResetBuffs();
         }
+
+        OnCurrencyChanged?.Invoke(CurrencyEarned);
+        InGameCoinUI.EnsureCoinUIExists();
 
         Debug.Log($"[RunStatsTracker] Khởi tạo Run mới. Tổng số phòng cần dọn: {TotalCombatRooms}");
     }
@@ -130,6 +139,7 @@ public class RunStatsTracker : MonoBehaviour
         }
 
         CurrencyEarned += finalAmount;
+        OnCurrencyChanged?.Invoke(CurrencyEarned);
         Debug.Log($"[RunStatsTracker] Đã nhặt Coin. Cộng thêm: {finalAmount} (Gốc: {amount}), Tổng số: {CurrencyEarned}");
     }
 
@@ -165,9 +175,14 @@ public class RunStatsTracker : MonoBehaviour
 
         int durationSeconds = (int)(Time.time - startTime);
         
-        // Thưởng thêm Victory Bonus nếu chiến thắng màn chơi
-        int victoryBonus = isVictory ? 100 : 0;
-        CurrencyEarned += victoryBonus;
+        // Quy đổi: 100 Coin nhặt trong trận = 1 Gem
+        int gemFromCoins = CurrencyEarned / 100;
+
+        // Thưởng thêm Victory Bonus nếu chiến thắng màn chơi: +100 Gem cố định
+        int victoryGemBonus = isVictory ? 100 : 0;
+
+        // Tổng số Gem nhận được sau trận (Ví dụ: 500 Coin + Thắng = 5 + 100 = 105 Gem)
+        TotalGemsEarned = gemFromCoins + victoryGemBonus;
 
         // Nếu chiến thắng, WavesSurvived mặc định = 5 (tầng cuối cùng hoàn thành), ngược lại tính theo tầng hiện tại đang chơi
         if (isVictory)
@@ -266,7 +281,7 @@ public class RunStatsTracker : MonoBehaviour
             wavesSurvived = WavesSurvived,
             enemiesKilled = EnemiesKilled,
             damageDealt = (int)DamageDealt,
-            currencyEarned = CurrencyEarned,
+            currencyEarned = TotalGemsEarned, // Lưu số Gem thực nhận sau khi quy đổi (100 Coin = 1 Gem + Victory Bonus)
             durationSeconds = durationSeconds
         };
 
@@ -291,6 +306,8 @@ public class RunStatsTracker : MonoBehaviour
             resultPanel.SetActive(true);
         }
 
+        InGameCoinUI.Instance?.SetVisible(false);
+
         if (resultTitleText != null)
         {
             resultTitleText.text = isVictory ? "VICTORY!" : "DEFEAT!";
@@ -300,11 +317,16 @@ public class RunStatsTracker : MonoBehaviour
         if (statsText != null)
         {
             string timeStr = $"{durationSeconds / 60:D2}:{durationSeconds % 60:D2}";
+            int gemFromCoins = CurrencyEarned / 100;
+            string victoryBonusLine = isVictory ? "\nVictory Bonus: +100 Gems" : "";
+
             statsText.text = $"Time Played: {timeStr}\n" +
                              $"Stages Cleared: {WavesSurvived}/5\n" +
                              $"Enemies Killed: {EnemiesKilled}\n" +
                              $"Damage Dealt: {(int)DamageDealt}\n" +
-                             $"Coins Earned: +{CurrencyEarned} Coins";
+                             $"Coins Collected: {CurrencyEarned} (+{gemFromCoins} Gems)" +
+                             victoryBonusLine + "\n" +
+                             $"Total Gems Earned: +{TotalGemsEarned} Gems";
         }
 
         EnsureCloseButtonExists();
@@ -316,6 +338,8 @@ public class RunStatsTracker : MonoBehaviour
         {
             resultPanel.SetActive(false);
         }
+
+        InGameCoinUI.Instance?.SetVisible(true);
     }
 
     private void EnsureCloseButtonExists()
