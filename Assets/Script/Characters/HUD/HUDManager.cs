@@ -11,12 +11,18 @@ public class HUDManager : MonoBehaviour
         {
             if (playerHUDs[i] == null) continue;
 
-            RookieHealth targetPlayer = (players != null && i < players.Length) ? players[i] : null;
-            if (targetPlayer == null)
+            RookieHealth targetPlayer = null;
+            if (i == 0)
             {
-                // Tự động tìm nhân vật người chơi trong Scene nếu Inspector bị Missing/None
+                // Luôn ưu tiên tìm nhân vật người chơi thực tế đang active trong Scene
                 GameObject p = GameObject.FindGameObjectWithTag("Player");
                 if (p != null) targetPlayer = p.GetComponent<RookieHealth>();
+            }
+
+            // Fallback nếu không tìm thấy tag Player thì mới dùng danh sách kéo thả Inspector
+            if (targetPlayer == null && players != null && i < players.Length)
+            {
+                targetPlayer = players[i];
             }
 
             if (targetPlayer != null)
