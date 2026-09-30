@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -79,6 +80,7 @@ public class CharacterSelectUIController : MonoBehaviour
         }
 
         RefreshCardsDisplay();
+        FetchCharacterDescriptions();
         ShopUIController.SyncUnlockedCharactersFromServer(() => RefreshCardsDisplay());
     }
 
@@ -125,28 +127,91 @@ public class CharacterSelectUIController : MonoBehaviour
         CreateCharacterCard(
             charName: "Rookie",
             displayName: "Rookie",
-            desc: "Brave standard tactical combat operative. Balanced stats and versatile weapon handling.",
+            desc: GetCharacterDbDescription("Rookie"),
             statsText: "HP: 100   |   Armor: 4   |   Mana: 200",
-            specialtyText: "Specialty: All-Round Balanced Combat",
             isSelected: currentSelected.Equals("Rookie", StringComparison.OrdinalIgnoreCase)
         );
 
-        // 2. Thẻ Hero Zero (Cyborg) - CHỈ hiển thị nếu người chơi ĐÃ MỞ KHÓA (tương tự như Kho Vũ Khí)
+        // 2. Thẻ Zero (Cyborg) - CHỈ hiển thị nếu người chơi ĐÃ MỞ KHÓA (tương tự như Kho Vũ Khí)
         bool isZeroUnlocked = ShopUIController.IsCharacterUnlocked("Zero");
         if (isZeroUnlocked)
         {
             CreateCharacterCard(
                 charName: "Zero",
-                displayName: "Hero Zero",
-                desc: "Advanced high-tech cybernetic operative equipped with high mobility Overdrive booster.",
-                statsText: "HP: 100   |   Armor: 4   |   Mana: 200",
-                specialtyText: "Specialty: Speed Skill (+100% Sprint Boost)",
+                displayName: "Zero",
+                desc: GetCharacterDbDescription("Zero"),
+                statsText: "HP: 200   |   Armor: 25   |   Mana: 240",
                 isSelected: currentSelected.Equals("Zero", StringComparison.OrdinalIgnoreCase)
             );
         }
     }
 
-    private void CreateCharacterCard(string charName, string displayName, string desc, string statsText, string specialtyText, bool isSelected)
+    private static readonly Dictionary<string, string> characterDescriptionCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Lấy nội dung mô tả nhân vật chuẩn từ Database / GameConfig
+    /// </summary>
+    public static string GetCharacterDbDescription(string charName)
+    {
+        string clean = (charName ?? "").Trim();
+        if (clean.Contains("zero", StringComparison.OrdinalIgnoreCase)) clean = "Zero";
+        else if (clean.Contains("rookie", StringComparison.OrdinalIgnoreCase)) clean = "Rookie";
+
+        if (characterDescriptionCache.TryGetValue(clean, out var cachedDesc) && !string.IsNullOrEmpty(cachedDesc))
+        {
+            return cachedDesc;
+        }
+
+        if (GameConfigManager.Instance != null)
+        {
+            var config = GameConfigManager.Instance.GetCharacterConfig(clean);
+            if (config != null && !string.IsNullOrEmpty(config.description))
+            {
+                return config.description;
+            }
+        }
+
+        if (clean.Equals("Zero", StringComparison.OrdinalIgnoreCase)) return "A military-trained assassin";
+        if (clean.Equals("Rookie", StringComparison.OrdinalIgnoreCase)) return "An elite soldier in the ranks of the army";
+        return "";
+    }
+
+    /// <summary>
+    /// Đồng bộ mô tả chuẩn của các nhân vật từ máy chủ API /Characters
+    /// </summary>
+    public void FetchCharacterDescriptions(Action onComplete = null)
+    {
+        if (ApiClient.Instance == null)
+        {
+            onComplete?.Invoke();
+            return;
+        }
+
+        ApiClient.Instance.Get("/Characters", (json) =>
+        {
+            try
+            {
+                string wrappedJson = "{\"data\":" + json + "}";
+                var wrapper = JsonUtility.FromJson<CharacterArrayWrapper>(wrappedJson);
+                if (wrapper != null && wrapper.data != null)
+                {
+                    foreach (var c in wrapper.data)
+                    {
+                        if (!string.IsNullOrEmpty(c.description))
+                        {
+                            if (!string.IsNullOrEmpty(c.prefabName)) characterDescriptionCache[c.prefabName.Trim()] = c.description;
+                            if (!string.IsNullOrEmpty(c.name)) characterDescriptionCache[c.name.Trim()] = c.description;
+                        }
+                    }
+                    RefreshCardsDisplay();
+                }
+            }
+            catch { }
+            onComplete?.Invoke();
+        }, (err) => onComplete?.Invoke());
+    }
+
+    private void CreateCharacterCard(string charName, string displayName, string desc, string statsText, bool isSelected)
     {
         GameObject card = new GameObject("Card_" + charName, typeof(RectTransform), typeof(Image));
         card.transform.SetParent(cardsContainer, false);
@@ -194,7 +259,7 @@ public class CharacterSelectUIController : MonoBehaviour
         GameObject iconFrame = new GameObject("IconFrame", typeof(RectTransform), typeof(Image));
         iconFrame.transform.SetParent(card.transform, false);
         RectTransform frameRect = iconFrame.GetComponent<RectTransform>();
-        frameRect.anchoredPosition = new Vector2(0, 78);
+        frameRect.anchoredPosition = new Vector2(0, 75);
         frameRect.sizeDelta = new Vector2(130, 130);
         Image frameImg = iconFrame.GetComponent<Image>();
         frameImg.color = new Color(0.04f, 0.06f, 0.10f, 0.95f);
@@ -234,45 +299,33 @@ public class CharacterSelectUIController : MonoBehaviour
         GameObject descObj = new GameObject("Desc", typeof(RectTransform), typeof(TextMeshProUGUI));
         descObj.transform.SetParent(card.transform, false);
         RectTransform descRect = descObj.GetComponent<RectTransform>();
-        descRect.anchoredPosition = new Vector2(0, -20);
-        descRect.sizeDelta = new Vector2(290, 48);
+        descRect.anchoredPosition = new Vector2(0, -25);
+        descRect.sizeDelta = new Vector2(290, 44);
         TextMeshProUGUI descTxt = descObj.GetComponent<TextMeshProUGUI>();
         descTxt.text = desc;
-        descTxt.fontSize = 12;
-        descTxt.color = new Color(0.75f, 0.85f, 0.95f);
+        descTxt.fontSize = 13;
+        descTxt.color = new Color(0.80f, 0.88f, 0.96f);
         descTxt.alignment = TextAlignmentOptions.Center;
 
         // Chỉ số Stats
         GameObject statsObj = new GameObject("Stats", typeof(RectTransform), typeof(TextMeshProUGUI));
         statsObj.transform.SetParent(card.transform, false);
         RectTransform statsRect = statsObj.GetComponent<RectTransform>();
-        statsRect.anchoredPosition = new Vector2(0, -60);
-        statsRect.sizeDelta = new Vector2(300, 24);
+        statsRect.anchoredPosition = new Vector2(0, -78);
+        statsRect.sizeDelta = new Vector2(300, 26);
         TextMeshProUGUI statsTxt = statsObj.GetComponent<TextMeshProUGUI>();
         statsTxt.text = statsText;
-        statsTxt.fontSize = 12;
+        statsTxt.fontSize = 13;
         statsTxt.color = new Color(1f, 0.85f, 0.35f);
         statsTxt.alignment = TextAlignmentOptions.Center;
         statsTxt.fontStyle = FontStyles.Bold;
-
-        // Kỹ năng đặc biệt
-        GameObject specObj = new GameObject("Specialty", typeof(RectTransform), typeof(TextMeshProUGUI));
-        specObj.transform.SetParent(card.transform, false);
-        RectTransform specRect = specObj.GetComponent<RectTransform>();
-        specRect.anchoredPosition = new Vector2(0, -90);
-        specRect.sizeDelta = new Vector2(300, 24);
-        TextMeshProUGUI specTxt = specObj.GetComponent<TextMeshProUGUI>();
-        specTxt.text = specialtyText;
-        specTxt.fontSize = 12;
-        specTxt.color = new Color(0.4f, 0.9f, 1f);
-        specTxt.alignment = TextAlignmentOptions.Center;
 
         // Nút bấm Hành động (Action Button)
         GameObject btnObj = new GameObject("BtnAction", typeof(RectTransform), typeof(Image), typeof(Button));
         btnObj.transform.SetParent(card.transform, false);
         RectTransform btnRect = btnObj.GetComponent<RectTransform>();
-        btnRect.anchoredPosition = new Vector2(0, -155);
-        btnRect.sizeDelta = new Vector2(270, 46);
+        btnRect.anchoredPosition = new Vector2(0, -150);
+        btnRect.sizeDelta = new Vector2(270, 48);
 
         Image btnImg = btnObj.GetComponent<Image>();
         Button btn = btnObj.GetComponent<Button>();

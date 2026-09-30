@@ -136,6 +136,7 @@ public class ShopUIController : MonoBehaviour
         if (shopPanel != null) shopPanel.SetActive(true);
         UpdateGemDisplay();
         RefreshAllTabs();
+        FetchCharacterDescriptions();
         FetchShopItems();
         SyncUnlockedCharactersFromServer(() => RefreshAllTabs());
     }
@@ -223,6 +224,7 @@ public class ShopUIController : MonoBehaviour
 
     public void FetchShopItems()
     {
+        FetchCharacterDescriptions();
         if (statusText != null) statusText.text = "Loading Shop Items...";
 
         if (ApiClient.Instance == null)
@@ -836,6 +838,122 @@ public class ShopUIController : MonoBehaviour
         return "Rookie";
     }
 
+    private static readonly Dictionary<string, string> characterDescriptionCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Lấy mô tả nhân vật chuẩn từ GameConfigManager, cache /Characters hoặc fallback database
+    /// </summary>
+    public static string GetCharacterDescription(string charIdentifier, string fallbackDesc = "")
+    {
+        string clean = (charIdentifier ?? "").Trim();
+        if (clean.Contains("zero", StringComparison.OrdinalIgnoreCase)) clean = "Zero";
+        else if (clean.Contains("rookie", StringComparison.OrdinalIgnoreCase)) clean = "Rookie";
+
+        // 1. Kiểm tra cache đã nạp từ API /Characters
+        if (characterDescriptionCache.TryGetValue(clean, out var cachedDesc) && !string.IsNullOrEmpty(cachedDesc))
+        {
+            return cachedDesc;
+        }
+
+        // 2. Kiểm tra GameConfigManager
+        if (GameConfigManager.Instance != null)
+        {
+            var config = GameConfigManager.Instance.GetCharacterConfig(clean);
+            if (config != null && !string.IsNullOrEmpty(config.description))
+            {
+                return config.description;
+            }
+        }
+
+        // 3. Fallback chuẩn theo database
+        if (clean.Equals("Zero", StringComparison.OrdinalIgnoreCase))
+        {
+            return "A military-trained assassin";
+        }
+        if (clean.Equals("Rookie", StringComparison.OrdinalIgnoreCase))
+        {
+            return "An elite soldier in the ranks of the army";
+        }
+
+        if (!string.IsNullOrEmpty(fallbackDesc) && !fallbackDesc.ToLowerInvariant().Contains("suit"))
+        {
+            return fallbackDesc;
+        }
+
+        return "Tactical combat operative";
+    }
+
+    /// <summary>
+    /// Lấy mô tả chi tiết của vũ khí tương ứng từ Tab Gem hoặc danh mục chuẩn
+    /// </summary>
+    public string ResolveWeaponDescription(string weaponName, string prefabPath, string currentDesc)
+    {
+        // 1. Tìm trong dynamicShopItems xem có vũ khí Gem tương ứng không
+        if (dynamicShopItems != null)
+        {
+            var gemWeapon = dynamicShopItems.Find(x => x != null 
+                && (x.itemType == "WEAPON_GEM" || x.currencyType == "GEM")
+                && ResolveWeaponPrefabName(x.name, x.description) == prefabPath);
+
+            if (gemWeapon != null && !string.IsNullOrEmpty(gemWeapon.description) && !gemWeapon.description.StartsWith("Pay via", StringComparison.OrdinalIgnoreCase))
+            {
+                return gemWeapon.description;
+            }
+        }
+
+        // 2. Tra cứu theo prefabPath hoặc tên nếu backend trả về mô tả dạng Pay via VietQR...
+        string clean = (prefabPath ?? weaponName ?? "").ToLowerInvariant();
+        if (clean.Contains("ak_47") || clean.Contains("ak-47") || clean.Contains("ak47")) return "High-damage gold-plated assault rifle";
+        if (clean.Contains("missile")) return "Long-range homing missile launcher";
+        if (clean.Contains("rocket")) return "Heavy rocket launcher with wide AoE";
+        if (clean.Contains("shotgun")) return "High spread tactical shotgun for close quarters combat";
+        if (clean.Contains("desert") || clean.Contains("eagle")) return "High-caliber semi-automatic handgun";
+        if (clean.Contains("katana")) return "Lethal golden blade with swift melee strikes";
+        if (clean.Contains("laser")) return "Futuristic energy weapon firing rapid laser beams";
+        if (clean.Contains("m249")) return "Heavy squad automatic weapon with immense ammo capacity";
+        if (clean.Contains("m4")) return "Standard military assault rifle with balanced handling";
+        if (clean.Contains("odin")) return "Heavy plasma cannon with devastating firepower";
+        if (clean.Contains("snipe")) return "Long-range high-precision sniper rifle";
+        if (clean.Contains("uzi")) return "Compact submachine gun with rapid fire rate";
+        if (clean.Contains("bow")) return "Silent classic bow with piercing arrows";
+
+        if (!string.IsNullOrEmpty(currentDesc) && !currentDesc.StartsWith("Pay via", StringComparison.OrdinalIgnoreCase))
+        {
+            return currentDesc;
+        }
+
+        return "High-performance specialized tactical weapon.";
+    }
+
+    /// <summary>
+    /// Đồng bộ mô tả chuẩn của tất cả nhân vật từ API /Characters
+    /// </summary>
+    public void FetchCharacterDescriptions()
+    {
+        if (ApiClient.Instance == null) return;
+        ApiClient.Instance.Get("/Characters", (json) =>
+        {
+            try
+            {
+                string wrappedJson = "{\"data\":" + json + "}";
+                var wrapper = JsonUtility.FromJson<CharacterArrayWrapper>(wrappedJson);
+                if (wrapper != null && wrapper.data != null)
+                {
+                    foreach (var c in wrapper.data)
+                    {
+                        if (!string.IsNullOrEmpty(c.description))
+                        {
+                            if (!string.IsNullOrEmpty(c.prefabName)) characterDescriptionCache[c.prefabName.Trim()] = c.description;
+                            if (!string.IsNullOrEmpty(c.name)) characterDescriptionCache[c.name.Trim()] = c.description;
+                        }
+                    }
+                    RefreshAllTabs();
+                }
+            }
+            catch { }
+        }, null);
+    }
+
     /// <summary>
     /// Hiển thị hộp thoại Popup xác nhận (Double Check) trước khi thực hiện mua vật phẩm hoặc mở khóa nhân vật
     /// </summary>
@@ -1238,7 +1356,7 @@ public class ShopUIController : MonoBehaviour
         tabBarRect.sizeDelta = new Vector2(840, 50);
 
         coinTabButton = CreateTabButton(tabBar.transform, new Vector2(-280, 0), "GEM WEAPONS");
-        gemTabButton = CreateTabButton(tabBar.transform, new Vector2(0, 0), "VIP WEAPONS (VietQR)");
+        gemTabButton = CreateTabButton(tabBar.transform, new Vector2(0, 0), "VIP WEAPONS");
         skinTabButton = CreateTabButton(tabBar.transform, new Vector2(280, 0), "CHARACTERS");
 
         if (coinTabButton != null) { coinTabButton.onClick.RemoveAllListeners(); coinTabButton.onClick.AddListener(() => SwitchTab(0)); }
@@ -1308,15 +1426,15 @@ public class ShopUIController : MonoBehaviour
                 }
                 else if (itemType == "WEAPON_VIP" || currencyType == "VND")
                 {
-                    // Tab 2: VIP WEAPONS (VietQR)
+                    // Tab 2: VIP WEAPONS
                     string priceText = $"{item.price:N0} VND";
                     string btnText = "BUY NOW";
                     int itemId = item.shopItemId;
                     int price = item.price;
                     string itemName = item.name;
                     string targetPrefab = prefabPath;
-                    string desc = !string.IsNullOrEmpty(item.description) ? item.description : $"Buy {item.name}";
-                    CreateShopCard(gemTabContent.transform, itemName, priceText, item.description, btnText, targetPrefab, () =>
+                    string desc = ResolveWeaponDescription(itemName, prefabPath, item.description);
+                    CreateShopCard(gemTabContent.transform, itemName, priceText, desc, btnText, targetPrefab, () =>
                     {
                         ShowPurchaseConfirmation(itemName, priceText, targetPrefab, () => BuyGemPackage(price, desc, itemId, targetPrefab));
                     });
@@ -1327,9 +1445,10 @@ public class ShopUIController : MonoBehaviour
                     string priceText = $"{item.price:N0} Gems";
                     string btnText = "BUY NOW";
                     int itemId = item.shopItemId;
-                    string itemName = item.name;
                     string targetChar = ResolveCharacterPrefabName(item.name, item.description);
-                    CreateShopCard(skinTabContent.transform, itemName, priceText, item.description, btnText, targetChar, () =>
+                    string itemName = item.name;
+                    string charDesc = GetCharacterDescription(targetChar, item.description);
+                    CreateShopCard(skinTabContent.transform, itemName, priceText, charDesc, btnText, targetChar, () =>
                     {
                         ShowPurchaseConfirmation(itemName, priceText, targetChar, () => BuyShopItem(itemId, targetChar, true, itemName), isCharacter: true);
                     }, isCharacter: true);
@@ -1348,17 +1467,17 @@ public class ShopUIController : MonoBehaviour
                 ShowPurchaseConfirmation("Rocket Launcher", "1,200 Gems", "Weapons/Rocket_Launcher", () => BuyShopItem(3, "Rocket_Launcher")));
 
             // 5b. Súng VIP mua trực tiếp bằng Tiền Thật qua VietQR (PayOS)
-            CreateShopCard(gemTabContent.transform, "AK-47 Gold VIP", "2,000 VND", "Pay via VietQR to unlock AK-47 Gold VIP", "BUY NOW", "Weapons/AK_47A_Gold", () =>
+            CreateShopCard(gemTabContent.transform, "AK-47 Gold VIP", "2,000 VND", "High-damage gold-plated assault rifle", "BUY NOW", "Weapons/AK_47A_Gold", () =>
                 ShowPurchaseConfirmation("AK-47 Gold VIP", "2,000 VND", "Weapons/AK_47A_Gold", () => BuyGemPackage(2000, "Buy AK-47 Gold VIP", 1, "AK_47A_Gold")));
-            CreateShopCard(gemTabContent.transform, "Missile Launcher VIP", "2,000 VND", "Pay via VietQR to unlock Missile Launcher VIP", "BUY NOW", "Weapons/Missile_Launcher", () =>
+            CreateShopCard(gemTabContent.transform, "Missile Launcher VIP", "2,000 VND", "Long-range homing missile launcher", "BUY NOW", "Weapons/Missile_Launcher", () =>
                 ShowPurchaseConfirmation("Missile Launcher VIP", "2,000 VND", "Weapons/Missile_Launcher", () => BuyGemPackage(2000, "Buy Missile Launcher VIP", 2, "Missile_Launcher")));
-            CreateShopCard(gemTabContent.transform, "Rocket Launcher VIP", "2,000 VND", "Pay via VietQR to unlock Rocket Launcher VIP", "BUY NOW", "Weapons/Rocket_Launcher", () =>
+            CreateShopCard(gemTabContent.transform, "Rocket Launcher VIP", "2,000 VND", "Heavy rocket launcher with wide AoE", "BUY NOW", "Weapons/Rocket_Launcher", () =>
                 ShowPurchaseConfirmation("Rocket Launcher VIP", "2,000 VND", "Weapons/Rocket_Launcher", () => BuyGemPackage(2000, "Buy Rocket Launcher VIP", 3, "Rocket_Launcher")));
 
             // 5c. Nhân Vật (Characters)
-            CreateShopCard(skinTabContent.transform, "Rookie", "0 Gems", "Default brave tactical operative. Balanced combat stats.", "OWNED", "Rookie", () => { }, isCharacter: true);
-            CreateShopCard(skinTabContent.transform, "Hero Zero", "200 Gems", "Agile high-tech cyborg operative with enhanced mobility.", "BUY NOW", "Zero", () =>
-                ShowPurchaseConfirmation("Hero Zero", "200 Gems", "Zero", () => BuyShopItem(5, "Zero", true, "Hero Zero"), isCharacter: true), isCharacter: true);
+            CreateShopCard(skinTabContent.transform, "Rookie", "0 Gems", "An elite soldier in the ranks of the army", "OWNED", "Rookie", () => { }, isCharacter: true);
+            CreateShopCard(skinTabContent.transform, "Zero", "200 Gems", "A military-trained assassin", "BUY NOW", "Zero", () =>
+                ShowPurchaseConfirmation("Zero", "200 Gems", "Zero", () => BuyShopItem(5, "Zero", true, "Zero"), isCharacter: true), isCharacter: true);
         }
     }
 
