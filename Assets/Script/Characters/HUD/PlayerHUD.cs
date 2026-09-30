@@ -27,6 +27,10 @@ public class PlayerHUD : MonoBehaviour
             PlayerBuffManager.Instance.OnBuffsChanged += RefreshBuffIcons;
         }
         RefreshBuffIcons();
+        if (currentTarget != null)
+        {
+            UpdateHUDVisuals();
+        }
     }
 
     private void OnDisable()
@@ -42,13 +46,13 @@ public class PlayerHUD : MonoBehaviour
     private void Start()
     {
         RefreshBuffIcons();
-        if (currentTarget == null)
+        GameObject p = GameObject.FindGameObjectWithTag("Player");
+        if (p != null)
         {
-            GameObject p = GameObject.FindGameObjectWithTag("Player");
-            if (p != null)
+            RookieHealth rh = p.GetComponent<RookieHealth>();
+            if (rh != null && rh != currentTarget)
             {
-                RookieHealth rh = p.GetComponent<RookieHealth>();
-                if (rh != null) SetTarget(rh);
+                SetTarget(rh);
             }
         }
     }
@@ -56,29 +60,46 @@ public class PlayerHUD : MonoBehaviour
     public void SetTarget(RookieHealth target)
     {
         if (target == null) return;
-        currentTarget = target;
-        target.onHealthChanged.AddListener(() =>
-        {
-            if (hpBar != null) hpBar.value = (float)target.GetCurrentHealth() / target.GetMaxHealth();
-            if (hpText != null) hpText.text = target.GetCurrentHealth() + "/" + target.GetMaxHealth();
-            if (armorBar != null) armorBar.value = (float)target.GetCurrentArmor() / target.GetMaxArmor();
-            if (armorText != null) armorText.text = target.GetCurrentArmor() + "/" + target.GetMaxArmor();
-            if (manaBar != null) manaBar.value = (float)target.GetCurrentMana() / target.GetMaxMana();
-            if (manaText != null) manaText.text = target.GetCurrentMana() + "/" + target.GetMaxMana();
-        });
 
-        StartCoroutine(InitHUD(target));
+        if (currentTarget != null)
+        {
+            currentTarget.onHealthChanged.RemoveListener(UpdateHUDVisuals);
+        }
+
+        currentTarget = target;
+        currentTarget.onHealthChanged.AddListener(UpdateHUDVisuals);
+
+        // Cập nhật ngay lập tức các thanh trạng thái mà không cần chờ đợi khung hình
+        UpdateHUDVisuals();
     }
 
-    private IEnumerator InitHUD(RookieHealth target)
+    public void UpdateHUDVisuals()
     {
-        yield return null;
-        if (hpBar != null) hpBar.value = (float)target.GetCurrentHealth() / target.GetMaxHealth();
-        if (hpText != null) hpText.text = target.GetCurrentHealth() + "/" + target.GetMaxHealth();
-        if (armorBar != null) armorBar.value = (float)target.GetCurrentArmor() / target.GetMaxArmor();
-        if (armorText != null) armorText.text = target.GetCurrentArmor() + "/" + target.GetMaxArmor();
-        if (manaBar != null) manaBar.value = (float)target.GetCurrentMana() / target.GetMaxMana();
-        if (manaText != null) manaText.text = target.GetCurrentMana() + "/" + target.GetMaxMana();
+        if (currentTarget == null) return;
+
+        int curHp = currentTarget.GetCurrentHealth();
+        int maxHp = currentTarget.GetMaxHealth();
+        int curArmor = currentTarget.GetCurrentArmor();
+        int maxArmor = currentTarget.GetMaxArmor();
+        int curMana = currentTarget.GetCurrentMana();
+        int maxMana = currentTarget.GetMaxMana();
+
+        if (hpBar != null) hpBar.value = maxHp > 0 ? (float)curHp / maxHp : 1f;
+        if (hpText != null) hpText.text = $"{curHp}/{maxHp}";
+
+        if (armorBar != null) armorBar.value = maxArmor > 0 ? (float)curArmor / maxArmor : 1f;
+        if (armorText != null) armorText.text = $"{curArmor}/{maxArmor}";
+
+        if (manaBar != null) manaBar.value = maxMana > 0 ? (float)curMana / maxMana : 1f;
+        if (manaText != null) manaText.text = $"{curMana}/{maxMana}";
+    }
+
+    private void OnDestroy()
+    {
+        if (currentTarget != null)
+        {
+            currentTarget.onHealthChanged.RemoveListener(UpdateHUDVisuals);
+        }
     }
 
     /// <summary>

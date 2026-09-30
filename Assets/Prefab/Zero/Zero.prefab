@@ -768,12 +768,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb5fad99dbb4df44cb1d8acb78a39aab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RookieHealth
-  maxHealth: 100
+  characterName: Zero
+  maxHealth: 200
   isDead: 0
-  maxArmor: 4
+  maxArmor: 25
   armorRegenDelay: 2
   armorRegenTick: 1
-  maxMana: 200
+  maxMana: 240
   onHealthChanged:
     m_PersistentCalls:
       m_Calls: []
