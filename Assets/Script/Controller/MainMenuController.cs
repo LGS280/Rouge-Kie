@@ -4,6 +4,8 @@ using System.Collections;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
+using TMPro;
+
 public class MainMenuController : MonoBehaviour
 {
     [Header("Main Panels")]
@@ -42,6 +44,14 @@ public class MainMenuController : MonoBehaviour
 
     private void Start()
     {
+        // Nếu người chơi mở game lần đầu tiên (kể cả khi chạy trực tiếp từ Scene_Menu), chuyển sang Scene_Cutscene
+        if (PlayerPrefs.GetInt(CutsceneManager.CUTSCENE_SEEN_KEY, 0) == 0)
+        {
+            SceneManager.LoadScene("Scene_Cutscene");
+            return;
+        }
+
+        EnsureRewatchCutsceneButton();
         ShowMainMenu();
 
         // Tự động kiểm tra trạng thái bảo trì hệ thống ngay khi vào game
@@ -187,6 +197,96 @@ public class MainMenuController : MonoBehaviour
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #endif
+    }
+
+    public void OnRewatchCutscenePressed()
+    {
+        Debug.Log("[MainMenuController] Xem lại Cutscene...");
+        CutsceneManager.IsRewatching = true;
+        SceneManager.LoadScene("Scene_Cutscene");
+    }
+
+    private void EnsureRewatchCutsceneButton()
+    {
+        if (mainMenuPanel == null) return;
+
+        Transform container = null;
+        if (playButton != null && playButton.transform.parent != null)
+        {
+            container = playButton.transform.parent;
+        }
+        else
+        {
+            container = mainMenuPanel.transform.Find("Button_Container ");
+            if (container == null) container = mainMenuPanel.transform.Find("Button_Container");
+        }
+
+        if (container == null) return;
+
+        Transform existing = container.Find("Rewatch_Button");
+        if (existing == null) existing = container.Find("Rewatch_Button ");
+
+        Button rewatchBtn = null;
+        if (existing != null)
+        {
+            rewatchBtn = existing.GetComponent<Button>();
+        }
+        else
+        {
+            // Clone từ Settings_Button hoặc Play_Button để giữ nguyên toàn bộ style pixel art & UIButtonJuice
+            Transform template = container.Find("Settings_Button ");
+            if (template == null) template = container.Find("Settings_Button");
+            if (template == null && playButton != null) template = playButton.transform;
+
+            if (template != null)
+            {
+                GameObject clone = Instantiate(template.gameObject, container);
+                clone.name = "Rewatch_Button";
+
+                // Đặt vị trí nằm trước nút Quit_Button
+                Transform quitTrans = container.Find("Quit_Button ");
+                if (quitTrans == null) quitTrans = container.Find("Quit_Button");
+                if (quitTrans != null)
+                {
+                    clone.transform.SetSiblingIndex(quitTrans.GetSiblingIndex());
+                }
+
+                RectTransform rt = clone.GetComponent<RectTransform>();
+                if (rt != null)
+                {
+                    rt.sizeDelta = new Vector2(210f, 80f);
+                }
+
+                TextMeshProUGUI tmp = clone.GetComponentInChildren<TextMeshProUGUI>(true);
+                if (tmp != null)
+                {
+                    tmp.text = "Rewatch Cutscene";
+                    tmp.fontSize = 18f;
+                    tmp.enableAutoSizing = false;
+                }
+
+                rewatchBtn = clone.GetComponent<Button>();
+            }
+        }
+
+        if (rewatchBtn != null)
+        {
+            // Xóa các persistent listener được clone từ nút mẫu bằng cách gán lại sự kiện runtime
+            rewatchBtn.onClick = new Button.ButtonClickedEvent();
+            rewatchBtn.onClick.AddListener(OnRewatchCutscenePressed);
+        }
+
+        // Căn chỉnh lại HorizontalLayoutGroup để 4 nút cân đối đẹp mắt ở giữa màn hình
+        HorizontalLayoutGroup hlg = container.GetComponent<HorizontalLayoutGroup>();
+        if (hlg != null)
+        {
+            hlg.spacing = 55f;
+        }
+        RectTransform containerRt = container.GetComponent<RectTransform>();
+        if (containerRt != null && Mathf.Abs(containerRt.anchoredPosition.x - (-300f)) < 5f)
+        {
+            containerRt.anchoredPosition = new Vector2(-415f, containerRt.anchoredPosition.y);
+        }
     }
 
     // --- LOGIC CHUYỂN TAB TRONG BẢNG SETTINGS ---
