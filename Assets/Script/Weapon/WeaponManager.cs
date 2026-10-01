@@ -24,49 +24,41 @@ public class WeaponManager : MonoBehaviour
     private WeaponAim handWeaponAim;
     private float nextScrollSwapTime = 0f;
     private PlayerController playerController;
-    private bool isLoadoutConfigured = false;
 
     private void Awake()
     {
         Instance = this;
-        if (playerController == null) playerController = GetComponentInParent<PlayerController>();
-        if (playerController == null) playerController = GetComponent<PlayerController>();
-        if (handPosition != null && handWeaponAim == null)
-        {
-            handWeaponAim = handPosition.GetComponent<WeaponAim>();
-        }
     }
 
     void Start()
     {
-        if (playerController == null) playerController = GetComponentInParent<PlayerController>();
+        playerController = GetComponentInParent<PlayerController>();
         if (playerController == null) playerController = GetComponent<PlayerController>();
-        if (handPosition != null && handWeaponAim == null)
-        {
-            handWeaponAim = handPosition.GetComponent<WeaponAim>();
-        }
-
-        // Nếu vũ khí đã được cấu hình trước đó trong cùng frame (ví dụ khi SwitchCharacter gọi EquipDefaultWeapons)
-        if (isLoadoutConfigured)
-        {
-            return;
-        }
+        handWeaponAim = handPosition.GetComponent<WeaponAim>();
 
         string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
-        // Nếu ở Lobby_Scene: Luôn dùng vũ khí mặc định của từng nhân vật cho run mới
+        // Nếu ở Lobby_Scene: Luôn dùng 2 vũ khí mặc định được cấu hình trong Inspector cho run mới
         if (currentScene == "Lobby_Scene")
         {
-            // Kiểm tra nếu là nhân vật Zero: Luôn trang bị vũ khí mặc định Katana và Súng lục (Desert Eagle)
-            bool isZero = name.Contains("Zero") || GetComponent<DashSlashSkill>() != null;
-            if (isZero)
+            ResetSavedWeapons();
+
+            if (weaponSlot1 != null)
             {
-                EquipDefaultWeaponsForZero();
-                return;
+                GameObject instance1 = Instantiate(weaponSlot1, handPosition.position, Quaternion.identity);
+                if (weaponSlot1.scene.IsValid()) Destroy(weaponSlot1);
+                weaponSlot1 = instance1;
             }
 
-            // Nhân vật Rookie: Luôn trang bị đúng 1 khẩu AK47 trên tay
-            EquipDefaultWeaponsForRookie();
+            if (weaponSlot2 != null)
+            {
+                GameObject instance2 = Instantiate(weaponSlot2, backPosition.position, Quaternion.identity);
+                if (weaponSlot2.scene.IsValid()) Destroy(weaponSlot2);
+                weaponSlot2 = instance2;
+            }
+
+            ResetWeaponsStatus();
+            SaveEquippedWeapons();
             return;
         }
 
@@ -76,14 +68,21 @@ public class WeaponManager : MonoBehaviour
         if (!restored)
         {
             // Dự phòng nếu không có dữ liệu lưu (ví dụ mở thẳng SampleScene trong Editor để test)
-            bool isZero = name.Contains("Zero") || GetComponent<DashSlashSkill>() != null;
-            if (isZero)
+            if (weaponSlot1 != null)
             {
-                EquipDefaultWeaponsForZero();
-                return;
+                GameObject instance1 = Instantiate(weaponSlot1, handPosition.position, Quaternion.identity);
+                if (weaponSlot1.scene.IsValid()) Destroy(weaponSlot1);
+                weaponSlot1 = instance1;
             }
 
-            EquipDefaultWeaponsForRookie();
+            if (weaponSlot2 != null)
+            {
+                GameObject instance2 = Instantiate(weaponSlot2, backPosition.position, Quaternion.identity);
+                if (weaponSlot2.scene.IsValid()) Destroy(weaponSlot2);
+                weaponSlot2 = instance2;
+            }
+
+            ResetWeaponsStatus();
         }
     }
 
@@ -210,7 +209,6 @@ public class WeaponManager : MonoBehaviour
 
         if (restoredAny)
         {
-            isLoadoutConfigured = true;
             isUsingSlot1 = true;
             ResetWeaponsStatus();
             return true;
@@ -319,19 +317,6 @@ public class WeaponManager : MonoBehaviour
         if (string.IsNullOrEmpty(weaponName)) return null;
         string cleanName = weaponName.Replace("Weapons/", "").Replace("(Clone)", "").Trim();
 
-        // Tự động nhận diện bí danh vũ khí (Katana, Súng lục / Pistol / Desert Eagle)
-        if (cleanName.IndexOf("Katana", System.StringComparison.OrdinalIgnoreCase) >= 0)
-        {
-            cleanName = "Gold_Katana";
-        }
-        else if (cleanName.IndexOf("Pistol", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
-                 cleanName.IndexOf("Handgun", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
-                 cleanName.IndexOf("Desert", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
-                 cleanName.IndexOf("Eagle", System.StringComparison.OrdinalIgnoreCase) >= 0)
-        {
-            cleanName = "Desert_Eagle";
-        }
-
         if (allWeaponPrefabs != null && allWeaponPrefabs.Length > 0)
         {
             foreach (var prefab in allWeaponPrefabs)
@@ -372,103 +357,6 @@ public class WeaponManager : MonoBehaviour
 #endif
 
         return null;
-    }
-
-    /// <summary>
-    /// Trang bị vũ khí mặc định cho Đặc nhiệm Zero:
-    /// - Slot 1 (cầm trên tay): Katana (Gold_Katana)
-    /// - Slot 2 (đeo sau lưng): Súng lục (Desert_Eagle)
-    /// </summary>
-    public bool EquipDefaultWeaponsForZero()
-    {
-        return SetEquippedWeaponsByName("Gold_Katana", "Desert_Eagle");
-    }
-
-    /// <summary>
-    /// Trang bị vũ khí mặc định cho Tân binh Kie (Rookie): Đúng 1 khẩu AK47 trên tay, không có vũ khí thứ 2
-    /// </summary>
-    public bool EquipDefaultWeaponsForRookie()
-    {
-        return SetEquippedWeaponsByName("AK47", null);
-    }
-
-    /// <summary>
-    /// Trang bị trực tiếp 2 vũ khí vào Slot 1 (tay) và Slot 2 (lưng) theo tên Prefab
-    /// </summary>
-    public bool SetEquippedWeaponsByName(string slot1WeaponName, string slot2WeaponName)
-    {
-        isLoadoutConfigured = true;
-
-        if (handPosition != null && handWeaponAim == null)
-        {
-            handWeaponAim = handPosition.GetComponent<WeaponAim>();
-        }
-
-        // Dọn dẹp sạch vũ khí hiện có trên cả 2 điểm treo
-        if (weaponSlot1 != null)
-        {
-            Destroy(weaponSlot1);
-            weaponSlot1 = null;
-        }
-        if (weaponSlot2 != null)
-        {
-            Destroy(weaponSlot2);
-            weaponSlot2 = null;
-        }
-
-        if (handPosition != null)
-        {
-            foreach (Transform child in handPosition)
-            {
-                if (child != null && child.gameObject != null) Destroy(child.gameObject);
-            }
-        }
-        if (backPosition != null)
-        {
-            foreach (Transform child in backPosition)
-            {
-                if (child != null && child.gameObject != null) Destroy(child.gameObject);
-            }
-        }
-
-        bool success = false;
-
-        if (!string.IsNullOrEmpty(slot1WeaponName))
-        {
-            GameObject p1 = FindWeaponPrefabByName(slot1WeaponName);
-            if (p1 != null)
-            {
-                weaponSlot1 = Instantiate(p1, handPosition != null ? handPosition.position : transform.position, Quaternion.identity);
-                UpdateWeaponParent(weaponSlot1, handPosition, true);
-                success = true;
-            }
-            else
-            {
-                Debug.LogWarning($"[WeaponManager] Không tìm thấy Prefab cho Slot 1: '{slot1WeaponName}'");
-            }
-        }
-
-        if (!string.IsNullOrEmpty(slot2WeaponName))
-        {
-            GameObject p2 = FindWeaponPrefabByName(slot2WeaponName);
-            if (p2 != null)
-            {
-                weaponSlot2 = Instantiate(p2, backPosition != null ? backPosition.position : transform.position, Quaternion.identity);
-                UpdateWeaponParent(weaponSlot2, backPosition, false);
-                success = true;
-            }
-            else
-            {
-                Debug.LogWarning($"[WeaponManager] Không tìm thấy Prefab cho Slot 2: '{slot2WeaponName}'");
-            }
-        }
-
-        isUsingSlot1 = true;
-        ResetWeaponsStatus();
-        SaveEquippedWeapons();
-        SyncActiveWeaponToNetwork();
-
-        return success;
     }
 
     /// <summary>

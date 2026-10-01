@@ -471,7 +471,7 @@ MonoBehaviour:
   handPosition: {fileID: 12616528524299117}
   backPosition: {fileID: 5289129472824092616}
   weaponSlot1: {fileID: 4669016871494135277}
-  weaponSlot2: {fileID: 0}
+  weaponSlot2: {fileID: 7899034397582093655}
   allWeaponPrefabs:
   - {fileID: 4136628244467973380, guid: 7ac88ad6a102d7d41ab1ff7cd22148cf, type: 3}
   - {fileID: 4136628244467973380, guid: 3ec6a54be3df1d74792a692a5f982e65, type: 3}

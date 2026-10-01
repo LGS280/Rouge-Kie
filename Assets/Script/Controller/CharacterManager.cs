@@ -75,12 +75,10 @@ public class CharacterManager : MonoBehaviour
         {
             EnsureHangarTriggerAndBoard();
             EnsureSelectedCharacterSpawned();
-            PlayerHUD.EnsureHUDExists();
         }
         else if (scene.name == "SampleScene")
         {
             EnsureSelectedCharacterSpawned();
-            PlayerHUD.EnsureHUDExists();
         }
     }
 
@@ -191,6 +189,12 @@ public class CharacterManager : MonoBehaviour
             spawnPos = current.transform.position;
             spawnRot = current.transform.rotation;
 
+            // Lưu lại vũ khí đang cầm trên tay và lưng
+            if (WeaponManager.Instance != null)
+            {
+                WeaponManager.Instance.SaveEquippedWeapons();
+            }
+
             current.tag = "Untagged";
             current.SetActive(false);
             Destroy(current);
@@ -219,20 +223,11 @@ public class CharacterManager : MonoBehaviour
             cam.target = newPlayer.transform;
         }
 
-        // Trang bị vũ khí mặc định cho nhân vật mới sau khi đổi
+        // Khôi phục vũ khí trên nhân vật mới
         WeaponManager newWm = newPlayer.GetComponent<WeaponManager>();
         if (newWm != null)
         {
-            if (clean.Equals("Zero", StringComparison.OrdinalIgnoreCase))
-            {
-                // Khi người chơi đổi sang nhân vật Zero: Vũ khí mặc định là Katana và Súng lục (Desert Eagle)
-                newWm.EquipDefaultWeaponsForZero();
-            }
-            else
-            {
-                // Khi đổi sang Rookie: Trang bị vũ khí mặc định của Rookie (AK47)
-                newWm.EquipDefaultWeaponsForRookie();
-            }
+            newWm.RestoreSavedEquippedWeapons();
         }
 
         // Đảm bảo có mũi tên chỉ báo người chơi (LocalPlayer_Arrow) lơ lửng trên đầu
@@ -257,7 +252,6 @@ public class CharacterManager : MonoBehaviour
         RookieHealth newHealth = newPlayer.GetComponent<RookieHealth>();
         if (newHealth != null)
         {
-            PlayerHUD.EnsureHUDExists();
             PlayerHUD[] huds = UnityEngine.Object.FindObjectsByType<PlayerHUD>(FindObjectsSortMode.None);
             foreach (var hud in huds)
             {
@@ -304,7 +298,6 @@ public class CharacterManager : MonoBehaviour
                 RookieHealth currentHealth = current.GetComponent<RookieHealth>();
                 if (currentHealth != null)
                 {
-                    PlayerHUD.EnsureHUDExists();
                     PlayerHUD[] huds = UnityEngine.Object.FindObjectsByType<PlayerHUD>(FindObjectsSortMode.None);
                     foreach (var hud in huds)
                     {
@@ -312,10 +305,6 @@ public class CharacterManager : MonoBehaviour
                     }
                 }
             }
-        }
-        else
-        {
-            SwitchCharacter(selected);
         }
     }
 
