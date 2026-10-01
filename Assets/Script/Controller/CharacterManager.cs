@@ -188,13 +188,6 @@ public class CharacterManager : MonoBehaviour
         {
             spawnPos = current.transform.position;
             spawnRot = current.transform.rotation;
-
-            // Lưu lại vũ khí đang cầm trên tay và lưng
-            if (WeaponManager.Instance != null)
-            {
-                WeaponManager.Instance.SaveEquippedWeapons();
-            }
-
             Destroy(current);
         }
         else
@@ -221,11 +214,11 @@ public class CharacterManager : MonoBehaviour
             cam.target = newPlayer.transform;
         }
 
-        // Khôi phục vũ khí trên nhân vật mới
+        // Khởi tạo vũ khí mặc định từ cấu hình Prefab của nhân vật mới (ví dụ Zero: Katana & DE)
         WeaponManager newWm = newPlayer.GetComponent<WeaponManager>();
         if (newWm != null)
         {
-            newWm.RestoreSavedEquippedWeapons();
+            newWm.InitializeDefaultWeapons();
         }
 
         // Đảm bảo có mũi tên chỉ báo người chơi (LocalPlayer_Arrow) lơ lửng trên đầu
