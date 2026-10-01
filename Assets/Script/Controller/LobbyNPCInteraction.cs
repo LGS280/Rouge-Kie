@@ -272,9 +272,11 @@ public class LobbyNPCInteraction : MonoBehaviour
             case LobbyInteractionType.DungeonPortal:
                 Debug.Log("[LobbyNPCInteraction] Chuyển tới Dungeon (SampleScene)...");
 
-                if (WeaponManager.Instance != null)
+                GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+                WeaponManager wm = (playerObj != null) ? playerObj.GetComponent<WeaponManager>() : WeaponManager.Instance;
+                if (wm != null)
                 {
-                    WeaponManager.Instance.SaveEquippedWeapons();
+                    wm.SaveEquippedWeapons();
                 }
 
                 if (LoadingScreenUI.Instance != null)

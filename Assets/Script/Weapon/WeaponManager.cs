@@ -24,6 +24,7 @@ public class WeaponManager : MonoBehaviour
     private WeaponAim handWeaponAim;
     private float nextScrollSwapTime = 0f;
     private PlayerController playerController;
+    [HideInInspector] public bool isWeaponsRestored = false;
 
     private void Awake()
     {
@@ -34,7 +35,7 @@ public class WeaponManager : MonoBehaviour
     {
         playerController = GetComponentInParent<PlayerController>();
         if (playerController == null) playerController = GetComponent<PlayerController>();
-        handWeaponAim = handPosition.GetComponent<WeaponAim>();
+        if (handWeaponAim == null && handPosition != null) handWeaponAim = handPosition.GetComponent<WeaponAim>();
 
         string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
@@ -42,59 +43,80 @@ public class WeaponManager : MonoBehaviour
         if (currentScene == "Lobby_Scene")
         {
             ResetSavedWeapons();
-
-            if (weaponSlot1 != null)
-            {
-                GameObject instance1 = Instantiate(weaponSlot1, handPosition.position, Quaternion.identity);
-                if (weaponSlot1.scene.IsValid()) Destroy(weaponSlot1);
-                weaponSlot1 = instance1;
-            }
-
-            if (weaponSlot2 != null)
-            {
-                GameObject instance2 = Instantiate(weaponSlot2, backPosition.position, Quaternion.identity);
-                if (weaponSlot2.scene.IsValid()) Destroy(weaponSlot2);
-                weaponSlot2 = instance2;
-            }
-
-            ResetWeaponsStatus();
-            SaveEquippedWeapons();
+            InitializeDefaultWeapons();
             return;
         }
+
+        // Nếu đã được khôi phục trước đó (ví dụ từ SwitchCharacter khi load scene), bỏ qua
+        if (isWeaponsRestored) return;
 
         // Nếu ở Dungeon (SampleScene hoặc các map chiến đấu): Khôi phục súng mà người chơi mang từ Lobby sang
         bool restored = RestoreSavedEquippedWeapons();
 
         if (!restored)
         {
-            // Dự phòng nếu không có dữ liệu lưu (ví dụ mở thẳng SampleScene trong Editor để test)
-            if (weaponSlot1 != null)
-            {
-                GameObject instance1 = Instantiate(weaponSlot1, handPosition.position, Quaternion.identity);
-                if (weaponSlot1.scene.IsValid()) Destroy(weaponSlot1);
-                weaponSlot1 = instance1;
-            }
+            InitializeDefaultWeapons();
+        }
+    }
 
-            if (weaponSlot2 != null)
-            {
-                GameObject instance2 = Instantiate(weaponSlot2, backPosition.position, Quaternion.identity);
-                if (weaponSlot2.scene.IsValid()) Destroy(weaponSlot2);
-                weaponSlot2 = instance2;
-            }
+    /// <summary>
+    /// Khởi tạo 2 vũ khí mặc định từ cấu hình Prefab của nhân vật (weaponSlot1 và weaponSlot2)
+    /// </summary>
+    public void InitializeDefaultWeapons()
+    {
+        if (handWeaponAim == null && handPosition != null) handWeaponAim = handPosition.GetComponent<WeaponAim>();
 
-            ResetWeaponsStatus();
+        if (handPosition != null)
+        {
+            foreach (Transform child in handPosition)
+            {
+                if (child != null && child.gameObject != null) Destroy(child.gameObject);
+            }
+        }
+        if (backPosition != null)
+        {
+            foreach (Transform child in backPosition)
+            {
+                if (child != null && child.gameObject != null) Destroy(child.gameObject);
+            }
+        }
+
+        if (weaponSlot1 != null)
+        {
+            GameObject instance1 = Instantiate(weaponSlot1, handPosition.position, Quaternion.identity);
+            if (weaponSlot1.scene.IsValid()) Destroy(weaponSlot1);
+            weaponSlot1 = instance1;
+        }
+
+        if (weaponSlot2 != null)
+        {
+            GameObject instance2 = Instantiate(weaponSlot2, backPosition.position, Quaternion.identity);
+            if (weaponSlot2.scene.IsValid()) Destroy(weaponSlot2);
+            weaponSlot2 = instance2;
+        }
+
+        isWeaponsRestored = true;
+        ResetWeaponsStatus();
+
+        string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (currentScene == "Lobby_Scene")
+        {
+            SaveEquippedWeapons();
         }
     }
 
     private static string savedSlot1PrefabName = "";
     private static string savedSlot2PrefabName = "";
+    private static string savedEquippedCharacter = "";
 
     public static void ResetSavedWeapons()
     {
         savedSlot1PrefabName = "";
         savedSlot2PrefabName = "";
+        savedEquippedCharacter = "";
         PlayerPrefs.DeleteKey("Lobby_Slot1_Weapon");
         PlayerPrefs.DeleteKey("Lobby_Slot2_Weapon");
+        PlayerPrefs.DeleteKey("Lobby_Equipped_Character");
         PlayerPrefs.Save();
         Debug.Log("[WeaponManager] Đã reset bộ nhớ vũ khí lưu cho lượt chơi mới.");
     }
@@ -107,15 +129,18 @@ public class WeaponManager : MonoBehaviour
 
         string s1Name = GetCleanWeaponPrefabName(handWeapon);
         string s2Name = GetCleanWeaponPrefabName(backWeapon);
+        string curChar = gameObject.name.Replace("(Clone)", "").Trim();
 
         savedSlot1PrefabName = s1Name;
         savedSlot2PrefabName = s2Name;
+        savedEquippedCharacter = curChar;
 
         PlayerPrefs.SetString("Lobby_Slot1_Weapon", s1Name ?? "");
         PlayerPrefs.SetString("Lobby_Slot2_Weapon", s2Name ?? "");
+        PlayerPrefs.SetString("Lobby_Equipped_Character", curChar ?? "");
         PlayerPrefs.Save();
 
-        Debug.Log($"[WeaponManager] Đã lưu vũ khí: Cầm trên tay (Slot 1) = '{s1Name}', Đeo sau lưng (Slot 2) = '{s2Name}'");
+        Debug.Log($"[WeaponManager] Đã lưu vũ khí cho '{curChar}': Cầm trên tay (Slot 1) = '{s1Name}', Đeo sau lưng (Slot 2) = '{s2Name}'");
     }
 
     private string GetCleanWeaponPrefabName(GameObject weaponObj)
@@ -133,12 +158,26 @@ public class WeaponManager : MonoBehaviour
 
     public bool RestoreSavedEquippedWeapons()
     {
+        if (isWeaponsRestored) return true;
+        if (handWeaponAim == null && handPosition != null) handWeaponAim = handPosition.GetComponent<WeaponAim>();
+
+        string curChar = gameObject.name.Replace("(Clone)", "").Trim();
+        string savedChar = !string.IsNullOrEmpty(savedEquippedCharacter) ? savedEquippedCharacter : PlayerPrefs.GetString("Lobby_Equipped_Character", "");
+
+        // Nếu vũ khí lưu thuộc về một nhân vật khác (ví dụ súng của Rookie nhưng hiện tại là Zero),
+        // không khôi phục để nhân vật mới dùng đúng vũ khí mặc định từ Prefab của họ
+        if (!string.IsNullOrEmpty(savedChar) && !savedChar.Equals(curChar, System.StringComparison.OrdinalIgnoreCase))
+        {
+            Debug.Log($"[WeaponManager] Vũ khí lưu thuộc về '{savedChar}', nhân vật hiện tại là '{curChar}'. Bỏ qua khôi phục để dùng vũ khí mặc định của nhân vật.");
+            return false;
+        }
+
         string s1Name = !string.IsNullOrEmpty(savedSlot1PrefabName) ? savedSlot1PrefabName : PlayerPrefs.GetString("Lobby_Slot1_Weapon", "");
         string s2Name = !string.IsNullOrEmpty(savedSlot2PrefabName) ? savedSlot2PrefabName : PlayerPrefs.GetString("Lobby_Slot2_Weapon", "");
 
         if (string.IsNullOrEmpty(s1Name) && string.IsNullOrEmpty(s2Name)) return false;
 
-        Debug.Log($"[WeaponManager] Khôi phục vũ khí đã lưu từ Lobby: Slot 1 = '{s1Name}', Slot 2 = '{s2Name}'");
+        Debug.Log($"[WeaponManager] Khôi phục vũ khí đã lưu từ Lobby cho '{curChar}': Slot 1 = '{s1Name}', Slot 2 = '{s2Name}'");
 
         // Dọn sạch các vũ khí mặc định cũ nếu có trong Scene
         if (weaponSlot1 != null && weaponSlot1.scene.IsValid())
@@ -209,6 +248,7 @@ public class WeaponManager : MonoBehaviour
 
         if (restoredAny)
         {
+            isWeaponsRestored = true;
             isUsingSlot1 = true;
             ResetWeaponsStatus();
             return true;

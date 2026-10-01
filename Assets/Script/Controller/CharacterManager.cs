@@ -189,12 +189,6 @@ public class CharacterManager : MonoBehaviour
             spawnPos = current.transform.position;
             spawnRot = current.transform.rotation;
 
-            // Lưu lại vũ khí đang cầm trên tay và lưng
-            if (WeaponManager.Instance != null)
-            {
-                WeaponManager.Instance.SaveEquippedWeapons();
-            }
-
             current.tag = "Untagged";
             current.SetActive(false);
             Destroy(current);
@@ -223,11 +217,27 @@ public class CharacterManager : MonoBehaviour
             cam.target = newPlayer.transform;
         }
 
-        // Khôi phục vũ khí trên nhân vật mới
+        // Khởi tạo vũ khí cho nhân vật mới:
+        // - Ở Lobby_Scene: Luôn dùng vũ khí mặc định của nhân vật (ví dụ Zero: Katana & DE)
+        // - Ở Dungeon (SampleScene): Khôi phục vũ khí người chơi đã mua/trang bị từ Lobby mang sang
         WeaponManager newWm = newPlayer.GetComponent<WeaponManager>();
         if (newWm != null)
         {
-            newWm.RestoreSavedEquippedWeapons();
+            string sceneName = newPlayer.scene.IsValid() ? newPlayer.scene.name : SceneManager.GetActiveScene().name;
+            bool isLobby = (sceneName == "Lobby_Scene");
+            if (isLobby)
+            {
+                newWm.InitializeDefaultWeapons();
+            }
+            else
+            {
+                bool restored = newWm.RestoreSavedEquippedWeapons();
+                if (!restored)
+                {
+                    Debug.Log($"[CharacterManager] Không khôi phục được vũ khí lưu cho '{clean}', dùng vũ khí mặc định.");
+                    newWm.InitializeDefaultWeapons();
+                }
+            }
         }
 
         // Đảm bảo có mũi tên chỉ báo người chơi (LocalPlayer_Arrow) lơ lửng trên đầu

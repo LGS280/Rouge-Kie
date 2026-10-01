@@ -62,8 +62,9 @@ public class MobAI : MonoBehaviour
         if (mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null)
         {
             bool isMelee = mobWeaponAim.currentWeaponInfo.IsMelee;
-            detectRange = isMelee ? 5.0f : 7.0f;
-            attackRange = isMelee ? 0.9f : 4.0f;
+            // Giữ nguyên thông số Inspector nếu đã cấu hình (> 0), chỉ gán mặc định nếu để trống (<= 0)
+            if (detectRange <= 0) detectRange = isMelee ? 5.0f : 7.0f;
+            if (attackRange <= 0) attackRange = isMelee ? 0.9f : 4.0f;
 
             WeaponConfig wConfig = mobWeaponAim.currentWeaponInfo.GetWeaponConfig();
             if (wConfig != null && wConfig.fireRate > 0)
@@ -73,8 +74,8 @@ public class MobAI : MonoBehaviour
         }
         else
         {
-            detectRange = 7.0f;
-            attackRange = 4.0f;
+            if (detectRange <= 0) detectRange = 7.0f;
+            if (attackRange <= 0) attackRange = 4.0f;
         }
 
         if (GameConfigManager.Instance != null)
@@ -432,7 +433,7 @@ public class MobAI : MonoBehaviour
 
         bool isMelee = (mobWeaponAim != null && mobWeaponAim.currentWeaponInfo != null && mobWeaponAim.currentWeaponInfo.IsMelee);
 
-        float targetAttackDistance = isMelee ? 0.9f : 4.0f;
+        float targetAttackDistance = (attackRange > 0) ? attackRange : (isMelee ? 0.9f : 4.0f);
 
         if (Time.time >= nextAttackTime)
         {
@@ -454,8 +455,8 @@ public class MobAI : MonoBehaviour
 
         if (isMelee)
         {
-
-            if (distanceToPlayer > 1.1f)
+            float meleeWaitDist = targetAttackDistance > 0 ? (targetAttackDistance + 0.2f) : 1.1f;
+            if (distanceToPlayer > meleeWaitDist)
             {
                 Vector2 targetDir = (targetPlayer.position - transform.position).normalized;
                 Vector2 separateForce = GetSeparationForce();
@@ -472,8 +473,8 @@ public class MobAI : MonoBehaviour
         }
         else
         {
-
-            if (distanceToPlayer < 5.0f)
+            float retreatDistance = Mathf.Max(2.5f, targetAttackDistance);
+            if (distanceToPlayer < retreatDistance)
             {
                 Vector2 targetDir = (targetPlayer.position - transform.position).normalized;
                 Vector2 retreatDir = -targetDir;
