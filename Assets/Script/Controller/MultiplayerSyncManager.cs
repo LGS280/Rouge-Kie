@@ -12,6 +12,7 @@ public class MultiplayerSyncManager : MonoBehaviour
     [SerializeField] private Transform localPlayer;
     [SerializeField] private float syncInterval = 0.033f; // Gửi tọa độ mỗi 33ms (Tần số 30Hz mượt mà)
     private float lastSyncTime = 0f;
+    private float lastSentWeaponAngle = 0f;
 
     // Quản lý danh sách các đồng đội đang có trong trận qua ConnectionId
     public Dictionary<string, GameObject> remotePlayers = new Dictionary<string, GameObject>();
@@ -82,6 +83,7 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.RequestSyncPlayerOrder();
 
             NetworkManager.Instance.OnReceivePosition += UpdateRemotePlayerPosition;
+            NetworkManager.Instance.OnReceivePlayerTransform += HandleReceivePlayerTransform;
             NetworkManager.Instance.OnPlayerDisconnected += RemoveRemotePlayer;
             NetworkManager.Instance.OnRemotePlayerShoot += HandleRemotePlayerShoot;
             NetworkManager.Instance.OnRemoteEnemyDamaged += HandleRemoteEnemyDamaged;
@@ -115,6 +117,7 @@ public class MultiplayerSyncManager : MonoBehaviour
         {
             NetworkManager.Instance.OnSyncPlayerOrder -= HandleSyncPlayerOrder;
             NetworkManager.Instance.OnReceivePosition -= UpdateRemotePlayerPosition;
+            NetworkManager.Instance.OnReceivePlayerTransform -= HandleReceivePlayerTransform;
             NetworkManager.Instance.OnPlayerDisconnected -= RemoveRemotePlayer;
             NetworkManager.Instance.OnRemotePlayerShoot -= HandleRemotePlayerShoot;
             NetworkManager.Instance.OnRemoteEnemyDamaged -= HandleRemoteEnemyDamaged;
@@ -143,26 +146,28 @@ public class MultiplayerSyncManager : MonoBehaviour
 
     private void Update()
     {
-        // Nếu bản thân đang bị ngã/chết, ngưng gửi tọa độ di chuyển hay góc quay súng lên mạng
-        if (localPlayer != null)
+        // Tự động tìm lại localPlayer nếu bị null (ví dụ sau khi đổi nhân vật)
+        if (localPlayer == null)
         {
-            RookieHealth health = localPlayer.GetComponent<RookieHealth>();
-            if (health != null && health.isDead) return;
+            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj != null) localPlayer = playerObj.transform;
+            if (localPlayer == null) return;
         }
 
-        // Định kỳ gửi tọa độ của chính mình lên Server
-        if (localPlayer != null && NetworkManager.Instance != null && Time.time - lastSyncTime >= syncInterval)
-        {
-            NetworkManager.Instance.SendPlayerPosition(localPlayer.position.x, localPlayer.position.y);
+        // Nếu bản thân đang bị ngã/chết, ngưng gửi tọa độ di chuyển hay góc quay súng lên mạng
+        RookieHealth health = localPlayer.GetComponent<RookieHealth>();
+        if (health != null && health.isDead) return;
 
-            // Gửi góc quay súng liên tục
+        // Định kỳ gửi tọa độ và góc xoay súng gộp chung của chính mình lên Server (1 gói duy nhất)
+        if (NetworkManager.Instance != null && Time.time - lastSyncTime >= syncInterval)
+        {
             WeaponAim weaponAim = localPlayer.GetComponentInChildren<WeaponAim>();
             if (weaponAim != null)
             {
-                float angle = weaponAim.transform.rotation.eulerAngles.z;
-                NetworkManager.Instance.SendWeaponAngle(angle, localPlayer.position.x, localPlayer.position.y);
+                lastSentWeaponAngle = weaponAim.transform.rotation.eulerAngles.z;
             }
 
+            NetworkManager.Instance.SendPlayerTransform(localPlayer.position.x, localPlayer.position.y, lastSentWeaponAngle);
             lastSyncTime = Time.time;
         }
     }
@@ -493,6 +498,29 @@ public class MultiplayerSyncManager : MonoBehaviour
                 {
                     remote.transform.position = new Vector3(x, y, 0);
                 }
+            }
+        }
+    }
+
+    // BỔ SUNG: Xử lý đồng bộ gộp cả tọa độ và góc quay súng từ Server (Đồng bộ 100% cùng 1 mili-giây)
+    private void HandleReceivePlayerTransform(string connId, float x, float y, float angle)
+    {
+        // Bỏ qua nếu gói tin đó là của chính mình
+        if (NetworkManager.Instance != null && !string.IsNullOrEmpty(NetworkManager.Instance.MyConnectionId))
+        {
+            if (string.Equals(connId, NetworkManager.Instance.MyConnectionId, System.StringComparison.OrdinalIgnoreCase)) return;
+        }
+
+        // 1. Cập nhật vị trí đồng đội (hoặc sinh mới nếu chưa có)
+        UpdateRemotePlayerPosition(connId, x, y);
+
+        // 2. Cập nhật góc quay súng đồng bộ tức thì trong cùng frame
+        if (remotePlayers.TryGetValue(connId, out GameObject remoteObj) && remoteObj != null)
+        {
+            RemotePlayerController rpc = remoteObj.GetComponent<RemotePlayerController>();
+            if (rpc != null)
+            {
+                rpc.targetWeaponAngle = angle;
             }
         }
     }
