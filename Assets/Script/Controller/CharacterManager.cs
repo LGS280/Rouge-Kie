@@ -188,6 +188,9 @@ public class CharacterManager : MonoBehaviour
         {
             spawnPos = current.transform.position;
             spawnRot = current.transform.rotation;
+
+            current.tag = "Untagged";
+            current.SetActive(false);
             Destroy(current);
         }
         else
@@ -214,11 +217,27 @@ public class CharacterManager : MonoBehaviour
             cam.target = newPlayer.transform;
         }
 
-        // Khởi tạo vũ khí mặc định từ cấu hình Prefab của nhân vật mới (ví dụ Zero: Katana & DE)
+        // Khởi tạo vũ khí cho nhân vật mới:
+        // - Ở Lobby_Scene: Luôn dùng vũ khí mặc định của nhân vật (ví dụ Zero: Katana & DE)
+        // - Ở Dungeon (SampleScene): Khôi phục vũ khí người chơi đã mua/trang bị từ Lobby mang sang
         WeaponManager newWm = newPlayer.GetComponent<WeaponManager>();
         if (newWm != null)
         {
-            newWm.InitializeDefaultWeapons();
+            string sceneName = newPlayer.scene.IsValid() ? newPlayer.scene.name : SceneManager.GetActiveScene().name;
+            bool isLobby = (sceneName == "Lobby_Scene");
+            if (isLobby)
+            {
+                newWm.InitializeDefaultWeapons();
+            }
+            else
+            {
+                bool restored = newWm.RestoreSavedEquippedWeapons();
+                if (!restored)
+                {
+                    Debug.Log($"[CharacterManager] Không khôi phục được vũ khí lưu cho '{clean}', dùng vũ khí mặc định.");
+                    newWm.InitializeDefaultWeapons();
+                }
+            }
         }
 
         // Đảm bảo có mũi tên chỉ báo người chơi (LocalPlayer_Arrow) lơ lửng trên đầu
@@ -273,17 +292,6 @@ public class CharacterManager : MonoBehaviour
 
         if (current != null)
         {
-            // Đảm bảo PlayerHUD trong Scene luôn được kết nối với nhân vật người chơi
-            RookieHealth currentHealth = current.GetComponent<RookieHealth>();
-            if (currentHealth != null)
-            {
-                PlayerHUD[] huds = UnityEngine.Object.FindObjectsByType<PlayerHUD>(FindObjectsSortMode.None);
-                foreach (var hud in huds)
-                {
-                    if (hud != null) hud.SetTarget(currentHealth);
-                }
-            }
-
             string curName = current.name.Replace("(Clone)", "").Trim();
             if (selected.Equals("Zero", StringComparison.OrdinalIgnoreCase) && !curName.Equals("Zero", StringComparison.OrdinalIgnoreCase))
             {
@@ -293,6 +301,19 @@ public class CharacterManager : MonoBehaviour
             else if (selected.Equals("Rookie", StringComparison.OrdinalIgnoreCase) && curName.Equals("Zero", StringComparison.OrdinalIgnoreCase))
             {
                 SwitchCharacter("Rookie");
+            }
+            else
+            {
+                // Nếu không đổi nhân vật, đảm bảo PlayerHUD trong Scene kết nối với nhân vật người chơi hiện tại
+                RookieHealth currentHealth = current.GetComponent<RookieHealth>();
+                if (currentHealth != null)
+                {
+                    PlayerHUD[] huds = UnityEngine.Object.FindObjectsByType<PlayerHUD>(FindObjectsSortMode.None);
+                    foreach (var hud in huds)
+                    {
+                        if (hud != null) hud.SetTarget(currentHealth);
+                    }
+                }
             }
         }
     }

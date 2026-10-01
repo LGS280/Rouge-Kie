@@ -24,6 +24,7 @@ public class WeaponManager : MonoBehaviour
     private WeaponAim handWeaponAim;
     private float nextScrollSwapTime = 0f;
     private PlayerController playerController;
+    [HideInInspector] public bool isWeaponsRestored = false;
 
     private void Awake()
     {
@@ -34,7 +35,7 @@ public class WeaponManager : MonoBehaviour
     {
         playerController = GetComponentInParent<PlayerController>();
         if (playerController == null) playerController = GetComponent<PlayerController>();
-        handWeaponAim = handPosition.GetComponent<WeaponAim>();
+        if (handWeaponAim == null && handPosition != null) handWeaponAim = handPosition.GetComponent<WeaponAim>();
 
         string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
@@ -45,6 +46,9 @@ public class WeaponManager : MonoBehaviour
             InitializeDefaultWeapons();
             return;
         }
+
+        // Nếu đã được khôi phục trước đó (ví dụ từ SwitchCharacter khi load scene), bỏ qua
+        if (isWeaponsRestored) return;
 
         // Nếu ở Dungeon (SampleScene hoặc các map chiến đấu): Khôi phục súng mà người chơi mang từ Lobby sang
         bool restored = RestoreSavedEquippedWeapons();
@@ -60,6 +64,8 @@ public class WeaponManager : MonoBehaviour
     /// </summary>
     public void InitializeDefaultWeapons()
     {
+        if (handWeaponAim == null && handPosition != null) handWeaponAim = handPosition.GetComponent<WeaponAim>();
+
         if (handPosition != null)
         {
             foreach (Transform child in handPosition)
@@ -89,8 +95,14 @@ public class WeaponManager : MonoBehaviour
             weaponSlot2 = instance2;
         }
 
+        isWeaponsRestored = true;
         ResetWeaponsStatus();
-        SaveEquippedWeapons();
+
+        string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (currentScene == "Lobby_Scene")
+        {
+            SaveEquippedWeapons();
+        }
     }
 
     private static string savedSlot1PrefabName = "";
@@ -146,6 +158,9 @@ public class WeaponManager : MonoBehaviour
 
     public bool RestoreSavedEquippedWeapons()
     {
+        if (isWeaponsRestored) return true;
+        if (handWeaponAim == null && handPosition != null) handWeaponAim = handPosition.GetComponent<WeaponAim>();
+
         string curChar = gameObject.name.Replace("(Clone)", "").Trim();
         string savedChar = !string.IsNullOrEmpty(savedEquippedCharacter) ? savedEquippedCharacter : PlayerPrefs.GetString("Lobby_Equipped_Character", "");
 
@@ -233,6 +248,7 @@ public class WeaponManager : MonoBehaviour
 
         if (restoredAny)
         {
+            isWeaponsRestored = true;
             isUsingSlot1 = true;
             ResetWeaponsStatus();
             return true;

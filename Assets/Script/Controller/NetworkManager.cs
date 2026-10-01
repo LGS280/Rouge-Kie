@@ -65,6 +65,8 @@ public class NetworkManager : MonoBehaviour
 
     // Sự kiện đồng bộ vị trí (Đồng đội gọi)
     public event Action<string, float, float> OnReceivePosition;
+    // BỔ SUNG: Sự kiện đồng bộ gộp tọa độ và góc súng (connId, x, y, angle)
+    public event Action<string, float, float, float> OnReceivePlayerTransform;
 
     // Sự kiện bắt đầu game
     public event Action OnGameStarted;
@@ -235,6 +237,12 @@ public class NetworkManager : MonoBehaviour
         hubConnection.On<string, float, float>("OnReceivePosition", (connId, x, y) =>
         {
             unityContext.Post(_ => OnReceivePosition?.Invoke(connId, x, y), null);
+        });
+
+        // BỔ SUNG: Đăng ký lắng nghe gói tin gộp tọa độ và góc súng từ Server
+        hubConnection.On<string, float, float, float>("OnReceivePlayerTransform", (connId, x, y, angle) =>
+        {
+            unityContext.Post(_ => OnReceivePlayerTransform?.Invoke(connId, x, y, angle), null);
         });
 
         // Đăng ký lắng nghe tín hiệu bắt đầu game
@@ -424,6 +432,22 @@ public class NetworkManager : MonoBehaviour
         {
             // Bắt ngoại lệ khi ngắt kết nối/reconnect tạm thời, tránh văng lỗi lên Unity SynchronizationContext
             Debug.LogWarning($"[NetworkManager] SendPlayerPosition tạm thời bị gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi gộp tọa độ di chuyển và góc ngắm súng của người chơi cục bộ lên Server (1 gói duy nhất)
+    public async void SendPlayerTransform(float x, float y, float angle)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected)
+            {
+                await hubConnection.InvokeAsync("SyncPlayerTransform", x, y, angle);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendPlayerTransform tạm thời bị gián đoạn: {ex.Message}");
         }
     }
 

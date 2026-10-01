@@ -33,11 +33,8 @@ public class RookieHealth : MonoBehaviour
     // Tham chiếu tới kỹ năng lướt của Zero để kiểm tra trạng thái bất tử (IsInvincible)
     private DashSlashSkill dashSlashSkill;
 
-    void Start()
+    private void Awake()
     {
-        ApplyCharacterConfig();
-        GameConfigManager.OnConfigLoaded += ApplyCharacterConfig;
-
         currentHealth = maxHealth;
         currentArmor = maxArmor;
         currentMana = maxMana;
@@ -46,6 +43,15 @@ public class RookieHealth : MonoBehaviour
         playerCollider = GetComponent<Collider2D>();
         rb = GetComponent<Rigidbody2D>();
         dashSlashSkill = GetComponent<DashSlashSkill>();
+
+        // Thử nạp cấu hình sớm nếu GameConfigManager đã sẵn sàng
+        ApplyCharacterConfig();
+    }
+
+    void Start()
+    {
+        ApplyCharacterConfig();
+        GameConfigManager.OnConfigLoaded += ApplyCharacterConfig;
         onHealthChanged?.Invoke();
     }
 
