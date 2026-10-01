@@ -14,7 +14,7 @@ public class DashSlashSkill : MonoBehaviour
     [Header("Dash")]
     [SerializeField] private float dashDistance = 7f;
     [SerializeField] private float dashDuration = 0.18f;
-    [SerializeField] private float cooldown = 3f;
+    [SerializeField] private float cooldown = 2f;
     [Tooltip("Tên Trigger trong Animator. Để trống nếu chưa có animation dash.")]
     [SerializeField] private string dashTrigger = "";
 
@@ -27,7 +27,7 @@ public class DashSlashSkill : MonoBehaviour
 
     [Header("Damage")]
     [SerializeField] private int damage = 60; // sát thương cố định
-    [SerializeField] private float hitRadius = 2f;
+    [SerializeField] private float hitRadius = 7f;
     [SerializeField] private string enemyTag = "Enemy";
     [Tooltip("Tên hàm nhận sát thương trên script máu của quái (tham số int).")]
     [SerializeField] private string damageMethodName = "TakeDamage";
