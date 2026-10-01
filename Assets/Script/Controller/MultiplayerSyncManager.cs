@@ -82,6 +82,7 @@ public class MultiplayerSyncManager : MonoBehaviour
             NetworkManager.Instance.RequestSyncPlayerOrder();
 
             NetworkManager.Instance.OnReceivePosition += UpdateRemotePlayerPosition;
+            NetworkManager.Instance.OnReceivePlayerTransform += HandleReceivePlayerTransform;
             NetworkManager.Instance.OnPlayerDisconnected += RemoveRemotePlayer;
             NetworkManager.Instance.OnRemotePlayerShoot += HandleRemotePlayerShoot;
             NetworkManager.Instance.OnRemoteEnemyDamaged += HandleRemoteEnemyDamaged;
@@ -115,6 +116,7 @@ public class MultiplayerSyncManager : MonoBehaviour
         {
             NetworkManager.Instance.OnSyncPlayerOrder -= HandleSyncPlayerOrder;
             NetworkManager.Instance.OnReceivePosition -= UpdateRemotePlayerPosition;
+            NetworkManager.Instance.OnReceivePlayerTransform -= HandleReceivePlayerTransform;
             NetworkManager.Instance.OnPlayerDisconnected -= RemoveRemotePlayer;
             NetworkManager.Instance.OnRemotePlayerShoot -= HandleRemotePlayerShoot;
             NetworkManager.Instance.OnRemoteEnemyDamaged -= HandleRemoteEnemyDamaged;
@@ -150,19 +152,17 @@ public class MultiplayerSyncManager : MonoBehaviour
             if (health != null && health.isDead) return;
         }
 
-        // Định kỳ gửi tọa độ của chính mình lên Server
+        // Định kỳ gửi tọa độ và góc xoay súng gộp chung của chính mình lên Server (1 gói duy nhất)
         if (localPlayer != null && NetworkManager.Instance != null && Time.time - lastSyncTime >= syncInterval)
         {
-            NetworkManager.Instance.SendPlayerPosition(localPlayer.position.x, localPlayer.position.y);
-
-            // Gửi góc quay súng liên tục
+            float angle = 0f;
             WeaponAim weaponAim = localPlayer.GetComponentInChildren<WeaponAim>();
             if (weaponAim != null)
             {
-                float angle = weaponAim.transform.rotation.eulerAngles.z;
-                NetworkManager.Instance.SendWeaponAngle(angle, localPlayer.position.x, localPlayer.position.y);
+                angle = weaponAim.transform.rotation.eulerAngles.z;
             }
 
+            NetworkManager.Instance.SendPlayerTransform(localPlayer.position.x, localPlayer.position.y, angle);
             lastSyncTime = Time.time;
         }
     }
@@ -493,6 +493,23 @@ public class MultiplayerSyncManager : MonoBehaviour
                 {
                     remote.transform.position = new Vector3(x, y, 0);
                 }
+            }
+        }
+    }
+
+    // BỔ SUNG: Xử lý đồng bộ gộp cả tọa độ và góc quay súng từ Server (Đồng bộ 100% cùng 1 mili-giây)
+    private void HandleReceivePlayerTransform(string connId, float x, float y, float angle)
+    {
+        // 1. Cập nhật vị trí đồng đội (hoặc sinh mới nếu chưa có)
+        UpdateRemotePlayerPosition(connId, x, y);
+
+        // 2. Cập nhật góc quay súng đồng bộ tức thì trong cùng frame
+        if (remotePlayers.TryGetValue(connId, out GameObject remoteObj) && remoteObj != null)
+        {
+            RemotePlayerController rpc = remoteObj.GetComponent<RemotePlayerController>();
+            if (rpc != null)
+            {
+                rpc.targetWeaponAngle = angle;
             }
         }
     }
