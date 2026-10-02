@@ -100550,6 +100550,7 @@ MonoBehaviour:
   textColor: {r: 1, g: 1, b: 1, a: 1}
   floatingCanvas: {fileID: 0}
   promptTextUI: {fileID: 0}
+  shopGemSprite: {fileID: 1273791641666433377, guid: aa067464d443dfd4dbce6c27f2022cb8, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

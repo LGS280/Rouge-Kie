@@ -47,6 +47,16 @@ public class CharacterManager : MonoBehaviour
         }
         else if (instance != this)
         {
+            // Bảo toàn tham chiếu Prefabs nếu instance trước đó bị khởi tạo rỗng từ code
+            if (instance.rookiePrefab == null && rookiePrefab != null)
+            {
+                instance.rookiePrefab = rookiePrefab;
+            }
+            if (instance.zeroPrefab == null && zeroPrefab != null)
+            {
+                instance.zeroPrefab = zeroPrefab;
+            }
+
             Destroy(gameObject);
             return;
         }
@@ -65,8 +75,13 @@ public class CharacterManager : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void AutoInitialize()
     {
-        var mgr = Instance;
-        mgr.OnSceneLoaded(SceneManager.GetActiveScene(), LoadSceneMode.Single);
+        string sceneName = SceneManager.GetActiveScene().name;
+        // Chỉ kích hoạt tự khởi tạo nếu đang ở Lobby hoặc SampleScene để tránh tạo instance rỗng trước khi vào Lobby
+        if (sceneName == "Lobby_Scene" || sceneName == "SampleScene")
+        {
+            var mgr = Instance;
+            mgr.OnSceneLoaded(SceneManager.GetActiveScene(), LoadSceneMode.Single);
+        }
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -140,6 +155,7 @@ public class CharacterManager : MonoBehaviour
 
     /// <summary>
     /// Nạp Prefab nhân vật tương ứng từ Inspector hoặc AssetDatabase
+    /// Luôn dùng đúng Prefab gốc trong Assets/Prefab/
     /// </summary>
     public GameObject GetCharacterPrefab(string charName)
     {
@@ -181,6 +197,14 @@ public class CharacterManager : MonoBehaviour
             return true;
         }
 
+        // BẢO VỆ CHẮC CHẮN: Kiểm tra nạp Prefab thành công TRƯỚC KHI hủy nhân vật hiện tại
+        GameObject prefab = GetCharacterPrefab(clean);
+        if (prefab == null)
+        {
+            Debug.LogError($"[CharacterManager] Không tìm thấy Prefab cho nhân vật '{clean}'! Giữ nguyên nhân vật hiện tại.");
+            return false;
+        }
+
         Vector3 spawnPos = new Vector3(0f, -2f, 0f);
         Quaternion spawnRot = Quaternion.identity;
 
@@ -197,13 +221,6 @@ public class CharacterManager : MonoBehaviour
         {
             GameObject sp = GameObject.Find("PlayerSpawnPoint");
             if (sp != null) spawnPos = sp.transform.position;
-        }
-
-        GameObject prefab = GetCharacterPrefab(clean);
-        if (prefab == null)
-        {
-            Debug.LogError($"[CharacterManager] Không tìm thấy Prefab cho nhân vật '{clean}'!");
-            return false;
         }
 
         GameObject newPlayer = Instantiate(prefab, spawnPos, spawnRot);
