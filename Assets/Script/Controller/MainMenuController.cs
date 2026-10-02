@@ -51,6 +51,9 @@ public class MainMenuController : MonoBehaviour
             return;
         }
 
+        // Áp dụng ngay toàn bộ cấu hình âm thanh & đồ họa đã lưu khi vào Menu chính
+        SettingsController.ApplyAllSavedSettings();
+
         EnsureRewatchCutsceneButton();
         ShowMainMenu();
 

@@ -257,7 +257,12 @@ public class MaintenancePopupUI : MonoBehaviour
             {
                 if (status != null && !status.isUnderMaintenance)
                 {
-                    // Máy chủ đã mở lại!
+                    // Máy chủ đã mở lại -> Tự động nạp lại toàn bộ cấu hình mới nhất từ Backend (Hot-Reload)
+                    if (GameConfigManager.Instance != null)
+                    {
+                        GameConfigManager.Instance.ReloadConfigs();
+                    }
+
                     if (timeText != null)
                     {
                         timeText.text = "Server is back online! You can now enter the game.";
