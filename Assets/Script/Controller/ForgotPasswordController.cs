@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.IO;
 using System.Text;
@@ -64,7 +65,12 @@ public class ForgotPasswordController : MonoBehaviour
         }
         if (string.IsNullOrEmpty(apiBase))
         {
-            apiBase = backendBase + "/api"; // Fallback to default backend base URL
+            apiBase = backendBase;
+        }
+        apiBase = apiBase.TrimEnd('/');
+        if (!apiBase.EndsWith("/api", StringComparison.OrdinalIgnoreCase))
+        {
+            apiBase += "/api";
         }
         return apiBase + path;
     }

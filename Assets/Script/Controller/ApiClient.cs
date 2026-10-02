@@ -262,7 +262,21 @@ public class ApiClient : MonoBehaviour
         PlayerPrefs.DeleteKey("username");
         PlayerPrefs.DeleteKey("user_id");
         PlayerPrefs.DeleteKey("account_role");
+
+        // Xóa sạch key legacy và guest để ngăn chặn rò rỉ trạng thái giữa các tài khoản
+        PlayerPrefs.DeleteKey("unlocked_characters");
+        PlayerPrefs.DeleteKey("unlocked_weapons");
+        PlayerPrefs.DeleteKey("SelectedCharacter");
+        PlayerPrefs.DeleteKey("unlocked_characters_guest");
+        PlayerPrefs.DeleteKey("unlocked_weapons_guest");
+        PlayerPrefs.DeleteKey("SelectedCharacter_guest");
         PlayerPrefs.Save();
+
+        // Đặt lại nhân vật mặc định Rookie
+        CharacterManager.Instance?.ResetToDefaultCharacter();
+
+        // Xóa bộ nhớ tạm vũ khí
+        WeaponVaultUIController.Instance?.ResetCache();
 
         if (NetworkManager.Instance != null)
         {

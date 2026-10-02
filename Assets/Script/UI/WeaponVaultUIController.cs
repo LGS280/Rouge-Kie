@@ -56,6 +56,13 @@ public class WeaponVaultUIController : MonoBehaviour
             return;
         }
 
+        // Xóa key legacy toàn cục để tránh ô nhiễm dữ liệu giữa các tài khoản khác nhau
+        if (PlayerPrefs.HasKey(PREFS_KEY_UNLOCKED))
+        {
+            PlayerPrefs.DeleteKey(PREFS_KEY_UNLOCKED);
+            PlayerPrefs.Save();
+        }
+
         LoadUnlockedWeaponsFromPrefs();
     }
 
@@ -128,11 +135,22 @@ public class WeaponVaultUIController : MonoBehaviour
     }
 
     /// <summary>
+    /// Lấy key PlayerPrefs mở khóa vũ khí được cô lập riêng theo từng tài khoản người chơi (UserId)
+    /// </summary>
+    public static string GetUserWeaponKey()
+    {
+        int userId = PlayerPrefs.GetInt("user_id", 0);
+        return userId > 0 ? $"unlocked_weapons_{userId}" : "unlocked_weapons_guest";
+    }
+
+    /// <summary>
     /// Nạp danh sách vũ khí mở khóa từ PlayerPrefs bộ nhớ tạm offline
     /// </summary>
     private void LoadUnlockedWeaponsFromPrefs()
     {
-        string saved = PlayerPrefs.GetString(PREFS_KEY_UNLOCKED, "");
+        unlockedWeaponPrefabs.Clear();
+        string key = GetUserWeaponKey();
+        string saved = PlayerPrefs.GetString(key, "");
         if (!string.IsNullOrEmpty(saved))
         {
             string[] items = saved.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -152,9 +170,23 @@ public class WeaponVaultUIController : MonoBehaviour
     /// </summary>
     private void SaveUnlockedWeaponsToPrefs()
     {
+        string key = GetUserWeaponKey();
         string combined = string.Join(",", unlockedWeaponPrefabs);
-        PlayerPrefs.SetString(PREFS_KEY_UNLOCKED, combined);
+        PlayerPrefs.SetString(key, combined);
         PlayerPrefs.Save();
+    }
+
+    /// <summary>
+    /// Xóa bộ nhớ tạm vũ khí khi đăng xuất để tránh lây nhiễm chéo sang tài khoản khác
+    /// </summary>
+    public void ResetCache()
+    {
+        unlockedWeaponPrefabs.Clear();
+        LoadUnlockedWeaponsFromPrefs();
+        if (vaultPanel != null && vaultPanel.activeSelf)
+        {
+            RefreshCardsDisplay();
+        }
     }
 
     /// <summary>
@@ -521,32 +553,7 @@ public class WeaponVaultUIController : MonoBehaviour
 
     private Sprite LoadWeaponSprite(string cleanName)
     {
-        ShopUIController shop = ShopUIController.Instance;
-        if (shop != null)
-        {
-            Sprite s = shop.GetWeaponSpriteFromPrefab(cleanName);
-            if (s != null) return s;
-        }
-
-#if UNITY_EDITOR
-        string spritePath = $"Assets/Weapons/Player_Weapon/{cleanName}/{cleanName}.png";
-        Sprite directSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
-        if (directSprite != null) return directSprite;
-
-        spritePath = $"Assets/Weapons/{cleanName}.png";
-        directSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
-        if (directSprite != null) return directSprite;
-
-        string prefabPath = $"Assets/Prefab/Weapons/{cleanName}.prefab";
-        GameObject p = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-        if (p != null)
-        {
-            SpriteRenderer sr = p.GetComponent<SpriteRenderer>();
-            if (sr == null) sr = p.GetComponentInChildren<SpriteRenderer>();
-            if (sr != null && sr.sprite != null) return sr.sprite;
-        }
-#endif
-        return null;
+        return ShopUIController.GetWeaponSprite(cleanName);
     }
 
     /// <summary>

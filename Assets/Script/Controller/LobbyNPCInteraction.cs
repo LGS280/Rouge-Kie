@@ -7,7 +7,8 @@ public enum LobbyInteractionType
     DungeonPortal,      // Cổng vào Dungeon / Bắt đầu trận
     LeaderboardBoard,   // Bảng xếp hạng
     PlayerProfile,      // Xem trang phục / thông tin người chơi
-    WeaponVault         // Kho vũ khí đã mở khóa (Hangar)
+    WeaponVault,        // Kho vũ khí đã mở khóa (Hangar)
+    CharacterVault      // Kho / Bảng chọn nhân vật đã mở khóa
 }
 
 public class LobbyNPCInteraction : MonoBehaviour
@@ -29,10 +30,22 @@ public class LobbyNPCInteraction : MonoBehaviour
     public GameObject floatingCanvas;
     public TextMeshProUGUI promptTextUI;
 
+    [Header("Shop References")]
+    public Sprite shopGemSprite;
+    public static Sprite CachedGemSprite { get; set; }
+
     private bool isPlayerInRange = false;
     private Transform portalVisualTransform;
 
     private bool hasTriggeredDungeonPortal = false;
+
+    private void Awake()
+    {
+        if (shopGemSprite != null)
+        {
+            CachedGemSprite = shopGemSprite;
+        }
+    }
 
     private void Start()
     {
@@ -223,7 +236,7 @@ public class LobbyNPCInteraction : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player") || other.GetComponent<PlayerController>() != null || other.name.Contains("Player") || other.name.Contains("Rookie"))
+        if (other.CompareTag("Player") || other.GetComponent<PlayerController>() != null || other.name.Contains("Player") || other.name.Contains("Rookie") || other.name.Contains("Zero"))
         {
             isPlayerInRange = true;
 
@@ -243,7 +256,7 @@ public class LobbyNPCInteraction : MonoBehaviour
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        if (other.CompareTag("Player") || other.GetComponent<PlayerController>() != null || other.name.Contains("Player") || other.name.Contains("Rookie"))
+        if (other.CompareTag("Player") || other.GetComponent<PlayerController>() != null || other.name.Contains("Player") || other.name.Contains("Rookie") || other.name.Contains("Zero"))
         {
             isPlayerInRange = false;
             if (floatingCanvas != null) floatingCanvas.SetActive(false);
@@ -265,15 +278,18 @@ public class LobbyNPCInteraction : MonoBehaviour
                     GameObject shopObj = new GameObject("ShopUIController");
                     shop = shopObj.AddComponent<ShopUIController>();
                 }
+                if (shopGemSprite != null) shop.gemSprite = shopGemSprite;
                 shop.OpenShop();
                 break;
 
             case LobbyInteractionType.DungeonPortal:
                 Debug.Log("[LobbyNPCInteraction] Chuyển tới Dungeon (SampleScene)...");
 
-                if (WeaponManager.Instance != null)
+                GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+                WeaponManager wm = (playerObj != null) ? playerObj.GetComponent<WeaponManager>() : WeaponManager.Instance;
+                if (wm != null)
                 {
-                    WeaponManager.Instance.SaveEquippedWeapons();
+                    wm.SaveEquippedWeapons();
                 }
 
                 if (LoadingScreenUI.Instance != null)
@@ -315,21 +331,40 @@ public class LobbyNPCInteraction : MonoBehaviour
                 }
                 vault.OpenVault();
                 break;
+
+            case LobbyInteractionType.CharacterVault:
+                CharacterSelectUIController roster = CharacterSelectUIController.Instance;
+                if (roster == null) roster = Object.FindFirstObjectByType<CharacterSelectUIController>();
+
+                if (roster == null)
+                {
+                    GameObject rosterObj = new GameObject("CharacterSelectUIController");
+                    roster = rosterObj.AddComponent<CharacterSelectUIController>();
+                }
+                if (roster.IsRosterOpen())
+                {
+                    roster.CloseRoster();
+                }
+                else
+                {
+                    roster.OpenRoster();
+                }
+                break;
         }
     }
 
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {
-        if (interactionType == LobbyInteractionType.WeaponVault)
+        if (interactionType == LobbyInteractionType.WeaponVault || interactionType == LobbyInteractionType.CharacterVault)
         {
             BoxCollider2D col = GetComponent<BoxCollider2D>();
             if (col != null)
             {
                 Gizmos.matrix = transform.localToWorldMatrix;
-                Gizmos.color = new Color(0.2f, 0.8f, 0.4f, 0.25f);
+                Gizmos.color = interactionType == LobbyInteractionType.CharacterVault ? new Color(0.2f, 0.6f, 1f, 0.25f) : new Color(0.2f, 0.8f, 0.4f, 0.25f);
                 Gizmos.DrawCube(col.offset, col.size);
-                Gizmos.color = new Color(0.1f, 1f, 0.5f, 0.9f);
+                Gizmos.color = interactionType == LobbyInteractionType.CharacterVault ? new Color(0.3f, 0.7f, 1f, 0.9f) : new Color(0.1f, 1f, 0.5f, 0.9f);
                 Gizmos.DrawWireCube(col.offset, col.size);
 
                 // Vẽ điểm màu vàng đánh dấu chính xác vị trí dòng chữ nổi Text

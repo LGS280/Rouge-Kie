@@ -81,7 +81,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 15
+  m_SortingOrder: 11
   m_MaskInteraction: 0
   m_Sprite: {fileID: -6797867435222064227, guid: 247e31419aa862e43946da8f0012d6e6, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -136,6 +136,14 @@ MonoBehaviour:
   recoilDistance: 0.15
   recoilDuration: 0.05
   returnDuration: 0.1
+  isBow: 0
+  maxChargeTime: 0.65
+  minChargeRatio: 0.35
+  drawBackDistance: 0.14
+  bowChargeSoundClip: {fileID: 0}
+  arrowPreviewRenderer: {fileID: 0}
+  arrowPreviewScale: {x: 0.5, y: 0.5, z: 1}
+  upAimOffset: 0.28
 --- !u!1 &7555099088172504916
 GameObject:
   m_ObjectHideFlags: 0

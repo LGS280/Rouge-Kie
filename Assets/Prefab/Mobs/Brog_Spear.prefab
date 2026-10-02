@@ -135,8 +135,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MobAI
   currentState: 0
-  chaseSpeed: 3
-  detectRange: 7
+  chaseSpeed: 4
+  detectRange: 9
   attackRange: 1.5
   attackCooldown: 1.5
   attackDamage: 10
@@ -172,6 +172,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MobHealth
   maxHealth: 100
   isDead: 0
+  enemyConfigName: 
   coinPrefabOverride: {fileID: 5135757895966900724, guid: cc04880d9ca75264a8c00200bb996385, type: 3}
   manaPrefabOverride: {fileID: 499877432794843320, guid: 37ed24bef8ff4eb4aa62a61cda0fdad4, type: 3}
   lootDropChance: 0.2

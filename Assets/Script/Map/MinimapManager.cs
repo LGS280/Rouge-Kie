@@ -585,6 +585,9 @@ public class MinimapManager : MonoBehaviour
         {
             Instance.InitializeMinimap();
         }
+
+        // Đảm bảo Coin HUD cũng được khởi tạo và đồng bộ vị trí kế bên Minimap
+        InGameCoinUI.EnsureCoinUIExists();
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -671,6 +674,7 @@ public class MinimapManager : MonoBehaviour
 
         Debug.Log("[MinimapManager] Đã tự động tạo và cấu hình Minimap UI.");
         manager.InitializeMinimap();
+        InGameCoinUI.EnsureCoinUIExists();
     }
 
     private static Sprite LoadSpriteSafely(string path)

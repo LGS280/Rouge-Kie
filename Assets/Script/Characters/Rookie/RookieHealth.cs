@@ -30,11 +30,11 @@ public class RookieHealth : MonoBehaviour
 
     public UnityEvent onHealthChanged;
 
-    void Start()
-    {
-        ApplyCharacterConfig();
-        GameConfigManager.OnConfigLoaded += ApplyCharacterConfig;
+    // Tham chiếu tới kỹ năng lướt của Zero để kiểm tra trạng thái bất tử (IsInvincible)
+    private DashSlashSkill dashSlashSkill;
 
+    private void Awake()
+    {
         currentHealth = maxHealth;
         currentArmor = maxArmor;
         currentMana = maxMana;
@@ -42,6 +42,16 @@ public class RookieHealth : MonoBehaviour
         animator = GetComponent<Animator>();
         playerCollider = GetComponent<Collider2D>();
         rb = GetComponent<Rigidbody2D>();
+        dashSlashSkill = GetComponent<DashSlashSkill>();
+
+        // Thử nạp cấu hình sớm nếu GameConfigManager đã sẵn sàng
+        ApplyCharacterConfig();
+    }
+
+    void Start()
+    {
+        ApplyCharacterConfig();
+        GameConfigManager.OnConfigLoaded += ApplyCharacterConfig;
         onHealthChanged?.Invoke();
     }
 
@@ -121,6 +131,10 @@ public class RookieHealth : MonoBehaviour
     {
         if (isDead) return;
 
+        // Kiểm tra nếu nhân vật (Zero) đang trong trạng thái bất tử của kỹ năng Dash Slash thì bỏ qua toàn bộ sát thương
+        if (dashSlashSkill == null) dashSlashSkill = GetComponent<DashSlashSkill>();
+        if (dashSlashSkill != null && dashSlashSkill.IsInvincible) return;
+
         int originalDamage = damage; // Lưu lại lượng sát thương thực tế để hiển thị chữ số bay
 
         if (currentArmor > 0)
@@ -168,6 +182,10 @@ public class RookieHealth : MonoBehaviour
     public void TakeDamageFromNetwork(int damage)
     {
         if (isDead) return;
+
+        // Bỏ qua sát thương đồng bộ mạng nếu nhân vật đang trong trạng thái bất tử khi lướt
+        if (dashSlashSkill == null) dashSlashSkill = GetComponent<DashSlashSkill>();
+        if (dashSlashSkill != null && dashSlashSkill.IsInvincible) return;
 
         int originalDamage = damage;
 

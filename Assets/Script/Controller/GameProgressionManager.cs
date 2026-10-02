@@ -274,7 +274,7 @@ public class GameProgressionManager : MonoBehaviour
         if (generator != null)
         {
             generator.GenerateSoulKnightMap();
-            yield return new WaitForSeconds(0.2f); // Chờ gạch sàn sinh xong
+            yield return new WaitForSecondsRealtime(0.2f); // Chờ gạch sàn sinh xong
 
             // BỔ SUNG: Làm mới ID mạng cho Phòng và Quái vật của tầng mới cho Co-op
             if (MultiplayerSyncManager.Instance != null)
@@ -345,7 +345,7 @@ public class GameProgressionManager : MonoBehaviour
             Debug.Log("[GameProgressionManager] Player đang trong trạng thái hy sinh, giữ nguyên vô hiệu hóa điều khiển và collider.");
         }
 
-        yield return new WaitForSeconds(0.4f); // Chờ hiệu ứng mượt trước khi làm mờ ẩn Loading Screen
+        yield return new WaitForSecondsRealtime(0.4f); // Chờ hiệu ứng mượt trước khi làm mờ ẩn Loading Screen
 
         if (LoadingScreenUI.Instance != null)
         {

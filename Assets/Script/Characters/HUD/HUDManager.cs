@@ -9,8 +9,24 @@ public class HUDManager : MonoBehaviour
     {
         for (int i = 0; i < playerHUDs.Length; i++)
         {
-            if (i < players.Length && players[i] != null)
-                playerHUDs[i].SetTarget(players[i]);
+            if (playerHUDs[i] == null) continue;
+
+            RookieHealth targetPlayer = null;
+            if (i == 0)
+            {
+                // Luôn ưu tiên tìm nhân vật người chơi thực tế đang active trong Scene
+                GameObject p = GameObject.FindGameObjectWithTag("Player");
+                if (p != null) targetPlayer = p.GetComponent<RookieHealth>();
+            }
+
+            // Fallback nếu không tìm thấy tag Player thì mới dùng danh sách kéo thả Inspector
+            if (targetPlayer == null && players != null && i < players.Length)
+            {
+                targetPlayer = players[i];
+            }
+
+            if (targetPlayer != null)
+                playerHUDs[i].SetTarget(targetPlayer);
         }
     }
 }
