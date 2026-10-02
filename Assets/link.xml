@@ -1,0 +1,31 @@
+<linker>
+  <!-- SignalR Client Core Assemblies -->
+  <assembly fullname="Microsoft.AspNetCore.SignalR.Client" preserve="all" />
+  <assembly fullname="Microsoft.AspNetCore.SignalR.Client.Core" preserve="all" />
+  <assembly fullname="Microsoft.AspNetCore.SignalR.Common" preserve="all" />
+  <assembly fullname="Microsoft.AspNetCore.SignalR.Protocols.Json" preserve="all" />
+
+  <!-- HTTP Connections & Transports -->
+  <assembly fullname="Microsoft.AspNetCore.Http.Connections.Client" preserve="all" />
+  <assembly fullname="Microsoft.AspNetCore.Http.Connections.Common" preserve="all" />
+  <assembly fullname="Microsoft.AspNetCore.Connections.Abstractions" preserve="all" />
+
+  <!-- Microsoft Extensions: Dependency Injection, Logging, Options -->
+  <assembly fullname="Microsoft.Extensions.DependencyInjection" preserve="all" />
+  <assembly fullname="Microsoft.Extensions.DependencyInjection.Abstractions" preserve="all" />
+  <assembly fullname="Microsoft.Extensions.Logging" preserve="all" />
+  <assembly fullname="Microsoft.Extensions.Logging.Abstractions" preserve="all" />
+  <assembly fullname="Microsoft.Extensions.Options" preserve="all" />
+  <assembly fullname="Microsoft.Extensions.Primitives" preserve="all" />
+  <assembly fullname="Microsoft.Extensions.Features" preserve="all" />
+
+  <!-- Low-level I/O, Async, Channels, and JSON Serialization -->
+  <assembly fullname="System.Threading.Channels" preserve="all" />
+  <assembly fullname="System.IO.Pipelines" preserve="all" />
+  <assembly fullname="System.Text.Json" preserve="all" />
+  <assembly fullname="System.Text.Encodings.Web" preserve="all" />
+  <assembly fullname="Microsoft.Bcl.AsyncInterfaces" preserve="all" />
+  <assembly fullname="Microsoft.Bcl.TimeProvider" preserve="all" />
+  <assembly fullname="System.Diagnostics.DiagnosticSource" preserve="all" />
+  <assembly fullname="System.ComponentModel.Annotations" preserve="all" />
+</linker>
