@@ -55,6 +55,19 @@ public class PlayerProfileUI : MonoBehaviour
         {
             instance = this;
         }
+
+        if (LobbyNPCInteraction.CachedGemSprite == null)
+        {
+            Image[] imgs = GetComponentsInChildren<Image>(true);
+            foreach (var img in imgs)
+            {
+                if (img != null && img.gameObject.name.Contains("GemIcon") && img.sprite != null)
+                {
+                    LobbyNPCInteraction.CachedGemSprite = img.sprite;
+                    break;
+                }
+            }
+        }
     }
 
     private void Start()

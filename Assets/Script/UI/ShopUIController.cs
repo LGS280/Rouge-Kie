@@ -692,11 +692,17 @@ public class ShopUIController : MonoBehaviour
         return num.ToString();
     }
 
+    [Header("Gem Sprite Reference")]
+    public Sprite gemSprite;
+
     /// <summary>
-    /// Nạp Sprite viên Gem từ Assets/Images/gemV1.png (Không dùng Resources)
+    /// Nạp Sprite viên Gem từ Assets/Images/gemV1.png (thông qua tham chiếu của LobbyNPCInteraction trong bản Build, hoặc AssetDatabase trong Editor)
     /// </summary>
     public Sprite GetGemSprite()
     {
+        if (gemSprite != null) return gemSprite;
+        if (LobbyNPCInteraction.CachedGemSprite != null) return LobbyNPCInteraction.CachedGemSprite;
+
 #if UNITY_EDITOR
         Sprite s = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Images/gemV1.png");
         if (s != null) return s;
@@ -704,17 +710,58 @@ public class ShopUIController : MonoBehaviour
         return null;
     }
 
+    private static readonly System.Collections.Generic.Dictionary<string, Sprite> weaponSpriteCache 
+        = new System.Collections.Generic.Dictionary<string, Sprite>(System.StringComparer.OrdinalIgnoreCase);
+
     /// <summary>
-    /// Tìm và nạp Sprite hình ảnh của vũ khí từ thư mục Assets/Weapons/Player_Weapon/ hoặc từ Prefab súng
+    /// Tìm và nạp Sprite hình ảnh của vũ khí từ WeaponManager, Resources hoặc Assets.
+    /// Hoạt động độc lập, không phụ thuộc vào việc Shop UI đã được mở hay chưa.
     /// </summary>
-    public Sprite GetWeaponSpriteFromPrefab(string weaponName)
+    public static Sprite GetWeaponSprite(string weaponName)
     {
         if (string.IsNullOrEmpty(weaponName)) return null;
 
         string cleanName = weaponName.Replace("Weapons/", "").Replace("(Clone)", "").Trim();
 
+        if (weaponSpriteCache.TryGetValue(cleanName, out Sprite cached) && cached != null)
+        {
+            return cached;
+        }
+
+        // 1. Tìm từ Prefab súng trong WeaponManager (hoạt động tốt trong Editor và Builds)
+        GameObject prefab = null;
+        if (WeaponManager.Instance != null)
+        {
+            prefab = WeaponManager.Instance.FindWeaponPrefabByName(cleanName);
+        }
+        else
+        {
+            WeaponManager wm = UnityEngine.Object.FindFirstObjectByType<WeaponManager>();
+            if (wm != null) prefab = wm.FindWeaponPrefabByName(cleanName);
+        }
+
+        if (prefab != null)
+        {
+            SpriteRenderer sr = prefab.GetComponent<SpriteRenderer>();
+            if (sr == null) sr = prefab.GetComponentInChildren<SpriteRenderer>();
+            if (sr != null && sr.sprite != null)
+            {
+                weaponSpriteCache[cleanName] = sr.sprite;
+                return sr.sprite;
+            }
+        }
+
+        // 2. Tìm trong Resources nếu có
+        Sprite resSprite = Resources.Load<Sprite>("Weapons/" + cleanName);
+        if (resSprite == null) resSprite = Resources.Load<Sprite>(cleanName);
+        if (resSprite != null)
+        {
+            weaponSpriteCache[cleanName] = resSprite;
+            return resSprite;
+        }
+
 #if UNITY_EDITOR
-        // 1. Ưu tiên tìm trực tiếp file Sprite ảnh súng trong thư mục Assets/Weapons/
+        // 3. Fallback cho Unity Editor
         string[] candidatePaths = new string[]
         {
             $"Assets/Weapons/Player_Weapon/{cleanName}/{cleanName}.png",
@@ -727,41 +774,43 @@ public class ShopUIController : MonoBehaviour
         foreach (var p in candidatePaths)
         {
             Sprite directSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(p);
-            if (directSprite != null) return directSprite;
-        }
-#endif
-
-        // 2. Dự phòng: Tìm từ SpriteRenderer của Prefab súng trong Assets/Prefab/Weapons/
-        GameObject prefab = null;
-        if (WeaponManager.Instance != null)
-        {
-            prefab = WeaponManager.Instance.FindWeaponPrefabByName(cleanName);
+            if (directSprite != null)
+            {
+                weaponSpriteCache[cleanName] = directSprite;
+                return directSprite;
+            }
         }
 
-#if UNITY_EDITOR
-        if (prefab == null)
-        {
-            string editorPath = $"Assets/Prefab/Weapons/{cleanName}.prefab";
-            prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(editorPath);
-        }
-#endif
-
+        string editorPath = $"Assets/Prefab/Weapons/{cleanName}.prefab";
+        prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(editorPath);
         if (prefab != null)
         {
             SpriteRenderer sr = prefab.GetComponent<SpriteRenderer>();
             if (sr == null) sr = prefab.GetComponentInChildren<SpriteRenderer>();
-            if (sr != null && sr.sprite != null) return sr.sprite;
+            if (sr != null && sr.sprite != null)
+            {
+                weaponSpriteCache[cleanName] = sr.sprite;
+                return sr.sprite;
+            }
         }
+#endif
 
         return null;
     }
 
     /// <summary>
+    /// Tìm và nạp Sprite hình ảnh của vũ khí từ thư mục Assets/Weapons/Player_Weapon/ hoặc từ Prefab súng
+    /// </summary>
+    public Sprite GetWeaponSpriteFromPrefab(string weaponName)
+    {
+        return GetWeaponSprite(weaponName);
+    }
+
     private static readonly System.Collections.Generic.Dictionary<string, Sprite> characterSpriteCache 
         = new System.Collections.Generic.Dictionary<string, Sprite>(System.StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Tìm và nạp Sprite hình ảnh hiển thị của nhân vật từ Assets/Characters/ hoặc Prefab (tương tự như logic nạp của vũ khí, không dùng Resources)
+    /// Tìm và nạp Sprite hình ảnh hiển thị của nhân vật từ CharacterManager, Resources hoặc AssetDatabase
     /// </summary>
     public static Sprite GetCharacterSprite(string charName)
     {
@@ -774,13 +823,14 @@ public class ShopUIController : MonoBehaviour
             return cached;
         }
 
-        // 1. Lấy từ Prefab qua CharacterManager nếu có sẵn
+        // 1. Lấy từ Prefab qua CharacterManager nếu có sẵn (được gán từ Assets/Prefab/ trong Lobby_Scene)
         if (CharacterManager.Instance != null)
         {
             GameObject p = CharacterManager.Instance.GetCharacterPrefab(key);
             if (p != null)
             {
                 SpriteRenderer rootSr = p.GetComponent<SpriteRenderer>();
+                if (rootSr == null) rootSr = p.GetComponentInChildren<SpriteRenderer>();
                 if (rootSr != null && rootSr.sprite != null)
                 {
                     characterSpriteCache[key] = rootSr.sprite;
@@ -790,7 +840,7 @@ public class ShopUIController : MonoBehaviour
         }
 
 #if UNITY_EDITOR
-        // 2. Nạp từ Prefab trong Assets/Prefab/
+        // 2. Fallback trong Unity Editor từ Assets/Prefab/
         string prefabPath = key == "Zero" 
             ? "Assets/Prefab/Zero/Zero.prefab" 
             : "Assets/Prefab/Rookie/Rookie.prefab";
@@ -799,6 +849,7 @@ public class ShopUIController : MonoBehaviour
         if (prefab != null)
         {
             SpriteRenderer rootSr = prefab.GetComponent<SpriteRenderer>();
+            if (rootSr == null) rootSr = prefab.GetComponentInChildren<SpriteRenderer>();
             if (rootSr != null && rootSr.sprite != null)
             {
                 characterSpriteCache[key] = rootSr.sprite;
@@ -806,7 +857,7 @@ public class ShopUIController : MonoBehaviour
             }
         }
 
-        // 3. Tìm trực tiếp file Sprite ảnh nhân vật trong thư mục Assets/Characters/
+        // 4. Tìm trực tiếp file Sprite ảnh nhân vật trong thư mục Assets/Characters/
         string sheetPath = key == "Zero" 
             ? "Assets/Characters/Zero/Zero_Idle.png" 
             : "Assets/Characters/Rookie/Rookie_Idel.png";
@@ -1306,6 +1357,11 @@ public class ShopUIController : MonoBehaviour
         if (gemSp != null)
         {
             gemIconImg.sprite = gemSp;
+            gemIconImg.color = Color.white;
+        }
+        else
+        {
+            gemIconImg.color = Color.clear;
         }
 
         // Text số lượng Gem (Dùng chữ thường, không dùng emoji ký tự để tránh lỗi thiếu font atlas)

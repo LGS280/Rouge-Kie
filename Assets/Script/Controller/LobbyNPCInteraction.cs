@@ -30,10 +30,22 @@ public class LobbyNPCInteraction : MonoBehaviour
     public GameObject floatingCanvas;
     public TextMeshProUGUI promptTextUI;
 
+    [Header("Shop References")]
+    public Sprite shopGemSprite;
+    public static Sprite CachedGemSprite { get; set; }
+
     private bool isPlayerInRange = false;
     private Transform portalVisualTransform;
 
     private bool hasTriggeredDungeonPortal = false;
+
+    private void Awake()
+    {
+        if (shopGemSprite != null)
+        {
+            CachedGemSprite = shopGemSprite;
+        }
+    }
 
     private void Start()
     {
@@ -266,6 +278,7 @@ public class LobbyNPCInteraction : MonoBehaviour
                     GameObject shopObj = new GameObject("ShopUIController");
                     shop = shopObj.AddComponent<ShopUIController>();
                 }
+                if (shopGemSprite != null) shop.gemSprite = shopGemSprite;
                 shop.OpenShop();
                 break;
 

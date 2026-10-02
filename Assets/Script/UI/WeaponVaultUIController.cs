@@ -553,32 +553,7 @@ public class WeaponVaultUIController : MonoBehaviour
 
     private Sprite LoadWeaponSprite(string cleanName)
     {
-        ShopUIController shop = ShopUIController.Instance;
-        if (shop != null)
-        {
-            Sprite s = shop.GetWeaponSpriteFromPrefab(cleanName);
-            if (s != null) return s;
-        }
-
-#if UNITY_EDITOR
-        string spritePath = $"Assets/Weapons/Player_Weapon/{cleanName}/{cleanName}.png";
-        Sprite directSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
-        if (directSprite != null) return directSprite;
-
-        spritePath = $"Assets/Weapons/{cleanName}.png";
-        directSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
-        if (directSprite != null) return directSprite;
-
-        string prefabPath = $"Assets/Prefab/Weapons/{cleanName}.prefab";
-        GameObject p = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-        if (p != null)
-        {
-            SpriteRenderer sr = p.GetComponent<SpriteRenderer>();
-            if (sr == null) sr = p.GetComponentInChildren<SpriteRenderer>();
-            if (sr != null && sr.sprite != null) return sr.sprite;
-        }
-#endif
-        return null;
+        return ShopUIController.GetWeaponSprite(cleanName);
     }
 
     /// <summary>
