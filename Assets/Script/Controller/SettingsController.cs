@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class SettingsController : MonoBehaviour
@@ -142,14 +143,86 @@ public class SettingsController : MonoBehaviour
         PlayerPrefs.Save();
     }
 
-    // --- CẤU HÌNH ÂM THANH (Sẽ kết nối với Audio Mixer sau) ---
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void InitGlobalSettings()
+    {
+        ApplyAllSavedSettings();
+        SceneManager.sceneLoaded += OnSceneLoadedGlobal;
+    }
 
-    // Thay thế các hàm SetVolume cũ trong SettingsController.cs bằng code này:
+    private static void OnSceneLoadedGlobal(Scene scene, LoadSceneMode mode)
+    {
+        ApplyAllSavedSettings();
+    }
+
+    /// <summary>
+    /// Áp dụng toàn bộ cài đặt đã lưu trong PlayerPrefs ngay lập tức (Audio, Resolution, Fullscreen, FPS)
+    /// </summary>
+    public static void ApplyAllSavedSettings()
+    {
+        // 1. Âm thanh: Master Volume
+        float masterVol = PlayerPrefs.GetFloat("MasterVol", 0.75f);
+        AudioListener.volume = Mathf.Clamp01(masterVol);
+
+        // 2. Âm thanh: BGM & SFX Volume
+        float bgmVol = PlayerPrefs.GetFloat("BGMVol", 0.60f);
+        float sfxVol = PlayerPrefs.GetFloat("SFXVol", 0.75f);
+
+        // Tìm AudioSource BGMPlayer ở Scene_Menu nếu có
+        GameObject bgmPlayer = GameObject.Find("BGMPlayer");
+        if (bgmPlayer != null)
+        {
+            AudioSource src = bgmPlayer.GetComponent<AudioSource>();
+            if (src != null)
+            {
+                src.volume = (bgmVol <= 0.0001f) ? 0f : bgmVol;
+            }
+        }
+
+        // Đồng bộ với AudioManager nếu đang tồn tại (Lobby / In-Game)
+        if (RogueKie.Audio.AudioManager.Instance != null)
+        {
+            RogueKie.Audio.AudioManager.Instance.SetVolume("MasterVolume", masterVol);
+            RogueKie.Audio.AudioManager.Instance.SetVolume("BGMVolume", bgmVol);
+            RogueKie.Audio.AudioManager.Instance.SetVolume("SFXVolume", sfxVol);
+        }
+
+        // 3. Đồ họa: Fullscreen
+        bool isFullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
+        Screen.fullScreenMode = isFullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
+
+        // 4. Đồ họa: FPS Limit
+        int fpsIndex = PlayerPrefs.GetInt("FPSLimitIndex", 0);
+        switch (fpsIndex)
+        {
+            case 0: Application.targetFrameRate = 60; break;
+            case 1: Application.targetFrameRate = 120; break;
+            case 2: Application.targetFrameRate = 144; break;
+            default: Application.targetFrameRate = 60; break;
+        }
+
+        // 5. Đồ họa: Resolution
+        int resIndex = PlayerPrefs.GetInt("ResolutionIndex", 0);
+        Resolution[] defaultResolutions = new Resolution[]
+        {
+            new Resolution { width = 1920, height = 1080 },
+            new Resolution { width = 1600, height = 900 },
+            new Resolution { width = 1280, height = 720 }
+        };
+        if (resIndex >= 0 && resIndex < defaultResolutions.Length)
+        {
+            Resolution res = defaultResolutions[resIndex];
+            Screen.SetResolution(res.width, res.height, Screen.fullScreenMode);
+        }
+    }
+
+    // --- CẤU HÌNH ÂM THANH ---
 
     public void SetMasterVolume(float volume)
     {
         if (_isInitializing) return;
         PlayerPrefs.SetFloat("MasterVol", volume);
+        PlayerPrefs.Save();
         AudioListener.volume = Mathf.Clamp01(volume);
         if (RogueKie.Audio.AudioManager.Instance != null)
         {
@@ -161,7 +234,8 @@ public class SettingsController : MonoBehaviour
     {
         if (_isInitializing) return;
         PlayerPrefs.SetFloat("BGMVol", volume);
-        if (bgmSource != null) bgmSource.volume = volume;
+        PlayerPrefs.Save();
+        if (bgmSource != null) bgmSource.volume = (volume <= 0.0001f) ? 0f : volume;
         if (RogueKie.Audio.AudioManager.Instance != null)
         {
             RogueKie.Audio.AudioManager.Instance.SetVolume("BGMVolume", volume);
@@ -172,6 +246,7 @@ public class SettingsController : MonoBehaviour
     {
         if (_isInitializing) return;
         PlayerPrefs.SetFloat("SFXVol", volume);
+        PlayerPrefs.Save();
         if (RogueKie.Audio.AudioManager.Instance != null)
         {
             RogueKie.Audio.AudioManager.Instance.SetVolume("SFXVolume", volume);
@@ -195,18 +270,16 @@ public class SettingsController : MonoBehaviour
                 }
             }
 
-            // Tắt event trước khi set value để tránh trigger
+            // Áp dụng cài đặt hệ thống toàn cục trước
+            ApplyAllSavedSettings();
+
+            // Đồng bộ giá trị vào các thành phần UI
             float masterVol = PlayerPrefs.GetFloat("MasterVol", 0.75f);
             if (masterSlider != null)
             {
                 masterSlider.onValueChanged.RemoveAllListeners();
                 masterSlider.value = masterVol;
                 masterSlider.onValueChanged.AddListener(SetMasterVolume);
-            }
-            AudioListener.volume = Mathf.Clamp01(masterVol);
-            if (RogueKie.Audio.AudioManager.Instance != null)
-            {
-                RogueKie.Audio.AudioManager.Instance.SetVolume("MasterVolume", masterVol);
             }
 
             float bgmVol = PlayerPrefs.GetFloat("BGMVol", 0.60f);
@@ -215,11 +288,7 @@ public class SettingsController : MonoBehaviour
                 bgmSlider.onValueChanged.RemoveAllListeners();
                 bgmSlider.value = bgmVol;
                 bgmSlider.onValueChanged.AddListener(SetBGMVolume);
-                if (bgmSource != null) bgmSource.volume = bgmVol;
-            }
-            if (RogueKie.Audio.AudioManager.Instance != null)
-            {
-                RogueKie.Audio.AudioManager.Instance.SetVolume("BGMVolume", bgmVol);
+                if (bgmSource != null) bgmSource.volume = (bgmVol <= 0.0001f) ? 0f : bgmVol;
             }
 
             float sfxVol = PlayerPrefs.GetFloat("SFXVol", 0.75f);
@@ -229,12 +298,7 @@ public class SettingsController : MonoBehaviour
                 sfxSlider.value = sfxVol;
                 sfxSlider.onValueChanged.AddListener(SetSFXVolume);
             }
-            if (RogueKie.Audio.AudioManager.Instance != null)
-            {
-                RogueKie.Audio.AudioManager.Instance.SetVolume("SFXVolume", sfxVol);
-            }
 
-            // Phần còn lại giữ nguyên
             bool isFullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
             if (fullscreenToggle != null)
             {
@@ -242,7 +306,6 @@ public class SettingsController : MonoBehaviour
                 fullscreenToggle.isOn = isFullscreen;
                 fullscreenToggle.onValueChanged.AddListener(SetFullscreen);
             }
-            Screen.fullScreenMode = isFullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
 
             int fpsIndex = PlayerPrefs.GetInt("FPSLimitIndex", 0);
             if (fpsDropdown != null)
@@ -263,7 +326,26 @@ public class SettingsController : MonoBehaviour
                     fpsDropdown.onValueChanged.AddListener(SetFPSLimit);
                 }
             }
-            SetFPSLimit(fpsIndex);
+
+            int savedResIndex = PlayerPrefs.GetInt("ResolutionIndex", 0);
+            if (resolutionDropdown != null)
+            {
+                if (resolutionDropdown.options.Count == 0)
+                {
+                    SetupResolutionDropdown();
+                }
+                else
+                {
+                    if (savedResIndex < 0 || savedResIndex >= resolutionDropdown.options.Count)
+                    {
+                        savedResIndex = 0;
+                    }
+                    resolutionDropdown.onValueChanged.RemoveAllListeners();
+                    resolutionDropdown.value = savedResIndex;
+                    resolutionDropdown.RefreshShownValue();
+                    resolutionDropdown.onValueChanged.AddListener(SetResolution);
+                }
+            }
         }
         finally
         {

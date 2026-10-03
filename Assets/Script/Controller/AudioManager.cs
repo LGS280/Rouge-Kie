@@ -142,11 +142,11 @@ namespace RogueKie.Audio
             }
             else if (parameterName == "BGMVolume" && bgmSource != null)
             {
-                bgmSource.volume = clampedVolume;
+                bgmSource.volume = (linearVolume <= 0.0001f) ? 0f : clampedVolume;
             }
             else if (parameterName == "SFXVolume" && sfxSource != null)
             {
-                sfxSource.volume = clampedVolume;
+                sfxSource.volume = (linearVolume <= 0.0001f) ? 0f : clampedVolume;
             }
         }
 
