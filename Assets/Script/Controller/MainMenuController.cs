@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections;
@@ -89,8 +90,50 @@ public class MainMenuController : MonoBehaviour
         SetSelected(playButton);
     }
 
+    /// <summary>
+    /// Fetch lại toàn bộ API từ Backend khi bấm nút Play (kể cả chưa login hoặc đã login)
+    /// </summary>
+    public void FetchAllApis()
+    {
+        Debug.Log("[MainMenuController] Bắt đầu fetch lại toàn bộ API từ Backend...");
+
+        // 1. Cấu hình game (súng, đạn, quái, nhân vật, màn chơi, buff, bảo trì...)
+        if (GameConfigManager.Instance != null)
+        {
+            GameConfigManager.Instance.ReloadConfigs();
+        }
+
+        // 2. Trạng thái bảo trì máy chủ
+        if (MaintenanceManager.Instance != null)
+        {
+            MaintenanceManager.Instance.CheckMaintenanceStatus(null, showPopupIfMaintenance: true);
+        }
+
+        // 3. Vật phẩm Shop & Mô tả nhân vật
+        if (ShopUIController.Instance != null)
+        {
+            ShopUIController.Instance.FetchShopItems();
+        }
+        if (CharacterSelectUIController.Instance != null)
+        {
+            CharacterSelectUIController.Instance.FetchCharacterDescriptions();
+        }
+
+        // 4. Nếu đã đăng nhập, nạp lại toàn bộ dữ liệu tài khoản từ máy chủ
+        bool loggedIn = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn;
+        if (loggedIn)
+        {
+            PlayerProfileUI.Instance?.RefreshProfile();
+            WeaponVaultUIController.Instance?.FetchUnlockedWeapons();
+            ShopUIController.SyncUnlockedCharactersFromServer();
+        }
+    }
+
     public void OnPlayButtonPressed()
     {
+        // Luôn fetch lại toàn bộ API từ Backend (kể cả chưa login hoặc đã login)
+        FetchAllApis();
+
         // Kiểm tra xem người chơi đã đăng nhập hay chưa ngay khi bấm nút Play
         bool loggedIn = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn;
         if (!loggedIn)
@@ -118,6 +161,9 @@ public class MainMenuController : MonoBehaviour
 
     public void OnSingleplayerPressed()
     {
+        // Luôn fetch lại toàn bộ API trước khi vào chơi đơn
+        FetchAllApis();
+
         // Chặn vào chơi nếu máy chủ đang bảo trì (ngoại trừ Developer và Admin)
         if (MaintenanceManager.Instance != null && MaintenanceManager.Instance.IsUnderMaintenance)
         {
