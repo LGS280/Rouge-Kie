@@ -52,6 +52,33 @@ public class PlayerBuffManager : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += HandleSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= HandleSceneLoaded;
+    }
+
+    private void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        // Khi quay lại sảnh Lobby hoặc Menu chính, dọn sạch toàn bộ Buff đã tích luỹ
+        if (scene.name == "Lobby_Scene" || scene.name == "Scene_Menu" || scene.name == "LoginScrene")
+        {
+            ResetBuffs();
+        }
+        else if (scene.name == "SampleScene")
+        {
+            // Nếu bắt đầu lượt chơi mới ở Tầng 1
+            if (GameProgressionManager.Instance != null && GameProgressionManager.Instance.currentFloor <= 1)
+            {
+                ResetBuffs();
+            }
+        }
+    }
+
     public void ResetBuffs()
     {
         damageMultiplier = 1f;

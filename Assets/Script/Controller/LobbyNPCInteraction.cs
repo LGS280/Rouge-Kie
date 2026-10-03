@@ -292,6 +292,15 @@ public class LobbyNPCInteraction : MonoBehaviour
                     wm.SaveEquippedWeapons();
                 }
 
+                if (GameProgressionManager.Instance != null)
+                {
+                    GameProgressionManager.Instance.ResetProgression();
+                }
+                else if (PlayerBuffManager.Instance != null)
+                {
+                    PlayerBuffManager.Instance.ResetBuffs();
+                }
+
                 if (LoadingScreenUI.Instance != null)
                 {
                     LoadingScreenUI.Instance.ShowLoading("SECTOR 1 - 1", "Connecting and initializing new dungeon sector...");

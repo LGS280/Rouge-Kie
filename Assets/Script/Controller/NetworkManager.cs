@@ -79,6 +79,10 @@ public class NetworkManager : MonoBehaviour
     // BỔ SUNG: Sự kiện đồng bộ chuyển tầng hầm ngục Co-op giữa các máy trong phòng
     public event Action<int> OnFloorTransitionSynced;
 
+    // BỔ SUNG: Sự kiện đồng bộ khi toàn bộ người chơi trong phòng đã chọn xong Buff (Co-op Buff Barrier)
+    public event Action OnAllPlayersBuffsReady;
+    public event Action<int, int> OnBuffSelectionProgress;
+
     // BỔ SUNG: Sự kiện đồng bộ loại súng chính và súng phụ Remote Player đang cầm (connId, activeWeaponName, secondaryWeaponName)
     public event Action<string, string, string> OnRemoteWeaponChanged;
 
@@ -338,6 +342,19 @@ public class NetworkManager : MonoBehaviour
         {
             Debug.Log($"[NetworkManager] Nhận được danh sách phòng từ Server: {(rooms != null ? rooms.Count : 0)} phòng.");
             unityContext.Post(_ => OnReceivePublicRooms?.Invoke(rooms), null);
+        });
+
+        // BỔ SUNG: Lắng nghe sự kiện đồng bộ khi toàn bộ thành viên trong phòng đã chọn xong Buff
+        hubConnection.On("OnAllPlayersBuffsReady", () =>
+        {
+            Debug.Log("[NetworkManager] Nhận OnAllPlayersBuffsReady: Toàn bộ người chơi đã chọn xong Buff!");
+            unityContext.Post(_ => OnAllPlayersBuffsReady?.Invoke(), null);
+        });
+
+        hubConnection.On<int, int>("OnBuffSelectionProgress", (ready, total) =>
+        {
+            Debug.Log($"[NetworkManager] Tiến độ chọn Buff trong phòng: {ready}/{total}");
+            unityContext.Post(_ => OnBuffSelectionProgress?.Invoke(ready, total), null);
         });
 
         // Gọi hàm đăng ký các sự kiện Combat mạng
@@ -685,6 +702,23 @@ public class NetworkManager : MonoBehaviour
         catch (Exception ex)
         {
             Debug.LogWarning($"[NetworkManager] SendNextFloorRequest gián đoạn: {ex.Message}");
+        }
+    }
+
+    // BỔ SUNG: Gửi thông báo người chơi đã chọn xong Buff khi chuyển tầng (Co-op Buff Barrier)
+    public async void SendPlayerBuffSelected(string roomId)
+    {
+        try
+        {
+            if (hubConnection != null && hubConnection.State == HubConnectionState.Connected && !string.IsNullOrEmpty(roomId))
+            {
+                await hubConnection.InvokeAsync("PlayerBuffSelected", roomId);
+                Debug.Log($"[NetworkManager] Đã gửi xác nhận hoàn tất chọn Buff cho phòng '{roomId}'.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NetworkManager] SendPlayerBuffSelected gián đoạn: {ex.Message}");
         }
     }
 

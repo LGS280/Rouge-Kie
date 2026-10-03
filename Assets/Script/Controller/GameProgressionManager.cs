@@ -57,7 +57,14 @@ public class GameProgressionManager : MonoBehaviour
     {
         currentFloor = 1;
         isTransitioning = false;
-        Debug.Log("[GameProgressionManager] Đã khởi tạo lại tiến trình màn chơi về Tầng 1.");
+
+        // Reset sạch sẽ toàn bộ Buff đã tích lũy từ các lượt chơi trước
+        if (PlayerBuffManager.Instance != null)
+        {
+            PlayerBuffManager.Instance.ResetBuffs();
+        }
+
+        Debug.Log("[GameProgressionManager] Đã khởi tạo lại tiến trình màn chơi về Tầng 1 và reset toàn bộ Buff.");
     }
 
     /// <summary>
@@ -156,12 +163,16 @@ public class GameProgressionManager : MonoBehaviour
         return UnityEngine.Random.Range(min, max + 1);
     }
 
+    private bool isWaitingForTeammatesBuff = false;
+
     private void Start()
     {
-        // BỔ SUNG: Đăng ký lắng nghe sự kiện chuyển tầng đồng bộ qua mạng từ NetworkManager
+        // BỔ SUNG: Đăng ký lắng nghe sự kiện chuyển tầng và hàng chờ Buff qua mạng từ NetworkManager
         if (NetworkManager.Instance != null)
         {
             NetworkManager.Instance.OnFloorTransitionSynced += HandleSyncedFloorTransition;
+            NetworkManager.Instance.OnAllPlayersBuffsReady += HandleAllPlayersBuffsReady;
+            NetworkManager.Instance.OnBuffSelectionProgress += HandleBuffSelectionProgress;
         }
     }
 
@@ -171,6 +182,38 @@ public class GameProgressionManager : MonoBehaviour
         if (NetworkManager.Instance != null)
         {
             NetworkManager.Instance.OnFloorTransitionSynced -= HandleSyncedFloorTransition;
+            NetworkManager.Instance.OnAllPlayersBuffsReady -= HandleAllPlayersBuffsReady;
+            NetworkManager.Instance.OnBuffSelectionProgress -= HandleBuffSelectionProgress;
+        }
+    }
+
+    private void HandleAllPlayersBuffsReady()
+    {
+        Debug.Log("[GameProgressionManager] Co-op Mode: Toàn bộ thành viên đã chọn xong Buff! Mở khóa di chuyển và ẩn Loading Screen.");
+        isWaitingForTeammatesBuff = false;
+        PlayerController.IsMovementLocked = false;
+
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player != null)
+        {
+            PlayerController pc = player.GetComponent<PlayerController>();
+            if (pc != null) pc.enabled = true;
+        }
+
+        if (LoadingScreenUI.Instance != null)
+        {
+            LoadingScreenUI.Instance.HideLoading();
+        }
+    }
+
+    private void HandleBuffSelectionProgress(int ready, int total)
+    {
+        if (isWaitingForTeammatesBuff && LoadingScreenUI.Instance != null)
+        {
+            LoadingScreenUI.Instance.ShowLoading(
+                $"SECTOR {currentFloor} - 1",
+                $"Waiting for teammates... ({ready}/{total} players ready)"
+            );
         }
     }
 
@@ -187,10 +230,15 @@ public class GameProgressionManager : MonoBehaviour
 
         Debug.Log($"[GameProgressionManager] Co-op Mode: Nhận tín hiệu đồng bộ chuyển sang Tầng {targetFloor} từ mạng.");
 
+        bool isMultiplayer = NetworkManager.Instance != null && 
+                             NetworkManager.Instance.IsLoggedIn && 
+                             !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+
         // BỔ SUNG: Kiểm tra theo tham số mạng targetFloor (targetFloor == 2 khi vừa xong Tầng 1, targetFloor == 4 khi vừa xong Tầng 3)
         // Đảm bảo cả Host và Client 100% cùng hiển thị Bảng chọn Buff
         if ((targetFloor == 2 || targetFloor == 4) && UpgradeSelectionUI.Instance != null)
         {
+            isWaitingForTeammatesBuff = isMultiplayer;
             UpgradeSelectionUI.Instance.OpenUpgradeMenu(() =>
             {
                 ExecuteFloorTransition(targetFloor);
@@ -198,6 +246,7 @@ public class GameProgressionManager : MonoBehaviour
         }
         else
         {
+            isWaitingForTeammatesBuff = false;
             ExecuteFloorTransition(targetFloor);
         }
     }
@@ -328,9 +377,18 @@ public class GameProgressionManager : MonoBehaviour
                 }
                 Debug.Log("[GameProgressionManager] Đã kích hoạt lại toàn bộ Collider của Player.");
             }
-            if (movement != null)
+
+            if (isWaitingForTeammatesBuff)
             {
-                movement.enabled = true;
+                // Nếu vẫn đang chờ các đồng đội khác chọn xong Buff trong Co-op: Khóa di chuyển!
+                PlayerController.IsMovementLocked = true;
+                if (movement != null) movement.enabled = false;
+                Debug.Log("[GameProgressionManager] Đang chờ đồng đội chọn Buff: Đã khóa di chuyển nhân vật.");
+            }
+            else
+            {
+                PlayerController.IsMovementLocked = false;
+                if (movement != null) movement.enabled = true;
             }
         }
         else
@@ -347,9 +405,23 @@ public class GameProgressionManager : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(0.4f); // Chờ hiệu ứng mượt trước khi làm mờ ẩn Loading Screen
 
-        if (LoadingScreenUI.Instance != null)
+        if (isWaitingForTeammatesBuff)
         {
-            LoadingScreenUI.Instance.HideLoading();
+            // Giữ Loading Screen và hiện thông điệp chờ đồng đội
+            if (LoadingScreenUI.Instance != null)
+            {
+                LoadingScreenUI.Instance.ShowLoading(
+                    $"SECTOR {currentFloor} - 1",
+                    "Waiting for all party members to choose their upgrades..."
+                );
+            }
+        }
+        else
+        {
+            if (LoadingScreenUI.Instance != null)
+            {
+                LoadingScreenUI.Instance.HideLoading();
+            }
         }
 
         isTransitioning = false;

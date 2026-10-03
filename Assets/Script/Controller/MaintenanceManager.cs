@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -51,17 +52,47 @@ public class MaintenanceManager : MonoBehaviour
 
     private string GetApiUrl(string path)
     {
-        string apiBase = "https://rougekiebe.azurewebsites.net/api";
+        string apiBase = "";
         if (GameConfigManager.Instance != null && !string.IsNullOrEmpty(GameConfigManager.Instance.BaseUrl))
         {
             apiBase = GameConfigManager.Instance.BaseUrl;
         }
+        else
+        {
+            apiBase = LoadBaseUrlFromStreamingAssets();
+        }
+
+        if (string.IsNullOrEmpty(apiBase))
+        {
+            apiBase = "https://rougekiebe.azurewebsites.net/api";
+        }
+
         apiBase = apiBase.TrimEnd('/');
         if (!apiBase.EndsWith("/api", StringComparison.OrdinalIgnoreCase))
         {
             apiBase += "/api";
         }
         return $"{apiBase}{path}";
+    }
+
+    private string LoadBaseUrlFromStreamingAssets()
+    {
+        try
+        {
+            string filePath = Path.Combine(Application.streamingAssetsPath, "appsettings.json");
+            if (File.Exists(filePath))
+            {
+                string jsonText = File.ReadAllText(filePath);
+                jsonText = System.Text.RegularExpressions.Regex.Replace(jsonText, @"^\s*//.*", "", System.Text.RegularExpressions.RegexOptions.Multiline);
+                ConfigData config = JsonUtility.FromJson<ConfigData>(jsonText);
+                if (config != null && !string.IsNullOrEmpty(config.baseUrl))
+                {
+                    return config.baseUrl;
+                }
+            }
+        }
+        catch { }
+        return null;
     }
 
     /// <summary>

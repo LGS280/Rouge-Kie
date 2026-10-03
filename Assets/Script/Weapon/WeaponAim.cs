@@ -44,7 +44,8 @@ public class WeaponAim : MonoBehaviour
             return;
         }
 
-        if ((ShopUIController.Instance != null && ShopUIController.Instance.IsShopOpen()) ||
+        if (PlayerController.IsMovementLocked ||
+            (ShopUIController.Instance != null && ShopUIController.Instance.IsShopOpen()) ||
             (WeaponVaultUIController.Instance != null && WeaponVaultUIController.Instance.IsVaultOpen()))
         {
             if (currentWeapon != null && currentWeapon.IsBowCharging())

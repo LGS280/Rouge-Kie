@@ -584,6 +584,15 @@ public class LobbyUIController : MonoBehaviour
     private void HandleGameStarted()
     {
         Debug.Log("Trận đấu bắt đầu! Đang tải màn chơi...");
+        if (GameProgressionManager.Instance != null)
+        {
+            GameProgressionManager.Instance.ResetProgression();
+        }
+        else if (PlayerBuffManager.Instance != null)
+        {
+            PlayerBuffManager.Instance.ResetBuffs();
+        }
+
         if (LoadingScreenUI.Instance != null)
         {
             LoadingScreenUI.Instance.ShowLoading("SECTOR 1 - 1", "Connecting and initializing Co-op chamber...");
