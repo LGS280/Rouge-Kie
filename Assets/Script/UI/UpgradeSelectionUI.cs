@@ -496,6 +496,13 @@ public class UpgradeSelectionUI : MonoBehaviour
             PlayerBuffManager.Instance.ApplyBuff(buff);
         }
 
+        // BỔ SUNG: Nếu đang trong phòng Co-op, gửi xác nhận đã chọn xong Buff lên Server (Co-op Buff Barrier)
+        bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+        if (isMultiplayer)
+        {
+            NetworkManager.Instance.SendPlayerBuffSelected(NetworkManager.Instance.CurrentRoomId);
+        }
+
         isMenuOpen = false;
         if (canvasObj != null)
         {

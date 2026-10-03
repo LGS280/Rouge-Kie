@@ -218,6 +218,14 @@ public class BraeadBossAI : MonoBehaviour, IBossAI
                 if (mobHealth.CurrentHealth <= mobHealth.maxHealth * 0.5f)
                 {
                     hasTriggeredUltimate = true;
+
+                    // Đồng bộ kích hoạt Chiêu Nộ Laser 360 độ tới tất cả Client trong phòng Co-op
+                    bool isMultiplayer = NetworkManager.Instance != null && NetworkManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomId);
+                    if (isMultiplayer && isHost && mobNetworkIdentity != null && !string.IsNullOrEmpty(mobNetworkIdentity.networkId))
+                    {
+                        NetworkManager.Instance.SendBossAttack(mobNetworkIdentity.networkId, 9999f, 9999f);
+                    }
+
                     StartCoroutine(UltimateSequenceRoutine());
                     return;
                 }
@@ -557,10 +565,66 @@ public class BraeadBossAI : MonoBehaviour, IBossAI
 
     public void ExecuteNetworkAttack(Vector2 targetPos)
     {
+        // 1. Tín hiệu kích hoạt Chiêu Nộ Laser 360 độ từ Host (targetPos = 9999, 9999)
+        if (targetPos.x >= 9000f && targetPos.y >= 9000f)
+        {
+            if (!hasTriggeredUltimate)
+            {
+                hasTriggeredUltimate = true;
+                StartCoroutine(ClientUltimateSequenceRoutine());
+            }
+            return;
+        }
+
+        // 2. Đòn đánh thường hoặc đòn đạn tỏa tròn Phase 2
         UpdateBossFacing(targetPos.x - transform.position.x);
         if (weaponAim != null)
         {
             weaponAim.ShootNormalBarrage(targetPlayer, targetPos, isEnraged);
         }
+    }
+
+    /// <summary>
+    /// Đồng bộ chuỗi Chiêu Nộ Laser 360 độ trên máy Client
+    /// </summary>
+    private IEnumerator ClientUltimateSequenceRoutine()
+    {
+        currentState = BossState.PreparingUltimate;
+
+        // 1. Lướt nhanh về trung tâm phòng
+        Vector2 center = (myRoom != null) ? (Vector2)myRoom.transform.position : roomCenter;
+        float timeout = 2.5f;
+        float timer = 0f;
+
+        while (Vector2.Distance(transform.position, center) > 0.5f && timer < timeout)
+        {
+            timer += Time.deltaTime;
+            Vector2 dirToCenter = (center - (Vector2)transform.position).normalized;
+            transform.position = Vector2.MoveTowards(transform.position, center, ultimateMoveSpeed * Time.deltaTime);
+            if (animator != null) animator.SetBool("isMoving", true);
+            yield return null;
+        }
+
+        transform.position = center;
+        if (animator != null) animator.SetBool("isMoving", false);
+        currentState = BossState.CastingUltimate;
+
+        // 2. Chờ báo hiệu sạc chiêu (Telegraph) 1.2 giây
+        yield return new WaitForSeconds(1.2f);
+
+        // 3. Kích hoạt quét tia Laser 360 độ đồng bộ
+        if (weaponAim != null)
+        {
+            yield return StartCoroutine(weaponAim.LaserSweepRoutine(laserSweepDuration));
+        }
+        else
+        {
+            yield return new WaitForSeconds(laserSweepDuration);
+        }
+
+        // 4. Kết thúc Laser -> Bước vào Phase 2 (Hóa nộ đồng bộ trên Client)
+        isEnraged = true;
+        currentState = BossState.Combat;
+        Debug.Log("[Braead Boss - Client] Kết thúc chiêu Laser đồng bộ! Kích hoạt Phase 2: Hóa Nộ (Enraged)");
     }
 }

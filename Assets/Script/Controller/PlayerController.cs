@@ -24,6 +24,8 @@ public class PlayerController : MonoBehaviour
     private float lastKeyboardMouseInputTime = -999f;
     private float lastGamepadInputTime = -999f;
 
+    public static bool IsMovementLocked = false;
+
     private WeaponAim weaponAim;
 
     private void Start()
@@ -83,6 +85,12 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateMoveInput()
     {
+        if (IsMovementLocked)
+        {
+            moveInput = Vector2.zero;
+            return;
+        }
+
         if (currentMode == InputMode.Gamepad)
         {
             // Ở chế độ Gamepad: Chỉ nhận di chuyển từ cần Analog trái (bỏ qua phím WASD)
@@ -115,10 +123,12 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // Chú ý: thêm điều kiện dừng di chuyển nếu Shop UI hoặc Kho Vũ Khí (Weapon Vault) đang mở
-        if ((ShopUIController.Instance != null && ShopUIController.Instance.IsShopOpen()) ||
+        // Khóa di chuyển khi đang chờ đồng đội chọn Buff hoặc Shop UI / Kho Vũ Khí đang mở
+        if (IsMovementLocked ||
+            (ShopUIController.Instance != null && ShopUIController.Instance.IsShopOpen()) ||
             (WeaponVaultUIController.Instance != null && WeaponVaultUIController.Instance.IsVaultOpen()))
         {
+            if (rb2d != null) rb2d.linearVelocity = Vector2.zero;
             return;
         }
 
