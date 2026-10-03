@@ -433,6 +433,17 @@ public class LoginController : MonoBehaviour
     {
         try
         {
+            // Kiểm tra trạng thái bảo trì máy chủ trước khi mở trình duyệt
+            bool isMaintenance = (GameConfigManager.Instance != null && GameConfigManager.Instance.IsUnderMaintenance) ||
+                                 (MaintenanceManager.Instance != null && MaintenanceManager.Instance.IsUnderMaintenance);
+
+            if (isMaintenance)
+            {
+                ShowMaintenancePopup();
+                ShowLoginMessage("Server is under maintenance. Google Login is unavailable. Please use Admin/Dev credentials to login.", new Color(1f, 0.72f, 0.2f));
+                return;
+            }
+
             if (string.IsNullOrEmpty(googleClientId))
             {
                 ShowLoginMessage("Error: Google Client ID not configured!", Color.red);
@@ -596,6 +607,15 @@ public class LoginController : MonoBehaviour
 
     private IEnumerator SendRegisterOtpRoutine()
     {
+        // Chặn gửi OTP nếu máy chủ đang bảo trì
+        bool isMaintenance = (GameConfigManager.Instance != null && GameConfigManager.Instance.IsUnderMaintenance) ||
+                             (MaintenanceManager.Instance != null && MaintenanceManager.Instance.IsUnderMaintenance);
+        if (isMaintenance)
+        {
+            ShowRegisterMessage(GetMaintenanceNoticeMessage(), Color.yellow);
+            yield break;
+        }
+
         var data = new SendOtpRequest
         {
             email = regEmailInput.text.Trim()
@@ -745,11 +765,11 @@ public class LoginController : MonoBehaviour
     private IEnumerator RegisterRoutine()
     {
         // Chặn đăng ký nếu máy chủ đang bảo trì
-        if (GameConfigManager.Instance != null && GameConfigManager.Instance.IsUnderMaintenance)
+        bool isMaintenance = (GameConfigManager.Instance != null && GameConfigManager.Instance.IsUnderMaintenance) ||
+                             (MaintenanceManager.Instance != null && MaintenanceManager.Instance.IsUnderMaintenance);
+        if (isMaintenance)
         {
-            var m = GameConfigManager.Instance.CurrentMaintenance;
-            string header = !string.IsNullOrWhiteSpace(m.title) ? m.title : "SERVER UNDER MAINTENANCE";
-            ShowRegisterMessage($"[MAINTENANCE] {header}\n{m.message}", Color.yellow);
+            ShowRegisterMessage(GetMaintenanceNoticeMessage(), Color.yellow);
             yield break;
         }
 
@@ -841,6 +861,43 @@ public class LoginController : MonoBehaviour
         }
 
         return fallback + ": " + request.error;
+    }
+
+    private void ShowMaintenancePopup()
+    {
+        if (MaintenancePopupUI.Instance != null)
+        {
+            if (MaintenanceManager.Instance != null && MaintenanceManager.Instance.CurrentStatus != null)
+            {
+                MaintenancePopupUI.Instance.Show(MaintenanceManager.Instance.CurrentStatus);
+            }
+            else if (GameConfigManager.Instance != null && GameConfigManager.Instance.CurrentMaintenance != null)
+            {
+                var m = GameConfigManager.Instance.CurrentMaintenance;
+                MaintenancePopupUI.Instance.Show(m.title, m.message, m.remainingMinutes, m.endTime);
+            }
+            else
+            {
+                MaintenancePopupUI.Instance.Show("Server Under Maintenance", "The server is currently undergoing maintenance. Please try again later.", 0);
+            }
+        }
+    }
+
+    private string GetMaintenanceNoticeMessage()
+    {
+        if (MaintenanceManager.Instance != null && MaintenanceManager.Instance.CurrentStatus != null)
+        {
+            var s = MaintenanceManager.Instance.CurrentStatus;
+            string header = !string.IsNullOrWhiteSpace(s.title) ? s.title : "SERVER UNDER MAINTENANCE";
+            return $"[MAINTENANCE] {header}\n{s.message}";
+        }
+        if (GameConfigManager.Instance != null && GameConfigManager.Instance.CurrentMaintenance != null)
+        {
+            var m = GameConfigManager.Instance.CurrentMaintenance;
+            string header = !string.IsNullOrWhiteSpace(m.title) ? m.title : "SERVER UNDER MAINTENANCE";
+            return $"[MAINTENANCE] {header}\n{m.message}";
+        }
+        return "[MAINTENANCE] SERVER UNDER MAINTENANCE\nThe server is currently undergoing maintenance.";
     }
 
     private void CheckServerMaintenanceOnStart()
